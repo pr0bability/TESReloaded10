@@ -52,7 +52,6 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: ${{env.ARTEFACT_NAME}}
-        path: ./build/
 
     - name: check dl
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -77,6 +76,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{env.GITHUB_WORKSPACE}}\build\${{env.ARTEFACT_NAME}}
+        asset_path: ${{env.GITHUB_WORKSPACE}}\${{env.ARTEFACT_NAME}}
         asset_name: ${{env.ARTEFACT_NAME}}.zip
         asset_content_type: application/zip
