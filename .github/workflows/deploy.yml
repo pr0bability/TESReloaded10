@@ -41,19 +41,25 @@ jobs:
         mkdir build/NewVegasReloaded
         echo "Release" > build/NewVegasReloaded/release.txt
 
-    - name: Create Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{env.ARTEFACT_NAME}}
-        path: |
-           ./build/${{inputs.projectname}}
+    # - name: Create Artifact
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: ${{env.ARTEFACT_NAME}}
+    #     path: |
+    #        ./build/${{inputs.projectname}}
 
-    - name: Download Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: ${{env.ARTEFACT_NAME}}
+    # - name: Download Artifact
+    #   uses: actions/download-artifact@v3
+    #   with:
+    #     name: ${{env.ARTEFACT_NAME}}
 
-    - name: check dl
+    - name: zip files
+      - uses: vimtor/action-zip@v1
+        with:
+          files: build/
+          dest: ${{env.ARTEFACT_NAME}}
+
+    - name: check files
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         Get-ChildItem –Recurse
