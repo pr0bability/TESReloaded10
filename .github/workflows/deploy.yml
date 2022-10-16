@@ -57,7 +57,7 @@ jobs:
       uses: vimtor/action-zip@v1
       with:
         files: build/
-        dest: ${{env.ARTEFACT_NAME}}
+        dest: ${{env.ARTEFACT_NAME}}.zip
 
     - name: check files
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -82,6 +82,5 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{env.GITHUB_WORKSPACE}}\${{env.ARTEFACT_NAME}}
         asset_name: ${{env.ARTEFACT_NAME}}.zip
         asset_content_type: application/zip
