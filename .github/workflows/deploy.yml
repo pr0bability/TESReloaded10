@@ -53,6 +53,8 @@ jobs:
       with:
         name: ${{env.ARTEFACT_NAME}}
         path: ./build/
+      run: |
+        Get-ChildItem
 
     - name: Create Release
       uses: actions/create-release@v1
