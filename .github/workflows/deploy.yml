@@ -54,10 +54,10 @@ jobs:
     #     name: ${{env.ARTEFACT_NAME}}
 
     - name: zip files
-      - uses: vimtor/action-zip@v1
-        with:
-          files: build/
-          dest: ${{env.ARTEFACT_NAME}}
+      uses: vimtor/action-zip@v1
+      with:
+        files: build/
+        dest: ${{env.ARTEFACT_NAME}}
 
     - name: check files
       working-directory: ${{env.GITHUB_WORKSPACE}}
