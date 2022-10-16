@@ -55,7 +55,7 @@ jobs:
         path: ./build/
 
     - name: check dl
-      working-directory: ${{env.GITHUB_WORKSPACE}}
+      working-directory: ${{env.GITHUB_WORKSPACE}}\build
       run: |
         Get-ChildItem
 
