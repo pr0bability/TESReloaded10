@@ -23,14 +23,14 @@ jobs:
     runs-on: windows-2019
 
     steps:
-    # - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-    # - name: Add MSBuild to PATH
-    #   uses: microsoft/setup-msbuild@v1.0.2
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
 
-    # - name: Restore NuGet packages
-    #   working-directory: ${{env.GITHUB_WORKSPACE}}
-    #   run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -41,22 +41,10 @@ jobs:
         mkdir build/NewVegasReloaded
         echo "Release" > build/NewVegasReloaded/release.txt
 
-    # - name: Create Artifact
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: ${{env.ARTEFACT_NAME}}
-    #     path: |
-    #        ./build/${{inputs.projectname}}
-
-    # - name: Download Artifact
-    #   uses: actions/download-artifact@v3
-    #   with:
-    #     name: ${{env.ARTEFACT_NAME}}
-
     - name: zip files
       uses: vimtor/action-zip@v1
       with:
-        files: build/
+        files: build/${{inputs.projectname}}/
         dest: ${{env.ARTEFACT_NAME}}.zip
 
     - name: check files
