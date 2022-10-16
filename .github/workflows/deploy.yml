@@ -53,6 +53,9 @@ jobs:
       with:
         name: ${{env.ARTEFACT_NAME}}
         path: ./build/
+
+    - name: check dl
+      working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
         Get-ChildItem
 
