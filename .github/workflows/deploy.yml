@@ -57,7 +57,7 @@ jobs:
     - name: check dl
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
-        Get-ChildItem ./build
+        Get-ChildItem –Recurse
 
     - name: Create Release
       uses: actions/create-release@v1
