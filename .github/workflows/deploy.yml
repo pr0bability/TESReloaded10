@@ -55,9 +55,9 @@ jobs:
         path: ./build/
 
     - name: check dl
-      working-directory: ${{env.GITHUB_WORKSPACE}}\build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
-        Get-ChildItem
+        Get-ChildItem ./build
 
     - name: Create Release
       uses: actions/create-release@v1
