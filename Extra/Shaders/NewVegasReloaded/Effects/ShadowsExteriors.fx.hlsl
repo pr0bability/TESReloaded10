@@ -305,6 +305,9 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	// brighten shadow value from 0 to darkness from config value
 	Shadow = lerp(darkness, 1.0f, Shadow);
+	
+	// No point for the shadow buffer to be beyond the 0-1 range
+	Shadow = saturate(Shadow);
 
 	// Shadow * (world_pos.z < TESR_WaterSettings.x); // cancel shadow value if under water
 	return float4(Shadow, Shadow, Shadow, 1.0f);
