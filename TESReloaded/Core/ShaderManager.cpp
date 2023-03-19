@@ -1272,6 +1272,10 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Rain.RainData.z = TheSettingManager->SettingsPrecipitations.Rain.Speed;
 			ShaderConst.Rain.RainData.w = TheSettingManager->SettingsPrecipitations.Rain.Opacity;
 
+			ShaderConst.Rain.RainAspect.x = TheSettingManager->SettingsPrecipitations.Rain.Refraction;
+			ShaderConst.Rain.RainAspect.y = TheSettingManager->SettingsPrecipitations.Rain.Coloring;
+			ShaderConst.Rain.RainAspect.z = TheSettingManager->SettingsPrecipitations.Rain.Bloom;
+
 			if (TheSettingManager->SettingsMain.Effects.Snow) {
 				// Snow fall
 				if (isSnow && ShaderConst.Animators.SnowAnimator.switched == false) {
@@ -2070,14 +2074,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 					WetWorldEffect->SetCT();
 					WetWorldEffect->Render(Device, RenderTarget, RenderedSurface, false);
 				}
-				if (RainEffect->Enabled && ShaderConst.Rain.RainData.x > 0.0f) {
-					RainEffect->SetCT();
-					RainEffect->Render(Device, RenderTarget, RenderedSurface, false);
-				}
-				if (SnowEffect->Enabled && ShaderConst.Snow.SnowData.x > 0.0f) {
-					SnowEffect->SetCT();
-					SnowEffect->Render(Device, RenderTarget, RenderedSurface, false);
-				}
 			}
 
 			if (VolumetricFogEffect->Enabled && !pipboyIsOn) {
@@ -2085,10 +2081,21 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 				VolumetricFogEffect->Render(Device, RenderTarget, RenderedSurface, false);
 			}
 
-			if (GodRaysEffect->Enabled && isExterior && isDaytime) {
-				Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-				GodRaysEffect->SetCT();
-				GodRaysEffect->Render(Device, RenderTarget, RenderedSurface, false);
+			if (isExterior) {
+				if (RainEffect->Enabled && ShaderConst.Rain.RainData.x > 0.0f) {
+					Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
+					RainEffect->SetCT();
+					RainEffect->Render(Device, RenderTarget, RenderedSurface, false);
+				}
+				if (SnowEffect->Enabled && ShaderConst.Snow.SnowData.x > 0.0f) {
+					SnowEffect->SetCT();
+					SnowEffect->Render(Device, RenderTarget, RenderedSurface, false);
+				}
+				if (GodRaysEffect->Enabled && isDaytime) {
+					Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
+					GodRaysEffect->SetCT();
+					GodRaysEffect->Render(Device, RenderTarget, RenderedSurface, false);
+				}
 			}
 		}
 	}
@@ -2130,6 +2137,14 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		SharpeningEffect->SetCT();
 		SharpeningEffect->Render(Device, RenderTarget, RenderedSurface, false);
 	}
+
+	// cinema effect gets rendered very last because of vignetting/letterboxing
+	if (CinemaEffect->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) {
+		Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
+		CinemaEffect->SetCT();
+		CinemaEffect->Render(Device, RenderTarget, RenderedSurface, false);
+	}
+
 	if (Effects->Extra) {
 		for (ExtraEffectsList::iterator iter = ExtraEffects.begin(); iter != ExtraEffects.end(); ++iter) {
 			if (iter->second->Enabled) {
@@ -2140,11 +2155,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		}
 	}
 
-	// cinema effect gets rendered very last because of vignetting/letterboxing
-	if (CinemaEffect->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) {
-		CinemaEffect->SetCT();
-		CinemaEffect->Render(Device, RenderTarget, RenderedSurface, false);
-	}
 	PreviousCell = currentCell;
 }
 
