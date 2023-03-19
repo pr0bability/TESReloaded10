@@ -1,9 +1,6 @@
 // Image space shadows shader for Oblivion Reloaded
 
-float4x4 TESR_WorldTransform;
 float4x4 TESR_WorldViewProjectionTransform;
-float4x4 TESR_ViewProjectionTransform;
-float4x4 TESR_InvViewProjectionTransform;
 float4x4 TESR_ShadowCameraToLightTransformNear;
 float4x4 TESR_ShadowCameraToLightTransformMiddle;
 float4x4 TESR_ShadowCameraToLightTransformFar;
@@ -18,16 +15,11 @@ float4 TESR_LightPosition6;
 float4 TESR_LightPosition7;
 float4 TESR_ReciprocalResolution;
 float4 TESR_ViewSpaceLightDir;
-float4 TESR_ScreenSpaceLightDir;
 float4 TESR_WaterSettings; //x: water height in the cell, y: water depth darkness, z: is camera underwater
 float4 TESR_ShadowData; // x: quality, y: darkness, z: nearmap resolution, w: farmap resolution
 float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
-float4 TESR_SunAmount;
-float4 TESR_FogColor;
 float4 TESR_ShadowFade;
-float4 TESR_SunDirection;
 float4 TESR_ShadowRadius; // radius of the 4 cascades
-float4 TESR_FogData; // x: fog start, y: fog end, z: sun glare, w: fog power
 float4 TESR_SkyColor;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -38,14 +30,14 @@ sampler2D TESR_ShadowMapBufferFar : register(s4) = sampler_state { ADDRESSU = CL
 sampler2D TESR_ShadowMapBufferLod : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
-sampler2D TESR_NormalsBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };;
+// sampler2D TESR_NormalsBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };;
 
+#define SSS_STEPNUM 10
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
 static const float MIN_VARIANCE = 0.000005;
 static const float BLEED_CORRECTION = 0.4;
 static const float SSS_DIST = 20;
-static const float SSS_STEPNUM = 10;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
@@ -66,7 +58,7 @@ struct VSIN
 #include "Includes/Depth.hlsl"
 #include "Includes/Blur.hlsl"
 #include "Includes/Blending.hlsl"
-#include "Includes/Normals.hlsl"
+// #include "Includes/Normals.hlsl"
 
 VSOUT FrameVS(VSIN IN)
 {
@@ -76,11 +68,6 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-float linstep(float low, float high, float t)
-{
-	// clamped linear interpolation
-	return clamp((t - low)/(high-low), 0.0f, 1.0f);
-}
 
 float ChebyshevUpperBound(float2 moments, float distance)
 {
@@ -93,7 +80,7 @@ float ChebyshevUpperBound(float2 moments, float distance)
 
 	// Compute the Chebyshev upper bound.
 	float d = distance - moments.x;
-	float p_max = linstep(BLEED_CORRECTION, 1.0, Variance / (Variance + d*d));
+	float p_max = invlerps(BLEED_CORRECTION, 1.0, Variance / (Variance + d*d));
 	return max(p, p_max);
 }
 
@@ -120,15 +107,6 @@ float GetLightAmountValueVSM(float2 moments, float depthCompare)
 {
 	//returns wether the coordinates are in shadow (0), light (1) or penumbra.
 	return ChebyshevUpperBound(moments, depthCompare);
-}
-
-// returns a value from 0 to 1 based on the positions of a value between a min/max 
-float invLerp(float from, float to, float value){
-  return (value - from) / (to - from);
-}
-
-float fogCoeff(float depth){
-	return saturate(invLerp(TESR_FogData.x, TESR_FogData.y, depth));
 }
 
 float GetLightAmountValue(sampler2D shadowBuffer, float4x4 lightTransform, float4 coord){
@@ -175,16 +153,16 @@ float GetLightAmount(float4 coord, float depth)
 	// calculate blending areas coefficients between cascades
 	float4 fadeIn = {
 		1.0,
-		clamp(0.0, 1.0, invLerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
-		clamp(0.0, 1.0, invLerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
-		clamp(0.0, 1.0, invLerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
+		clamp(0.0, 1.0, invlerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
+		clamp(0.0, 1.0, invlerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
+		clamp(0.0, 1.0, invlerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
 	};
 
 	float4 fadeOut = {
-		clamp(0.0, 1.0, 1 - invLerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
-		clamp(0.0, 1.0, 1 - invLerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
-		clamp(0.0, 1.0, 1 - invLerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
-		clamp(0.0, 1.0, 1 - invLerp(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)),
+		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
+		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
+		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
+		clamp(0.0, 1.0, 1 - invlerp(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)),
 	};
 
 	// apply blending to each cascade shadow
@@ -219,7 +197,7 @@ float GetLightAmount(float4 coord, float depth)
 // tailored to return a different value for each uv coord of the screen.
 float3 random(float2 seed)
 {
-	return tex2D(TESR_NoiseSampler, (seed/255 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	return tex2D(TESR_NoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
 }
 
 float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
@@ -230,10 +208,10 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	float3 pos = reconstructPosition(uv) ; 
 
 	float bias = 0.0;
-	if (pos.z > SSS_MAXDEPTH) return float4 (1.0f, 1.0, 1.0, 1.0); // early out for 
+	if (pos.z > SSS_MAXDEPTH) return float4 (1.0f, 1.0, 1.0, 1.0); // early out for pixels further away than the max render distance
 
-	
 	float occlusion = 0.0;
+	[unroll]
 	for (float i = 1; i < SSS_STEPNUM/2; i++){
 		float4 step = SSS_DIST / SSS_STEPNUM * i * TESR_ViewSpaceLightDir * rand;
 
@@ -275,9 +253,10 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float depth = readDepth(IN.UVCoord);
 	float3 camera_vector = toWorld(IN.UVCoord) * depth;
 	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
-	float world_normal = GetWorldNormal(IN.UVCoord);
+	// float world_normal = GetWorldNormal(IN.UVCoord);
 
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
+	if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 1.5 && world_pos.z > TESR_WaterSettings.x - 1.5) return float4 (1.0f, 1.0, 1.0, 1.0);
 	// if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
 
 	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
@@ -299,9 +278,10 @@ float4 Shadow(VSOUT IN) : COLOR0
 	Shadow += attenuation(world_pos, TESR_LightPosition7);
 
 	// calculate fog impact
-	float fog = fogCoeff(depth);
-	float fogColor = Desaturate(TESR_FogColor).x;
-	float darkness = clamp(lerp(DARKNESS, fogColor, fog), DARKNESS, 1.0);
+	// float fog = fogCoeff(depth);
+	// float fogColor = Desaturate(TESR_FogColor).x;
+	// float darkness = clamp(lerp(DARKNESS, fogColor, fog), DARKNESS, 1.0);
+	float darkness = DARKNESS;
 
 	// brighten shadow value from 0 to darkness from config value
 	Shadow = lerp(darkness, 1.0f, Shadow);
@@ -320,7 +300,7 @@ float4 CombineShadow (VSOUT IN) : COLOR0
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float Shadow = tex2D(TESR_RenderedBuffer, IN.UVCoord).r;
 
-	float4 colorShadow = Luma(color) * Shadow * TESR_SkyColor;
+	float4 colorShadow = luma(color.rgb) * Shadow * TESR_SkyColor;
 
 	return lerp(colorShadow, color * Shadow, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 }
