@@ -43,6 +43,7 @@ samplerCUBE TESR_ShadowCubeMapBuffer10: register(s13) = sampler_state { ADDRESSU
 samplerCUBE TESR_ShadowCubeMapBuffer11 : register(s14) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; ADDRESSW = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s15) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 
+#include "Includes/Helpers.hlsl"
 #include "Includes/Blending.hlsl"
 #include "Includes/Depth.hlsl"
 #include "Includes/Normals.hlsl"
@@ -86,10 +87,6 @@ float GetLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir, floa
 	return lerp(1, Shadow, lightDepth > 0.0f && lightDepth < 1.0f);
 }
 
-// returns a value from 0 to 1 based on the positions of a value between a min/max 
-float invLerp(float from, float to, float value){
-  return (value - from) / (to - from);
-}
 
 float GetLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, float4 LightPos, float4 normal, float4 attenuation) {
 	float LightAmount = 0.0f;
@@ -146,7 +143,7 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer10, pos, TESR_ShadowLightPosition10, normal, TESR_LightAttenuation7);
 	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer11, pos, TESR_ShadowLightPosition11, normal, TESR_LightAttenuation7);
 
-	Shadow = lerp(Shadow, 1.0, saturate(invLerp(300, MAXDISTANCE, depth))); // fade shadows with distance
+	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, depth)); // fade shadows with distance
 
 	Shadow = saturate(Shadow);
 	
@@ -154,10 +151,6 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	
 }
 
-float Luma(float3 input)
-{
-	return input.r * 0.3f + input.g * 0.59f +input.b * 0.11f;
-}
 
 float4 CombineShadow( VSOUT IN ) : COLOR0 {
 
@@ -170,7 +163,7 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 
 	Shadow *= color;
 
-	float lumaDiff = saturate(invLerp(Luma(Shadow), 1.0f, Luma(color)));
+	float lumaDiff = invlerps(luma(Shadow.rgb), 1.0f, luma(color.rgb));
 	return lerp(Shadow, color, lumaDiff); // bring back some of the original color based on luma (brightest lights will come through)
 }
 

@@ -104,7 +104,7 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 
 	// skylight
 	float4 skyColor = lerp(TESR_SkyColor, TESR_HorizonColor, depth);
-	skyColor = lerp(Desaturate(skyColor), skyColor, SkySaturation);
+	skyColor = lerp(luma(skyColor.rgb).rrrr, skyColor, SkySaturation);
 
 	// fresnel
 	result += light.b * color * saturate(luminance * 2) * FresnelStrength * invLuma * sunSetFade; //fresnel scales with the luminance, but reaches full power at half max luminance
@@ -113,7 +113,7 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	result += SkyStrength * light.g * skyColor * 0.1 * saturate(smoothstep(0.4, 0, luminance)) * invLuma * sunSetFade; // skylight is more pronounced in darker areas
 
 	// specular
-	result += lerp(0, light.r * SpecStrength * TESR_SunColor * color, saturate(invlerp(LumTreshold * sunLuma, 1, luminance))); // specular will boost areas above treshold
+	result += lerp(0, light.r * SpecStrength * TESR_SunColor * color, invlerps(LumTreshold * sunLuma, 1, luminance)); // specular will boost areas above treshold
 
 	return float4 (result.rgb, 1.0f);
 }
