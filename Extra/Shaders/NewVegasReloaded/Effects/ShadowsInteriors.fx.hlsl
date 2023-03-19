@@ -147,6 +147,8 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer11, pos, TESR_ShadowLightPosition11, normal, TESR_LightAttenuation7);
 
 	Shadow = lerp(Shadow, 1.0, saturate(invLerp(300, MAXDISTANCE, depth))); // fade shadows with distance
+
+	Shadow = saturate(Shadow);
 	
 	return float4(Shadow, Shadow, Shadow, 1.0f);
 	
