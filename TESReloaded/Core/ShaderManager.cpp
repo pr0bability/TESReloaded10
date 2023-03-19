@@ -99,6 +99,8 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.Shadow.OrthoData;
 	else if (!strcmp(Name, "TESR_RainData"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.Rain.RainData;
+	else if (!strcmp(Name, "TESR_RainAspect"))
+		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.Rain.RainAspect;
 	else if (!strcmp(Name, "TESR_SnowData"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.Snow.SnowData;
 	else if (!strcmp(Name, "TESR_WorldTransform"))

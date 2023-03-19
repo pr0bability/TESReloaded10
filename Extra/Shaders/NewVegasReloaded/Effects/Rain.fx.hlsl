@@ -6,13 +6,15 @@ float4x4 TESR_ShadowCameraToLightTransformOrtho;
 float4 TESR_ReciprocalResolution;
 float4 TESR_GameTime;
 float4 TESR_RainData; // x:rain amount, set by weather (0 to 1), y: vertical scale, z: speed of rainfall w: opacity
+float4 TESR_RainAspect; // x:refraction amount, y: base color
 float4 TESR_FogColor;
 float4 TESR_SunDirection;
 float4 TESR_SunColor;
 
-sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_OrthoMapBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_RenderedBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_OrthoMapBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const float PI = 3.14159265;
 static const float timetick = TESR_GameTime.z;
@@ -67,7 +69,7 @@ float GetOrtho(float4 OrthoPos) {
 
 float4 Rain( VSOUT IN ) : COLOR0
 {
-	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	int iterations = RainLayers;
 
 	// calculating the ray along which the  volumetric rain will be calculated
@@ -108,15 +110,113 @@ float4 Rain( VSOUT IN ) : COLOR0
 		totalRain += drop;
 	}
 
+	// a rain tint color that scales with the sun direction
 	float4 rainColor = lerp(float(0.5).xxxx, TESR_SunColor * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
 
-	color = lerp(color, rainColor, totalRain * TESR_RainData.w);
-	return float4(color.rgb, 1.0f);
+	// sample the bloom buffer and the source buffer with refracted UV to shade the rain with
+	float2 refractedUV = IN.UVCoord + float2(totalRain * TESR_RainAspect.x, -totalRain * TESR_RainAspect.x);
+	float4 refractedColor = tex2D(TESR_SourceBuffer, refractedUV);
+	refractedColor += tex2D(TESR_RenderedBuffer, refractedUV);
 
+
+	// return tex2D(TESR_SourceBuffer, IN.UVCoord);
+	// return TESR_RainAspect.yyyy;
+	return lerp(color, refractedColor + rainColor * TESR_RainAspect.y, totalRain* TESR_RainData.w);
+}
+
+// places the different things to blur separately into separate quadrants of the screen
+float4 Scale(VSOUT IN, uniform float scaleFactor) : COLOR0
+{
+	float2 uv = IN.UVCoord / scaleFactor;
+	clip((uv <= 1) - 1);
+
+	return tex2D(TESR_RenderedBuffer, uv);	
+}
+
+
+// simple local average without weights
+float4 BoxBlur (VSOUT IN, uniform float2 offsetMask, uniform float scaleFactor) :COLOR0
+{
+	clip((IN.UVCoord <= scaleFactor) - 1);
+
+	float maxuv = scaleFactor - 1.5 * TESR_ReciprocalResolution;
+	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * 1 * TESR_ReciprocalResolution.xy, maxuv));
+	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * -1 * TESR_ReciprocalResolution.xy, maxuv));
+	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * -2 * TESR_ReciprocalResolution.xy, maxuv));
+	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * 2 * TESR_ReciprocalResolution.xy, maxuv));
+
+	// return color;
+	return color /= 5;
+}
+
+float4 Bloom(VSOUT IN ):COLOR0{
+	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	return color * smoothstep(min(TESR_RainAspect.z / luma(TESR_SunColor), luma(color)), 1, luma(color)) * 3;
 }
 
 technique
 {
+
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Bloom();
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(0.5);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(0.5);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(0.5);
+	}
+	
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 BoxBlur(float2(1, 0), 0.125);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 BoxBlur(float2(0, 1), 0.125);
+	}
+	
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 BoxBlur(float2(1, 0), 0.125);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 BoxBlur(float2(0, 1), 0.125);
+	}
+
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(2);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(2);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(2);
+	}
+
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();

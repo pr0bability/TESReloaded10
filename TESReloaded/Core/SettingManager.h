@@ -496,6 +496,9 @@ struct SettingsPrecipitationsStruct {
 		float Opacity;
 		float VerticalScale;
 		float Speed;
+		float Refraction;
+		float Coloring;
+		float Bloom;
 	};
 	
 	struct SnowStruct {

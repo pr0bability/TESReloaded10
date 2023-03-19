@@ -74,6 +74,7 @@ struct ShaderConstants {
 	};
 	struct RainStruct{
 		D3DXVECTOR4		RainData;
+		D3DXVECTOR4		RainAspect;
 	};
 	struct SnowStruct{
 		D3DXVECTOR4		SnowData;
