@@ -13,21 +13,15 @@ sampler2D TESR_SourceBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; A
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
 
-// static const float k = 0.00001;
-// static const float eps = 0.000001;
-// static const float FocusPoint = 100.0 * TESR_DebugVar.x;
-// static const float FocusPower = 100.0 * TESR_DebugVar.y;
-// static const float Accomodation = 10.0;
-
 static const bool DistantBlur = bool(TESR_DepthOfFieldBlur.x);
 static const float DistantStart = TESR_DepthOfFieldBlur.y;
 static const float DistantEnd = TESR_DepthOfFieldBlur.z;
 static const float BaseBlurRadius = TESR_DepthOfFieldBlur.w;
 
-static const float FocusDistance = TESR_DepthOfFieldData.x; //1.5
-static const float BlurRadius = TESR_DepthOfFieldData.y;
+static const float FocusDistance = TESR_DepthOfFieldData.x;
+static const float BlurRadius = TESR_DepthOfFieldData.y; 
 static const float BokehTreshold = TESR_DepthOfFieldData.z;
-static const float NearBlurCutoff = TESR_DepthOfFieldData.w;
+static const float NearBlurCutoff = TESR_DepthOfFieldData.w; 
 
 struct VSOUT
 {
