@@ -740,15 +740,17 @@ void SettingManager::LoadSettings() {
 	SettingsMotionBlurThirdPersonView.BlurOffsetMax = GetSettingF("Shaders.MotionBlur.ThirdPersonView", "BlurOffsetMax");
 	SettingsMotionBlurThirdPersonView.BlurCutOff = GetSettingF("Shaders.MotionBlur.ThirdPersonView", "BlurCutOff");
 
-
 	SettingsPOM.HeightMapScale = GetSettingF("Shaders.POM.Main", "HeightMapScale");
 	SettingsPOM.MinSamples = GetSettingF("Shaders.POM.Main", "MinSamples");
 	SettingsPOM.MaxSamples = GetSettingF("Shaders.POM.Main", "MaxSamples");
 
-
 	SettingsPrecipitations.Rain.Opacity = GetSettingF("Shaders.Precipitations.Main", "Opacity");
 	SettingsPrecipitations.Rain.Speed = GetSettingF("Shaders.Precipitations.Main", "Speed");
 	SettingsPrecipitations.Rain.VerticalScale = GetSettingF("Shaders.Precipitations.Main", "VerticalScale");
+	SettingsPrecipitations.Rain.Refraction = GetSettingF("Shaders.Precipitations.Main", "Refraction");
+	SettingsPrecipitations.Rain.Coloring = GetSettingF("Shaders.Precipitations.Main", "Coloring");
+	SettingsPrecipitations.Rain.Bloom = GetSettingF("Shaders.Precipitations.Main", "Bloom");
+
 	SettingsPrecipitations.Snow.DepthStep = GetSettingF("Shaders.Snow.Main", "DepthStep");
 	SettingsPrecipitations.Snow.Flakes = GetSettingF("Shaders.Snow.Main", "Flakes");
 	SettingsPrecipitations.Snow.Speed = GetSettingF("Shaders.Snow.Main", "Speed");
