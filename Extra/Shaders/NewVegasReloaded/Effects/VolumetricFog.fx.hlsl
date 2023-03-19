@@ -19,8 +19,18 @@ static const float sunScatter = 8.0; //raise to decrease the intensity of sun fo
 static const float FOG_GROUND =	15000;
 static const float FOG_HEIGHT = 25000;
 
+static const float nearFogDistance = TESR_FogData.x;
+static const float farFogDistance = TESR_FogData.y;
+static const float SunGlare = TESR_FogData.z;
+static const float FogPower = TESR_FogData.w;
+
+static const float SunExponent = max(TESR_VolumetricFogData.x, 1); // 8
+static const float SunGlareCoeff = TESR_VolumetricFogData.y; // 100
+static const float FogStrength = TESR_VolumetricFogData.z; // 1
+static const float MaxFogHeight = TESR_VolumetricFogData.w; // 80000
 
 #include "Includes/Depth.hlsl"
+#include "Includes/Helpers.hlsl"
 
 struct VSOUT
 {
@@ -42,29 +52,15 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-// returns a value from 0 to 1 based on the positions of a value between a min/max 
-float invLerp(float from, float to, float value){
-  return (value - from) / (to - from);
-}
-
 
 float ExponentialFog(float posHeight, float distance) {
-	float fogAmount = exp(-posHeight) * (1.0 - exp(-distance)) * TESR_VolumetricFogData.z;
+	float fogAmount = exp(-posHeight) * (1.0 - exp(-distance)) * FogStrength;
 	return fogAmount;
 }
 
-float Luma(float3 input)
+
+float4 VolumetricFog(VSOUT IN) : COLOR0 
 {
-	return input.r * 0.3f + input.g * 0.59f +input.b * 0.11f;
-}
-
-float4 VolumetricFog(VSOUT IN) : COLOR0 {
-
-	float SunExponent = max(TESR_VolumetricFogData.x, 1); // 8
-	float SunGlareCoeff = TESR_VolumetricFogData.y; // 100
-	float FogStrength = TESR_VolumetricFogData.z; // 1
-	float MaxFogHeight = TESR_VolumetricFogData.w; // 80000
-
 	float3 color = tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb;
     float height = reconstructWorldPosition(IN.UVCoord).z;
     float depth = readDepth(IN.UVCoord);
@@ -72,18 +68,22 @@ float4 VolumetricFog(VSOUT IN) : COLOR0 {
 	float fogDepth = length(eyeVector * depth);
 
 	// quadratic fog based on linear distance in fog range with fog power
-	float distance = saturate(invLerp(TESR_FogData.x, TESR_FogData.y, fogDepth));
-	float fogAmount = saturate(pow(distance, TESR_FogData.w) * FogStrength);
+	float distance = invlerps(nearFogDistance, farFogDistance, fogDepth);
+	float fogAmount = saturate(pow(distance, FogPower) * FogStrength);
 	fogAmount = fogAmount * saturate(exp( - height/MaxFogHeight)); // fade with height
 
 	// calculate color
-	float3 fogColor  = lerp(TESR_HorizonColor, TESR_FogColor, saturate(1/ (1 + distance))).rgb; // fade color between fog to horizon based on depth
-	float sunAmount = pow(saturate(dot(eyeVector, TESR_SunDirection.xyz)), SunExponent) * (TESR_FogData.z * SunGlareCoeff); //sun influence
+	float3 fogColor = lerp(TESR_HorizonColor, TESR_FogColor, saturate(1/ (1 + distance))).rgb; // fade color between fog to horizon based on depth
+	float sunAmount = pows(dot(eyeVector, TESR_SunDirection.xyz), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
 	fogColor = fogColor + TESR_SunColor.rgb * sunAmount; // add sun color to the fog
 
 	fogColor = lerp(color.rgb, fogColor.rgb, fogAmount); // calculate final color of scene through the fog
-	float lumaDiff = saturate(invLerp(saturate(Luma(fogColor)), 1.0f, Luma(color)));
-	color = lerp(fogColor, color, lumaDiff); // bring back some of the original color based on luma (brightest lights will come through)
+
+	// bring back some of the original color based on luma (brightest lights will come through)
+    float fogLuma = luma(fogColor);
+    float lumaDiff = saturate(invlerp(fogLuma, max(fogLuma, 1.0f), luma(color)));
+	color = lerp(fogColor, color, lumaDiff); 
+
 
 	// if (IN.UVCoord.x > 0.8 && IN.UVCoord.x < 0.9){
 	// 	if (IN.UVCoord.y > 0.3 && IN.UVCoord.y < 0.4) return TESR_FogColor;
