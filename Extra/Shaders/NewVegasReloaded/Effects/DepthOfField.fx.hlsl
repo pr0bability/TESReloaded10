@@ -18,10 +18,10 @@ static const float DistantStart = TESR_DepthOfFieldBlur.y;
 static const float DistantEnd = TESR_DepthOfFieldBlur.z;
 static const float BaseBlurRadius = TESR_DepthOfFieldBlur.w;
 
-static const float FocusDistance = TESR_DepthOfFieldData.x;
+static const float FocusDistance = max(0.0000001, TESR_DepthOfFieldData.x * 1000);
 static const float BlurRadius = TESR_DepthOfFieldData.y; 
 static const float BokehTreshold = TESR_DepthOfFieldData.z;
-static const float NearBlurCutoff = TESR_DepthOfFieldData.w; 
+static const float NearBlurCutoff = max(FocusDistance, TESR_DepthOfFieldData.w); 
 
 struct VSOUT
 {
@@ -105,8 +105,10 @@ float2 remapFromQuadrant(float2 uv, float4 quadrants){
 float4 DoF(VSOUT IN) : COLOR0
 {
 	float depth = readDepth(IN.UVCoord);
+	float3 camera_vector = toWorld(IN.UVCoord) * depth;
+	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
-	float HyperFocalDistance = 1000 * FocusDistance; // the distance at which DOF is greatest (infinite towards the distance and closest to the camera)
+	float HyperFocalDistance = FocusDistance; // the distance at which DOF is greatest (infinite towards the distance and closest to the camera)
 	float focalLength = 0.01; // mostly negligible and used here to avoid dividing by 0; In real life this value influences the HFD
 	float focalDistance = min(HyperFocalDistance, getFocalDistance()); // focal distance is maxed at the hyper focal distance as with perfect autofocus
 
@@ -119,7 +121,7 @@ float4 DoF(VSOUT IN) : COLOR0
 	float farBlur = invlerps(farPlane, farPlane * 2, depth) * 0.8;
 
 	nearblur *= invlerps(0, NearBlurCutoff, depth); // attenuate near blur to reveal gun
-	farBlur = saturate(farBlur + invlerps(DistantStart, DistantEnd, depth) * DistantBlur); // add in distance constant blur
+	farBlur = saturate(farBlur + invlerps(DistantStart, DistantEnd, depth) * DistantBlur * invlerps(100000, 0, world_pos.z)); // add in distance constant blur but exclude sky
 
 	return float4(nearblur, farBlur, 1, 1);
 }
