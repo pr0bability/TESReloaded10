@@ -2007,9 +2007,12 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	bool isDaytime = (ShaderConst.GameTime.y >= ShaderConst.SunTiming.x && ShaderConst.GameTime.y <= ShaderConst.SunTiming.w); // gametime is between sunrise start and sunset end
 	bool isCellTransition = currentCell != PreviousCell;
 
-	bool pipboyIsOn = InterfaceManager->IsActive(Menu::kMenuType_BigFour);
+	//bool pipboyIsOn = InterfaceManager->IsActive(Menu::kMenuType_BigFour);
+	bool pipboyIsOn = InterfaceManager->getIsMenuOpen();
 	bool VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
-	bool terminalIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) || InterfaceManager->IsActive(Menu::kMenuType_LockPick);
+	bool terminalIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
+		InterfaceManager->IsActive(Menu::kMenuType_LockPick) || 
+		InterfaceManager->IsActive(Menu::kMenuType_Surgery);
 
 	TheShaderManager->UpdateConstants();
 
