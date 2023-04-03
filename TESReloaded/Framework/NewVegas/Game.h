@@ -5289,8 +5289,10 @@ public:
 	NiTArray<void>			array454;			// 454 NiTPrimitiveArray@TextureType@BSTextureManager
 	NiTArray<void>			array464;			// 464 NiTPrimitiveArray@FilterMode@NiTexturingProperty
 	UInt32					unk474[18];			// 474
-	UInt32					unk4BC;				// 4BC
+	UInt32					pipBoyMode;			// 4BC
 	UInt32					unk4C0[48];			// 4C0
+
+	UInt8					getIsMenuOpen() { return pipBoyMode == 3; };
 };
 assert(sizeof(MenuInterfaceManager) == 0x580);
 
