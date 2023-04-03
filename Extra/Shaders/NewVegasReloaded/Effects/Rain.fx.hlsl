@@ -139,7 +139,7 @@ float4 BoxBlur (VSOUT IN, uniform float2 offsetMask, uniform float scaleFactor) 
 {
 	clip((IN.UVCoord <= scaleFactor) - 1);
 
-	float maxuv = scaleFactor - 1.5 * TESR_ReciprocalResolution;
+	float2 maxuv = scaleFactor - 1.5 * TESR_ReciprocalResolution.xy;
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * 1 * TESR_ReciprocalResolution.xy, maxuv));
 	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * -1 * TESR_ReciprocalResolution.xy, maxuv));

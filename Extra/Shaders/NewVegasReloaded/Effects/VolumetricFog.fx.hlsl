@@ -64,7 +64,8 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float3 color = tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb;
     float height = reconstructWorldPosition(IN.UVCoord).z;
     float depth = readDepth(IN.UVCoord);
-	float3 eyeVector = normalize(toWorld(IN.UVCoord));
+	float3 eyeVector = (toWorld(IN.UVCoord));
+	float3 eyeDirection = normalize(eyeVector);
 	float fogDepth = length(eyeVector * depth);
 
 	// quadratic fog based on linear distance in fog range with fog power
@@ -73,16 +74,21 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	fogAmount = fogAmount * saturate(exp( - height/MaxFogHeight)); // fade with height
 
 	// calculate color
-	float3 fogColor = lerp(TESR_HorizonColor, TESR_FogColor, saturate(1/ (1 + distance))).rgb; // fade color between fog to horizon based on depth
-	float sunAmount = pows(dot(eyeVector, TESR_SunDirection.xyz), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
+	float3 fogColor = lerp(TESR_HorizonColor, TESR_FogColor, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
+	float sunAmount = pows(dot(eyeDirection, TESR_SunDirection.xyz), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
 	fogColor = fogColor + TESR_SunColor.rgb * sunAmount; // add sun color to the fog
 
 	fogColor = lerp(color.rgb, fogColor.rgb, fogAmount); // calculate final color of scene through the fog
 
-	// bring back some of the original color based on luma (brightest lights will come through)
+    // Blend back in some of the original color based on luma (brightest lights will come through):
     float fogLuma = luma(fogColor);
-    float lumaDiff = saturate(invlerp(fogLuma, max(fogLuma, 1.0f), luma(color)));
-	color = lerp(fogColor, color, lumaDiff); 
+    float lumaDiff = invlerps(saturate(fogLuma), 1.0f, luma(color));
+    color = lerp(fogColor, color, lumaDiff); 
+
+    // Bring back any fog above 1 as additive (there usually isn't any, but it's good for HDR rendering):
+    float fogAdditiveLumaRatio = saturate(1.0f / fogLuma); // From (background) color luma to fog luma
+    float3 additiveFogColor = fogColor * (1.0f - fogAdditiveLumaRatio);
+    color += additiveFogColor;
 
 
 	// if (IN.UVCoord.x > 0.8 && IN.UVCoord.x < 0.9){

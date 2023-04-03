@@ -56,9 +56,8 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-
-#include "Includes/Blending.hlsl"
 #include "Includes/Helpers.hlsl"
+#include "Includes/Blending.hlsl"
 #include "Includes/Depth.hlsl"
 #include "Includes/Blur.hlsl"
 
@@ -108,7 +107,7 @@ float4 Cinema(VSOUT IN) : COLOR0
 
 	// get wether we are facing the sun to make the lens appear stronger
 	float sunProximity = shades(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(IN.UVCoord)));
-    color = lerp(color, saturate(color + dirtColor * dirtAmount), sunProximity * luma(TESR_SunColor.rgb));
+    color = lerp(color, saturate(color + dirtColor * dirtAmount), sunProximity * luma(TESR_SunColor));
 
 	//Film grain 
 	//--------------------------------------------------
