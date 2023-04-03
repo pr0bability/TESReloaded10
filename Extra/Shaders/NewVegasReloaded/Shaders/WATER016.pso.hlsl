@@ -40,14 +40,14 @@ sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitati
 
 float4 getFresnelBelowWater(float3 surfaceNormal, float3 eyeDirection, float4 reflectionColor, float4 color){
     float fresnelCoeff = 1 - pow(dot(eyeDirection, surfaceNormal), 5);  // texture based fresnel
-    fresnelCoeff += 0.5 * pow(1 - dot(eyeDirection, float3(0, 0, -1)), 1.5);  // modulate with distance
+    fresnelCoeff += 0.5 * pow(1 - dot(eyeDirection.xyz, float3(0, 0, -1)), 1.5);  // modulate with distance
     return lerp(color, reflectionColor, pow(saturate(fresnelCoeff), 5));
 }
 
 
 float4 skyColor(float3 eyeDirection){
     float3 skyColor = lerp(TESR_HorizonColor, TESR_SkyColor, pow(dot(eyeDirection, float3(0, 0, 1)), 0.5));
-    skyColor += TESR_SunColor.rgb * pow(shades(eyeDirection, -TESR_SunDirection), 12);
+    skyColor += TESR_SunColor.rgb * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 12);
     return float4(skyColor, 1);
 }
 
