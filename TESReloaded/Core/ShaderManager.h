@@ -325,6 +325,7 @@ public:
 		ShadowsInteriors,
 		Extra,
 		Normals,
+		AvgLuma,
 	};
 
 	virtual void			SetCT();
@@ -379,6 +380,7 @@ public:
 	CustomConstants			CustomConst;
 	IDirect3DVertexBuffer9*	FrameVertex;
 	EffectRecord*			NormalsEffect;
+	EffectRecord*			AvgLumaEffect;
 	EffectRecord*			UnderwaterEffect;
 	EffectRecord*			WaterLensEffect;
 	EffectRecord*			GodRaysEffect;
