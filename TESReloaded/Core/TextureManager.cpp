@@ -24,7 +24,6 @@ TextureRecord::TextureRecord() {
 }
 
 bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
-
 	IDirect3DTexture9* Tex = NULL;
 	IDirect3DVolumeTexture9* TexV = NULL;
 	IDirect3DCubeTexture9* TexC = NULL;
@@ -65,6 +64,9 @@ bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
 			break;
 		case NormalsBuffer:
 			Texture = TheTextureManager->NormalsTexture;
+			break;
+		case AvgLumaBuffer:
+			Texture = TheTextureManager->AvgLumaTexture;
 			break;
 		case ShadowMapBufferNear:
 			Texture = TheTextureManager->ShadowMapTextureBlurred[ShadowManager::ShadowMapTypeEnum::MapNear];
@@ -109,12 +111,16 @@ void TextureManager::Initialize() {
 	TheTextureManager->NormalsSurface = NULL;
 	TheTextureManager->DepthTexture = NULL;
 	TheTextureManager->DepthSurface = NULL;
+	TheTextureManager->AvgLumaTexture = NULL;
+	TheTextureManager->AvgLumaSurface = NULL;
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &TheTextureManager->SourceTexture, NULL);
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &TheTextureManager->RenderedTexture, NULL);
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A16B16G16R16F, D3DPOOL_DEFAULT, &TheTextureManager->NormalsTexture, NULL);
+	Device->CreateTexture(1, 1, 1, D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &TheTextureManager->AvgLumaTexture, NULL);
 	TheTextureManager->SourceTexture->GetSurfaceLevel(0, &TheTextureManager->SourceSurface);
 	TheTextureManager->RenderedTexture->GetSurfaceLevel(0, &TheTextureManager->RenderedSurface);
 	TheTextureManager->NormalsTexture->GetSurfaceLevel(0, &TheTextureManager->NormalsSurface);
+	TheTextureManager->AvgLumaTexture->GetSurfaceLevel(0, &TheTextureManager->AvgLumaSurface);
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_DEPTHSTENCIL, (D3DFORMAT)MAKEFOURCC('I', 'N', 'T', 'Z'), D3DPOOL_DEFAULT, &TheTextureManager->DepthTexture, NULL);
 
 	for (int i = 0; i <= ShadowManager::ShadowMapTypeEnum::MapOrtho; i++) {
@@ -158,6 +164,7 @@ TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DX
 	Type = !strcmp(ConstantName, "TESR_RenderedBuffer") ? TextureRecord::TextureRecordType::RenderedBuffer : Type;
 	Type = !strcmp(ConstantName, "TESR_DepthBuffer") ? TextureRecord::TextureRecordType::DepthBuffer : Type;
 	Type = !strcmp(ConstantName, "TESR_NormalsBuffer") ? TextureRecord::TextureRecordType::NormalsBuffer : Type;
+	Type = !strcmp(ConstantName, "TESR_AvgLumaBuffer") ? TextureRecord::TextureRecordType::AvgLumaBuffer : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferNear") ? TextureRecord::TextureRecordType::ShadowMapBufferNear : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferMiddle") ? TextureRecord::TextureRecordType::ShadowMapBufferMiddle : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferFar") ? TextureRecord::TextureRecordType::ShadowMapBufferFar : Type;

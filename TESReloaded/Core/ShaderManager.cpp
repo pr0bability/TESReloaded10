@@ -888,9 +888,11 @@ void ShaderManager::CreateEffects() {
 	CreateEffect(EffectRecord::EffectRecordType::ShadowsInteriors);
 	CreateEffect(EffectRecord::EffectRecordType::Specular);
 	CreateEffect(EffectRecord::EffectRecordType::Normals);
+	CreateEffect(EffectRecord::EffectRecordType::AvgLuma);
 //	CreateEffect(EffectRecord::EffectRecordType::Extra);
 
 	NormalsEffect->Enabled = true;
+	AvgLumaEffect->Enabled = true;
 	if (Effects->AmbientOcclusion) AmbientOcclusionEffect->Enabled = true;
 	if (Effects->BloodLens) BloodLensEffect->Enabled = true;
 	if (Effects->Bloom) BloomEffect->Enabled = true;
@@ -1775,6 +1777,10 @@ void ShaderManager::CreateEffect(EffectRecord::EffectRecordType EffectType) {
 			strcat(Filename, "Normals.fx");
 			NormalsEffect = EffectRecord::LoadEffect(Filename);
 			break;
+		case EffectRecord::EffectRecordType::AvgLuma:
+			strcat(Filename, "AvgLuma.fx");
+			AvgLumaEffect = EffectRecord::LoadEffect(Filename);
+			break;
 		case EffectRecord::EffectRecordType::Underwater:
 			strcat(Filename, "Underwater.fx");
 			UnderwaterEffect = EffectRecord::LoadEffect(Filename);
@@ -1918,6 +1924,9 @@ void ShaderManager::DisposeEffect(EffectRecord::EffectRecordType EffectType) {
 		case EffectRecord::EffectRecordType::Normals:
 			delete NormalsEffect; NormalsEffect = NULL;
 			break;
+		case EffectRecord::EffectRecordType::AvgLuma:
+			delete AvgLumaEffect; AvgLumaEffect = NULL;
+			break;
 		case EffectRecord::EffectRecordType::Underwater:
 			delete UnderwaterEffect; UnderwaterEffect = NULL;
 			break;
@@ -2024,6 +2033,13 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(TheTextureManager->NormalsSurface, NULL, TheTextureManager->NormalsSurface, NULL, D3DTEXF_NONE);
 	NormalsEffect->SetCT();
 	NormalsEffect->Render(Device, TheTextureManager->NormalsSurface, TheTextureManager->NormalsSurface, false);
+
+	// calculate average luma for use by shaders
+	Device->SetRenderTarget(0, TheTextureManager->AvgLumaSurface);
+	Device->StretchRect(TheTextureManager->AvgLumaSurface, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
+	Device->StretchRect(TheTextureManager->AvgLumaSurface, NULL, TheTextureManager->AvgLumaSurface, NULL, D3DTEXF_NONE);
+	AvgLumaEffect->SetCT();
+	AvgLumaEffect->Render(Device, TheTextureManager->AvgLumaSurface, TheTextureManager->AvgLumaSurface, false);
 
 	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
