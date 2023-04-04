@@ -70,30 +70,33 @@ void GameMenuManager::Render() {
 			}
 			if (!EditingMode) {
 				if (SelectedColumn == 0) {
-					if (Global->OnKeyDown(MenuSettings->KeyDown)) SelectedColumn = 1;
-					if (Global->OnKeyDown(MenuSettings->KeyLeft) && SelectedRow[SelectedColumn] > 0) SelectedRow[SelectedColumn] -= 1;
-					if (Global->OnKeyDown(MenuSettings->KeyRight) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) SelectedRow[SelectedColumn] += 1;
+					// header is a column tilted to the side (column 0). Left and Right change rows and Down moves to column 1 (or the actual menu)
+					if (Global->OnKeyDown(MenuSettings->KeyDown)) {
+						SelectedColumn = 1;
+					}else if (Global->OnKeyDown(MenuSettings->KeyLeft) && SelectedRow[SelectedColumn] > 0) {					
+						SelectedRow[SelectedColumn] -= 1;
+					}else if (Global->OnKeyDown(MenuSettings->KeyRight) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1){	
+						SelectedRow[SelectedColumn] += 1;
+					}
 					SelectedPage[1] = SelectedPage[2] = SelectedPage[3] = 0;
 				}
 				else {
 					if (Global->OnKeyDown(MenuSettings->KeyUp)) {
-						if (SelectedRow[SelectedColumn] > 0) SelectedRow[SelectedColumn] -= 1; else SelectedColumn = 0;
-					}
-					if (Global->OnKeyDown(MenuSettings->KeyDown) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) SelectedRow[SelectedColumn] += 1;
-					if (Global->OnKeyDown(MenuSettings->KeyLeft)) {
-						if (SelectedColumn > 0) SelectedColumn -= 1;
-						SelectedRow[SelectedColumn + 1] = 0;
-					}
-					if (Global->OnKeyDown(MenuSettings->KeyRight) && SelectedColumn < 3) SelectedColumn += 1;
-					if (Global->OnKeyDown(MenuSettings->KeyPageUp) && SelectedPage[SelectedColumn] > 0) {
+						if (SelectedRow[SelectedColumn] > 0) SelectedRow[SelectedColumn] -= 1; else SelectedColumn = 0; // move up in the column or go to header
+					}else if (Global->OnKeyDown(MenuSettings->KeyDown) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
+						SelectedRow[SelectedColumn] += 1;
+					}else if (Global->OnKeyDown(MenuSettings->KeyLeft)) {
+						SelectedRow[SelectedColumn] = 0;
+						SelectedColumn -= 1;
+					}else if (Global->OnKeyDown(MenuSettings->KeyRight) && SelectedColumn < 3) {
+						SelectedColumn += 1;
+					}else if (Global->OnKeyDown(MenuSettings->KeyPageUp) && SelectedPage[SelectedColumn] > 0) {
 						SelectedPage[SelectedColumn] -= 1;
 						SelectedRow[SelectedColumn] = 0;
-					}
-					if (Global->OnKeyDown(MenuSettings->KeyPageDown) && SelectedPage[SelectedColumn] < Pages[SelectedColumn]) {
+					}else if (Global->OnKeyDown(MenuSettings->KeyPageDown) && SelectedPage[SelectedColumn] < Pages[SelectedColumn]) {
 						SelectedPage[SelectedColumn] += 1;
 						SelectedRow[SelectedColumn] = 0;
-					}
-					if (Global->OnKeyDown(MenuSettings->KeyAdd)) {
+					}else if (Global->OnKeyDown(MenuSettings->KeyAdd)) {
 						if ((SelectedColumn == 1 && !memcmp(SelectedNode.Section, "Shaders", 7)) || ((SelectedColumn == 3 && !memcmp(SelectedNode.Section, "Shaders", 7) && !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6)))) {
 							GetMidSection(MidSection);
 							bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
@@ -127,8 +130,7 @@ void GameMenuManager::Render() {
 									break;
 							}
 						}
-					}
-					if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
+					}else if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
 						if ((SelectedColumn == 1 && !memcmp(SelectedNode.Section, "Shaders", 7)) || ((SelectedColumn == 3 && !memcmp(SelectedNode.Section, "Shaders", 7) && !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6)))) {
 							GetMidSection(MidSection);
 							bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
@@ -144,8 +146,7 @@ void GameMenuManager::Render() {
 									TheSettingManager->SetSetting(SelectedNode.Section, "Enabled", ShaderEnabled);
 
 							}
-						}
-						else if (SelectedColumn == 3) {
+						}else if (SelectedColumn == 3) {
 							switch (SelectedNode.Type) {
 								case SettingManager::Configuration::NodeType::Boolean:
 									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, !atoi(SelectedNode.Value));
@@ -158,8 +159,7 @@ void GameMenuManager::Render() {
 									break;
 							}
 						}
-					}
-					if (Global->OnKeyDown(MenuSettings->KeySave)) {
+					} else if (Global->OnKeyDown(MenuSettings->KeySave)) {
 						TheSettingManager->SaveSettings();
 						InterfaceManager->ShowMessage("Settings saved.");
 					}
