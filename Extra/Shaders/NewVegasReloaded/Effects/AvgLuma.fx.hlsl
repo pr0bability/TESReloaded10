@@ -1,6 +1,17 @@
 // AvgLuma for Oblivion Reloaded
 
-sampler2D TESR_SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+float4 TESR_MotionBlurData;
+float4 TESR_DebugVar;
+
+sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+
+static const float decreaseRate = -0.01; // max value for adaptation speed towards darker screens
+static const float increaseRate = 0.03; // max value for adaptation speed towards brighter screens
+static const float2 center = float2(0.5, 0.5); // this shader is to be applied on a 1x1 texture so we sample at the center
+
+#include "Includes/Helpers.hlsl"
 
 struct VSOUT
 {
@@ -22,15 +33,62 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
+static float2 taps[12] =
+{
+    float2(-0.326212, -0.405810),
+    float2(-0.840144, -0.073580),
+    float2(-0.695914,  0.457137),
+    float2(-0.203345,  0.620716),
+    float2( 0.962340, -0.194983),
+    float2( 0.473434, -0.480026),
+    float2( 0.519456,  0.767022),
+    float2( 0.185461, -0.893124),
+    float2( 0.507431,  0.064425),
+    float2( 0.896420,  0.412458),
+    float2(-0.321940, -0.932615),
+    float2(-0.791559, -0.597710)
+};
+
+// returns a value from start to end within a min and max step from start
+float stepTo(float startValue, float endValue, float minStep, float maxStep){
+	float diff = clamp(endValue - startValue, minStep, maxStep);
+	return startValue + diff;
+}
+
+float getFocalDistance() {
+	float oldFocus = tex2D(TESR_AvgLumaBuffer, center).b;
+
+	// gets the autofocus depth based on a local average, scaled with player movement speed (to avoid flicker during fast movement)
+	float2 speed = saturate(abs(float2(TESR_MotionBlurData.x, TESR_MotionBlurData.y))) + 0.1;
+
+	float depth = tex2D(TESR_DepthBuffer, center);
+	float centerDepth = depth;
+	float2 samplingRange = speed;
+	for (int i=0; i<12; i++){
+		depth += tex2D(TESR_DepthBuffer, center + 0.3 * taps[i] * samplingRange);
+	}
+	depth /= 12;
+
+	depth = centerDepth > depth ? centerDepth:depth; //if pixel at the center is farther than the average, we use that value (fix for some iron sights)
+	return stepTo(oldFocus, depth, -0.01 * TESR_DebugVar.x, 0.01 * TESR_DebugVar.y);
+}
+
 float4 AvgLuma(VSOUT IN) : COLOR0
-{	// samples 100 different locations around the screen to calculate an average
+{	
+	// samples 100 different locations around the screen to calculate an average
 	float4 color = float4(0, 0, 0, 0);
 	for (float i=0.05; i<1; i+=0.1){
 		for (float j=0.05; j<1; j+=0.1){
-			color += tex2D(TESR_SourceBuffer, float2(i, j));
+			color += tex2D(TESR_RenderedBuffer, float2(i, j));
 		}
 	}
-	return color/100;
+	color *= 0.01;
+
+	// gradually change average luma
+	float oldLuma = tex2D(TESR_AvgLumaBuffer, center).g;
+	float newLuma = luma(color);
+
+	return float4(newLuma, stepTo(oldLuma, newLuma, -0.01, 0.03), getFocalDistance(), 1);
 }
  
 technique
