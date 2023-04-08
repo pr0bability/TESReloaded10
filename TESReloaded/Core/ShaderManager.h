@@ -368,6 +368,7 @@ public:
 	void					CreateEffect(EffectRecord::EffectRecordType EffectType);
 	void					DisposeEffect(EffectRecord::EffectRecordType EffectType);
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
+	void					RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectRecord* Effect, bool clearRenderTarget);
 	void					SwitchShaderStatus(const char* Name);
 	void					SetCustomConstant(const char* Name, D3DXVECTOR4 Value);
 	void					SetExtraEffectEnabled(const char* Name, bool Value);
