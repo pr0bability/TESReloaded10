@@ -2000,6 +2000,17 @@ void ShaderManager::DisposeEffect(EffectRecord::EffectRecordType EffectType) {
 }
 
 /*
+* Renders a given effect to an arbitrary render target
+*/
+void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectRecord* Effect, bool clearRenderTarget) {
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	Device->SetRenderTarget(0, RenderTarget);
+	Device->StretchRect(RenderTarget, NULL, RenderTarget, NULL, D3DTEXF_NONE);
+	Effect->SetCT();
+	Effect->Render(Device, RenderTarget, RenderTarget, clearRenderTarget);
+};
+
+/*
 * Renders the effect that have been set to enabled.
 */
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
@@ -2029,17 +2040,10 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->SetFVF(FrameFVF);
 	
 	// render post process normals for use by shaders
-	Device->SetRenderTarget(0, TheTextureManager->NormalsSurface);
-	Device->StretchRect(TheTextureManager->NormalsSurface, NULL, TheTextureManager->NormalsSurface, NULL, D3DTEXF_NONE);
-	NormalsEffect->SetCT();
-	NormalsEffect->Render(Device, TheTextureManager->NormalsSurface, TheTextureManager->NormalsSurface, false);
+	RenderEffectToRT(TheTextureManager->NormalsSurface, NormalsEffect, true);
 
 	// calculate average luma for use by shaders
-	Device->SetRenderTarget(0, TheTextureManager->AvgLumaSurface);
-	Device->StretchRect(TheTextureManager->AvgLumaSurface, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
-	Device->StretchRect(TheTextureManager->AvgLumaSurface, NULL, TheTextureManager->AvgLumaSurface, NULL, D3DTEXF_NONE);
-	AvgLumaEffect->SetCT();
-	AvgLumaEffect->Render(Device, TheTextureManager->AvgLumaSurface, TheTextureManager->AvgLumaSurface, false);
+	RenderEffectToRT(TheTextureManager->AvgLumaSurface, AvgLumaEffect, false);
 
 	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
