@@ -1,5 +1,7 @@
 // Depth of Field fullscreen shader for Oblivion/Skyrim Reloaded
 
+#define showDepth 0
+
 float4 TESR_ReciprocalResolution;
 float4 TESR_DepthOfFieldBlur; //x: distant blur, y:distant blur start, z: distant blur end, w: base blur radius
 float4 TESR_DepthOfFieldData; //x: blur fallout y:radius z:diameterRange w:nearblur cutoff
@@ -9,6 +11,7 @@ float4 TESR_DebugVar;
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state {ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_AvgLumaBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
@@ -18,10 +21,13 @@ static const float DistantStart = TESR_DepthOfFieldBlur.y;
 static const float DistantEnd = TESR_DepthOfFieldBlur.z;
 static const float BaseBlurRadius = TESR_DepthOfFieldBlur.w;
 
-static const float FocusDistance = max(0.0000001, TESR_DepthOfFieldData.x * 1000);
+static const float HyperFocalDistance = max(0.0000001, TESR_DepthOfFieldData.x * 1000); // the distance at which DOF is greatest (infinite towards the distance and closest to the camera)
 static const float BlurRadius = TESR_DepthOfFieldData.y; 
 static const float BokehTreshold = TESR_DepthOfFieldData.z;
-static const float NearBlurCutoff = max(FocusDistance, TESR_DepthOfFieldData.w); 
+static const float NearBlurCutoff = min(HyperFocalDistance, TESR_DepthOfFieldData.w); 
+
+// sample focal distance from blue channel of AvgLumaBuffer which animates it. The value is encoded as a [0-1] fraction of the HyperFocalDistance
+static const float focalDistance = tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).b * HyperFocalDistance;
 
 struct VSOUT
 {
@@ -42,8 +48,6 @@ VSOUT FrameVS(VSIN IN)
 	OUT.UVCoord = IN.UVCoord;
 	return OUT;
 }
- 
-static float focus = readDepth(float2(0.5, 0.5));
 
 static float2 taps[12] =
 {
@@ -60,22 +64,6 @@ static float2 taps[12] =
     float2(-0.321940, -0.932615),
     float2(-0.791559, -0.597710)
 };
-
-
-float getFocalDistance() {
-	// gets the autofocus depth based on a local average, scaled with player movement speed (to avoid flicker during fast movement)
-	float2 speed = saturate(abs(float2(TESR_MotionBlurData.x, TESR_MotionBlurData.y))) + 0.1;
-
-	float2 center = float2(0.5, 0.5);
-	float depth = readDepth(center);
-	float centerDepth = depth;
-	float2 samplingRange = speed;
-	for (int i=0; i<12; i++){
-		depth += readDepth(center + 0.3 * taps[i] * samplingRange);
-	}
-	depth /= 12;
-	return centerDepth > depth ? centerDepth:depth; //if pixel at the center is farther than the average, we use that value (fix for some iron sights)
-}
 
 // returns a vector of 4 booleans for each quadrants to signify which quadrant the uv belong to
 float4 getQuadrants(float2 uv){
@@ -108,9 +96,7 @@ float4 DoF(VSOUT IN) : COLOR0
 	float3 camera_vector = toWorld(IN.UVCoord) * depth;
 	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
-	float HyperFocalDistance = FocusDistance; // the distance at which DOF is greatest (infinite towards the distance and closest to the camera)
 	float focalLength = 0.01; // mostly negligible and used here to avoid dividing by 0; In real life this value influences the HFD
-	float focalDistance = min(HyperFocalDistance, getFocalDistance()); // focal distance is maxed at the hyper focal distance as with perfect autofocus
 
 	// calculating near and far plane based on hyperfocal distance (http://www.waloszek.de/gen_dof_e.php) (DOF is infinite at that distance)
 	float nearPlane =  focalDistance * (HyperFocalDistance - focalLength)/(HyperFocalDistance  + focalDistance - 2 * focalLength);
@@ -120,8 +106,8 @@ float4 DoF(VSOUT IN) : COLOR0
 	float nearblur = invlerps(nearPlane, 0, depth);
 	float farBlur = invlerps(farPlane, farPlane * 2, depth) * 0.8;
 
-	nearblur *= invlerps(0, NearBlurCutoff, depth); // attenuate near blur to reveal gun
-	farBlur = saturate(farBlur + invlerps(DistantStart, DistantEnd, depth) * DistantBlur * invlerps(100000, 0, world_pos.z)); // add in distance constant blur but exclude sky
+	nearblur *= 0.5 * smoothstep(NearBlurCutoff/2, 0, depth) + smoothstep(NearBlurCutoff/2, NearBlurCutoff, depth); // attenuate near blur to reveal gun
+	farBlur = saturate(farBlur + invlerps(DistantStart, DistantEnd, depth) * DistantBlur * invlerps(100000, 5000, world_pos.z)); // add in distance constant blur but exclude sky
 
 	return float4(nearblur, farBlur, 1, 1);
 }
@@ -142,6 +128,9 @@ float4 halfRes(VSOUT IN) : COLOR0
 	return color;
 }
 
+// calculates a max (bokeh) and average (blur) over a poisson disk and lerps between the two based on luma, 
+// so that only bright spots create bokeh (faking the behavior of HDR values)
+// useBokeh parameter allows to disable this behavior for simple blur
 float4 BokehBlur(VSOUT IN, uniform float useBokeh) : COLOR0
 {
 	float2 uv = IN.UVCoord;
@@ -211,6 +200,10 @@ float4 Combine(VSOUT IN) : COLOR0
 	float4 baseColor = tex2D(TESR_SourceBuffer, uv);	
 	float4 color = lerp(baseColor, farBlurImage, farBlurAmount);
 	color = lerp(color, nearBlurImage, nearBlurAmount);
+
+	#if showDepth
+		color *= float4(nearBlurAmount, farBlurAmount, 0, 1);
+	#endif
 
 	return color;
 }

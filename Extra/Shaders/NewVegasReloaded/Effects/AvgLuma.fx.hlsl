@@ -1,7 +1,7 @@
 // AvgLuma for Oblivion Reloaded
 
 float4 TESR_MotionBlurData;
-float4 TESR_DebugVar;
+float4 TESR_DepthOfFieldData;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -12,6 +12,7 @@ static const float increaseRate = 0.03; // max value for adaptation speed toward
 static const float2 center = float2(0.5, 0.5); // this shader is to be applied on a 1x1 texture so we sample at the center
 
 #include "Includes/Helpers.hlsl"
+#include "Includes/Depth.hlsl"
 
 struct VSOUT
 {
@@ -55,22 +56,28 @@ float stepTo(float startValue, float endValue, float minStep, float maxStep){
 	return startValue + diff;
 }
 
+static const float HyperFocalDistance = max(0.0000001, TESR_DepthOfFieldData.x * 1000); // the distance at which DOF is greatest (infinite towards the distance and closest to the camera)
+
+// calculates the current focal distance for depth of field shader and animates the value.
 float getFocalDistance() {
 	float oldFocus = tex2D(TESR_AvgLumaBuffer, center).b;
 
 	// gets the autofocus depth based on a local average, scaled with player movement speed (to avoid flicker during fast movement)
 	float2 speed = saturate(abs(float2(TESR_MotionBlurData.x, TESR_MotionBlurData.y))) + 0.1;
 
-	float depth = tex2D(TESR_DepthBuffer, center);
-	float centerDepth = depth;
+	float centerDepth = readDepth(center);
+	float depth = centerDepth;
 	float2 samplingRange = speed;
 	for (int i=0; i<12; i++){
-		depth += tex2D(TESR_DepthBuffer, center + 0.3 * taps[i] * samplingRange);
+		depth += readDepth(center + 0.3 * taps[i] * samplingRange);
 	}
 	depth /= 12;
 
 	depth = centerDepth > depth ? centerDepth:depth; //if pixel at the center is farther than the average, we use that value (fix for some iron sights)
-	return stepTo(oldFocus, depth, -0.01 * TESR_DebugVar.x, 0.01 * TESR_DebugVar.y);
+	depth = saturate(depth/HyperFocalDistance); // remaps to [0-1] to save as color value in the texture
+
+	float step = pow(max(oldFocus, depth), 0.1); // because of the nature of depth, we scale the speed with distance
+	return stepTo(oldFocus, depth, -0.3 * step, 0.1 * step);
 }
 
 float4 AvgLuma(VSOUT IN) : COLOR0
@@ -88,6 +95,7 @@ float4 AvgLuma(VSOUT IN) : COLOR0
 	float oldLuma = tex2D(TESR_AvgLumaBuffer, center).g;
 	float newLuma = luma(color);
 
+	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
 	return float4(newLuma, stepTo(oldLuma, newLuma, -0.01, 0.03), getFocalDistance(), 1);
 }
  
