@@ -50,6 +50,7 @@ typedef std::vector<TextureRecord*> WaterMapList;
 class TextureManager { // Never disposed
 public:
 	static void				Initialize();
+	static void					InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT format);
 
 	TextureRecord*			LoadTexture(ID3DXBuffer* ShaderSource, D3DXPARAMETER_TYPE ConstantType, LPCSTR ConstantName, UINT RegisterIndex, bool* HasRenderedBuffer, bool* HasDepthBuffer);
 	void 					GetSamplerStates(std::string& samplerStateSubstring, TextureRecord* textureRecord );
@@ -66,6 +67,8 @@ public:
 	IDirect3DSurface9*		NormalsSurface;
 	IDirect3DTexture9* 		AvgLumaTexture;
 	IDirect3DSurface9*		AvgLumaSurface;
+	IDirect3DTexture9* 		BloomTexture;
+	IDirect3DSurface9*		BloomSurface;
 	IDirect3DTexture9*		DepthTexture;
 	IDirect3DTexture9*		DepthTextureINTZ;
 	IDirect3DSurface9*		DepthSurface;
