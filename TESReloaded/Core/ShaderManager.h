@@ -357,6 +357,7 @@ public:
 		EffectRecord*		Bloom;
 		EffectRecord*		Coloring;
 		EffectRecord*		Cinema;
+		EffectRecord*		Exposure;
 		EffectRecord*		DepthOfField;
 		EffectRecord*		GodRays;
 		EffectRecord*		LowHF;
