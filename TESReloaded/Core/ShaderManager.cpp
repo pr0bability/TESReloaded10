@@ -879,6 +879,7 @@ void ShaderManager::CreateEffects() {
 	Effects.Cinema = CreateEffect("Cinema", EffectsSettings->Cinema);
 	Effects.Coloring = CreateEffect("Coloring", EffectsSettings->Coloring);
 	Effects.DepthOfField = CreateEffect("DepthOfField", EffectsSettings->DepthOfField);
+	Effects.Exposure = CreateEffect("Exposure", true);
 	Effects.GodRays = CreateEffect("GodRays", EffectsSettings->GodRays);
 	Effects.LowHF = CreateEffect("LowHF", EffectsSettings->LowHF);
 	Effects.MotionBlur = CreateEffect("MotionBlur", EffectsSettings->MotionBlur);
