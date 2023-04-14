@@ -248,7 +248,7 @@ public:
 	virtual void			SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount) = 0;
 
 	static ShaderRecord*	LoadShader(const char* Name, const char* SubPath);
-	
+
 	bool					HasRenderedBuffer; 
 	bool					HasDepthBuffer;
 };
@@ -302,45 +302,18 @@ public:
 	EffectRecord();
 	virtual ~EffectRecord();
 	
-	enum EffectRecordType {
-		Underwater,
-		WaterLens,
-		GodRays,
-		DepthOfField,
-		AmbientOcclusion,
-		Coloring,
-		Cinema,
-		Bloom,
-		SnowAccumulation,
-		BloodLens,
-		MotionBlur,
-		LowHF,
-		WetWorld,
-		Sharpening,
-		Specular,
-		VolumetricFog,
-		Rain,
-		Snow,
-		ShadowsExteriors,
-		ShadowsInteriors,
-		Extra,
-		Normals,
-		AvgLuma,
-	};
-
 	virtual void			SetCT();
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable);
-	void					SwitchEffect();
+	bool					SwitchEffect();
 	void					Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, bool ClearRenderTarget);
 	void					DisposeEffect();
 	bool					LoadEffect(bool alwaysCompile = false); 
-	bool 					IsLoaded();
 	
 	static EffectRecord*	LoadEffect(const char* Name);
-
+	bool 					IsLoaded();
 	bool					Enabled;
+
 	ID3DXEffect*			Effect;
-	EffectRecordType		Type;
 	std::string*			Path;
 	std::string*			SourcePath;
 };
@@ -365,8 +338,8 @@ public:
 	void					LoadShader(NiD3DVertexShader* VertexShader);
 	void					LoadShader(NiD3DPixelShader* PixelShader);
 	void					DisposeShader(const char* Name);
-	void					CreateEffect(EffectRecord::EffectRecordType EffectType);
-	void					DisposeEffect(EffectRecord::EffectRecordType EffectType);
+	EffectRecord*			CreateEffect(const char* Name, bool setEnabled);
+	void					DisposeEffect(EffectRecord** Effect);  // unused?
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
 	void					RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectRecord* Effect, bool clearRenderTarget);
 	void					SwitchShaderStatus(const char* Name);
@@ -377,32 +350,36 @@ public:
 	static float			smoothStep(float a, float b, float t);
 	static float			clamp(float a, float b, float t);
 		
+	struct	EffectsStruct {
+		EffectRecord*		Normals;
+		EffectRecord*		AvgLuma;
+		EffectRecord*		Underwater;
+		EffectRecord*		WaterLens;
+		EffectRecord*		GodRays;
+		EffectRecord*		DepthOfField;
+		EffectRecord*		AmbientOcclusion;
+		EffectRecord*		Coloring;
+		EffectRecord*		Cinema;
+		EffectRecord*		Bloom;
+		EffectRecord*		SnowAccumulation;
+		EffectRecord*		BloodLens;
+		EffectRecord*		MotionBlur;
+		EffectRecord*		LowHF;
+		EffectRecord*		WetWorld;
+		EffectRecord*		Sharpening;
+		EffectRecord*		Specular;
+		EffectRecord*		VolumetricFog;
+		EffectRecord*		Rain;
+		EffectRecord*		Snow;
+		EffectRecord*		ShadowsExteriors;
+		EffectRecord*		ShadowsInteriors;
+		ExtraEffectsList	ExtraEffects;
+	};
+
+	EffectsStruct			Effects;
 	ShaderConstants			ShaderConst;
 	CustomConstants			CustomConst;
 	IDirect3DVertexBuffer9*	FrameVertex;
-	EffectRecord*			NormalsEffect;
-	EffectRecord*			AvgLumaEffect;
-	EffectRecord*			UnderwaterEffect;
-	EffectRecord*			WaterLensEffect;
-	EffectRecord*			GodRaysEffect;
-	EffectRecord*			DepthOfFieldEffect;
-	EffectRecord*			AmbientOcclusionEffect;
-	EffectRecord*			ColoringEffect;
-	EffectRecord*			CinemaEffect;
-	EffectRecord*			BloomEffect;
-	EffectRecord*			SnowAccumulationEffect;
-	EffectRecord*			BloodLensEffect;
-	EffectRecord*			MotionBlurEffect;
-	EffectRecord*			LowHFEffect;
-	EffectRecord*			WetWorldEffect;
-	EffectRecord*			SharpeningEffect;
-	EffectRecord*			SpecularEffect;
-	EffectRecord*			VolumetricFogEffect;
-	EffectRecord*			RainEffect;
-	EffectRecord*			SnowEffect;
-	EffectRecord*			ShadowsExteriorsEffect;
-	EffectRecord*			ShadowsInteriorsEffect;
-	ExtraEffectsList		ExtraEffects;
 	NiD3DVertexShader*		WaterVertexShaders[51];
 	NiD3DPixelShader*		WaterPixelShaders[51];
     TESObjectCELL*          PreviousCell;
