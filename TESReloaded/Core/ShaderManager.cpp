@@ -785,7 +785,9 @@ bool EffectRecord::SwitchEffect(){
 /**
 * Renders the given effect shader.
 */
-void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, bool ClearRenderTarget) {
+void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, bool ClearRenderTarget, bool useSourceBuffer) {
+
+	if (useSourceBuffer) Device->StretchRect(RenderTarget, NULL, TheTextureManager->SourceSurface, NULL, D3DTEXF_NONE);
 
 	SetCT(); // update the constant table
 	UINT Passes;
@@ -1847,7 +1849,7 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	Device->SetRenderTarget(0, RenderTarget);
 	Device->StretchRect(RenderTarget, NULL, RenderTarget, NULL, D3DTEXF_NONE);
-	Effect->Render(Device, RenderTarget, RenderTarget, clearRenderTarget);
+	Effect->Render(Device, RenderTarget, RenderTarget, clearRenderTarget, false);
 };
 
 /*
@@ -1878,11 +1880,13 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
-	
+
+
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, true);
 
 	// calculate average luma for use by shaders
+	Device->StretchRect(TheTextureManager->AvgLumaSurface, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 	RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
 
 	// prepare device for effects
@@ -1895,60 +1899,52 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 		// Snow must be rendered first so other effects appear on top
 		if (Effects.SnowAccumulation->Enabled && ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) {
-			Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-			Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false);
+			Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
 		}
 
 		if (ShaderConst.AmbientOcclusion.Enabled) {
-			Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-			Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false);
+			Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
 		}
 
 		// Disable shadows during VATS
 		if (!VATSIsOn) {
 			if (isExterior && Effects.ShadowsExteriors->Enabled) {
-				Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-				Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false);
+				Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
 			}
 			else if (!isExterior && Effects.ShadowsInteriors->Enabled) {
-				Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-				Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, false);
+				Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
 			}
 		}
 
 		if (isUnderwater) {
 			// underwater only effects
 			if (Effects.Underwater->Enabled && isUnderwater) {
-				Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false);
+				Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false, false);
 			}
 		}
 		else {
 			if (isExterior) {
 				if (Effects.Specular->Enabled) {
-					Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-					Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false);
+					Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
 				}
 				if (Effects.WetWorld->Enabled && ShaderConst.WetWorld.Data.z > 0.0f) {
-					Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-					Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false);
+					Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
 				}
 			}
 
 			if (Effects.VolumetricFog->Enabled && !pipboyIsOn) {
-				Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false);
+				Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false, false);
 			}
 
 			if (isExterior) {
 				if (Effects.Rain->Enabled && ShaderConst.Rain.RainData.x > 0.0f) {
-					Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-					Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false);
+					Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false, true);
 				}
 				if (Effects.Snow->Enabled && ShaderConst.Snow.SnowData.x > 0.0f) {
-					Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false);
+					Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false, false);
 				}
 				if (Effects.GodRays->Enabled && isDaytime) {
-					Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-					Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false);
+					Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
 				}
 			}
 		}
@@ -1956,45 +1952,44 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// screenspace coloring/blurring effects get rendered last
 	if (Effects.Coloring->Enabled) {
-		Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, false, false);
 	}
 	if (Effects.Bloom->Enabled) {
-		Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-		Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, false, true);
+	}
+	if (Effects.Exposure->Enabled) {
+		Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, false, true);
 	}
 	if (Effects.DepthOfField->Enabled && ShaderConst.DepthOfField.Enabled) {
-		Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-		Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, false, true);
 	}
 	if (Effects.MotionBlur->Enabled && (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y)) {
-		Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, false, true);
 	}
 
 	// lens effects
 	if (Effects.BloodLens->Enabled && ShaderConst.BloodLens.Percent > 0.0f) {
-		Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, false, false);
 	}
 	if (Effects.WaterLens->Enabled && ShaderConst.WaterLens.Percent > 0.0f) {
-		Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, false, false);
 	}
 	if (Effects.LowHF->Enabled && ShaderConst.LowHF.Data.x) {
-		Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, false, false);
 	}
 	if (Effects.Sharpening->Enabled) {
-		Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, false, false);
 	}
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
 	if (Effects.Cinema->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) {
-		Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-		Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false);
+		Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
 	}
 
 	if (EffectsSettings->Extra) {
 		for (ExtraEffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
 			if (iter->second->Enabled) {
-				Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-				iter->second->Render(Device, RenderTarget, RenderedSurface, false);
+				iter->second->Render(Device, RenderTarget, RenderedSurface, false, true);
 			}
 		}
 	}
