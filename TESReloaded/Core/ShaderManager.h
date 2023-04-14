@@ -351,28 +351,28 @@ public:
 	static float			clamp(float a, float b, float t);
 		
 	struct	EffectsStruct {
-		EffectRecord*		Normals;
 		EffectRecord*		AvgLuma;
-		EffectRecord*		Underwater;
-		EffectRecord*		WaterLens;
-		EffectRecord*		GodRays;
-		EffectRecord*		DepthOfField;
 		EffectRecord*		AmbientOcclusion;
+		EffectRecord*		BloodLens;
+		EffectRecord*		Bloom;
 		EffectRecord*		Coloring;
 		EffectRecord*		Cinema;
-		EffectRecord*		Bloom;
-		EffectRecord*		SnowAccumulation;
-		EffectRecord*		BloodLens;
-		EffectRecord*		MotionBlur;
+		EffectRecord*		DepthOfField;
+		EffectRecord*		GodRays;
 		EffectRecord*		LowHF;
-		EffectRecord*		WetWorld;
+		EffectRecord*		MotionBlur;
+		EffectRecord*		Normals;
+		EffectRecord*		Rain;
 		EffectRecord*		Sharpening;
 		EffectRecord*		Specular;
-		EffectRecord*		VolumetricFog;
-		EffectRecord*		Rain;
 		EffectRecord*		Snow;
+		EffectRecord*		SnowAccumulation;
 		EffectRecord*		ShadowsExteriors;
 		EffectRecord*		ShadowsInteriors;
+		EffectRecord*		Underwater;
+		EffectRecord*		VolumetricFog;
+		EffectRecord*		WaterLens;
+		EffectRecord*		WetWorld;
 		ExtraEffectsList	ExtraEffects;
 	};
 
