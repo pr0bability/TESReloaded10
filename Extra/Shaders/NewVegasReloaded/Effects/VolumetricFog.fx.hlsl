@@ -8,6 +8,7 @@ float4 TESR_SunDirection;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
 float4 TESR_HorizonColor;
+float4 TESR_DebugVar;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -72,6 +73,13 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float distance = invlerps(nearFogDistance, farFogDistance, fogDepth);
 	float fogAmount = saturate(pow(distance, FogPower) * FogStrength);
 	fogAmount = fogAmount * saturate(exp( - height/MaxFogHeight)); // fade with height
+
+	// vertical exponential depth fog
+	// float distantFogAmount = saturate(pow(distance, FogPower) * FogStrength);
+	// color = lerp(color, TESR_HorizonColor, distantFogAmount<0.99999?distantFogAmount:0);
+	// float density = 0.08 * TESR_DebugVar.x; //0.0002
+	// float falloff = 0.00225 * TESR_DebugVar.y; // tie to darkness setting?
+	// float fogAmount = saturate((density/falloff) * exp(-TESR_CameraPosition.z*falloff) * (1.0 - exp( -fogDepth*eyeDirection.z*falloff ))/eyeDirection.z);
 
 	// calculate color
 	float3 fogColor = lerp(TESR_HorizonColor, TESR_FogColor, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
