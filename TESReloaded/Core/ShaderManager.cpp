@@ -829,7 +829,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
-	TheShaderManager->EffectsNames["Rain"] = &TheShaderManager->Effects.Rain;
+	TheShaderManager->EffectsNames["Precipitations"] = &TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = &TheShaderManager->Effects.ShadowsExteriors;
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
