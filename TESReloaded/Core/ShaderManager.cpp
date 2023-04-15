@@ -777,10 +777,16 @@ void EffectRecord::SetCT() {
 bool EffectRecord::SwitchEffect(){
 	bool change = true;
 	if (!IsLoaded() || (!Enabled && ShouldCompileShader(Path->data(), SourcePath->data(), ShaderCompileType::RecompileChanged)) ) {
+		Logger::Log("Effect %s is not loaded", Path->data());
 		DisposeEffect();
 		change = LoadEffect(true);
 	}
-	if(change) Enabled = !Enabled;
+	if (change) {
+		Enabled = !Enabled;
+	}
+	else {
+		Logger::Log("Couldn't switch status of effect %s", Path->data());
+	}
 	return Enabled;
 }
 
@@ -2012,6 +2018,8 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 	}
 
 	// effects
+	Logger::Log("switching effect %s", Name);
+
 	EffectRecord* effect = *EffectsNames[Name];
 	if (effect != nullptr) {
 		bool* setting = TheSettingManager->GetMenuShaderSetting(Name);
