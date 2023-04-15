@@ -136,6 +136,7 @@ struct SettingsMainStruct {
 		bool Cinema;
 		bool Coloring;
 		bool DepthOfField;
+		bool Exposure;
 		bool GodRays;
 		bool LowHF;
 		bool MotionBlur;
@@ -337,6 +338,13 @@ struct SettingsWaterLensStruct {
 	float Time;
 	float Amount;
 	float Viscosity;
+};
+
+struct SettingsExposureStruct {
+	float MinBrightness;
+	float MaxBrightness;
+	float LightAdaptSpeed;
+	float DarkAdaptSpeed;
 };
 
 struct SettingsGrassStruct {
@@ -676,6 +684,7 @@ public:
 	SettingsDepthOfFieldStruct		SettingsDepthOfFieldFirstPersonView;
 	SettingsDepthOfFieldStruct		SettingsDepthOfFieldThirdPersonView;
 	SettingsDepthOfFieldStruct		SettingsDepthOfFieldVanityView;
+	SettingsExposureStruct			SettingsExposure;
 	SettingsGodRaysStruct			SettingsGodRays;
 	SettingsGrassStruct				SettingsGrass;
 	SettingsHDRStruct				SettingsHDR;

@@ -277,6 +277,8 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.DepthOfField.Blur;
 	else if (!strcmp(Name, "TESR_DepthOfFieldData"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.DepthOfField.Data;
+	else if (!strcmp(Name, "TESR_ExposureData"))
+		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.Exposure.Data;
 	else if (!strcmp(Name, "TESR_GodRaysRay"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.GodRays.Ray;
 	else if (!strcmp(Name, "TESR_GodRaysRayColor"))
@@ -1613,6 +1615,13 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Sharpening.Data.x = TheSettingManager->SettingsSharpening.Strength;
 			ShaderConst.Sharpening.Data.y = TheSettingManager->SettingsSharpening.Clamp;
 			ShaderConst.Sharpening.Data.z = TheSettingManager->SettingsSharpening.Offset;
+		}
+
+		if (TheSettingManager->SettingsMain.Effects.Exposure) {
+			ShaderConst.Exposure.Data.x = TheSettingManager->SettingsExposure.MinBrightness;
+			ShaderConst.Exposure.Data.y = TheSettingManager->SettingsExposure.MaxBrightness;
+			ShaderConst.Exposure.Data.z = TheSettingManager->SettingsExposure.DarkAdaptSpeed;
+			ShaderConst.Exposure.Data.w = TheSettingManager->SettingsExposure.LightAdaptSpeed;
 		}
 
 		ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->SettingsShadows.ScreenSpace.Enabled;

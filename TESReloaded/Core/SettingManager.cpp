@@ -387,7 +387,6 @@ void SettingManager::LoadSettings() {
 	SettingsMain.EquipmentMode.TorchOnBeltRot.y = GetSettingF("Main.EquipmentMode.Positioning", "TorchOnBeltRotY");
 	SettingsMain.EquipmentMode.TorchOnBeltRot.z = GetSettingF("Main.EquipmentMode.Positioning", "TorchOnBeltRotZ");
 
-
 	SettingsMain.MountedCombat.Enabled = GetSettingI("Main.MountedCombat.Main", "Enabled");
 	SettingsMain.MountedCombat.WeaponOnBackPos.x = GetSettingF("Main.MountedCombat.Positioning", "WeaponOnBackPosX");
 	SettingsMain.MountedCombat.WeaponOnBackPos.y = GetSettingF("Main.MountedCombat.Positioning", "WeaponOnBackPosY");
@@ -447,6 +446,7 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Effects.WaterLens = GetSettingI("Shaders.WaterLens.Status", "Enabled");
 	SettingsMain.Effects.GodRays = GetSettingI("Shaders.GodRays.Status", "Enabled");
 	SettingsMain.Effects.DepthOfField = GetSettingI("Shaders.DepthOfField.Status", "Enabled");
+	SettingsMain.Effects.Exposure = GetSettingI("Shaders.Exposure.Status", "Enabled");
 	SettingsMain.Effects.Coloring = GetSettingI("Shaders.Coloring.Status", "Enabled");
 	SettingsMain.Effects.Cinema = GetSettingI("Shaders.Cinema.Status", "Enabled");
 	SettingsMain.Effects.Bloom = GetSettingI("Shaders.Bloom.Status", "Enabled");
@@ -688,6 +688,10 @@ void SettingManager::LoadSettings() {
 	SettingsDepthOfFieldVanityView.DiameterRange = GetSettingF("Shaders.DepthOfField.VanityView", "DiameterRange");
 	SettingsDepthOfFieldVanityView.NearBlurCutOff = GetSettingF("Shaders.DepthOfField.VanityView", "NearBlurCutOff");
 
+	SettingsExposure.MaxBrightness = GetSettingF("Shaders.Exposure.Main", "MaxBrightness");
+	SettingsExposure.MinBrightness = GetSettingF("Shaders.Exposure.Main", "MinBrightness");
+	SettingsExposure.DarkAdaptSpeed = GetSettingF("Shaders.Exposure.Main", "DarkAdaptSpeed");
+	SettingsExposure.LightAdaptSpeed = GetSettingF("Shaders.Exposure.Main", "LightAdaptSpeed");
 
 	SettingsGodRays.TimeEnabled = GetSettingI("Shaders.GodRays.Main", "TimeEnabled");
 	SettingsGodRays.SunGlareEnabled = GetSettingI("Shaders.GodRays.Main", "SunGlareEnabled");
@@ -1333,6 +1337,7 @@ bool* SettingManager::GetMenuShaderSetting(const char* Name) {
 	if (!strcmp(Name, "Cinema")) return &SettingsMain.Effects.Cinema;
 	if (!strcmp(Name, "Coloring")) return &SettingsMain.Effects.Coloring;
 	if (!strcmp(Name, "DepthOfField")) return &SettingsMain.Effects.DepthOfField;
+	if (!strcmp(Name, "Exposure")) return &SettingsMain.Effects.Exposure;
 	if (!strcmp(Name, "ExtraEffects")) return &SettingsMain.Effects.Extra;
 	if (!strcmp(Name, "ExtraShaders")) return &SettingsMain.Shaders.Extra;
 	if (!strcmp(Name, "GodRays")) return &SettingsMain.Effects.GodRays;
