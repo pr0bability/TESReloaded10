@@ -94,6 +94,9 @@ struct ShaderConstants {
 		D3DXVECTOR4		Blur;
 		D3DXVECTOR4		Data;
 	};
+	struct ExposureStruct {
+		D3DXVECTOR4		Data;
+	};
 	struct AmbientOcclusionStruct {
 		bool			Enabled;
 		D3DXVECTOR4		AOData;
@@ -182,6 +185,7 @@ struct ShaderConstants {
 	float					fogStart;
 	float					fogEnd;
 	float					fogPower;
+	ExposureStruct			Exposure;
 	AnimatorsStruct			Animators;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;

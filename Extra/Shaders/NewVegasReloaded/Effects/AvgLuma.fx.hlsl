@@ -2,13 +2,14 @@
 
 float4 TESR_MotionBlurData;
 float4 TESR_DepthOfFieldData;
+float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-static const float decreaseRate = -0.01; // max value for adaptation speed towards darker screens
-static const float increaseRate = 0.03; // max value for adaptation speed towards brighter screens
+static const float decreaseRate = -TESR_ExposureData.z; // max value for adaptation speed towards darker screens
+static const float increaseRate = TESR_ExposureData.w; // max value for adaptation speed towards brighter screens
 static const float2 center = float2(0.5, 0.5); // this shader is to be applied on a 1x1 texture so we sample at the center
 
 #include "Includes/Helpers.hlsl"
