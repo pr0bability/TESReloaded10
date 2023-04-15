@@ -318,7 +318,7 @@ public:
 	std::string*			SourcePath;
 };
 
-typedef std::map<std::string, EffectRecord*> ExtraEffectsList;
+typedef std::map<std::string, EffectRecord**> EffectsList;
 typedef std::map<std::string, D3DXVECTOR4> CustomConstants;
 
 struct		FrameVS { float x, y, z, u, v; };
@@ -374,10 +374,11 @@ public:
 		EffectRecord*		VolumetricFog;
 		EffectRecord*		WaterLens;
 		EffectRecord*		WetWorld;
-		ExtraEffectsList	ExtraEffects;
+		EffectsList			ExtraEffects;
 	};
 
 	EffectsStruct			Effects;
+	EffectsList				EffectsNames;
 	ShaderConstants			ShaderConst;
 	CustomConstants			CustomConst;
 	IDirect3DVertexBuffer9*	FrameVertex;

@@ -1318,72 +1318,45 @@ void SettingManager::CreateNodeS(Configuration::ConfigNode* Node, const char* Se
 
 }
 
+
 bool SettingManager::GetMenuShaderEnabled(const char* Name) {
+	bool* setting = GetMenuShaderSetting(Name);
+	return (setting == nullptr)? false : *setting; // if no setting exists, defaults to false
+}
 
-	bool Value = false;
-
-	if (!strcmp(Name, "AmbientOcclusion"))
-		Value = SettingsMain.Effects.AmbientOcclusion;
-	else if (!strcmp(Name, "Blood"))
-		Value = SettingsMain.Shaders.Blood;
-	else if (!strcmp(Name, "BloodLens"))
-		Value = SettingsMain.Effects.BloodLens;
-	else if (!strcmp(Name, "Bloom"))
-		Value = SettingsMain.Effects.Bloom;
-	else if (!strcmp(Name, "Cinema"))
-		Value = SettingsMain.Effects.Cinema;
-	else if (!strcmp(Name, "Coloring"))
-		Value = SettingsMain.Effects.Coloring;
-	else if (!strcmp(Name, "DepthOfField"))
-		Value = SettingsMain.Effects.DepthOfField;
-	else if (!strcmp(Name, "ExtraEffects"))
-		Value = SettingsMain.Effects.Extra;
-	else if (!strcmp(Name, "ExtraShaders"))
-		Value = SettingsMain.Shaders.Extra;
-	else if (!strcmp(Name, "GodRays"))
-		Value = SettingsMain.Effects.GodRays;
-	else if (!strcmp(Name, "Grass"))
-		Value = SettingsMain.Shaders.Grass;
-	else if (!strcmp(Name, "HDR"))
-		Value = SettingsMain.Shaders.HDR;
-	else if (!strcmp(Name, "LowHF"))
-		Value = SettingsMain.Effects.LowHF;
-	else if (!strcmp(Name, "MotionBlur"))
-		Value = SettingsMain.Effects.MotionBlur;
-	else if (!strcmp(Name, "NightEye"))
-		Value = SettingsMain.Shaders.NightEye;
-	else if (!strcmp(Name, "POM"))
-		Value = SettingsMain.Shaders.POM;
-	else if (!strcmp(Name, "Precipitations"))
-		Value = SettingsMain.Effects.Rain;
-	else if (!strcmp(Name, "Snow"))
-		Value = SettingsMain.Effects.Snow;
-	else if (!strcmp(Name, "ShadowsExteriors"))
-		Value = SettingsMain.Effects.ShadowsExteriors;
-	else if (!strcmp(Name, "ShadowsInteriors"))
-		Value = SettingsMain.Effects.ShadowsInteriors;
-	else if (!strcmp(Name, "Sharpening"))
-		Value = SettingsMain.Effects.Sharpening;
-	else if (!strcmp(Name, "Specular"))
-		Value = SettingsMain.Effects.Specular;
-	else if (!strcmp(Name, "Skin"))
-		Value = SettingsMain.Shaders.Skin;
-	else if (!strcmp(Name, "SnowAccumulation"))
-		Value = SettingsMain.Effects.SnowAccumulation;
-	else if (!strcmp(Name, "Terrain"))
-		Value = SettingsMain.Shaders.Terrain;
-	else if (!strcmp(Name, "Underwater"))
-		Value = SettingsMain.Effects.Underwater;
-	else if (!strcmp(Name, "VolumetricFog"))
-		Value = SettingsMain.Effects.VolumetricFog;
-	else if (!strcmp(Name, "Water"))
-		Value = SettingsMain.Shaders.Water;
-	else if (!strcmp(Name, "WaterLens"))
-		Value = SettingsMain.Effects.WaterLens;
-	else if (!strcmp(Name, "WetWorld"))
-		Value = SettingsMain.Effects.WetWorld;
-	return Value;
-
+// finds a setting pointer by name
+bool* SettingManager::GetMenuShaderSetting(const char* Name) {
+	if (!strcmp(Name, "AmbientOcclusion")) return &SettingsMain.Effects.AmbientOcclusion;
+	if (!strcmp(Name, "Blood")) return &SettingsMain.Shaders.Blood;
+	if (!strcmp(Name, "BloodLens")) return &SettingsMain.Effects.BloodLens;
+	if (!strcmp(Name, "Bloom")) return &SettingsMain.Effects.Bloom;
+	if (!strcmp(Name, "Cinema")) return &SettingsMain.Effects.Cinema;
+	if (!strcmp(Name, "Coloring")) return &SettingsMain.Effects.Coloring;
+	if (!strcmp(Name, "DepthOfField")) return &SettingsMain.Effects.DepthOfField;
+	if (!strcmp(Name, "ExtraEffects")) return &SettingsMain.Effects.Extra;
+	if (!strcmp(Name, "ExtraShaders")) return &SettingsMain.Shaders.Extra;
+	if (!strcmp(Name, "GodRays")) return &SettingsMain.Effects.GodRays;
+	if (!strcmp(Name, "Grass")) return &SettingsMain.Shaders.Grass;
+	if (!strcmp(Name, "HDR")) return &SettingsMain.Shaders.HDR;
+	if (!strcmp(Name, "LowHF")) return &SettingsMain.Effects.LowHF;
+	if (!strcmp(Name, "MotionBlur")) return &SettingsMain.Effects.MotionBlur;
+	if (!strcmp(Name, "NightEye")) return &SettingsMain.Shaders.NightEye;
+	if (!strcmp(Name, "POM")) return &SettingsMain.Shaders.POM;
+	if (!strcmp(Name, "Precipitations")) return &SettingsMain.Effects.Rain;
+	if (!strcmp(Name, "Snow")) return &SettingsMain.Effects.Snow;
+	if (!strcmp(Name, "ShadowsExteriors")) return &SettingsMain.Effects.ShadowsExteriors;
+	if (!strcmp(Name, "ShadowsInteriors")) return &SettingsMain.Effects.ShadowsInteriors;
+	if (!strcmp(Name, "Sharpening")) return &SettingsMain.Effects.Sharpening;
+	if (!strcmp(Name, "Specular")) return &SettingsMain.Effects.Specular;
+	if (!strcmp(Name, "Skin")) return &SettingsMain.Shaders.Skin;
+	if (!strcmp(Name, "SnowAccumulation")) return &SettingsMain.Effects.SnowAccumulation;
+	if (!strcmp(Name, "Terrain")) return &SettingsMain.Shaders.Terrain;
+	if (!strcmp(Name, "Underwater")) return &SettingsMain.Effects.Underwater;
+	if (!strcmp(Name, "VolumetricFog")) return &SettingsMain.Effects.VolumetricFog;
+	if (!strcmp(Name, "Water")) return &SettingsMain.Shaders.Water;
+	if (!strcmp(Name, "WaterLens")) return &SettingsMain.Effects.WaterLens;
+	if (!strcmp(Name, "WetWorld")) return &SettingsMain.Effects.WetWorld;
+	return NULL;
 }
 
 SettingsWaterStruct* SettingManager::GetSettingsWater(const char* PlayerLocation) {

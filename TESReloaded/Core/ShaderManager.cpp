@@ -813,27 +813,39 @@ void ShaderManager::Initialize() {
 	TheShaderManager = new ShaderManager();
 
 	TheShaderManager->FrameVertex = NULL;
-	TheShaderManager->Effects.Underwater = NULL;
-	TheShaderManager->Effects.WaterLens = NULL;
-	TheShaderManager->Effects.GodRays = NULL;
-	TheShaderManager->Effects.DepthOfField = NULL;
-	TheShaderManager->Effects.AmbientOcclusion = NULL;
-	TheShaderManager->Effects.Coloring = NULL;
-	TheShaderManager->Effects.Cinema = NULL;
-	TheShaderManager->Effects.Bloom = NULL;
-	TheShaderManager->Effects.SnowAccumulation = NULL;
-	TheShaderManager->Effects.BloodLens = NULL;
-	TheShaderManager->Effects.MotionBlur = NULL;
-	TheShaderManager->Effects.LowHF = NULL;
-	TheShaderManager->Effects.WetWorld = NULL;
-	TheShaderManager->Effects.Sharpening = NULL;
-	TheShaderManager->Effects.Specular = NULL;
-	TheShaderManager->Effects.VolumetricFog = NULL;
-	TheShaderManager->Effects.Rain = NULL;
-	TheShaderManager->Effects.Snow = NULL;
-	TheShaderManager->Effects.Normals = NULL;
-	TheShaderManager->Effects.ShadowsExteriors = NULL;
-	TheShaderManager->Effects.ShadowsInteriors = NULL;
+
+	// initializing the list of effect names
+	TheShaderManager->EffectsNames["AvgLuma"] = &TheShaderManager->Effects.AvgLuma;
+	TheShaderManager->EffectsNames["AmbientOcclusion"] = &TheShaderManager->Effects.AmbientOcclusion;
+	TheShaderManager->EffectsNames["BloodLens"] = &TheShaderManager->Effects.BloodLens;
+	TheShaderManager->EffectsNames["Bloom"] = &TheShaderManager->Effects.Bloom;
+	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
+	TheShaderManager->EffectsNames["Cinema"] = &TheShaderManager->Effects.Cinema;
+	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
+	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
+	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
+	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
+	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
+	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
+	TheShaderManager->EffectsNames["Rain"] = &TheShaderManager->Effects.Rain;
+	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
+	TheShaderManager->EffectsNames["ShadowsExteriors"] = &TheShaderManager->Effects.ShadowsExteriors;
+	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
+	TheShaderManager->EffectsNames["Specular"] = &TheShaderManager->Effects.Specular;
+	TheShaderManager->EffectsNames["Snow"] = &TheShaderManager->Effects.Snow;
+	TheShaderManager->EffectsNames["SnowAccumulation"] = &TheShaderManager->Effects.SnowAccumulation;
+	TheShaderManager->EffectsNames["Underwater"] = &TheShaderManager->Effects.Underwater;
+	TheShaderManager->EffectsNames["VolumetricFog"] = &TheShaderManager->Effects.VolumetricFog;
+	TheShaderManager->EffectsNames["WaterLens"] = &TheShaderManager->Effects.WaterLens;
+	TheShaderManager->EffectsNames["WetWorld"] = &TheShaderManager->Effects.WetWorld;
+
+	// Initialize all effects to NULL
+	EffectsList::iterator v = TheShaderManager->EffectsNames.begin();
+	while (v != TheShaderManager->EffectsNames.end()) {
+		*v->second = NULL;
+		v++;
+	}
+
 	memset(TheShaderManager->WaterVertexShaders, NULL, sizeof(WaterVertexShaders));
 	memset(TheShaderManager->WaterPixelShaders, NULL, sizeof(WaterPixelShaders));
 	TheShaderManager->InitializeConstants();
@@ -871,58 +883,24 @@ void ShaderManager::CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVert
 * Initializes the Effect Record for each effect activated in the settings.
 */
 void ShaderManager::CreateEffects() {
-	
-	SettingsMainStruct::EffectsStruct* EffectsSettings = &TheSettingManager->SettingsMain.Effects;
 
 	// create effect records for effects shaders based on name
-	Effects.AmbientOcclusion = CreateEffect("AmbientOcclusion", EffectsSettings->AmbientOcclusion);
-	Effects.BloodLens = CreateEffect("BloodLens", EffectsSettings->BloodLens);
-	Effects.Bloom = CreateEffect("Bloom", EffectsSettings->Bloom);
-	Effects.Cinema = CreateEffect("Cinema", EffectsSettings->Cinema);
-	Effects.Coloring = CreateEffect("Coloring", EffectsSettings->Coloring);
-	Effects.DepthOfField = CreateEffect("DepthOfField", EffectsSettings->DepthOfField);
-	Effects.Exposure = CreateEffect("Exposure", true);
-	Effects.GodRays = CreateEffect("GodRays", EffectsSettings->GodRays);
-	Effects.LowHF = CreateEffect("LowHF", EffectsSettings->LowHF);
-	Effects.MotionBlur = CreateEffect("MotionBlur", EffectsSettings->MotionBlur);
-	Effects.Sharpening = CreateEffect("Sharpening", EffectsSettings->Sharpening);
-	Effects.SnowAccumulation = CreateEffect("SnowAccumulation", EffectsSettings->SnowAccumulation);
-	Effects.Underwater = CreateEffect("Underwater", EffectsSettings->Underwater);
-	Effects.VolumetricFog = CreateEffect("VolumetricFog", EffectsSettings->VolumetricFog);
-	Effects.WaterLens = CreateEffect("WaterLens", EffectsSettings->WaterLens);
-	Effects.WetWorld = CreateEffect("WetWorld", EffectsSettings->WetWorld);
-	Effects.Rain = CreateEffect("Rain", EffectsSettings->Rain);
-	Effects.Snow = CreateEffect("Snow", EffectsSettings->Snow);
-	Effects.ShadowsExteriors = CreateEffect("ShadowsExteriors", EffectsSettings->ShadowsExteriors);
-	Effects.ShadowsInteriors = CreateEffect("ShadowsInteriors", EffectsSettings->ShadowsInteriors);
-	Effects.Specular = CreateEffect("Specular", EffectsSettings->Specular);
-	Effects.Normals = CreateEffect("Normals", true);
-	Effects.AvgLuma = CreateEffect("AvgLuma", true);
-//	CreateEffect(EffectRecord::EffectRecordType::Extra);
+	EffectsList::iterator v = TheShaderManager->EffectsNames.begin();
+	while (v != TheShaderManager->EffectsNames.end()) {
+		const char* Name = v->first.c_str();
+		bool* setting = TheSettingManager->GetMenuShaderSetting(Name);
+		bool enabled = (setting == nullptr) ? true:*setting; // if no setting exists, defaults to true
 
-	// disable settings of effects that couldn't load
-	EffectsSettings->AmbientOcclusion = Effects.AmbientOcclusion->Enabled;
-	EffectsSettings->BloodLens = Effects.BloodLens->Enabled;
-	EffectsSettings->Bloom = Effects.Bloom->Enabled;
-	EffectsSettings->Cinema = Effects.Cinema->Enabled;
-	EffectsSettings->Coloring = Effects.Coloring->Enabled;
-	EffectsSettings->DepthOfField = Effects.DepthOfField->Enabled;
-	EffectsSettings->GodRays = Effects.GodRays->Enabled;
-	EffectsSettings->LowHF = Effects.LowHF->Enabled;
-	EffectsSettings->MotionBlur = Effects.MotionBlur->Enabled;
-	EffectsSettings->Sharpening = Effects.Sharpening->Enabled;
-	EffectsSettings->SnowAccumulation = Effects.SnowAccumulation->Enabled;
-	EffectsSettings->Underwater = Effects.Underwater->Enabled;
-	EffectsSettings->VolumetricFog = Effects.VolumetricFog->Enabled;
-	EffectsSettings->WaterLens = Effects.WaterLens->Enabled;
-	EffectsSettings->WetWorld = Effects.WetWorld->Enabled;
-	EffectsSettings->Rain = Effects.Rain->Enabled;
-	EffectsSettings->Snow = Effects.Snow->Enabled;
-	EffectsSettings->ShadowsExteriors = Effects.ShadowsExteriors->Enabled;
-	EffectsSettings->ShadowsInteriors = Effects.ShadowsInteriors->Enabled;
-	EffectsSettings->Specular = Effects.Specular->Enabled;
+		EffectRecord* effect = CreateEffect(Name, enabled);
+		*v->second = effect; // assign pointer from Effects struct to the newly created effect record
+
+		// disable settings of effects that couldn't load
+		if (setting != nullptr) *setting = effect->Enabled;
+		v++;
+	}
 
 	/*TODO*/
+	//CreateEffect(EffectRecord::EffectRecordType::Extra);
 	//if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
 }
 
@@ -1773,7 +1751,6 @@ void ShaderManager::DisposeShader(const char* Name) {
 /*
 * Loads an Effect Shader from the corresponding fx file based on the Effect Record effect Type.
 */
-//void ShaderManager::CreateEffect(EffectNameEffectRecord::EffectRecordType EffectType) {
 EffectRecord* ShaderManager::CreateEffect(const char* Name, bool setEnabled) {
 	
 	char Filename[MAX_PATH];
@@ -1826,7 +1803,6 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name, bool setEnabled) {
 /*
 * Deletes an Effect based on the Effect Record effect type. 
 */
-//void ShaderManager::DisposeEffect(EffectRecord::EffectRecordType EffectType) {
 void ShaderManager::DisposeEffect(EffectRecord** Effect) {
 	*Effect = NULL;
 	delete* Effect;
@@ -1849,7 +1825,7 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	Device->SetRenderTarget(0, RenderTarget);
 	Device->StretchRect(RenderTarget, NULL, RenderTarget, NULL, D3DTEXF_NONE);
-	Effect->Render(Device, RenderTarget, RenderTarget, clearRenderTarget, false);
+	Effect->Render(Device, RenderTarget, RenderTarget, clearRenderTarget, true);
 };
 
 /*
@@ -1881,13 +1857,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
 
-
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, true);
-
-	// calculate average luma for use by shaders
-	Device->StretchRect(TheTextureManager->AvgLumaSurface, NULL, SourceSurface, NULL, D3DTEXF_NONE);
-	RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
 
 	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
@@ -1898,101 +1869,62 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		// disable these effects during terminal/lockpicking sequences because they bleed through the overlay
 
 		// Snow must be rendered first so other effects appear on top
-		if (Effects.SnowAccumulation->Enabled && ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) {
-			Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
-		}
-
-		if (ShaderConst.AmbientOcclusion.Enabled) {
-			Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
-		}
+		if (Effects.SnowAccumulation->Enabled && ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
+		if (ShaderConst.AmbientOcclusion.Enabled) Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 		// Disable shadows during VATS
 		if (!VATSIsOn) {
-			if (isExterior && Effects.ShadowsExteriors->Enabled) {
-				Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
-			}
-			else if (!isExterior && Effects.ShadowsInteriors->Enabled) {
-				Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
-			}
+			if (isExterior && Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
+			else if (!isExterior && Effects.ShadowsInteriors->Enabled) Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
 		}
 
 		if (isUnderwater) {
 			// underwater only effects
-			if (Effects.Underwater->Enabled && isUnderwater) {
-				Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false, false);
-			}
+			if (Effects.Underwater->Enabled && isUnderwater) Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false, false);
 		}
 		else {
 			if (isExterior) {
-				if (Effects.Specular->Enabled) {
-					Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
-				}
-				if (Effects.WetWorld->Enabled && ShaderConst.WetWorld.Data.z > 0.0f) {
-					Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
-				}
+				if (Effects.Specular->Enabled) Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
+				if (Effects.WetWorld->Enabled && ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
 			}
 
-			if (Effects.VolumetricFog->Enabled && !pipboyIsOn) {
-				Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false, false);
-			}
+			if (Effects.VolumetricFog->Enabled && !pipboyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false, false);
 
 			if (isExterior) {
-				if (Effects.Rain->Enabled && ShaderConst.Rain.RainData.x > 0.0f) {
-					Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false, true);
-				}
-				if (Effects.Snow->Enabled && ShaderConst.Snow.SnowData.x > 0.0f) {
-					Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false, false);
-				}
-				if (Effects.GodRays->Enabled && isDaytime) {
-					Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
-				}
+				if (Effects.Rain->Enabled && ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false, true);
+				if (Effects.Snow->Enabled && ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false, false);
+				if (Effects.GodRays->Enabled && isDaytime) Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
 			}
 		}
 	}
+
+	// calculate average luma for use by shaders
+	RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
+	Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
 
 	// screenspace coloring/blurring effects get rendered last
-	if (Effects.Coloring->Enabled) {
-		Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, false, false);
-	}
-	if (Effects.Bloom->Enabled) {
-		Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, false, true);
-	}
-	if (Effects.Exposure->Enabled) {
-		Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, false, true);
-	}
-	if (Effects.DepthOfField->Enabled && ShaderConst.DepthOfField.Enabled) {
-		Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, false, true);
-	}
-	if (Effects.MotionBlur->Enabled && (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y)) {
-		Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, false, true);
-	}
+	if (Effects.Coloring->Enabled) Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, false, false);
+	if (Effects.Bloom->Enabled) Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, false, true);
+	if (Effects.Exposure->Enabled) Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, false, true);
+	if (Effects.DepthOfField->Enabled && ShaderConst.DepthOfField.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, false, true);
+	if (Effects.MotionBlur->Enabled && (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y)) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 	// lens effects
-	if (Effects.BloodLens->Enabled && ShaderConst.BloodLens.Percent > 0.0f) {
-		Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, false, false);
-	}
-	if (Effects.WaterLens->Enabled && ShaderConst.WaterLens.Percent > 0.0f) {
-		Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, false, false);
-	}
-	if (Effects.LowHF->Enabled && ShaderConst.LowHF.Data.x) {
-		Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, false, false);
-	}
-	if (Effects.Sharpening->Enabled) {
-		Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, false, false);
-	}
+	if (Effects.BloodLens->Enabled && ShaderConst.BloodLens.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, false, false);
+	if (Effects.WaterLens->Enabled && ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, false, false);
+	if (Effects.LowHF->Enabled && ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, false, false);
+	if (Effects.Sharpening->Enabled) Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, false, false);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
-	if (Effects.Cinema->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) {
-		Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
-	}
+	if (Effects.Cinema->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
 
-	if (EffectsSettings->Extra) {
-		for (ExtraEffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
-			if (iter->second->Enabled) {
-				iter->second->Render(Device, RenderTarget, RenderedSurface, false, true);
-			}
-		}
-	}
+	//if (EffectsSettings->Extra) {
+	//	for (EffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
+	//		if (iter->second->Enabled) {
+	//			iter->second->Render(Device, RenderTarget, RenderedSurface, false, true);
+	//		}
+	//	}
+	//}
 
 	PreviousCell = currentCell;
 }
@@ -2002,8 +1934,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 * Also creates or deletes the corresponding Effect Record.
 */
 void ShaderManager::SwitchShaderStatus(const char* Name) {
-	
-	SettingsMainStruct::EffectsStruct* EffectsSettings = &TheSettingManager->SettingsMain.Effects;
 	SettingsMainStruct::ShadersStruct* ShadersSettings = &TheSettingManager->SettingsMain.Shaders;
 	IsMenuSwitch = true;
 
@@ -2012,74 +1942,78 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		ShadersSettings->Blood = !ShadersSettings->Blood;
 		DisposeShader(Name);
 		if (ShadersSettings->Blood) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "ExtraShaders")) {
+	if (!strcmp(Name, "ExtraShaders")) {
 		ShadersSettings->Extra = !ShadersSettings->Extra;
 		DisposeShader(Name);
 		if (ShadersSettings->Extra) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "Grass")) {
+	if (!strcmp(Name, "Grass")) {
 		ShadersSettings->Grass = !ShadersSettings->Grass;
 		DisposeShader(Name);
 		if (ShadersSettings->Grass) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "HDR")) {
+	if (!strcmp(Name, "HDR")) {
 		ShadersSettings->HDR = !ShadersSettings->HDR;
 		DisposeShader(Name);
 		if (ShadersSettings->HDR) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "NightEye")) {
+	if (!strcmp(Name, "NightEye")) {
 		ShadersSettings->NightEye = !ShadersSettings->NightEye;
 		DisposeShader(Name);
 		if (ShadersSettings->NightEye) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "POM")) {
+	if (!strcmp(Name, "POM")) {
 		ShadersSettings->POM = !ShadersSettings->POM;
 		DisposeShader(Name);
 		if (ShadersSettings->POM) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "Terrain")) {
+	if (!strcmp(Name, "Terrain")) {
 		ShadersSettings->Terrain = !ShadersSettings->Terrain;
 		DisposeShader(Name);
 		if (ShadersSettings->Terrain) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "Skin")) {
+	if (!strcmp(Name, "Skin")) {
 		ShadersSettings->Skin = !ShadersSettings->Skin;
 		DisposeShader(Name);
 		if (ShadersSettings->Skin) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
-	else if (!strcmp(Name, "Water")) {
+	if (!strcmp(Name, "Water")) {
 		ShadersSettings->Water = !ShadersSettings->Water;
 		DisposeShader(Name);
 		if (ShadersSettings->Water) CreateShader(Name);
+		IsMenuSwitch = false;
+		return;
 	}
 
 	// effects
-	else if (!strcmp(Name, "AmbientOcclusion")) EffectsSettings->AmbientOcclusion = Effects.AmbientOcclusion->SwitchEffect();
-	else if (!strcmp(Name, "BloodLens")) EffectsSettings->BloodLens = Effects.BloodLens->SwitchEffect();
-	else if (!strcmp(Name, "Bloom")) EffectsSettings->Bloom = Effects.Bloom->SwitchEffect();
-	else if (!strcmp(Name, "Cinema")) EffectsSettings->Cinema = Effects.Cinema->SwitchEffect();
-	else if (!strcmp(Name, "Coloring")) EffectsSettings->Coloring = Effects.Coloring->SwitchEffect();
-	else if (!strcmp(Name, "DepthOfField")) EffectsSettings->DepthOfField = Effects.DepthOfField->SwitchEffect();
+	EffectRecord* effect = *EffectsNames[Name];
+	if (effect != nullptr) {
+		bool* setting = TheSettingManager->GetMenuShaderSetting(Name);
+		*setting = effect->SwitchEffect();
+	}
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
 	//	EffectsSettings->Extra = !EffectsSettings->Extra;
 	//	DisposeEffect(EffectRecord::EffectRecordType::Extra);
 	//	if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
 	//}
-	else if (!strcmp(Name, "GodRays")) EffectsSettings->GodRays = Effects.GodRays->SwitchEffect();
-	else if (!strcmp(Name, "LowHF")) EffectsSettings->LowHF = Effects.LowHF->SwitchEffect();
-	else if (!strcmp(Name, "MotionBlur")) EffectsSettings->MotionBlur = Effects.MotionBlur->SwitchEffect();
-	else if (!strcmp(Name, "Precipitations")) EffectsSettings->Rain = Effects.Rain->SwitchEffect();
-	else if (!strcmp(Name, "ShadowsExteriors")) EffectsSettings->ShadowsExteriors = Effects.ShadowsExteriors->SwitchEffect();
-	else if (!strcmp(Name, "ShadowsInteriors")) EffectsSettings->ShadowsInteriors = Effects.ShadowsInteriors->SwitchEffect();
-	else if (!strcmp(Name, "Snow")) EffectsSettings->Snow = Effects.Snow->SwitchEffect();
-	else if (!strcmp(Name, "SnowAccumulation")) EffectsSettings->SnowAccumulation = Effects.SnowAccumulation->SwitchEffect();
-	else if (!strcmp(Name, "Specular")) EffectsSettings->Specular = Effects.Specular->SwitchEffect();
-	else if (!strcmp(Name, "Underwater")) EffectsSettings->Underwater = Effects.Underwater->SwitchEffect();
-	else if (!strcmp(Name, "WaterLens")) EffectsSettings->WaterLens = Effects.WaterLens->SwitchEffect();
-	else if (!strcmp(Name, "WetWorld"))	EffectsSettings->WetWorld = Effects.WetWorld->SwitchEffect();
-	else if (!strcmp(Name, "Sharpening")) EffectsSettings->Sharpening = Effects.Sharpening->SwitchEffect();
-	else if (!strcmp(Name, "VolumetricFog")) EffectsSettings->VolumetricFog = Effects.VolumetricFog->SwitchEffect();
+
 	IsMenuSwitch = false;
 }
 
@@ -2089,8 +2023,8 @@ void ShaderManager::SetCustomConstant(const char* Name, D3DXVECTOR4 Value) {
 }
 
 void ShaderManager::SetExtraEffectEnabled(const char* Name, bool Value) {
-	ExtraEffectsList::iterator v = Effects.ExtraEffects.find(std::string(Name));
-	if (v != Effects.ExtraEffects.end()) v->second->Enabled = Value;
+	//EffectsList::iterator v = Effects.ExtraEffects.find(std::string(Name));
+	//if (v != Effects.ExtraEffects.end()) v->second->Enabled = Value;
 }
 
 float ShaderManager::lerp(float a, float b, float t) {

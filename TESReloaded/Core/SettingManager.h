@@ -653,6 +653,7 @@ public:
 	void					CreateNodeF(Configuration::ConfigNode* Node, const char* Section, const char* Key, float Value, bool Reboot, UInt32 Type);
 	void					CreateNodeS(Configuration::ConfigNode* Node, const char* Section, const char* Key, const char* Value, bool Reboot);
 	bool					GetMenuShaderEnabled(const char* Name);
+	bool*					GetMenuShaderSetting(const char* Name);
 	SettingsWaterStruct*	GetSettingsWater(const char* PlayerLocation);
 	SettingsColoringStruct* GetSettingsColoring(const char* PlayerLocation);
 	SettingsWeatherStruct*	GetSettingsWeather(const char* WeatherName);
