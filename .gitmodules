@@ -1,0 +1,4 @@
+[submodule "TESReloaded/lib/toml11"]
+	path = TESReloaded/lib/toml11
+	url = https://github.com/ToruNiina/toml11.git
+	ignore = dirty
