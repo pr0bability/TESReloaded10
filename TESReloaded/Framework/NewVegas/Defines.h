@@ -2,6 +2,7 @@
 
 #define CommandPrefix "NVR"
 #define SettingsFile "\\Data\\NVSE\\Plugins\\NewVegasReloaded.dll.config"
+#define TomlSettingsFile "\\Data\\NVSE\\Plugins\\NewVegasReloaded.dll.toml"
 #define ShadersPath "Data\\Shaders\\NewVegasReloaded\\Shaders\\"
 #define EffectsPath "Data\\Shaders\\NewVegasReloaded\\Effects\\"
 #define RenderStateArgs 0, 0
@@ -10,7 +11,7 @@
 static const char* IntroMovie = "NVRGameStudios.bik";
 static const char* MainMenuMovie = "\\Data\\Video\\NVRMainMenu.bik";
 static const char* MainMenuMusic = "NVRMainMenu";
-static char* TitleMenu = "New Vegas Reloaded - Settings";
+static char* TitleMenu = (char*)"New Vegas Reloaded - Settings";
 
 // to review
 static const char* WeatherColorTypes[TESWeather::kNumColorTypes] = { "SkyUpper", "Fog", "CloudsLower", "Ambient", "Sunlight", "Sun", "Stars", "SkyLower", "Horizon", "CloudsUpper" };

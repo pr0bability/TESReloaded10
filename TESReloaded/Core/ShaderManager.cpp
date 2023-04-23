@@ -385,29 +385,29 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 
 	strcpy(FileName, ShadersPath);
 	if (!memcmp(Name, "WATER", 5)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Water) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.Water) return NULL;
 	}
 	else if (!memcmp(Name, "GRASS", 5)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Grass) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.Grass) return NULL;
 	}
 	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
 		// load tonemapping shaders, with different names between New vegas and Oblivion
-		if (!TheSettingManager->SettingsMain.Shaders.HDR) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.HDR) return NULL;
 	}
 	else if (!memcmp(Name, "PAR", 3)) {
-		if (!TheSettingManager->SettingsMain.Shaders.POM) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.POM) return NULL;
 	}
 	else if (!memcmp(Name, "SKIN", 4)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Skin) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.Skin) return NULL;
 	}
 	else if (strstr(TerrainShaders, Name)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Terrain) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.Terrain) return NULL;
 	}
 	else if (strstr(BloodShaders, Name)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Blood) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.Blood) return NULL;
 	}
 	else if (!memcmp(Name, "NIGHTEYE", 8)) {
-		if (!TheSettingManager->SettingsMain.Shaders.NightEye) return false;
+		if (!TheSettingManager->SettingsMain.Shaders.NightEye) return NULL;
 	}
 	else if (!memcmp(Name, "Shadow", 6)) {
 		strcat(FileName, "Shadows\\");
@@ -418,7 +418,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	else if (!memcmp(Name, "Bink", 4)) {
 		strcat(FileName, "Bink\\");
 	}
-	else if(!TheSettingManager->SettingsMain.Shaders.Extra) return false;
+	else if(!TheSettingManager->SettingsMain.Shaders.Extra) return NULL;
     
 	if (SubPath) strcat(FileName, SubPath);
 	strcat(FileName, Name);
@@ -630,6 +630,7 @@ bool EffectRecord::LoadEffect(bool alwaysCompile){
     HRESULT prepass = D3DXPreprocessShaderFromFileA(SourcePath->data(), NULL, NULL, &ShaderSource , &Errors);
 	ID3DXEffectCompiler* Compiler = NULL;
 	ID3DXBuffer* EffectBuffer = NULL;
+	HRESULT load = NULL;
 	if(alwaysCompile || ShouldCompileShader(Path->data(), SourcePath->data(), (ShaderCompileType)TheSettingManager->SettingsMain.Develop.CompileEffects) ){
 		HRESULT comp  = D3DXCreateEffectCompilerFromFileA(SourcePath->data(), NULL, NULL, NULL, &Compiler, &Errors);
 		if(FAILED(comp)) goto cleanup;
@@ -655,7 +656,7 @@ bool EffectRecord::LoadEffect(bool alwaysCompile){
 			Logger::Log("Effect compiled: %s", SourcePath->data());
 		}
 	}
-	HRESULT load = D3DXCreateEffectFromFileA(TheRenderManager->device, Path->data(), NULL, NULL, NULL, NULL, &Effect, &Errors);
+	load = D3DXCreateEffectFromFileA(TheRenderManager->device, Path->data(), NULL, NULL, NULL, NULL, &Effect, &Errors);
 	if(FAILED(load)) goto cleanup;
 	
 	if (Errors) Logger::Log((char*)Errors->GetBufferPointer()); // LAst can be cleaned in the cleanup section

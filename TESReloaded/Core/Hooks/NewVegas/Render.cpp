@@ -170,7 +170,7 @@ void* __fastcall ShowDetectorWindowHook(DetectorWindow* This, UInt32 edx, HWND H
 	NiAVObject* Object = NULL;
 	void* r = NULL;
 
-	r = (ShowDetectorWindow)(This, Handle, Instance, RootNode, "Pipeline detector by Alenet", X, Y, 1280, 1024);
+	r = (ShowDetectorWindow)(This, Handle, Instance, RootNode, (char*)"Pipeline detector by Alenet", X, Y, 1280, 1024);
 	for (int i = 0; i < RootNode->m_children.end; i++) {
 		NiNode* Node = (NiNode*)RootNode->m_children.data[i];
 		Node->m_children.data[0] = NULL;
