@@ -803,7 +803,7 @@ void ShadowManager::RenderShadowMaps() {
 
 		// render ortho map
 		ShadowData->z = 1; // identify ortho map
-		D3DXVECTOR4 OrthoDir = D3DXVECTOR3(0.05f, 0.05f, 1.0f);
+		D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
 		RenderShadowMap(MapOrtho, ShadowsExteriors, &At, &OrthoDir);
 
 		// Render all other shadow maps

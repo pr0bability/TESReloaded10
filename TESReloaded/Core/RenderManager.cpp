@@ -423,7 +423,7 @@ DWNode* DWNode::Get() {
 
 }
 
-void DWNode::AddNode(char* Name, NiAVObject* Child0, NiAVObject* Child1) {
+void DWNode::AddNode(const char* Name, NiAVObject* Child0, NiAVObject* Child1) {
 
 	NiNode* Node = (NiNode*)Pointers::Functions::MemoryAlloc(sizeof(NiNode)); Node->New(2);
 
