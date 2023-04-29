@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 
 class Logger {
 public:
@@ -11,4 +12,14 @@ public:
 //	static char			MessageBuffer[8192];
 	static FILE*		LogFile;
 
+};
+
+class TimeLogger {
+public:
+	std::chrono::system_clock::time_point start;
+	std::chrono::system_clock::time_point end;
+	TimeLogger();
+	virtual ~TimeLogger();
+
+	void LogTime(const char* Name);
 };

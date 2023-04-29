@@ -2,7 +2,35 @@
 //char	Logger::MessageBuffer[8192];
 FILE*	Logger::LogFile;
 
+#include<chrono>
+
 //#define debugmode
+//#define logperf
+
+TimeLogger::TimeLogger() {
+#ifdef logperf
+	start = std::chrono::system_clock::now();
+	end = std::chrono::system_clock::now();
+#endif
+};
+
+
+TimeLogger::~TimeLogger() {
+};
+
+
+/*
+* Starts the animator by setting a target value and a duration to reach it.
+*/
+void TimeLogger::LogTime(const char* Name) {
+#ifdef logperf
+	end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end - start;
+	Logger::Log("%s ran in %f ms", Name, elapsed_seconds * 1000);
+#endif
+}
+
+
 
 void Logger::Initialize(const char* FileName) {
 
