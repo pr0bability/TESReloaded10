@@ -93,6 +93,8 @@ bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
 void TextureManager::Initialize() {
 
 	Logger::Log("Starting the textures manager...");
+	auto timer = TimeLogger();
+	
 	TheTextureManager = new TextureManager();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
@@ -133,7 +135,7 @@ void TextureManager::Initialize() {
 	}
 
 	Device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &TheTextureManager->ShadowCubeMapDepthSurface, NULL);
-
+	timer.LogTime("TextureManager::Initialize");
 }
 
 /*
@@ -154,7 +156,8 @@ void TextureManager::InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9*
 * Binds texture buffers to a given register name
 */
 TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DXPARAMETER_TYPE ConstantType, LPCSTR ConstantName, UINT ConstantIndex, bool* HasRenderedBuffer, bool* HasDepthBuffer) {
-	
+	auto timer = TimeLogger();
+
 	TextureRecord::TextureRecordType Type = TextureRecord::TextureRecordType::None;
 	std::string Source = std::string((const char*) ShaderSourceBuffer->GetBufferPointer());
 	std::string TexturePath;
@@ -252,10 +255,13 @@ TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DX
                 Logger::Log("ERROR: Cannot bind texture %s", ConstantName);
             }
 		}
-
 		GetSamplerStates(SamplerString, NewTextureRecord);
+
+		timer.LogTime("TextureManager::LoadTexture");
+
 		return NewTextureRecord;
 	}
+
 	Logger::Log("[ERROR] Sampler %s doesn't have a valid type", ConstantName);
 	return nullptr;
 }

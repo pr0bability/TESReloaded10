@@ -280,6 +280,8 @@ void SettingManager::Initialize() {
 
 void SettingManager::LoadSettings() {
 
+	auto timer = TimeLogger();
+
 	StringList List;
 	StringList InnerList;
 	SettingsWaterStruct SW{};
@@ -967,6 +969,7 @@ void SettingManager::LoadSettings() {
 	SettingsWaterLens.Amount = GetSettingF("Shaders.WaterLens.Main", "Amount");
 	SettingsWaterLens.Viscosity = GetSettingF("Shaders.WaterLens.Main", "Viscosity");
 
+	timer.LogTime("SettingsManager::InitSettings for loop");
 }
 
 void SettingManager::SaveSettings() {

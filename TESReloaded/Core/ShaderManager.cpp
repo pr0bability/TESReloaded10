@@ -371,7 +371,8 @@ Loads the shader by name from a given subfolder (optionally). Shader will be com
 @returns the ShaderRecord for this shader.
 */
 ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
-	
+	auto timer = TimeLogger();
+
 	ShaderRecord* ShaderProg = NULL;
 	ID3DXBuffer* ShaderSource = NULL;
 	ID3DXBuffer* Shader = NULL;
@@ -459,6 +460,9 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 				Logger::Log("ERROR: Shader %s not found. Try to enable the CompileShader option to recompile the shaders.", FileNameBinary);
 			}
 		}
+
+		timer.LogTime("ShaderRecord::LoadShader");
+
 		if (Shader) {
 			if (ShaderProfile[0] == 'v') {
 				ShaderProg = new ShaderRecordVertex();
@@ -480,7 +484,6 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	if (Shader) Shader->Release();
 	if (Errors) Errors->Release();
 	return ShaderProg;
-
 }
 
 /**
@@ -489,6 +492,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 * @param ConstantTable
 */
 void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) {
+	auto timer = TimeLogger();
 
 	D3DXCONSTANTTABLE_DESC ConstantTableDesc;
 	D3DXCONSTANT_DESC ConstantDesc;
@@ -527,6 +531,7 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		}
 	}
 
+	timer.LogTime("ShaderRecord::createCT");
 }
 
 /* 
@@ -623,6 +628,8 @@ void EffectRecord::DisposeEffect(){
  * Compile and Load the Effect shader
  */
 bool EffectRecord::LoadEffect(bool alwaysCompile){
+	auto timer = TimeLogger();
+
 	ID3DXBuffer* ShaderSource = NULL;
 	ID3DXBuffer* Errors = NULL;
 	ID3DXEffect* Effect = NULL;
@@ -676,6 +683,9 @@ cleanup:
 		Logger::Log((char*)Errors->GetBufferPointer());
 		Errors->Release();
 	}
+
+	timer.LogTime("EffectRecord::LoadSEffect");
+
 	return success;
 }
 
@@ -705,6 +715,7 @@ bool EffectRecord::IsLoaded(){
 Creates the Constant Table for the Effect Record. 
 */
 void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) {
+	auto timer = TimeLogger();
 
 	D3DXEFFECT_DESC ConstantTableDesc;
 	D3DXPARAMETER_DESC ConstantDesc;
@@ -722,6 +733,9 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	}
 	if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)malloc(FloatShaderValuesCount * sizeof(ShaderValue));
 	if (TextureShaderValuesCount) TextureShaderValues = (ShaderValue*)malloc(TextureShaderValuesCount * sizeof(ShaderValue));
+
+	Logger::Log("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
+
 	for (UINT c = 0; c < ConstantTableDesc.Parameters; c++) {
 		Handle = Effect->GetParameter(NULL, c);
 		Effect->GetParameterDesc(Handle, &ConstantDesc);
@@ -746,6 +760,7 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		}
 	}
 
+	timer.LogTime("EffectRecord::ConstantTableDesc");
 }
 
 /*
@@ -818,6 +833,8 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 */
 void ShaderManager::Initialize() {
 
+	auto timer = TimeLogger();
+
 	Logger::Log("Starting the shaders manager...");
 	TheShaderManager = new ShaderManager();
 
@@ -867,6 +884,8 @@ void ShaderManager::Initialize() {
     TheShaderManager->PreviousCell = nullptr;
     TheShaderManager->IsMenuSwitch = false;
 
+	timer.LogTime("ShaderManager::Initialize");
+
 }
 
 void ShaderManager::CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex) {
@@ -893,6 +912,8 @@ void ShaderManager::CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVert
 */
 void ShaderManager::CreateEffects() {
 
+	auto timer = TimeLogger();
+
 	// create effect records for effects shaders based on name
 	EffectsList::iterator v = TheShaderManager->EffectsNames.begin();
 	while (v != TheShaderManager->EffectsNames.end()) {
@@ -911,6 +932,8 @@ void ShaderManager::CreateEffects() {
 	/*TODO*/
 	//CreateEffect(EffectRecord::EffectRecordType::Extra);
 	//if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
+
+	timer.LogTime("ShaderManager::CreateEffects");
 }
 
 void ShaderManager::InitializeConstants() {
@@ -939,6 +962,8 @@ Updates the values of the constants that can be accessed from shader code, with 
 */
 void ShaderManager::UpdateConstants() {
 	
+	auto timer = TimeLogger();
+
 	bool IsThirdPersonView = !TheCameraManager->IsFirstPerson();
 	Sky* WorldSky = Tes->sky;
 	NiNode* SunRoot = WorldSky->sun->RootNode;
@@ -1664,6 +1689,8 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.DebugVar.y = TheSettingManager->SettingsMain.Develop.DebugVar2;
 	ShaderConst.DebugVar.z = TheSettingManager->SettingsMain.Develop.DebugVar3;
 	ShaderConst.DebugVar.w = TheSettingManager->SettingsMain.Develop.DebugVar4;
+
+	timer.LogTime("ShaderManager::UpdateConstants");
 }
 
 void ShaderManager::CreateShader(const char* Name) {
@@ -1849,6 +1876,8 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 */
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	
+	auto timer = TimeLogger();
+
 	SettingsMainStruct::EffectsStruct* EffectsSettings = &TheSettingManager->SettingsMain.Effects;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
@@ -1943,6 +1972,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	//}
 
 	PreviousCell = currentCell;
+
+	timer.LogTime("ShaderManager::RenderEffects");
 }
 
 /*
