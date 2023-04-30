@@ -1,4 +1,6 @@
 #pragma once
+#include <../lib/tomlplusplus/include/toml++/toml.h>
+
 
 struct SettingsMainStruct {
 
@@ -226,10 +228,10 @@ struct SettingsMainStruct {
 		UInt8	CompileShaders;  // 1 Compile All, 2 Compile modified or missing only, 3 Compile only in menu
 		UInt8	CompileEffects;
 		bool    DebugMode;       // enables hotkeys to print textures
-		float    DebugVar1;       // var to use for development
-		float    DebugVar2;       // var to use for development
-		float    DebugVar3;       // var to use for development
-		float    DebugVar4;       // var to use for development
+		float   DebugVar1;       // var to use for development
+		float   DebugVar2;       // var to use for development
+		float   DebugVar3;       // var to use for development
+		float   DebugVar4;       // var to use for development
 		UInt8	TraceShaders;
 	};
 
@@ -632,15 +634,14 @@ public:
 		typedef	std::vector<ConfigNode> SettingList;
 
 		void			Init();
-		SectionPosition	GoToSection(const char* Section, const char* FromPosition = NULL);
 		bool			FillNode(ConfigNode* Node, const char* Section, const char* Key);
-		char*			GetAttribute(char* KeyPosition, const char* Attribute, char* AttributeValue);
 		void			FillSections(StringList* Sections, const char* ParentSection);
 		void			FillSettings(SettingList* Nodes, const char* Section);
 		void			SetValue(ConfigNode* Node);
-		void			SetAttribute(char* KeyPosition, const char* Attribute, const char* Value);
 		void			CreateWeatherSection(const char* WeatherName, TESWeather* Weather);
 
+		toml::table		TomlConfig;
+		bool			configLoaded;
 		char*			Config;
 		char*			ConfigB;
 		UInt32			FileSize;
@@ -653,14 +654,19 @@ public:
 	float					GetSettingF(const char* Section, const char* Key);
 	char*					GetSettingS(const char* Section, const char* Key, char* Value);
 	void					SetSetting(const char* Section, const char* Key, float Value);
+	void					SetSetting(const char* Section, const char* Key, UINT8 Value);
+	void					SetSetting(const char* Section, const char* Key, bool Value);
 	void					SetSettingS(const char* Section, const char* Key, char* Value);
 	void					SetSetting(Configuration::ConfigNode* Node);
 	void					SetSettingWeather(const char* Section, const char* Key, float Value);
 	void					FillMenuSections(StringList* Sections, const char* ParentSection);
 	void					FillMenuSettings(Configuration::SettingList* Settings, const char* Section);
-	void					CreateNodeF(Configuration::ConfigNode* Node, const char* Section, const char* Key, float Value, bool Reboot, UInt32 Type);
+	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, float Value, bool Reboot);
+	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, UINT8 Value, bool Reboot);
+	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, bool Value, bool Reboot);
 	void					CreateNodeS(Configuration::ConfigNode* Node, const char* Section, const char* Key, const char* Value, bool Reboot);
 	bool					GetMenuShaderEnabled(const char* Name);
+	void					SetMenuShaderEnabled(const char* Name, bool enabled);
 	bool*					GetMenuShaderSetting(const char* Name);
 	SettingsWaterStruct*	GetSettingsWater(const char* PlayerLocation);
 	SettingsColoringStruct* GetSettingsColoring(const char* PlayerLocation);
@@ -672,6 +678,7 @@ public:
 	static void									SplitString(const char* String, const char* Delimiter, StringList* Values);
 	template <typename T> static void			FillFromString(const char* String, const char* Delimiter, T* Values);
 
+				
 	Configuration					Config;
 	bool							GameLoading;
 	SettingsMainStruct				SettingsMain;
