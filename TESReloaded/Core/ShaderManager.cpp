@@ -1,4 +1,3 @@
-
 /*
 * Constructor of Animator class. Starts an animator for a given value.
 */
@@ -492,7 +491,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 * @param ConstantTable
 */
 void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) {
-	auto timer = TimeLogger();
+
 
 	D3DXCONSTANTTABLE_DESC ConstantTableDesc;
 	D3DXCONSTANT_DESC ConstantDesc;
@@ -508,8 +507,14 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		if (ConstantDesc.RegisterSet == D3DXRS_FLOAT4 && !memcmp(ConstantDesc.Name, "TESR_", 5)) FloatShaderValuesCount += 1;
 		if (ConstantDesc.RegisterSet == D3DXRS_SAMPLER && !memcmp(ConstantDesc.Name, "TESR_", 5)) TextureShaderValuesCount += 1;
     }
+
+	auto timer = TimeLogger();
 	if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)malloc(FloatShaderValuesCount * sizeof(ShaderValue));
 	if (TextureShaderValuesCount) TextureShaderValues = (ShaderValue*)malloc(TextureShaderValuesCount * sizeof(ShaderValue));
+	timer.LogTime("ShaderRecord::createCT Malloc");
+
+	//Logger::Log("CreateCT: Shader has %i constants", ConstantTableDesc.Constants);
+
 	for (UINT c = 0; c < ConstantTableDesc.Constants; c++) {
 		Handle = ConstantTable->GetConstant(NULL, c);
 		ConstantTable->GetConstantDesc(Handle, &ConstantDesc, &ConstantCount);
@@ -531,7 +536,7 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		}
 	}
 
-	timer.LogTime("ShaderRecord::createCT");
+	timer.LogTime("ShaderRecord::createCT Done");
 }
 
 /* 
@@ -1065,7 +1070,8 @@ void ShaderManager::UpdateConstants() {
 				MoonPhase = lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
 
 				// map MoonVisibility to MinNightDarkness/1 range
-				float MoonVisibility = lerp(0.0, TheSettingManager->SettingsShadows.Exteriors.NightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
+				float nightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
+				float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
 				ShaderConst.ShadowFade.x = lerp(MoonVisibility, 1, ShaderConst.ShadowFade.x);
 			}
 
@@ -1189,9 +1195,9 @@ void ShaderManager::UpdateConstants() {
 		//Logger::Log("sun g %f", ShaderConst.sunColor.y);
 		//Logger::Log("sun b %f", ShaderConst.sunColor.z);
 		//Logger::Log("sunglare %f", ShaderConst.fogData.z);
-		//Logger::Log("sunglare %f", WorldSky->sun->glareScale);
+		//Logger::Log("sunglare %f", WorldSky->sun->glareScale);3
 
-		if (TheSettingManager->SettingsMain.Shaders.Water || TheSettingManager->SettingsMain.Effects.Underwater) {
+		if (TheSettingManager->GetMenuShaderEnabled("Water") || TheSettingManager->GetMenuShaderEnabled("Underwater")) {
 			RGBA* rgba = NULL;
 			SettingsWaterStruct* sws = NULL;
 			TESWaterForm* currentWater = currentCell->GetWaterForm();
