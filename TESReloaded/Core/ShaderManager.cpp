@@ -538,7 +538,6 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 * Sets the Constant Table for the shader
 */
 void ShaderRecord::SetCT() {
-	
 	ShaderValue* Value;
 
 	if (HasRenderedBuffer) TheRenderManager->device->StretchRect(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface, NULL, TheTextureManager->RenderedSurface, NULL, D3DTEXF_NONE);
@@ -554,7 +553,6 @@ void ShaderRecord::SetCT() {
 		Value = &FloatShaderValues[c];
 		SetShaderConstantF(Value->RegisterIndex, Value->Value, Value->RegisterCount);
 	}
-
 }
 
 
@@ -665,7 +663,7 @@ bool EffectRecord::LoadEffect(bool alwaysCompile){
 	}
 	load = D3DXCreateEffectFromFileA(TheRenderManager->device, Path->data(), NULL, NULL, NULL, NULL, &Effect, &Errors);
 	if(FAILED(load)) goto cleanup;
-	
+
 	if (Errors) Logger::Log((char*)Errors->GetBufferPointer()); // LAst can be cleaned in the cleanup section
 	if (Effect) {
 		this->Effect = Effect;
@@ -767,7 +765,6 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 *Sets the Effect Shader constants table and texture registers.
 */
 void EffectRecord::SetCT() {
-
 	ShaderValue* Value;
 	if (!Enabled || Effect == nullptr) return;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
@@ -784,7 +781,6 @@ void EffectRecord::SetCT() {
 		else
 			Effect->SetMatrix((D3DXHANDLE)Value->RegisterIndex, (D3DXMATRIX*)Value->Value);
 	}
-
 }
 
 /*
@@ -918,14 +914,13 @@ void ShaderManager::CreateEffects() {
 	EffectsList::iterator v = TheShaderManager->EffectsNames.begin();
 	while (v != TheShaderManager->EffectsNames.end()) {
 		const char* Name = v->first.c_str();
-		bool* setting = TheSettingManager->GetMenuShaderSetting(Name);
-		bool enabled = (setting == nullptr) ? true:*setting; // if no setting exists, defaults to true
+		bool enabled = TheSettingManager->GetMenuShaderEnabled(Name);
 
 		EffectRecord* effect = CreateEffect(Name, enabled);
 		*v->second = effect; // assign pointer from Effects struct to the newly created effect record
 
-		// disable settings of effects that couldn't load
-		if (setting != nullptr) *setting = effect->Enabled;
+		enabled = effect->Enabled;
+		TheSettingManager->SetMenuShaderEnabled(Name, enabled); // disable settings of effects that couldn't load
 		v++;
 	}
 
@@ -1075,11 +1070,11 @@ void ShaderManager::UpdateConstants() {
 			}
 
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-			ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled;
+			ShaderConst.ShadowFade.y = TheSettingManager->GetMenuShaderEnabled("ShadowsExteriors");
 		}
 		else {
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-			ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Interiors.Enabled;
+			ShaderConst.ShadowFade.y = TheSettingManager->GetMenuShaderEnabled("ShadowsInteriors");
 		}
 
 		//Logger::Log("exterior");
@@ -2050,12 +2045,10 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 	}
 
 	// effects
-	Logger::Log("switching effect %s", Name);
-
 	EffectRecord* effect = *EffectsNames[Name];
 	if (effect != nullptr) {
-		bool* setting = TheSettingManager->GetMenuShaderSetting(Name);
-		*setting = effect->SwitchEffect();
+		bool setting = effect->SwitchEffect();
+		TheSettingManager->SetMenuShaderEnabled(Name, setting);
 	}
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
 	//	EffectsSettings->Extra = !EffectsSettings->Extra;

@@ -65,7 +65,7 @@ void GameMenuManager::Render() {
 				if (!EditingMode)
 					strcpy(EditingValue, SelectedNode.Value);
 				else
-					TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, atof(SelectedNode.Value));
+					TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, (float)atof(SelectedNode.Value));
 				EditingMode = !EditingMode;
 			}
 			if (!EditingMode) {
@@ -81,6 +81,7 @@ void GameMenuManager::Render() {
 					SelectedPage[1] = SelectedPage[2] = SelectedPage[3] = 0;
 				}
 				else {
+					// handle user input normally
 					if (Global->OnKeyDown(MenuSettings->KeyUp)) {
 						if (SelectedRow[SelectedColumn] > 0) SelectedRow[SelectedColumn] -= 1; else SelectedColumn = 0; // move up in the column or go to header
 					}else if (Global->OnKeyDown(MenuSettings->KeyDown) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
@@ -97,20 +98,12 @@ void GameMenuManager::Render() {
 						SelectedPage[SelectedColumn] += 1;
 						SelectedRow[SelectedColumn] = 0;
 					}else if (Global->OnKeyDown(MenuSettings->KeyAdd)) {
+						// react to user key input to reduce the value of the setting
 						if ((SelectedColumn == 1 && !memcmp(SelectedNode.Section, "Shaders", 7)) || ((SelectedColumn == 3 && !memcmp(SelectedNode.Section, "Shaders", 7) && !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6)))) {
+							// enable shaders and effects
 							GetMidSection(MidSection);
 							bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
-							if (!ShaderEnabled) {
-								TheShaderManager->SwitchShaderStatus(MidSection);
-								ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
-								strcpy(SelectedNode.Section, "Shaders.");
-								strcat(SelectedNode.Section, MidSection);
-								strcat(SelectedNode.Section, ".Status");
-								if (!memcmp(MidSection, "Shadows", 7))
-									TheSettingManager->SetSetting(SelectedNode.Section, "PostProcess", ShaderEnabled);
-								else
-									TheSettingManager->SetSetting(SelectedNode.Section, "Enabled", ShaderEnabled);
-							}
+							if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(MidSection);
 						}
 						else if (SelectedColumn == 1 && !memcmp(SelectedNode.Section, "Weathers", 8)) {
 							GetMidSection(MidSection);
@@ -118,44 +111,47 @@ void GameMenuManager::Render() {
 							Tes->sky->ForceWeather(Weather);
 						}
 						else if (SelectedColumn == 3) {
+							// edit settings values
 							switch (SelectedNode.Type) {
+								int intvalue;
+								float floatvalue;
 								case SettingManager::Configuration::NodeType::Boolean:
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, !atoi(SelectedNode.Value));
+									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
+									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, (bool)!intvalue);
 									break;
 								case SettingManager::Configuration::NodeType::Integer:
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, atoi(SelectedNode.Value) + 1);
+									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
+									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, (UINT8)(intvalue + 1));
 									break;
 								case SettingManager::Configuration::NodeType::Float:
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, atof(SelectedNode.Value) + 0.1f);
+									floatvalue = TheSettingManager->GetSettingF(SelectedNode.Section, SelectedNode.Key);
+									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, floatvalue + 0.1f);
 									break;
 							}
 						}
 					}else if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
+						// react to user key input to reduce the value of the setting
 						if ((SelectedColumn == 1 && !memcmp(SelectedNode.Section, "Shaders", 7)) || ((SelectedColumn == 3 && !memcmp(SelectedNode.Section, "Shaders", 7) && !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6)))) {
+							// disable shaders and effects
 							GetMidSection(MidSection);
 							bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
-							if (ShaderEnabled) {
-								TheShaderManager->SwitchShaderStatus(MidSection);
-								ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
-								strcpy(SelectedNode.Section, "Shaders.");
-								strcat(SelectedNode.Section, MidSection);
-								strcat(SelectedNode.Section, ".Status");
-								if (!memcmp(MidSection, "Shadows", 7))
-									TheSettingManager->SetSetting(SelectedNode.Section, "PostProcess", ShaderEnabled);
-								else
-									TheSettingManager->SetSetting(SelectedNode.Section, "Enabled", ShaderEnabled);
-
-							}
+							if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(MidSection);
 						}else if (SelectedColumn == 3) {
+							// edit settings values
+							int intvalue;
+							float floatvalue;
 							switch (SelectedNode.Type) {
 								case SettingManager::Configuration::NodeType::Boolean:
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, !atoi(SelectedNode.Value));
+									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
+									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, !intvalue);
 									break;
 								case SettingManager::Configuration::NodeType::Integer:
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, atoi(SelectedNode.Value) - 1);
+									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
+									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, UINT8(intvalue - 1));
 									break;
 								case SettingManager::Configuration::NodeType::Float:
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, atof(SelectedNode.Value) - 0.1f);
+									floatvalue = TheSettingManager->GetSettingF(SelectedNode.Section, SelectedNode.Key);
+									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, floatvalue - 0.1f);
 									break;
 							}
 						}
@@ -166,6 +162,8 @@ void GameMenuManager::Render() {
 				}
 			}
 			else {
+
+				//handle entry using numpad keys
 				if (Global->OnKeyDown(82))
 					strcat(EditingValue, "0");
 				else if (Global->OnKeyDown(79))
@@ -202,6 +200,7 @@ void GameMenuManager::Render() {
 			SetRect(&Rect, Rect.left, Rect.bottom + RowSpace, Rect.right, Rect.bottom + RowSpace + 2);
 			TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L);
 
+			// render header
 			Rows[0] = 0;
 			SetRect(&Rect, Rect.left + MainItemColumnSize * 0, Rect.bottom + RowSpace, Rect.left + MainItemColumnSize * 1, Rect.bottom + RowSpace + MenuSettings->TextSize);
 			TheSettingManager->FillMenuSections(&Sections, NULL);
@@ -229,6 +228,7 @@ void GameMenuManager::Render() {
 			SetRect(&Rect, PositionX, Rect.bottom + RowSpace, PositionX + TitleColumnSize, Rect.bottom + RowSpace + 2);
 			TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L);
 
+			// render left column (shaders/menu category names)
 			int MenuRectX = PositionX;
 			int MenuRectY = Rect.bottom + RowSpace;
 			Rows[1] = 0;
@@ -259,6 +259,8 @@ void GameMenuManager::Render() {
 						FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
 						FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
 					}
+
+					// if in shader mode, add indication wether each shader is activated
 					if (!memcmp(SelectedNode.Section, "Shaders", 7)) {
 						if (SelectedRow[1] == Rows[1] && SelectedColumn >= 1)
 							FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_CALCRECT, TextColorSelected);
@@ -301,9 +303,12 @@ void GameMenuManager::Render() {
 				}
 				Item++;
 			}
+
+
+			// render middle column (shader/menu subsection names)
 			Rows[2] = 0;
 			SetRect(&Rect, MenuRectX + ItemColumnSize * 1, MenuRectY, MenuRectX + ItemColumnSize * 2, MenuRectY + MenuSettings->TextSize);
-			TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section);
+			TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section); // get a list of sections for a given category
 			ListSize = Sections.size();
 			Pages[2] = ListSize / RowsPerPage;
 			Item = Sections.begin();
@@ -333,9 +338,11 @@ void GameMenuManager::Render() {
 				}
 				Item++;
 			}
+
+			// render right column (settings name/value pairs)
 			Rows[3] = 0;
 			SetRect(&Rect, MenuRectX + ItemColumnSize * 2, MenuRectY, MenuRectX + ItemColumnSize * 3, MenuRectY + MenuSettings->TextSize);
-			TheSettingManager->FillMenuSettings(&Settings, SelectedNode.Section);
+			TheSettingManager->FillMenuSettings(&Settings, SelectedNode.Section); // build a setting list to display values
 			ListSize = Settings.size();
 			Pages[3] = ListSize / RowsPerPage;
 			Setting = Settings.begin();
