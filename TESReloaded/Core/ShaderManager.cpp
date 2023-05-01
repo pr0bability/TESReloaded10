@@ -1991,10 +1991,10 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 	}
 	catch (std::out_of_range e){
 		// shaders
-		bool enabled = TheSettingManager->GetMenuShaderEnabled(Name);
-		TheSettingManager->SetMenuShaderEnabled(Name, !enabled);
+		bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
+		TheSettingManager->SetMenuShaderEnabled(Name, enable);
 		DisposeShader(Name);
-		if (enabled) CreateShader(Name);
+		if (enable) CreateShader(Name);
 	}
 
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
