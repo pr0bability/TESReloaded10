@@ -1432,7 +1432,6 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
 			}
 
-
 			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayR");
 			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayG");
 			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayB");
@@ -1547,7 +1546,6 @@ void ShaderManager::UpdateConstants() {
 				sectionName = "Shaders.DepthOfField.VanityView";
 			else if (IsThirdPersonView)
 				sectionName = "Shaders.DepthOfField.ThirdPersonView";
-
 
 			bool dofActive = TheSettingManager->GetSettingI(sectionName, "Enabled");
 			switch (TheSettingManager->GetSettingI(sectionName, "Mode")){
@@ -1944,8 +1942,13 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	}
 
 	// calculate average luma for use by shaders
-	RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
-	Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
+	if (Effects.DepthOfField->Enabled || 
+		Effects.Cinema->Enabled ||
+		Effects.Exposure->Enabled) {
+
+		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
+		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
+	}
 
 	// screenspace coloring/blurring effects get rendered last
 	if (Effects.Coloring->Enabled) Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, false, false);
