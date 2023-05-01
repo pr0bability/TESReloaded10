@@ -1982,80 +1982,22 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 * Also creates or deletes the corresponding Effect Record.
 */
 void ShaderManager::SwitchShaderStatus(const char* Name) {
-	SettingsMainStruct::ShadersStruct* ShadersSettings = &TheSettingManager->SettingsMain.Shaders;
 	IsMenuSwitch = true;
 
-	// shaders
-	if (!strcmp(Name, "Blood")) {
-		ShadersSettings->Blood = !ShadersSettings->Blood;
-		DisposeShader(Name);
-		if (ShadersSettings->Blood) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "ExtraShaders")) {
-		ShadersSettings->Extra = !ShadersSettings->Extra;
-		DisposeShader(Name);
-		if (ShadersSettings->Extra) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "Grass")) {
-		ShadersSettings->Grass = !ShadersSettings->Grass;
-		DisposeShader(Name);
-		if (ShadersSettings->Grass) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "HDR")) {
-		ShadersSettings->HDR = !ShadersSettings->HDR;
-		DisposeShader(Name);
-		if (ShadersSettings->HDR) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "NightEye")) {
-		ShadersSettings->NightEye = !ShadersSettings->NightEye;
-		DisposeShader(Name);
-		if (ShadersSettings->NightEye) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "POM")) {
-		ShadersSettings->POM = !ShadersSettings->POM;
-		DisposeShader(Name);
-		if (ShadersSettings->POM) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "Terrain")) {
-		ShadersSettings->Terrain = !ShadersSettings->Terrain;
-		DisposeShader(Name);
-		if (ShadersSettings->Terrain) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "Skin")) {
-		ShadersSettings->Skin = !ShadersSettings->Skin;
-		DisposeShader(Name);
-		if (ShadersSettings->Skin) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-	if (!strcmp(Name, "Water")) {
-		ShadersSettings->Water = !ShadersSettings->Water;
-		DisposeShader(Name);
-		if (ShadersSettings->Water) CreateShader(Name);
-		IsMenuSwitch = false;
-		return;
-	}
-
 	// effects
-	EffectRecord* effect = *EffectsNames[Name];
-	if (effect != nullptr) {
+	try {
+		EffectRecord* effect = *EffectsNames.at(Name);
 		bool setting = effect->SwitchEffect();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
 	}
+	catch (std::out_of_range e){
+		// shaders
+		bool enabled = TheSettingManager->GetMenuShaderEnabled(Name);
+		TheSettingManager->SetMenuShaderEnabled(Name, !enabled);
+		DisposeShader(Name);
+		if (enabled) CreateShader(Name);
+	}
+
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
 	//	EffectsSettings->Extra = !EffectsSettings->Extra;
 	//	DisposeEffect(EffectRecord::EffectRecordType::Extra);
