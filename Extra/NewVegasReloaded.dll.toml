@@ -50,6 +50,7 @@ HealthEnabled = false
 
 [_Main.Main.Misc]
 ForceMSAA = false
+RenderEffects = true
 ReplaceIntro = false
 ScreenshotKey = 87
 

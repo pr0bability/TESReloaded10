@@ -1875,6 +1875,8 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 */
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	
+	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
+
 	auto timer = TimeLogger();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
