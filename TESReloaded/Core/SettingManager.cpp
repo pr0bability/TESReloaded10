@@ -610,9 +610,9 @@ void SettingManager::SaveSettings() {
 	std::ofstream ConfigurationFile(Filename, std::ios::trunc | std::ios::binary);
 
 	// log config file contents
-	std::stringstream buffer;
-	buffer << Config.TomlConfig << std::endl;
-	Logger::Log("%s", buffer.str().c_str());
+	//std::stringstream buffer;
+	//buffer << Config.TomlConfig << std::endl;
+	//Logger::Log("%s", buffer.str().c_str());
 
 	ConfigurationFile << Config.TomlConfig << std::endl;
 	ConfigurationFile.close();
