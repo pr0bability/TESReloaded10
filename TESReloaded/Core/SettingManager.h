@@ -131,30 +131,6 @@ struct SettingsMainStruct {
 		bool Extra;
 	};
 
-	struct EffectsStruct {
-		bool AmbientOcclusion;
-		bool BloodLens;
-		bool Bloom;
-		bool Cinema;
-		bool Coloring;
-		bool DepthOfField;
-		bool Exposure;
-		bool GodRays;
-		bool LowHF;
-		bool MotionBlur;
-		bool Rain;
-		bool Snow;
-		bool Sharpening;
-		bool SnowAccumulation;
-		bool Underwater;
-		bool WaterLens;
-		bool WetWorld;
-		bool VolumetricFog;
-		bool ShadowsExteriors;
-		bool ShadowsInteriors;
-		bool Specular;
-		bool Extra;
-	};
 
 	struct MenuStruct {
 		char	TextFont[40];
@@ -189,13 +165,6 @@ struct SettingsMainStruct {
 		int		RowsPerPage;
 	};
 
-	struct LowHFSoundStruct {
-		bool	HealthEnabled;
-		bool	FatigueEnabled;
-		float	HealthCoeff;
-		float	FatigueCoeff;
-	};
-
 	struct PurgerStruct {
 		bool	Enabled;
 		bool	PurgeTextures;
@@ -228,10 +197,6 @@ struct SettingsMainStruct {
 		UInt8	CompileShaders;  // 1 Compile All, 2 Compile modified or missing only, 3 Compile only in menu
 		UInt8	CompileEffects;
 		bool    DebugMode;       // enables hotkeys to print textures
-		float   DebugVar1;       // var to use for development
-		float   DebugVar2;       // var to use for development
-		float   DebugVar3;       // var to use for development
-		float   DebugVar4;       // var to use for development
 		UInt8	TraceShaders;
 	};
 
@@ -248,9 +213,7 @@ struct SettingsMainStruct {
 	WeatherModeStruct			WeatherMode;
 	ShadowModeStruct			ShadowMode;
 	ShadersStruct				Shaders;
-	EffectsStruct				Effects;
 	MenuStruct					Menu;
-	LowHFSoundStruct			LowHFSound;
 	PurgerStruct				Purger;
 	GravityStruct				Gravity;
 	DodgeStruct					Dodge;
@@ -334,90 +297,6 @@ struct SettingsWaterStruct {
 	float depthDarkness;
 };
 
-struct SettingsWaterLensStruct {
-	float TimeMultA;
-	float TimeMultB;
-	float Time;
-	float Amount;
-	float Viscosity;
-};
-
-struct SettingsExposureStruct {
-	float MinBrightness;
-	float MaxBrightness;
-	float LightAdaptSpeed;
-	float DarkAdaptSpeed;
-};
-
-struct SettingsGrassStruct {
-	bool WindEnabled;
-	int GrassDensity;
-	float WindCoefficient;
-	float ScaleX;
-	float ScaleY;
-	float ScaleZ;
-	float MinDistance;
-	float MaxDistance;
-};
-
-struct SettingsHDRStruct {
-	float ToneMapping;
-	float ToneMappingBlur;
-	float ToneMappingColor;
-	float Linearization;
-};
-
-struct SettingsPOMStruct {
-	float HeightMapScale;
-	float MinSamples;
-	float MaxSamples;
-};
-
-struct SettingsTerrainStruct {
-	float DistantSpecular;
-	float DistantNoise;
-	float NearSpecular;
-	float MiddleSpecular;
-};
-
-struct SettingsSkinStruct {
-	float Attenuation;
-	float SpecularPower;
-	float MaterialThickness;
-	float RimScalar;
-	float CoeffRed;
-	float CoeffGreen;
-	float CoeffBlue;
-};
-
-struct SettingsGodRaysStruct {
-	bool TimeEnabled;
-	bool SunGlareEnabled;
-	int LightShaftPasses;
-	float RayIntensity;
-	float RayLength;
-	float RayDensity;
-	float RayVisibility;
-	float Luminance;
-	float GlobalMultiplier;
-	float RayR;
-	float RayG;
-	float RayB;
-	float Saturate;
-};
-
-struct SettingsDepthOfFieldStruct {
-	bool Enabled;
-	bool DistantBlur;
-	UInt8 Mode;
-	float DistantBlurStartRange;
-	float DistantBlurEndRange;
-	float BaseBlurRadius;
-	float BlurFallOff;
-	float Radius;
-	float DiameterRange;
-	float NearBlurCutOff;
-};
 
 struct SettingsSpecularStruct {
 	bool Enabled;
@@ -449,18 +328,6 @@ struct SettingsSpecularStruct {
 
 };
 
-struct SettingsAmbientOcclusionStruct {
-	bool Enabled;
-	float Samples;
-	float StrengthMultiplier;
-	float ClampStrength;
-	float AngleBias;
-	float Range;
-	float LumThreshold;
-	float BlurDropThreshold;
-	float BlurRadiusMultiplier;
-};
-
 struct SettingsColoringStruct {
 	float Strength;
 	float BaseGamma;
@@ -480,106 +347,6 @@ struct SettingsColoringStruct {
 	float Linearization;
 };
 
-struct SettingsCinemaStruct {
-	UInt8 Mode;
-	float AspectRatio;
-	float VignetteRadius;
-	float VignetteDarkness;
-	float OverlayStrength;
-	float DirtLensAmount;
-	float FilmGrainAmount;
-	float ChromaticAberration;
-};
-
-struct SettingsBloomStruct {
-	float BloomIntensity;
-	float OriginalIntensity;
-	float BloomSaturation;
-	float OriginalSaturation;
-	float Luminance;
-	float MiddleGray;
-	float WhiteCutOff;
-};
-
-struct SettingsPrecipitationsStruct {
-	struct RainStruct {
-		float Opacity;
-		float VerticalScale;
-		float Speed;
-		float Refraction;
-		float Coloring;
-		float Bloom;
-	};
-	
-	struct SnowStruct {
-		float DepthStep;
-		float Flakes;
-		float Speed;
-	};
-	
-	struct WetWorldStruct {
-		float Amount;
-		float Increase;
-		float Decrease;
-		float PuddleCoeff_R;
-		float PuddleCoeff_G;
-		float PuddleCoeff_B;
-		float PuddleSpecularMultiplier;
-	};
-
-	struct SnowAccumulationStruct {
-		float Amount;
-		float Increase;
-		float Decrease;
-		float SunPower;
-		float BlurNormDropThreshhold;
-		float BlurRadiusMultiplier;
-	};
-	
-	RainStruct				Rain;
-	SnowStruct				Snow;
-	WetWorldStruct			WetWorld;
-	SnowAccumulationStruct	SnowAccumulation;
-};
-
-struct SettingsBloodLensStruct {
-	float Chance;
-	float ColorR;
-	float ColorG;
-	float ColorB;
-	float Intensity;
-	float Time;
-};
-
-struct SettingsMotionBlurStruct {
-	bool Enabled;
-	float GaussianWeight;
-	float BlurScale;
-	float BlurOffsetMax;
-	float BlurCutOff;
-};
-
-struct SettingsLowHFStruct {
-	float HealthLimit;
-	float FatigueLimit;
-	float LumaMultiplier;
-	float BlurMultiplier;
-	float VignetteMultiplier;
-	float DarknessMultiplier;
-};
-
-struct SettingsSharpeningStruct {
-	float Strength;
-	float Clamp;
-	float Offset;
-};
-
-struct SettingsVolumetricFogStruct {
-	float Exponent;
-	float ColorCoeff;
-	float Amount;
-	float MaxDistance;
-};
 
 struct SettingsWeatherStruct {
 	char					LowerLayer[80];
@@ -682,30 +449,7 @@ public:
 	Configuration					Config;
 	bool							GameLoading;
 	SettingsMainStruct				SettingsMain;
-	SettingsAmbientOcclusionStruct	SettingsAmbientOcclusionExteriors;
-	SettingsAmbientOcclusionStruct	SettingsAmbientOcclusionInteriors;
-	SettingsBloodLensStruct			SettingsBloodLens;
-	SettingsBloomStruct				SettingsBloomExteriors;
-	SettingsBloomStruct				SettingsBloomInteriors;
-	SettingsCinemaStruct			SettingsCinema;
-	SettingsDepthOfFieldStruct		SettingsDepthOfFieldFirstPersonView;
-	SettingsDepthOfFieldStruct		SettingsDepthOfFieldThirdPersonView;
-	SettingsDepthOfFieldStruct		SettingsDepthOfFieldVanityView;
-	SettingsExposureStruct			SettingsExposure;
-	SettingsGodRaysStruct			SettingsGodRays;
-	SettingsGrassStruct				SettingsGrass;
-	SettingsHDRStruct				SettingsHDR;
-	SettingsLowHFStruct				SettingsLowHF;
-	SettingsMotionBlurStruct		SettingsMotionBlurFirstPersonView;
-	SettingsMotionBlurStruct		SettingsMotionBlurThirdPersonView;
-	SettingsPOMStruct				SettingsPOM;
-	SettingsPrecipitationsStruct	SettingsPrecipitations;
 	SettingsShadowStruct			SettingsShadows;
-	SettingsSharpeningStruct		SettingsSharpening;
-	SettingsSkinStruct				SettingsSkin;
-	SettingsTerrainStruct			SettingsTerrain;
-	SettingsVolumetricFogStruct		SettingsVolumetricFog;
-	SettingsWaterLensStruct			SettingsWaterLens;
 	SettingsWaterMap				SettingsWater;
 	SettingsColoringMap				SettingsColoring;
 	SettingsWeatherMap				SettingsWeather;

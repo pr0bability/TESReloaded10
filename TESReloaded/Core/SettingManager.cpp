@@ -364,40 +364,6 @@ void SettingManager::LoadSettings() {
 
 	SettingsMain.ShadowMode.NearQuality = GetSettingF("Main.ShadowMode.Main", "NearQuality");
 
-	SettingsMain.Shaders.Water = GetSettingI("Shaders.Water.Status", "Enabled");
-	SettingsMain.Shaders.Grass = GetSettingI("Shaders.Grass.Status", "Enabled");
-	SettingsMain.Shaders.HDR = GetSettingI("Shaders.HDR.Status", "Enabled");
-	SettingsMain.Shaders.POM = GetSettingI("Shaders.POM.Status", "Enabled");
-	SettingsMain.Shaders.Skin = GetSettingI("Shaders.Skin.Status", "Enabled");
-	SettingsMain.Shaders.Terrain = GetSettingI("Shaders.Terrain.Status", "Enabled");
-	SettingsMain.Shaders.Blood = GetSettingI("Shaders.Blood.Status", "Enabled");
-	SettingsMain.Shaders.NightEye = GetSettingI("Shaders.NightEye.Status", "Enabled");
-	SettingsMain.Shaders.Extra = GetSettingI("Shaders.ExtraShaders.Status", "Enabled");
-
-	SettingsMain.Effects.AmbientOcclusion = GetSettingI("Shaders.AmbientOcclusion.Status", "Enabled");
-	SettingsMain.Effects.Underwater = GetSettingI("Shaders.Underwater.Status", "Enabled");
-	SettingsMain.Effects.WaterLens = GetSettingI("Shaders.WaterLens.Status", "Enabled");
-	SettingsMain.Effects.GodRays = GetSettingI("Shaders.GodRays.Status", "Enabled");
-	SettingsMain.Effects.DepthOfField = GetSettingI("Shaders.DepthOfField.Status", "Enabled");
-	SettingsMain.Effects.Exposure = GetSettingI("Shaders.Exposure.Status", "Enabled");
-	SettingsMain.Effects.Coloring = GetSettingI("Shaders.Coloring.Status", "Enabled");
-	SettingsMain.Effects.Cinema = GetSettingI("Shaders.Cinema.Status", "Enabled");
-	SettingsMain.Effects.Bloom = GetSettingI("Shaders.Bloom.Status", "Enabled");
-	SettingsMain.Effects.SnowAccumulation = GetSettingI("Shaders.SnowAccumulation.Status", "Enabled");
-	SettingsMain.Effects.BloodLens = GetSettingI("Shaders.BloodLens.Status", "Enabled");
-	SettingsMain.Effects.MotionBlur = GetSettingI("Shaders.MotionBlur.Status", "Enabled");
-	SettingsMain.Effects.LowHF = GetSettingI("Shaders.LowHF.Status", "Enabled");
-	SettingsMain.Effects.WetWorld = GetSettingI("Shaders.WetWorld.Status", "Enabled");
-	SettingsMain.Effects.Sharpening = GetSettingI("Shaders.Sharpening.Status", "Enabled");
-	SettingsMain.Effects.VolumetricFog = GetSettingI("Shaders.VolumetricFog.Status", "Enabled");
-	SettingsMain.Effects.Rain = GetSettingI("Shaders.Precipitations.Status", "Enabled");
-	SettingsMain.Effects.Snow = GetSettingI("Shaders.Snow.Status", "Enabled"); //TODO change in the INI
-	SettingsMain.Effects.ShadowsExteriors = GetSettingI("Shaders.ShadowsExteriors.Status", "PostProcess");
-	SettingsMain.Effects.ShadowsInteriors = GetSettingI("Shaders.ShadowsInteriors.Status", "PostProcess");
-	SettingsMain.Effects.Specular = GetSettingI("Shaders.Specular.Status", "Enabled");
-	SettingsMain.Effects.Extra = GetSettingI("Shaders.ExtraEffects.Status", "Enabled");
-
-
 	strcpy(SettingsMain.Menu.TextFont, GetSettingS("Main.Menu.Style", "TextFont", Value));
 	SettingsMain.Menu.TextSize = GetSettingI("Main.Menu.Style", "TextSize");
 	strcpy(SettingsMain.Menu.TextFontStatus, GetSettingS("Main.Menu.Style", "TextFontStatus", Value));
@@ -429,11 +395,6 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Menu.KeySave = GetSettingI("Main.Menu.Keys", "KeySave");
 	SettingsMain.Menu.KeyEditing = GetSettingI("Main.Menu.Keys", "KeyEditing");
 
-	SettingsMain.LowHFSound.HealthEnabled = GetSettingI("Main.LowHFSound.Main", "HealthEnabled");
-	SettingsMain.LowHFSound.FatigueEnabled = GetSettingI("Main.LowHFSound.Main", "FatigueEnabled");
-	SettingsMain.LowHFSound.HealthCoeff = GetSettingF("Main.LowHFSound.Main", "HealthCoeff");
-	SettingsMain.LowHFSound.FatigueCoeff = GetSettingF("Main.LowHFSound.Main", "FatigueCoeff");
-
 	SettingsMain.Purger.Enabled = GetSettingI("Main.Purger.Main", "Enabled");
 	SettingsMain.Purger.Time = GetSettingI("Main.Purger.Main", "Time");
 	SettingsMain.Purger.PurgeTextures = GetSettingI("Main.Purger.Main", "PurgeTextures");
@@ -457,10 +418,6 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Develop.CompileShaders = GetSettingI("Main.Develop.Main", "CompileShaders");
 	SettingsMain.Develop.CompileEffects = GetSettingI("Main.Develop.Main", "CompileEffects");
 	SettingsMain.Develop.DebugMode = GetSettingI("Main.Develop.Main", "DebugMode");
-	SettingsMain.Develop.DebugVar1 = GetSettingF("Main.Develop.Main", "DebugVar1");
-	SettingsMain.Develop.DebugVar2 = GetSettingF("Main.Develop.Main", "DebugVar2");
-	SettingsMain.Develop.DebugVar3 = GetSettingF("Main.Develop.Main", "DebugVar3");
-	SettingsMain.Develop.DebugVar4 = GetSettingF("Main.Develop.Main", "DebugVar4");
 	SettingsMain.Develop.TraceShaders = GetSettingI("Main.Develop.Main", "TraceShaders");
 
 
@@ -505,61 +462,6 @@ void SettingManager::LoadSettings() {
 		SettingsWeather[WeatherSection] = SE;
 	}
 
-
-	SettingsAmbientOcclusionExteriors.Enabled = GetSettingI("Shaders.AmbientOcclusion.Exteriors", "Enabled");
-	SettingsAmbientOcclusionExteriors.Samples = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "Samples");
-	SettingsAmbientOcclusionExteriors.StrengthMultiplier = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "StrengthMultiplier");
-	SettingsAmbientOcclusionExteriors.ClampStrength = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "ClampStrength");
-	SettingsAmbientOcclusionExteriors.AngleBias = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "AngleBias");
-	SettingsAmbientOcclusionExteriors.Range = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "Range");
-	SettingsAmbientOcclusionExteriors.LumThreshold = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "LumThreshold");
-	SettingsAmbientOcclusionExteriors.BlurDropThreshold = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "BlurDropThreshold");
-	SettingsAmbientOcclusionExteriors.BlurRadiusMultiplier = GetSettingF("Shaders.AmbientOcclusion.Exteriors", "BlurRadiusMultiplier");
-
-	SettingsAmbientOcclusionInteriors.Enabled = GetSettingI("Shaders.AmbientOcclusion.Interiors", "Enabled");
-	SettingsAmbientOcclusionInteriors.Samples = GetSettingF("Shaders.AmbientOcclusion.Interiors", "Samples");
-	SettingsAmbientOcclusionInteriors.StrengthMultiplier = GetSettingF("Shaders.AmbientOcclusion.Interiors", "StrengthMultiplier");
-	SettingsAmbientOcclusionInteriors.ClampStrength = GetSettingF("Shaders.AmbientOcclusion.Interiors", "ClampStrength");
-	SettingsAmbientOcclusionInteriors.AngleBias = GetSettingF("Shaders.AmbientOcclusion.Interiors", "AngleBias");
-	SettingsAmbientOcclusionInteriors.Range = GetSettingF("Shaders.AmbientOcclusion.Interiors", "Range");
-	SettingsAmbientOcclusionInteriors.LumThreshold = GetSettingF("Shaders.AmbientOcclusion.Interiors", "LumThreshold");
-	SettingsAmbientOcclusionInteriors.BlurDropThreshold = GetSettingF("Shaders.AmbientOcclusion.Interiors", "BlurDropThreshold");
-	SettingsAmbientOcclusionInteriors.BlurRadiusMultiplier = GetSettingF("Shaders.AmbientOcclusion.Interiors", "BlurRadiusMultiplier");
-
-
-	SettingsBloodLens.Chance = GetSettingF("Shaders.BloodLens.Main", "Chance");
-	SettingsBloodLens.ColorR = GetSettingF("Shaders.BloodLens.Main", "ColorR");
-	SettingsBloodLens.ColorG = GetSettingF("Shaders.BloodLens.Main", "ColorG");
-	SettingsBloodLens.ColorB = GetSettingF("Shaders.BloodLens.Main", "ColorB");
-	SettingsBloodLens.Intensity = GetSettingF("Shaders.BloodLens.Main", "Intensity");
-	SettingsBloodLens.Time = GetSettingF("Shaders.BloodLens.Main", "Time");
-
-
-	SettingsBloomExteriors.BloomIntensity = GetSettingF("Shaders.Bloom.Exteriors", "BloomIntensity");
-	SettingsBloomExteriors.OriginalIntensity = GetSettingF("Shaders.Bloom.Exteriors", "OriginalIntensity");
-	SettingsBloomExteriors.BloomSaturation = GetSettingF("Shaders.Bloom.Exteriors", "BloomSaturation");
-	SettingsBloomExteriors.OriginalSaturation = GetSettingF("Shaders.Bloom.Exteriors", "OriginalSaturation");
-	SettingsBloomExteriors.Luminance = GetSettingF("Shaders.Bloom.Exteriors", "Luminance");
-	SettingsBloomExteriors.MiddleGray = GetSettingF("Shaders.Bloom.Exteriors", "MiddleGray");
-	SettingsBloomExteriors.WhiteCutOff = GetSettingF("Shaders.Bloom.Exteriors", "WhiteCutOff");
-
-	SettingsBloomInteriors.BloomIntensity = GetSettingF("Shaders.Bloom.Interiors", "BloomIntensity");
-	SettingsBloomInteriors.OriginalIntensity = GetSettingF("Shaders.Bloom.Interiors", "OriginalIntensity");
-	SettingsBloomInteriors.BloomSaturation = GetSettingF("Shaders.Bloom.Interiors", "BloomSaturation");
-	SettingsBloomInteriors.OriginalSaturation = GetSettingF("Shaders.Bloom.Interiors", "OriginalSaturation");
-	SettingsBloomInteriors.Luminance = GetSettingF("Shaders.Bloom.Interiors", "Luminance");
-	SettingsBloomInteriors.MiddleGray = GetSettingF("Shaders.Bloom.Interiors", "MiddleGray");
-	SettingsBloomInteriors.WhiteCutOff = GetSettingF("Shaders.Bloom.Interiors", "WhiteCutOff");
-
-	SettingsCinema.Mode = GetSettingI("Shaders.Cinema.Main", "Mode");
-	SettingsCinema.AspectRatio = GetSettingF("Shaders.Cinema.Main", "AspectRatio");
-	SettingsCinema.VignetteRadius = GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
-	SettingsCinema.VignetteDarkness = GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
-	SettingsCinema.OverlayStrength = GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
-	SettingsCinema.DirtLensAmount = GetSettingF("Shaders.Cinema.Main", "DirtLensAmount");
-	SettingsCinema.FilmGrainAmount = GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
-	SettingsCinema.ChromaticAberration = GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
-
 	Config.FillSections(&List, "Shaders.Coloring");
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		const char* ColoringSection = Iter->c_str();
@@ -586,143 +488,6 @@ void SettingManager::LoadSettings() {
 			SettingsColoring[ColoringSection] = SC;
 		}
 	}
-
-
-	SettingsDepthOfFieldFirstPersonView.Enabled = GetSettingI("Shaders.DepthOfField.FirstPersonView", "Enabled");
-	SettingsDepthOfFieldFirstPersonView.Mode = GetSettingI("Shaders.DepthOfField.FirstPersonView", "Mode");
-	SettingsDepthOfFieldFirstPersonView.DistantBlur = GetSettingI("Shaders.DepthOfField.FirstPersonView", "DistantBlur");
-	SettingsDepthOfFieldFirstPersonView.DistantBlurStartRange = GetSettingF("Shaders.DepthOfField.FirstPersonView", "DistantBlurStartRange");
-	SettingsDepthOfFieldFirstPersonView.DistantBlurEndRange = GetSettingF("Shaders.DepthOfField.FirstPersonView", "DistantBlurEndRange");
-	SettingsDepthOfFieldFirstPersonView.BaseBlurRadius = GetSettingF("Shaders.DepthOfField.FirstPersonView", "BaseBlurRadius");
-	SettingsDepthOfFieldFirstPersonView.BlurFallOff = GetSettingF("Shaders.DepthOfField.FirstPersonView", "BlurFallOff");
-	SettingsDepthOfFieldFirstPersonView.Radius = GetSettingF("Shaders.DepthOfField.FirstPersonView", "Radius");
-	SettingsDepthOfFieldFirstPersonView.DiameterRange = GetSettingF("Shaders.DepthOfField.FirstPersonView", "DiameterRange");
-	SettingsDepthOfFieldFirstPersonView.NearBlurCutOff = GetSettingF("Shaders.DepthOfField.FirstPersonView", "NearBlurCutOff");
-
-	SettingsDepthOfFieldThirdPersonView.Enabled = GetSettingI("Shaders.DepthOfField.ThirdPersonView", "Enabled");
-	SettingsDepthOfFieldThirdPersonView.Mode = GetSettingI("Shaders.DepthOfField.ThirdPersonView", "Mode");
-	SettingsDepthOfFieldThirdPersonView.DistantBlur = GetSettingI("Shaders.DepthOfField.ThirdPersonView", "DistantBlur");
-	SettingsDepthOfFieldThirdPersonView.DistantBlurStartRange = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DistantBlurStartRange");
-	SettingsDepthOfFieldThirdPersonView.DistantBlurEndRange = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DistantBlurEndRange");
-	SettingsDepthOfFieldThirdPersonView.BaseBlurRadius = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "BaseBlurRadius");
-	SettingsDepthOfFieldThirdPersonView.BlurFallOff = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "BlurFallOff");
-	SettingsDepthOfFieldThirdPersonView.Radius = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "Radius");
-	SettingsDepthOfFieldThirdPersonView.DiameterRange = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DiameterRange");
-	SettingsDepthOfFieldThirdPersonView.NearBlurCutOff = GetSettingF("Shaders.DepthOfField.ThirdPersonView", "NearBlurCutOff");
-
-	SettingsDepthOfFieldVanityView.Enabled = GetSettingI("Shaders.DepthOfField.VanityView", "Enabled");
-	SettingsDepthOfFieldVanityView.Mode = GetSettingI("Shaders.DepthOfField.VanityView", "Mode");
-	SettingsDepthOfFieldVanityView.DistantBlur = GetSettingI("Shaders.DepthOfField.VanityView", "DistantBlur");
-	SettingsDepthOfFieldVanityView.DistantBlurStartRange = GetSettingF("Shaders.DepthOfField.VanityView", "DistantBlurStartRange");
-	SettingsDepthOfFieldVanityView.DistantBlurEndRange = GetSettingF("Shaders.DepthOfField.VanityView", "DistantBlurEndRange");
-	SettingsDepthOfFieldVanityView.BaseBlurRadius = GetSettingF("Shaders.DepthOfField.VanityView", "BaseBlurRadius");
-	SettingsDepthOfFieldVanityView.BlurFallOff = GetSettingF("Shaders.DepthOfField.VanityView", "BlurFallOff");
-	SettingsDepthOfFieldVanityView.Radius = GetSettingF("Shaders.DepthOfField.VanityView", "Radius");
-	SettingsDepthOfFieldVanityView.DiameterRange = GetSettingF("Shaders.DepthOfField.VanityView", "DiameterRange");
-	SettingsDepthOfFieldVanityView.NearBlurCutOff = GetSettingF("Shaders.DepthOfField.VanityView", "NearBlurCutOff");
-
-	SettingsExposure.MaxBrightness = GetSettingF("Shaders.Exposure.Main", "MaxBrightness");
-	SettingsExposure.MinBrightness = GetSettingF("Shaders.Exposure.Main", "MinBrightness");
-	SettingsExposure.DarkAdaptSpeed = GetSettingF("Shaders.Exposure.Main", "DarkAdaptSpeed");
-	SettingsExposure.LightAdaptSpeed = GetSettingF("Shaders.Exposure.Main", "LightAdaptSpeed");
-
-	SettingsGodRays.TimeEnabled = GetSettingI("Shaders.GodRays.Main", "TimeEnabled");
-	SettingsGodRays.SunGlareEnabled = GetSettingI("Shaders.GodRays.Main", "SunGlareEnabled");
-	SettingsGodRays.LightShaftPasses = GetSettingI("Shaders.GodRays.Main", "LightShaftPasses");
-	SettingsGodRays.RayIntensity = GetSettingF("Shaders.GodRays.Main", "RayIntensity");
-	SettingsGodRays.RayLength = GetSettingF("Shaders.GodRays.Main", "RayLength");
-	SettingsGodRays.RayDensity = GetSettingF("Shaders.GodRays.Main", "RayDensity");
-	SettingsGodRays.RayVisibility = GetSettingF("Shaders.GodRays.Main", "RayVisibility");
-	SettingsGodRays.Luminance = GetSettingF("Shaders.GodRays.Main", "Luminance");
-	SettingsGodRays.GlobalMultiplier = GetSettingF("Shaders.GodRays.Main", "GlobalMultiplier");
-	SettingsGodRays.RayR = GetSettingF("Shaders.GodRays.Main", "RayR");
-	SettingsGodRays.RayG = GetSettingF("Shaders.GodRays.Main", "RayG");
-	SettingsGodRays.RayB = GetSettingF("Shaders.GodRays.Main", "RayB");
-	SettingsGodRays.Saturate = GetSettingF("Shaders.GodRays.Main", "Saturate");
-
-
-	SettingsGrass.WindEnabled = GetSettingI("Shaders.Grass.Main", "WindEnabled");
-	SettingsGrass.GrassDensity = GetSettingI("Shaders.Grass.Main", "GrassDensity");
-	SettingsGrass.WindCoefficient = GetSettingF("Shaders.Grass.Main", "WindCoefficient");
-	SettingsGrass.ScaleX = GetSettingF("Shaders.Grass.Main", "ScaleX");
-	SettingsGrass.ScaleY = GetSettingF("Shaders.Grass.Main", "ScaleY");
-	SettingsGrass.ScaleZ = GetSettingF("Shaders.Grass.Main", "ScaleZ");
-	SettingsGrass.MinDistance = GetSettingF("Shaders.Grass.Main", "MinDistance");
-	SettingsGrass.MaxDistance = GetSettingF("Shaders.Grass.Main", "MaxDistance");
-
-
-	SettingsHDR.ToneMapping = GetSettingF("Shaders.HDR.Main", "ToneMapping");
-	SettingsHDR.ToneMappingBlur = GetSettingF("Shaders.HDR.Main", "ToneMappingBlur");
-	SettingsHDR.ToneMappingColor = GetSettingF("Shaders.HDR.Main", "ToneMappingColor");
-	SettingsHDR.Linearization = GetSettingF("Shaders.HDR.Main", "Linearization");
-
-
-	SettingsLowHF.HealthLimit = GetSettingF("Shaders.LowHF.Main", "HealthLimit");
-	SettingsLowHF.FatigueLimit = GetSettingF("Shaders.LowHF.Main", "FatigueLimit");
-	SettingsLowHF.LumaMultiplier = GetSettingF("Shaders.LowHF.Main", "LumaMultiplier");
-	SettingsLowHF.BlurMultiplier = GetSettingF("Shaders.LowHF.Main", "BlurMultiplier");
-	SettingsLowHF.VignetteMultiplier = GetSettingF("Shaders.LowHF.Main", "VignetteMultiplier");
-	SettingsLowHF.DarknessMultiplier = GetSettingF("Shaders.LowHF.Main", "DarknessMultiplier");
-
-
-	SettingsMotionBlurFirstPersonView.Enabled = GetSettingI("Shaders.MotionBlur.FirstPersonView", "Enabled");
-	SettingsMotionBlurFirstPersonView.GaussianWeight = GetSettingF("Shaders.MotionBlur.FirstPersonView", "GaussianWeight");
-	SettingsMotionBlurFirstPersonView.BlurScale = GetSettingF("Shaders.MotionBlur.FirstPersonView", "BlurScale");
-	SettingsMotionBlurFirstPersonView.BlurOffsetMax = GetSettingF("Shaders.MotionBlur.FirstPersonView", "BlurOffsetMax");
-	SettingsMotionBlurFirstPersonView.BlurCutOff = GetSettingF("Shaders.MotionBlur.FirstPersonView", "BlurCutOff");
-
-	SettingsMotionBlurThirdPersonView.Enabled = GetSettingI("Shaders.MotionBlur.ThirdPersonView", "Enabled");
-	SettingsMotionBlurThirdPersonView.GaussianWeight = GetSettingF("Shaders.MotionBlur.ThirdPersonView", "GaussianWeight");
-	SettingsMotionBlurThirdPersonView.BlurScale = GetSettingF("Shaders.MotionBlur.ThirdPersonView", "BlurScale");
-	SettingsMotionBlurThirdPersonView.BlurOffsetMax = GetSettingF("Shaders.MotionBlur.ThirdPersonView", "BlurOffsetMax");
-	SettingsMotionBlurThirdPersonView.BlurCutOff = GetSettingF("Shaders.MotionBlur.ThirdPersonView", "BlurCutOff");
-
-	SettingsPOM.HeightMapScale = GetSettingF("Shaders.POM.Main", "HeightMapScale");
-	SettingsPOM.MinSamples = GetSettingF("Shaders.POM.Main", "MinSamples");
-	SettingsPOM.MaxSamples = GetSettingF("Shaders.POM.Main", "MaxSamples");
-
-	SettingsPrecipitations.Rain.Opacity = GetSettingF("Shaders.Precipitations.Main", "Opacity");
-	SettingsPrecipitations.Rain.Speed = GetSettingF("Shaders.Precipitations.Main", "Speed");
-	SettingsPrecipitations.Rain.VerticalScale = GetSettingF("Shaders.Precipitations.Main", "VerticalScale");
-	SettingsPrecipitations.Rain.Refraction = GetSettingF("Shaders.Precipitations.Main", "Refraction");
-	SettingsPrecipitations.Rain.Coloring = GetSettingF("Shaders.Precipitations.Main", "Coloring");
-	SettingsPrecipitations.Rain.Bloom = GetSettingF("Shaders.Precipitations.Main", "Bloom");
-
-	SettingsPrecipitations.Snow.DepthStep = GetSettingF("Shaders.Snow.Main", "DepthStep");
-	SettingsPrecipitations.Snow.Flakes = GetSettingF("Shaders.Snow.Main", "Flakes");
-	SettingsPrecipitations.Snow.Speed = GetSettingF("Shaders.Snow.Main", "Speed");
-	SettingsPrecipitations.WetWorld.Amount = GetSettingF("Shaders.WetWorld.Main", "Amount");
-	SettingsPrecipitations.WetWorld.Increase = GetSettingF("Shaders.WetWorld.Main", "Increase");
-	SettingsPrecipitations.WetWorld.Decrease = GetSettingF("Shaders.WetWorld.Main", "Decrease");
-	SettingsPrecipitations.WetWorld.PuddleCoeff_R = GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
-	SettingsPrecipitations.WetWorld.PuddleCoeff_G = GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
-	SettingsPrecipitations.WetWorld.PuddleCoeff_B = GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
-	SettingsPrecipitations.WetWorld.PuddleSpecularMultiplier = GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
-	SettingsPrecipitations.SnowAccumulation.Amount = GetSettingF("Shaders.SnowAccumulation.Main", "Amount");
-	SettingsPrecipitations.SnowAccumulation.Increase = GetSettingF("Shaders.SnowAccumulation.Main", "Increase");
-	SettingsPrecipitations.SnowAccumulation.Decrease = GetSettingF("Shaders.SnowAccumulation.Main", "Decrease");
-	SettingsPrecipitations.SnowAccumulation.SunPower = GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
-	SettingsPrecipitations.SnowAccumulation.BlurNormDropThreshhold = GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
-	SettingsPrecipitations.SnowAccumulation.BlurRadiusMultiplier = GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
-
-	// Specular effect settings
-	SettingsSpecular.Exterior.SpecLumaTreshold = GetSettingF("Shaders.Specular.Exterior", "SpecLumaTreshold");
-	SettingsSpecular.Exterior.BlurMultiplier = GetSettingF("Shaders.Specular.Exterior", "BlurMultiplier");
-	SettingsSpecular.Exterior.Glossiness = GetSettingF("Shaders.Specular.Exterior", "Glossiness");
-	SettingsSpecular.Exterior.DistanceFade = GetSettingF("Shaders.Specular.Exterior", "DistanceFade");
-	SettingsSpecular.Exterior.SpecularStrength = GetSettingF("Shaders.Specular.Exterior", "SpecularStrength");
-	SettingsSpecular.Exterior.FresnelStrength = GetSettingF("Shaders.Specular.Exterior", "FresnelStrength");
-	SettingsSpecular.Exterior.SkyTintStrength = GetSettingF("Shaders.Specular.Exterior", "SkyTintStrength");
-	SettingsSpecular.Exterior.SkyTintSaturation = GetSettingF("Shaders.Specular.Exterior", "SkyTintSaturation");
-
-	SettingsSpecular.Rain.SpecLumaTreshold = GetSettingF("Shaders.Specular.Rain", "SpecLumaTreshold");
-	SettingsSpecular.Rain.BlurMultiplier = GetSettingF("Shaders.Specular.Rain", "BlurMultiplier");
-	SettingsSpecular.Rain.Glossiness = GetSettingF("Shaders.Specular.Rain", "Glossiness");
-	SettingsSpecular.Rain.DistanceFade = GetSettingF("Shaders.Specular.Rain", "DistanceFade");
-	SettingsSpecular.Rain.SpecularStrength = GetSettingF("Shaders.Specular.Rain", "SpecularStrength");
-	SettingsSpecular.Rain.FresnelStrength = GetSettingF("Shaders.Specular.Rain", "FresnelStrength");
-	SettingsSpecular.Rain.SkyTintStrength = GetSettingF("Shaders.Specular.Rain", "SkyTintStrength");
-	SettingsSpecular.Rain.SkyTintSaturation = GetSettingF("Shaders.Specular.Rain", "SkyTintSaturation");
 
 	// Generic exterior shadows settings
 	SettingsShadows.Exteriors.Enabled = GetSettingI("Shaders.ShadowsExteriors.Main", "Enabled");
@@ -808,33 +573,6 @@ void SettingManager::LoadSettings() {
 	}
 	if (List.size()) std::sort(SettingsShadows.Interiors.ExcludedForms.begin(), SettingsShadows.Interiors.ExcludedForms.end());
 
-
-	SettingsSharpening.Strength = GetSettingF("Shaders.Sharpening.Main", "Strength");
-	SettingsSharpening.Clamp = GetSettingF("Shaders.Sharpening.Main", "Clamp");
-	SettingsSharpening.Offset = GetSettingF("Shaders.Sharpening.Main", "Offset");
-
-
-	SettingsSkin.Attenuation = GetSettingF("Shaders.Skin.Main", "Attenuation");
-	SettingsSkin.SpecularPower = GetSettingF("Shaders.Skin.Main", "SpecularPower");
-	SettingsSkin.MaterialThickness = GetSettingF("Shaders.Skin.Main", "MaterialThickness");
-	SettingsSkin.RimScalar = GetSettingF("Shaders.Skin.Main", "RimScalar");
-	SettingsSkin.CoeffRed = GetSettingF("Shaders.Skin.Main", "CoeffRed");
-	SettingsSkin.CoeffGreen = GetSettingF("Shaders.Skin.Main", "CoeffGreen");
-	SettingsSkin.CoeffBlue = GetSettingF("Shaders.Skin.Main", "CoeffBlue");
-
-
-	SettingsTerrain.DistantSpecular = GetSettingF("Shaders.Terrain.Main", "DistantSpecular");
-	SettingsTerrain.DistantNoise = GetSettingF("Shaders.Terrain.Main", "DistantNoise");
-	SettingsTerrain.NearSpecular = GetSettingF("Shaders.Terrain.Main", "NearSpecular");
-	SettingsTerrain.MiddleSpecular = GetSettingF("Shaders.Terrain.Main", "MiddleSpecular");
-
-
-	SettingsVolumetricFog.Exponent = GetSettingF("Shaders.VolumetricFog.Main", "Exponent");
-	SettingsVolumetricFog.ColorCoeff = GetSettingF("Shaders.VolumetricFog.Main", "ColorCoeff");
-	SettingsVolumetricFog.Amount = GetSettingF("Shaders.VolumetricFog.Main", "Amount");
-	SettingsVolumetricFog.MaxDistance = GetSettingF("Shaders.VolumetricFog.Main", "MaxDistance");
-
-
 	Config.FillSections(&List, "Shaders.Water");
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		const char* WaterSection = Iter->c_str();
@@ -859,12 +597,6 @@ void SettingManager::LoadSettings() {
 			SettingsWater[WaterSection] = SW;
 		}
 	}
-
-	SettingsWaterLens.TimeMultA = GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
-	SettingsWaterLens.TimeMultB = GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
-	SettingsWaterLens.Time = GetSettingF("Shaders.WaterLens.Main", "Time");
-	SettingsWaterLens.Amount = GetSettingF("Shaders.WaterLens.Main", "Amount");
-	SettingsWaterLens.Viscosity = GetSettingF("Shaders.WaterLens.Main", "Viscosity");
 
 	timer.LogTime("SettingsManager::InitSettings for loop");
 }
@@ -1295,44 +1027,6 @@ void SettingManager::SetMenuShaderEnabled(const char* Name, bool enabled) {
 	SetSetting(settingString, settingName, enabled);
 }
 
-
-
-// finds a setting pointer by name
-bool* SettingManager::GetMenuShaderSetting(const char* Name) {
-
-	if (!strcmp(Name, "AmbientOcclusion")) return &SettingsMain.Effects.AmbientOcclusion;
-	if (!strcmp(Name, "Blood")) return &SettingsMain.Shaders.Blood;
-	if (!strcmp(Name, "BloodLens")) return &SettingsMain.Effects.BloodLens;
-	if (!strcmp(Name, "Bloom")) return &SettingsMain.Effects.Bloom;
-	if (!strcmp(Name, "Cinema")) return &SettingsMain.Effects.Cinema;
-	if (!strcmp(Name, "Coloring")) return &SettingsMain.Effects.Coloring;
-	if (!strcmp(Name, "DepthOfField")) return &SettingsMain.Effects.DepthOfField;
-	if (!strcmp(Name, "Exposure")) return &SettingsMain.Effects.Exposure;
-	if (!strcmp(Name, "ExtraEffects")) return &SettingsMain.Effects.Extra;
-	if (!strcmp(Name, "ExtraShaders")) return &SettingsMain.Shaders.Extra;
-	if (!strcmp(Name, "GodRays")) return &SettingsMain.Effects.GodRays;
-	if (!strcmp(Name, "Grass")) return &SettingsMain.Shaders.Grass;
-	if (!strcmp(Name, "HDR")) return &SettingsMain.Shaders.HDR;
-	if (!strcmp(Name, "LowHF")) return &SettingsMain.Effects.LowHF;
-	if (!strcmp(Name, "MotionBlur")) return &SettingsMain.Effects.MotionBlur;
-	if (!strcmp(Name, "NightEye")) return &SettingsMain.Shaders.NightEye;
-	if (!strcmp(Name, "POM")) return &SettingsMain.Shaders.POM;
-	if (!strcmp(Name, "Precipitations")) return &SettingsMain.Effects.Rain;
-	if (!strcmp(Name, "Snow")) return &SettingsMain.Effects.Snow;
-	if (!strcmp(Name, "ShadowsExteriors")) return &SettingsMain.Effects.ShadowsExteriors;
-	if (!strcmp(Name, "ShadowsInteriors")) return &SettingsMain.Effects.ShadowsInteriors;
-	if (!strcmp(Name, "Sharpening")) return &SettingsMain.Effects.Sharpening;
-	if (!strcmp(Name, "Specular")) return &SettingsMain.Effects.Specular;
-	if (!strcmp(Name, "Skin")) return &SettingsMain.Shaders.Skin;
-	if (!strcmp(Name, "SnowAccumulation")) return &SettingsMain.Effects.SnowAccumulation;
-	if (!strcmp(Name, "Terrain")) return &SettingsMain.Shaders.Terrain;
-	if (!strcmp(Name, "Underwater")) return &SettingsMain.Effects.Underwater;
-	if (!strcmp(Name, "VolumetricFog")) return &SettingsMain.Effects.VolumetricFog;
-	if (!strcmp(Name, "Water")) return &SettingsMain.Shaders.Water;
-	if (!strcmp(Name, "WaterLens")) return &SettingsMain.Effects.WaterLens;
-	if (!strcmp(Name, "WetWorld")) return &SettingsMain.Effects.WetWorld;
-	return NULL;
-}
 
 SettingsWaterStruct* SettingManager::GetSettingsWater(const char* PlayerLocation) {
 
