@@ -421,7 +421,7 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Develop.TraceShaders = GetSettingI("Main.Develop.Main", "TraceShaders");
 
 
-	Config.FillSections(&List, "Weathers");
+	Config.FillSections(&List, "Weathers"); // get the list of weathers
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		const char* WeatherSection = Iter->c_str();
 		char SectionName[80];
@@ -462,7 +462,7 @@ void SettingManager::LoadSettings() {
 		SettingsWeather[WeatherSection] = SE;
 	}
 
-	Config.FillSections(&List, "Shaders.Coloring");
+	Config.FillSections(&List, "Shaders.Coloring"); // get the list of coloring sections
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		const char* ColoringSection = Iter->c_str();
 		if (strcmp(ColoringSection, "Status")) {
@@ -540,7 +540,7 @@ void SettingManager::LoadSettings() {
 		SettingsShadows.Exteriors.Forms[shadowType].Lod = GetSettingI(sectionName, "Lod");
 	};
 
-	Config.FillSections(&List, "Shaders.ShadowsExteriors.ExcludedFormID");
+	Config.FillSections(&List, "Shaders.ShadowsExteriors.ExcludedFormID"); // get the list of excluded formIDs
 	if (List.size()) SettingsShadows.Exteriors.ExcludedForms.reserve(List.size());
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		SettingsShadows.Exteriors.ExcludedForms.push_back(strtol(Iter->c_str(), NULL, 16));
@@ -573,7 +573,7 @@ void SettingManager::LoadSettings() {
 	}
 	if (List.size()) std::sort(SettingsShadows.Interiors.ExcludedForms.begin(), SettingsShadows.Interiors.ExcludedForms.end());
 
-	Config.FillSections(&List, "Shaders.Water");
+	Config.FillSections(&List, "Shaders.Water"); // get the list of waters
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		const char* WaterSection = Iter->c_str();
 		if (strcmp(WaterSection, "Status")) {
@@ -601,6 +601,9 @@ void SettingManager::LoadSettings() {
 	timer.LogTime("SettingsManager::InitSettings for loop");
 }
 
+/*
+* Saves the state of the config to the config file
+*/
 void SettingManager::SaveSettings() {
 
 	char Filename[MAX_PATH];
