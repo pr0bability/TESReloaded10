@@ -83,6 +83,10 @@ public:
 	float x;
 	float y;
 	float z;
+
+	D3DXVECTOR4		toD3DXVEC4() {
+		return D3DXVECTOR4(x, y, z, 1.0);
+	}
 };
 assert(sizeof(NiPoint3) == 0x00C);
 

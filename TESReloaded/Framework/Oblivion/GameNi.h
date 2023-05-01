@@ -76,7 +76,7 @@ assert(sizeof(NiPoint2) == 0x008);
 
 class NiPoint3 {
 public:
-	float NiPoint3::operator * (const NiPoint3 pt) const { return x * pt.x + y * pt.y + z * pt.z; }
+	float operator * (const NiPoint3 pt) const { return x * pt.x + y * pt.y + z * pt.z; }
 
 	void GetLookAt(NiPoint3* LookAt, NiPoint3* Rotation) {
 		float x, y, z, r;
@@ -93,6 +93,10 @@ public:
 	float x;
 	float y;
 	float z;
+
+	D3DXVECTOR4		toD3DXVEC4() {
+		return D3DXVECTOR4(x, y, z, 1.0);
+	}
 };
 assert(sizeof(NiPoint3) == 0x00C);
 

@@ -723,11 +723,7 @@ void ShadowManager::RenderShadowMaps() {
 	while (Entry) {
 		NiPointLight* Light = Entry->data->sourceLight;
 
-		D3DXVECTOR4 LightPosition;
-		LightPosition.x = Light->m_worldTransform.pos.x;
-		LightPosition.y = Light->m_worldTransform.pos.y;
-		LightPosition.z = Light->m_worldTransform.pos.z;
-		LightPosition.w = 1.0f;
+		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
 
 		bool lightCulled = Light->m_flags & NiAVObject::kFlag_AppCulled;
 		D3DXVECTOR4 LightVector = LightPosition - PlayerPosition;
@@ -762,10 +758,7 @@ void ShadowManager::RenderShadowMaps() {
 				if (Process->OnBeltState == HighProcessEx::State::In) CastShadow = false;
 			}
 
-			D3DXVECTOR4 LightPosition;
-			LightPosition.x = Light->m_worldTransform.pos.x;
-			LightPosition.y = Light->m_worldTransform.pos.y;
-			LightPosition.z = Light->m_worldTransform.pos.z;
+			D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
 			LightPosition.w = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer; //light strength
 			TheShaderManager->LightPosition[i] = LightPosition;
 
