@@ -1,0 +1,984 @@
+[_Main.Main.Memory]
+HeapManagement = false
+TextureManagement = true
+
+[_Main.Main.Water]
+RemoveUnderwater = true
+
+[_Main.Main.Precipitations]
+RemovePrecipitations = true
+
+[_Main.Main.Misc]
+SkipFog = false
+AnisotropicFilter = 8
+FarPlaneDistance = 283840.0
+ScreenshotKey = 87
+ReplaceIntro = true
+
+[_Main.FrameRate.SmartControl]
+SmartControl = true
+SmartControlFPS = 40
+FlowControl = -0.5
+
+[_Main.FrameRate.Stuttering]
+SmartBackgroundProcess = true
+BackgroundThreadPriority = 5
+
+[_Main.CullingProcess.Main]
+EnableCulling = true
+EnableReflectionCulling = false
+CullMinSize = 10.0
+CullMinSizeReflection = 100.0
+
+[_Main.OcclusionCulling.Main]
+Enabled = false
+OcclusionMapRatio = 2
+OccludingStatic = true
+OccludingStaticMin = 1000.0
+OccludedStatic = false
+OccludedStaticMin = 10.0
+OccludedStaticMax = 500.0
+OccludedDistantStatic = true
+OccludedDistantStaticIC = false
+OccludedDistantStaticMax = 10.0
+
+[_Main.CameraMode.Main]
+Enabled = false
+FoV = 90.0
+Crosshair = 0
+ChasingFirst = false
+ChasingThird = false
+
+[_Main.CameraMode.Positioning]
+OffsetX = 0.0
+OffsetY = 15.0
+OffsetZ = 5.0
+DialogOffsetX = -50.0
+DialogOffsetY = -50.0
+DialogOffsetZ = 10.0
+AimingOffsetX = -1.0
+AimingOffsetY = 15.0
+AimingOffsetZ = 4.5
+
+[_Main.IKFoot.Main]
+Enabled = false
+Coeff = 1.0
+CoeffThigh = 0.9
+CoeffCalf = -1.6
+CoeffFoot = 0.4
+CoeffToe = 0.5
+
+[_Main.EquipmentMode.Main]
+Enabled = false
+TorchKey = 21
+SleepingEquipment = true
+SwimmingEquipment = true
+CombatEquipmentKey = 260
+DualBlockDelay = 0.15
+
+[_Main.EquipmentMode.Positioning]
+ShieldOnBackPosX = -15.0
+ShieldOnBackPosY = -10.0
+ShieldOnBackPosZ = 0.0
+ShieldOnBackRotX = 0.0
+ShieldOnBackRotY = 270.0
+ShieldOnBackRotZ = 30.0
+WeaponOnBackPosX = 14.0
+WeaponOnBackPosY = -30.0
+WeaponOnBackPosZ = -2.0
+WeaponOnBackRotX = 15.0
+WeaponOnBackRotY = 5.0
+WeaponOnBackRotZ = 0.0
+TwoHandWeaponOnBackPosX = 0.0
+TwoHandWeaponOnBackPosY = 0.0
+TwoHandWeaponOnBackPosZ = 0.0
+TwoHandWeaponOnBackRotX = 0.0
+TwoHandWeaponOnBackRotY = -5.0
+TwoHandWeaponOnBackRotZ = 0.0
+BowOnBackPosX = 0.0
+BowOnBackPosY = 25.0
+BowOnBackPosZ = 0.0
+BowOnBackRotX = 0.0
+BowOnBackRotY = 0.0
+BowOnBackRotZ = 0.0
+StaffOnBackPosX = 0.0
+StaffOnBackPosY = 0.0
+StaffOnBackPosZ = 0.0
+StaffOnBackRotX = 180.0
+StaffOnBackRotY = 0.0
+StaffOnBackRotZ = 120.0
+TorchOnBeltPosX = 0.0
+TorchOnBeltPosY = 0.0
+TorchOnBeltPosZ = -15.0
+TorchOnBeltRotX = 90.0
+TorchOnBeltRotY = -15.0
+TorchOnBeltRotZ = 0.0
+
+[_Main.MountedCombat.Main]
+Enabled = false
+
+[_Main.MountedCombat.Positioning]
+WeaponOnBackPosX = 14.0
+WeaponOnBackPosY = -30.0
+WeaponOnBackPosZ = -1.0
+WeaponOnBackRotX = 30.0
+WeaponOnBackRotY = 5.0
+WeaponOnBackRotZ = 0.0
+TwoHandWeaponOnBackPosX = 0.0
+TwoHandWeaponOnBackPosY = 4.0
+TwoHandWeaponOnBackPosZ = 0.0
+TwoHandWeaponOnBackRotX = 10.0
+TwoHandWeaponOnBackRotY = 15.0
+TwoHandWeaponOnBackRotZ = 0.0
+BowOnBackPosX = 0.0
+BowOnBackPosY = 0.0
+BowOnBackPosZ = 0.0
+BowOnBackRotX = 0.0
+BowOnBackRotY = 0.0
+BowOnBackRotZ = 0.0
+StaffOnBackPosX = 0.0
+StaffOnBackPosY = 0.0
+StaffOnBackPosZ = 0.0
+StaffOnBackRotX = 210.0
+StaffOnBackRotY = 0.0
+StaffOnBackRotZ = 120.0
+
+[_Main.GrassMode.Main]
+Enabled = true
+
+[_Main.SleepingMode.Main]
+Enabled = true
+Mode = 0
+
+[_Main.WeatherMode.Main]
+Enabled = true
+
+[_Main.WeatherMode.General]
+CoeffNightR = 0.6
+CoeffNightG = 0.6
+CoeffNightB = 0.5
+CoeffFogR = 0.9
+CoeffFogG = 0.88
+CoeffFogB = 0.86
+CoeffSunR = 1.0
+CoeffSunG = 0.9
+CoeffSunB = 0.8
+
+[_Main.ShadowMode.Main]
+NearQuality = 3.0
+
+[_Main.Menu.Style]
+TextFont = "Calibri"
+TextSize = 22
+TextFontStatus = "Consolas"
+TextSizeStatus = 12
+TextColorNormal = "250,240,180"
+TextShadowColorNormal = "50,50,50"
+TextColorSelected = "255,255,255"
+TextShadowColorSelected = "50,50,50"
+TextColorEditing = "255,100,50"
+TextShadowColorEditing = "50,50,50"
+TextColorEnabled = "100,170,90"
+TextShadowColorEnabled = "50,50,50"
+PositionX = 60
+PositionY = 120
+TitleColumnSize = 850
+MainItemColumnSize = 100
+ItemColumnSize = 300
+RowSpace = 0
+RowsPerPage = 30
+
+[_Main.Menu.Keys]
+KeyEnable = 24
+KeyUp = 200
+KeyDown = 208
+KeyLeft = 203
+KeyRight = 205
+KeyPageUp = 201
+KeyPageDown = 209
+KeyAdd = 78
+KeySubtract = 74
+KeySave = 28
+KeyEditing = 156
+
+[_Main.LowHFSound.Main]
+HealthEnabled = true
+FatigueEnabled = true
+HealthCoeff = 0.5
+FatigueCoeff = 0.5
+
+[_Main.Purger.Main]
+Enabled = false
+Time = 300
+PurgeTextures = true
+PurgeCells = true
+Key = 88
+
+[_Main.Gravity.Main]
+Enabled = true
+Value = 9.8
+
+[_Main.Dodge.Main]
+Enabled = true
+AcrobaticsLevel = 0
+DoubleTap = true
+DoubleTapTime = 0.2
+
+[_Main.FlyCam.Main]
+Enabled = true
+ScrollMultiplier = 2.0
+KeyAdd = 78
+KeySubtract = 74
+StepValue = 1.0
+
+[_Main.Develop.Main]
+CompileShaders = false
+CompileEffects = false
+TraceShaders = 25
+
+[_Weathers.CamoranWeather.Colors]
+Color0 = "89,116,142 189,126,122 89,116,142 53,69,71"
+Color1 = "85,122,145 85,122,145 85,122,145 57,81,84"
+Color2 = "244,192,170 255,255,255 244,192,170 146,115,85"
+Color3 = "54,79,99 90,110,150 54,79,99 32,47,49"
+Color4 = "234,76,16 255,180,152 234,76,16 140,51,10"
+Color5 = "255,135,124 255,135,124 255,135,124 153,90,77"
+Color6 = "216,252,250 216,252,250 216,252,250 129,151,125"
+Color7 = "197,139,124 197,139,124 197,139,124 118,83,62"
+Color8 = "77,105,134 77,105,134 77,105,134 46,63,67"
+Color9 = "251,177,134 255,255,255 251,177,134 150,106,67"
+
+[_Weathers.CamoranWeather.HDR]
+HDR = "0.9 7 2 1 1.2 1.2 2 0.5 1.3 0 0 2 2 2"
+
+[_Weathers.CamoranWeather.Main]
+CloudSpeedLower = 20
+CloudSpeedUpper = 5
+FogFarDay = 200000.0
+FogFarNight = 200000.0
+FogNearDay = 10000.0
+FogNearNight = 10000.0
+SunDamage = 0
+SunGlare = 205
+TransDelta = 25
+WindSpeed = 4
+UpperLayer = "Sky\\ORCamoranUpper.dds"
+LowerLayer = "Sky\\ORCamoranLower.dds"
+
+[_Weathers.Clear.Colors]
+Color0 = "150,176,199 100,141,191 111,108,100 0,1,6"
+Color1 = "77,89,108 90,120,160 65,67,83 2,9,14"
+Color2 = "255,202,170 255,255,255 109,101,133 2,7,11"
+Color3 = "51,66,104 130,150,200 62,62,108 20,30,47"
+Color4 = "255,145,68 255,216,178 200,88,10 45,56,68"
+Color5 = "104,58,44 255,164,68 200,94,40 0,0,0"
+Color6 = "103,135,167 255,255,255 255,255,255 153,153,127"
+Color7 = "228,217,197 152,197,241 213,135,123 3,9,15"
+Color8 = "243,160,129 152,189,235 238,113,70 1,9,14"
+Color9 = "255,225,196 255,255,255 255,164,119 3,9,13"
+
+[_Weathers.Clear.HDR]
+HDR = "0.7 4 2 1 1.2 1.1 1.75 0.3 1 0 0 1.3 1.3 1.2"
+
+[_Weathers.Clear.Main]
+CloudSpeedLower = 26
+CloudSpeedUpper = 0
+FogFarDay = 200000.0
+FogFarNight = 200000.0
+FogNearDay = 10000.0
+FogNearNight = 10000.0
+SunDamage = 255
+SunGlare = 255
+TransDelta = 255
+WindSpeed = 13
+UpperLayer = "Sky\\OREmpty.dds"
+LowerLayer = "Sky\\ORClearLower.dds"
+
+[_Weathers.Cloudy.Colors]
+Color0 = "96,121,149 95,142,182 94,97,140 0,0,6"
+Color1 = "82,99,121 90,118,144 47,59,82 0,9,15"
+Color2 = "205,172,146 200,190,190 115,113,149 8,16,22"
+Color3 = "44,60,105 120,140,160 44,50,92 18,29,43"
+Color4 = "255,171,102 190,148,124 238,108,56 38,48,64"
+Color5 = "199,147,96 200,162,88 200,100,51 0,0,0"
+Color6 = "78,99,124 210,210,210 255,255,255 153,153,127"
+Color7 = "165,181,197 145,162,195 150,139,180 4,13,19"
+Color8 = "226,158,114 105,120,130 223,112,96 1,12,17"
+Color9 = "240,207,164 200,200,200 240,147,128 8,13,17"
+
+[_Weathers.Cloudy.HDR]
+HDR = "0.7 4 2 1 1.2 1 1.5 0.35 1.1 0 0 1.3 1.3 1.2"
+
+[_Weathers.Cloudy.Main]
+CloudSpeedLower = 50
+CloudSpeedUpper = 25
+FogFarDay = 150000.0
+FogFarNight = 150000.0
+FogNearDay = 5000.0
+FogNearNight = 5000.0
+SunDamage = 179
+SunGlare = 154
+TransDelta = 229
+WindSpeed = 25
+UpperLayer = "Sky\\ORCloudyUpper.dds"
+LowerLayer = "Sky\\ORCloudyLower.dds"
+
+[_Weathers.Fog.Colors]
+Color0 = "240,230,232 90,100,100 114,121,141 34,40,45"
+Color1 = "102,110,117 99,108,111 91,91,95 20,27,27"
+Color2 = "163,166,184 150,160,160 165,135,148 19,28,31"
+Color3 = "56,58,71 73,73,80 58,67,90 15,18,24"
+Color4 = "138,105,103 80,81,72 163,108,91 31,42,48"
+Color5 = "254,207,176 100,108,96 255,217,178 0,0,0"
+Color6 = "255,255,255 200,200,200 175,159,143 26,32,33"
+Color7 = "206,200,198 90,100,100 175,159,143 26,32,33"
+Color8 = "131,135,143 100,110,110 128,117,113 26,31,31"
+Color9 = "255,234,223 100,100,100 249,235,213 34,40,40"
+
+[_Weathers.Fog.HDR]
+HDR = "0.7 8 3 1 1.2 1 2 0.5 1.1 0 0 1.3 1.3 1.5"
+
+[_Weathers.Fog.Main]
+CloudSpeedLower = 25
+CloudSpeedUpper = 14
+FogFarDay = 10000.0
+FogFarNight = 10000.0
+FogNearDay = -2500.0
+FogNearNight = -2500.0
+SunDamage = 103
+SunGlare = 25
+TransDelta = 255
+WindSpeed = 0
+UpperLayer = "Sky\\ORFogUpper.dds"
+LowerLayer = "Sky\\ORFogLower.dds"
+
+[_Weathers.Overcast.Colors]
+Color0 = "48,54,58 75,79,84 41,43,44 3,6,7"
+Color1 = "38,51,55 63,79,85 29,42,44 5,10,11"
+Color2 = "124,135,137 200,200,200 136,125,119 13,19,20"
+Color3 = "44,60,73 82,90,99 39,51,67 18,26,33"
+Color4 = "145,120,105 145,134,122 135,109,96 34,39,45"
+Color5 = "205,143,108 10,9,8 0,0,0 0,0,0"
+Color6 = "0,0,0 0,0,0 0,0,0 6,9,11"
+Color7 = "70,64,57 88,96,100 40,52,53 3,6,7"
+Color8 = "71,64,63 98,106,113 40,52,53 6,9,11"
+Color9 = "141,154,158 230,230,230 136,125,119 16,22,23"
+
+[_Weathers.Overcast.HDR]
+HDR = "0.7 4 2 1 1.2 1 1.75 0.3 1.1 0 0 1.3 1.3 1.3"
+
+[_Weathers.Overcast.Main]
+CloudSpeedLower = 50
+CloudSpeedUpper = 35
+FogFarDay = 100000.0
+FogFarNight = 100000.0
+FogNearDay = 0.0
+FogNearNight = 0.0
+SunDamage = 50
+SunGlare = 0
+TransDelta = 255
+WindSpeed = 21
+UpperLayer = "Sky\\OROvercastUpper.dds"
+LowerLayer = "Sky\\OROvercastLower.dds"
+
+[_Weathers.Rain.Colors]
+Color0 = "29,31,35 68,77,81 50,58,67 7,9,10"
+Color1 = "28,40,40 49,59,61 28,36,45 6,9,10"
+Color2 = "77,92,94 150,155,158 83,89,102 15,18,19"
+Color3 = "46,66,82 71,86,99 50,58,78 28,37,45"
+Color4 = "179,193,197 150,144,136 170,167,170 62,75,86"
+Color5 = "121,109,72 150,135,120 0,0,0 0,0,0"
+Color6 = "0,0,0 0,0,0 0,0,0 7,9,10"
+Color7 = "49,67,68 68,77,81 50,58,67 7,9,10"
+Color8 = "36,49,51 69,74,80 36,43,53 6,9,9"
+Color9 = "91,105,108 208,210,213 107,117,126 21,25,24"
+
+[_Weathers.Rain.HDR]
+HDR = "0.7 6 2 1 1.2 1 2 0.275 1.11 0 0 0.5 0.85 1.2"
+
+[_Weathers.Rain.Main]
+CloudSpeedLower = 63
+CloudSpeedUpper = 37
+FogFarDay = 100000.0
+FogFarNight = 100000.0
+FogNearDay = 0.0
+FogNearNight = 0.0
+SunDamage = 77
+SunGlare = 0
+TransDelta = 255
+WindSpeed = 14
+UpperLayer = "Sky\\ORRainUpper.dds"
+LowerLayer = "Sky\\ORRainLower.dds"
+
+[_Weathers.Snow.Colors]
+Color0 = "105,109,129 30,40,50 77,82,94 17,22,24"
+Color1 = "108,111,125 88,90,90 76,81,91 19,25,28"
+Color2 = "153,155,166 100,110,120 107,114,126 24,29,31"
+Color3 = "55,58,81 64,68,65 51,56,66 27,33,36"
+Color4 = "38,38,38 38,38,38 38,38,38 52,62,62"
+Color5 = "98,90,92 78,80,60 0,0,0 0,0,0"
+Color6 = "0,0,0 158,169,192 77,82,94 17,22,24"
+Color7 = "126,123,132 30,40,50 77,82,94 17,22,24"
+Color8 = "107,109,120 58,69,70 74,78,89 15,20,21"
+Color9 = "185,176,177 50,60,70 140,133,130 30,37,36"
+
+[_Weathers.Snow.HDR]
+HDR = "0.7 7 3 1 1.15 1 1 0.1 1.3 0 0 1.3 1.75 1.5"
+
+[_Weathers.Snow.Main]
+CloudSpeedLower = 20
+CloudSpeedUpper = 6
+FogFarDay = 15000.0
+FogFarNight = 15000.0
+FogNearDay = 0.0
+FogNearNight = 0.0
+SunDamage = 100
+SunGlare = 20
+TransDelta = 255
+WindSpeed = 0
+UpperLayer = "Sky\\ORSnowUpper.dds"
+LowerLayer = "Sky\\ORSnowLower.dds"
+
+[_Weathers.Thunderstorm.Colors]
+Color0 = "28,36,40 41,50,58 17,21,26 8,10,11"
+Color1 = "27,36,38 42,49,55 21,27,33 8,10,11"
+Color2 = "79,97,102 100,110,120 78,88,101 22,24,24"
+Color3 = "52,75,97 78,99,135 48,62,101 34,51,66"
+Color4 = "165,172,182 120,117,112 169,171,179 102,121,127"
+Color5 = "0,0,0 10,9,8 0,0,0 0,0,0"
+Color6 = "23,31,34 0,0,0 20,26,33 8,10,11"
+Color7 = "23,31,34 44,50,58 22,28,35 8,10,11"
+Color8 = "27,36,41 44,50,58 22,28,35 7,9,10"
+Color9 = "96,111,117 100,110,120 83,95,108 28,31,30"
+
+[_Weathers.Thunderstorm.HDR]
+HDR = "0.7 8 2 1 1.2 1 3 0.35 1.1 0 0 0.5 0.85 1.5"
+
+[_Weathers.Thunderstorm.Main]
+CloudSpeedLower = 101
+CloudSpeedUpper = 63
+FogFarDay = 10000.0
+FogFarNight = 10000.0
+FogNearDay = -5000.0
+FogNearNight = -5000.0
+SunDamage = 25
+SunGlare = 0
+TransDelta = 173
+WindSpeed = 120
+UpperLayer = "Sky\\SESkyD01.dds"
+LowerLayer = "Sky\\CloudsThunderstormLower.dds"
+
+[_Weathers.ThunderstormKvatch.Colors]
+Color0 = "28,36,40 130,140,148 17,21,26 8,10,11"
+Color1 = "27,36,38 42,49,55 21,27,33 8,10,11"
+Color2 = "79,97,102 100,110,120 78,88,101 22,24,24"
+Color3 = "52,75,97 78,99,135 48,62,101 34,51,66"
+Color4 = "165,172,182 120,117,112 169,171,179 102,121,127"
+Color5 = "0,0,0 10,9,8 0,0,0 0,0,0"
+Color6 = "23,31,34 0,0,0 20,26,33 8,10,11"
+Color7 = "23,31,34 44,50,58 22,28,35 8,10,11"
+Color8 = "27,36,41 44,50,58 22,28,35 7,9,10"
+Color9 = "96,111,117 100,110,120 83,95,108 28,31,30"
+
+[_Weathers.ThunderstormKvatch.HDR]
+HDR = "0.7 8 2 1 1.2 1 3 0.35 1.1 0 0 0.5 0.85 1.5"
+
+[_Weathers.ThunderstormKvatch.Main]
+CloudSpeedLower = 101
+CloudSpeedUpper = 76
+FogFarDay = 7500.0
+FogFarNight = 7500.0
+FogNearDay = -5000.0
+FogNearNight = -5000.0
+SunDamage = 10
+SunGlare = 0
+TransDelta = 173
+WindSpeed = 130
+UpperLayer = "Sky\\ORThunderStormUpper.dds"
+LowerLayer = "Sky\\CloudsThunderstormLower.dds"
+
+[_Shaders.AmbientOcclusion.Status]
+Enabled = false
+
+[_Shaders.AmbientOcclusion.Exteriors]
+Enabled = true
+RadiusMultiplier = 15.0
+StrengthMultiplier = 2.0
+ClampStrength = 0.5
+AngleBias = 15.0
+Range = 50.0
+LumThreshold = 0.2
+BlurDropThreshold = 10.0
+BlurRadiusMultiplier = 1.0
+
+[_Shaders.AmbientOcclusion.Interiors]
+Enabled = true
+RadiusMultiplier = 15.0
+StrengthMultiplier = 1.2
+ClampStrength = 0.5
+AngleBias = 15.0
+Range = 50.0
+LumThreshold = 0.1
+BlurDropThreshold = 10.0
+BlurRadiusMultiplier = 1.0
+
+[_Shaders.Blood.Status]
+Enabled = false
+
+[_Shaders.BloodLens.Status]
+Enabled = false
+
+[_Shaders.BloodLens.Main]
+Chance = 10.0
+ColorR = 0.92
+ColorG = 0.16
+ColorB = 0.16
+Intensity = 0.8
+Time = 900.0
+
+[_Shaders.Bloom.Status]
+Enabled = false
+
+[_Shaders.Bloom.Exteriors]
+BloomIntensity = 1.4
+OriginalIntensity = 1.0
+BloomSaturation = 1.2
+OriginalSaturation = 1.0
+Luminance = 0.06
+MiddleGray = 0.18
+WhiteCutOff = 0.8
+
+[_Shaders.Bloom.Interiors]
+BloomIntensity = 1.4
+OriginalIntensity = 1.0
+BloomSaturation = 1.2
+OriginalSaturation = 1.0
+Luminance = 0.06
+MiddleGray = 0.18
+WhiteCutOff = 0.8
+
+[_Shaders.Cinema.Status]
+Enabled = false
+
+[_Shaders.Cinema.Main]
+Mode = 0.0
+AspectRatio = 1.2
+VignetteRadius = 3.0
+VignetteDarkness = 0.55
+
+[_Shaders.Coloring.Status]
+Enabled = false
+
+[_Shaders.Coloring.Default]
+Strength = 0.5
+BaseGamma = 1.6
+Fade = 0.0
+Contrast = 0.8
+Saturation = -0.1
+Bleach = 0.1
+BleachLuma = 0.2
+ColorCurve = 1.2
+ColorCurveR = 0.9
+ColorCurveG = 1.0
+ColorCurveB = 1.0
+EffectGamma = 0.9
+EffectGammaR = 1.0
+EffectGammaG = 1.0
+EffectGammaB = 1.0
+Linearization = 1.1
+
+[_Shaders.DepthOfField.Status]
+Enabled = false
+
+[_Shaders.DepthOfField.FirstPersonView]
+Enabled = true
+Mode = 0
+DistantBlur = false
+DistantBlurStartRange = 900.0
+DistantBlurEndRange = 1000.0
+BaseBlurRadius = 1.0
+BlurFallOff = 2.0
+Radius = 8.0
+DiameterRange = 0.009
+NearBlurCutOff = 0.8
+
+[_Shaders.DepthOfField.ThirdPersonView]
+Enabled = true
+Mode = 0
+DistantBlur = true
+DistantBlurStartRange = 900.0
+DistantBlurEndRange = 1000.0
+BaseBlurRadius = 0.25
+BlurFallOff = 2.5
+Radius = 3.0
+DiameterRange = 0.009
+NearBlurCutOff = 0.8
+
+[_Shaders.DepthOfField.VanityView]
+Enabled = true
+Mode = 0
+DistantBlur = false
+DistantBlurStartRange = 900.0
+DistantBlurEndRange = 1000.0
+BaseBlurRadius = 1.0
+BlurFallOff = 2.0
+Radius = 8.0
+DiameterRange = 0.009
+NearBlurCutOff = 0.8
+
+[_Shaders.ExtraEffects.Status]
+Enabled = true
+
+[_Shaders.ExtraShaders.Status]
+Enabled = true
+
+[_Shaders.GodRays.Status]
+Enabled = true
+
+[_Shaders.GodRays.Main]
+TimeEnabled = false
+SunGlareEnabled = true
+LightShaftPasses = 45
+RayIntensity = 3.2
+RayLength = 0.98
+RayDensity = 0.6
+RayVisibility = 0.3
+Luminance = 1.2
+GlobalMultiplier = 3.0
+RayR = 0.38
+RayG = 0.54
+RayB = 0.44
+Saturate = 0.4
+
+[_Shaders.Grass.Status]
+Enabled = true
+
+[_Shaders.Grass.Main]
+WindEnabled = true
+WindCoefficient = 100.0
+GrassDensity = 3
+ScaleX = 2.0
+ScaleY = 2.0
+ScaleZ = 1.0
+MinDistance = 9000.0
+MaxDistance = 11000.0
+
+[_Shaders.HDR.Status]
+Enabled = true
+
+[_Shaders.HDR.Main]
+ToneMapping = 1.0
+ToneMappingBlur = 0.0
+ToneMappingColor = 1.2
+Linearization = 2.2
+
+[_Shaders.LowHF.Status]
+Enabled = true
+
+[_Shaders.LowHF.Main]
+HealthLimit = 0.5
+FatigueLimit = 0.25
+LumaMultiplier = 1.0
+BlurMultiplier = 0.2
+VignetteMultiplier = 1.0
+DarknessMultiplier = 1.0
+
+[_Shaders.MotionBlur.Status]
+Enabled = true
+
+[_Shaders.MotionBlur.FirstPersonView]
+Enabled = true
+GaussianWeight = 6.0
+BlurScale = 4.0
+BlurOffsetMax = 24.0
+BlurCutOff = 15.0
+
+[_Shaders.MotionBlur.ThirdPersonView]
+Enabled = false
+GaussianWeight = 6.0
+BlurScale = 4.0
+BlurOffsetMax = 24.0
+BlurCutOff = 15.0
+
+[_Shaders.NightEye.Status]
+Enabled = false
+
+[_Shaders.POM.Status]
+Enabled = true
+
+[_Shaders.POM.Main]
+HeightMapScale = 0.55
+MinSamples = 8
+MaxSamples = 32
+
+[_Shaders.Precipitations.Status]
+Enabled = true
+
+[_Shaders.Precipitations.Rain]
+DepthStep = 8.0
+Speed = 3.0
+
+[_Shaders.Precipitations.Snow]
+DepthStep = 2.5
+Flakes = 0.5
+Speed = 1.4
+
+[_Shaders.ShadowsExteriors.Status]
+PostProcess = false
+
+[_Shaders.ShadowsExteriors.Main]
+Darkness = 0.1
+Quality = 0
+ShadowMapFarPlane = 8192.0
+
+[_Shaders.ShadowsExteriors.Near]
+Enabled = true
+AlphaEnabled = false
+Activators = false
+Actors = true
+Apparatus = false
+Books = false
+Containers = true
+Doors = true
+Furniture = false
+Misc = false
+Statics = true
+Terrain = false
+Trees = true
+MinRadius = 10.0
+ShadowMapSize = 4096
+ShadowMapRadius = 4096.0
+
+[_Shaders.ShadowsExteriors.Far]
+AlphaEnabled = false
+Activators = false
+Actors = false
+Apparatus = false
+Books = false
+Containers = false
+Doors = true
+Furniture = false
+Misc = false
+Statics = true
+Terrain = false
+Trees = true
+MinRadius = 100.0
+ShadowMapSize = 1024
+ShadowMapRadius = 8192.0
+
+[_Shaders.ShadowsExteriors.Ortho]
+AlphaEnabled = true
+Activators = false
+Actors = false
+Apparatus = false
+Books = false
+Containers = false
+Doors = false
+Furniture = false
+Misc = false
+Statics = true
+Terrain = false
+Trees = false
+MinRadius = 100.0
+ShadowMapSize = 1024
+ShadowMapRadius = 2048.0
+
+[_Shaders.ShadowsExteriors.ExcludedFormID]
+
+[_Shaders.ShadowsInteriors.Status]
+PostProcess = false
+
+[_Shaders.ShadowsInteriors.Main]
+Enabled = true
+AlphaEnabled = true
+Activators = true
+Actors = true
+Apparatus = true
+Books = false
+Containers = true
+Doors = false
+Furniture = true
+Misc = false
+Statics = true
+MinRadius = 10.0
+Darkness = 1.0
+LightRadiusMult = 1.0
+Quality = 1
+LightPoints = 2
+TorchesCastShadows = true
+ShadowCubeMapSize = 2048
+
+[_Shaders.ShadowsInteriors.ExcludedFormID]
+
+[_Shaders.Sharpening.Status]
+Enabled = false
+
+[_Shaders.Sharpening.Main]
+Strength = 0.75
+Clamp = 0.1
+Offset = 2.0
+
+[_Shaders.Skin.Status]
+Enabled = true
+
+[_Shaders.Skin.Main]
+Attenuation = 0.84
+SpecularPower = 0.78
+MaterialThickness = 0.12
+RimScalar = 0.5
+CoeffRed = 0.36
+CoeffGreen = 0.22
+CoeffBlue = 0.12
+
+[_Shaders.SnowAccumulation.Status]
+Enabled = true
+
+[_Shaders.SnowAccumulation.Main]
+Amount = 1.6
+Increase = 0.0005
+Decrease = 0.0001
+SunPower = 0.3
+BlurNormDropThreshhold = 0.82
+BlurRadiusMultiplier = 0.6
+
+[_Shaders.Terrain.Status]
+Enabled = true
+
+[_Shaders.Terrain.Main]
+DistantSpecular = 0.2
+DistantNoise = 0.6
+NearSpecular = 0.0
+MiddleSpecular = 0.0
+
+[_Shaders.Underwater.Status]
+Enabled = true
+
+[_Shaders.VolumetricFog.Status]
+Enabled = true
+
+[_Shaders.VolumetricFog.Main]
+Exponent = 2.0
+ColorCoeff = 1.8
+Amount = 0.9
+MaxDistance = 100000.0
+
+[_Shaders.Water.Status]
+Enabled = true
+
+[_Shaders.Water.Default]
+choppiness = 1.0
+waveWidth = 3.8
+waveSpeed = 0.3
+reflectivity = 0.8
+causticsStrength = 0.6
+causticsStrengthS = 0.4
+shoreFactor = 1.2
+shoreMovement = 20.0
+turbidity = 0.86
+inScattCoeff = 0.12
+inExtCoeff_R = 0.4
+inExtCoeff_G = 0.26
+inExtCoeff_B = 0.3
+depthDarkness = 1.0
+
+[_Shaders.Water.Blood]
+choppiness = 0.4
+waveWidth = 1.8
+waveSpeed = 0.05
+reflectivity = 1.0
+causticsStrength = 0.0
+causticsStrengthS = 0.0
+shoreFactor = 0.1
+shoreMovement = 0.0
+turbidity = 18.0
+inScattCoeff = 0.18
+inExtCoeff_R = 0.15
+inExtCoeff_G = 0.45
+inExtCoeff_B = 0.8
+depthDarkness = 0.2
+
+[_Shaders.Water.Lava]
+choppiness = 0.4
+waveWidth = 2.0
+waveSpeed = 0.06
+reflectivity = 1.2
+causticsStrength = 0.0
+causticsStrengthS = 0.0
+shoreFactor = 0.2
+shoreMovement = 0.0
+turbidity = 5.86
+inScattCoeff = 0.32
+inExtCoeff_R = 0.2
+inExtCoeff_G = 0.56
+inExtCoeff_B = 0.8
+depthDarkness = 0.2
+
+[_Shaders.Water.BravilWorld]
+choppiness = 0.5
+waveWidth = 1.8
+waveSpeed = 0.2
+reflectivity = 0.4
+causticsStrength = 0.5
+causticsStrengthS = 0.1
+shoreFactor = 0.6
+shoreMovement = 20.0
+turbidity = 2.24
+inScattCoeff = 0.12
+inExtCoeff_R = 0.28
+inExtCoeff_G = 0.32
+inExtCoeff_B = 0.62
+depthDarkness = 0.4
+
+[_Shaders.Water.ImperialSewers03]
+choppiness = 0.8
+waveWidth = 1.2
+waveSpeed = 0.2
+reflectivity = 0.2
+causticsStrength = 0.0
+causticsStrengthS = 0.0
+shoreFactor = 0.1
+shoreMovement = 20.0
+turbidity = 8.0
+inScattCoeff = 0.52
+inExtCoeff_R = 1.04
+inExtCoeff_G = 1.16
+inExtCoeff_B = 1.6
+depthDarkness = 0.5
+
+[_Shaders.Water.Vilverin02]
+choppiness = 1.1
+waveWidth = 2.8
+waveSpeed = 0.2
+reflectivity = 0.2
+causticsStrength = 0.0
+causticsStrengthS = 0.0
+shoreFactor = 0.1
+shoreMovement = 20.0
+turbidity = 0.96
+inScattCoeff = 0.22
+inExtCoeff_R = 0.3
+inExtCoeff_G = 0.26
+inExtCoeff_B = 0.3
+depthDarkness = 0.7
+
+[_Shaders.WaterLens.Status]
+Enabled = true
+
+[_Shaders.WaterLens.Main]
+TimeMultA = 0.1
+TimeMultB = 0.2
+Time = 180.0
+Amount = 0.1
+Viscosity = 0.05
+
+[_Shaders.WetWorld.Status]
+Enabled = true
+
+[_Shaders.WetWorld.Main]
+Amount = 0.85
+Increase = 0.001
+Decrease = 0.0001
+PuddleCoeff_R = 0.72
+PuddleCoeff_G = 0.62
+PuddleCoeff_B = 0.48
+PuddleSpecularMultiplier = 0.2
