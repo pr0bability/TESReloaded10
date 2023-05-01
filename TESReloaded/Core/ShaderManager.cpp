@@ -385,29 +385,29 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 
 	strcpy(FileName, ShadersPath);
 	if (!memcmp(Name, "WATER", 5)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Water) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("Water")) return NULL;
 	}
 	else if (!memcmp(Name, "GRASS", 5)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Grass) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("Grass")) return NULL;
 	}
 	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
 		// load tonemapping shaders, with different names between New vegas and Oblivion
-		if (!TheSettingManager->SettingsMain.Shaders.HDR) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("HDR")) return NULL;
 	}
 	else if (!memcmp(Name, "PAR", 3)) {
-		if (!TheSettingManager->SettingsMain.Shaders.POM) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("POM")) return NULL;
 	}
 	else if (!memcmp(Name, "SKIN", 4)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Skin) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("Skin")) return NULL;
 	}
 	else if (strstr(TerrainShaders, Name)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Terrain) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("Terrain")) return NULL;
 	}
 	else if (strstr(BloodShaders, Name)) {
-		if (!TheSettingManager->SettingsMain.Shaders.Blood) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("Blood")) return NULL;
 	}
 	else if (!memcmp(Name, "NIGHTEYE", 8)) {
-		if (!TheSettingManager->SettingsMain.Shaders.NightEye) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("NightEye")) return NULL;
 	}
 	else if (!memcmp(Name, "Shadow", 6)) {
 		strcat(FileName, "Shadows\\");
