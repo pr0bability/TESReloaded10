@@ -820,7 +820,7 @@ void ShadowManager::RenderShadowMaps() {
 
 		// Update constants used by shadow shaders: x=quality, y=darkness
 		ShadowData->x = ShadowsExteriors->Quality;
-		if (TheSettingManager->SettingsMain.Effects.ShadowsExteriors) ShadowData->x = -1; // Disable the forward shadowing
+		if (TheShaderManager->Effects.ShadowsExteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
 		ShadowData->y = ShadowsExteriors->Darkness;
 
 		// fade shadows when sun is nearing the horizon
@@ -852,7 +852,7 @@ void ShadowManager::RenderShadowMaps() {
 		CalculateBlend(Lights, LightIndex);
 
 		ShadowData->x = ShadowsInteriors->Quality;
-		if (TheSettingManager->SettingsMain.Effects.ShadowsInteriors) ShadowData->x = -1; // Disable the forward shadowing
+		if (TheShaderManager->Effects.ShadowsInteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
 		ShadowData->y = ShadowsInteriors->Darkness;
 		ShadowData->z = 1.0f / (float)ShadowsInteriors->ShadowCubeMapSize;
 	}
