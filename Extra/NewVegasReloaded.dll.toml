@@ -59,7 +59,7 @@ RemovePrecipitations = false
 
 [_Main.Main.Water]
 ForceReflections = true
-RemoveUnderwater = true
+RemoveUnderwater = false
 
 [_Main.Menu.Keys]
 KeyAdd = 74
