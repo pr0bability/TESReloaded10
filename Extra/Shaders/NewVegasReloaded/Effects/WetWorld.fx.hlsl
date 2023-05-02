@@ -145,7 +145,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	eyeDirection = normalize(eyeDirection);
 
 	// early out to avoid computing pixels that aren't puddles
-    if (depth > DrawD || worldPos.z < TESR_WaterSettings.x || floorAngle == 0) return color;
+    if (depth > DrawD || floorAngle == 0) return color;
 
 	float LODfade = smoothstep(0, DrawD, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
