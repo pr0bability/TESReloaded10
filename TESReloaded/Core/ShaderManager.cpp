@@ -1886,7 +1886,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	TESWorldSpace* currentWorldSpace = Player->GetWorldSpace();
 	TESObjectCELL* currentCell = Player->parentCell;
 	Sky* WorldSky = Tes->sky;
-	bool isExterior = Player->GetWorldSpace() || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior;
+	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
 	bool isUnderwater = Tes->sky->GetIsUnderWater(); /*TODO do this work in interior????*/
 	bool isDaytime = (ShaderConst.GameTime.y >= ShaderConst.SunTiming.x && ShaderConst.GameTime.y <= ShaderConst.SunTiming.w); // gametime is between sunrise start and sunset end
 	bool isCellTransition = currentCell != PreviousCell;
