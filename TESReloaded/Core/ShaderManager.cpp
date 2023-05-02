@@ -849,6 +849,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = &TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
+	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
@@ -1967,6 +1968,9 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
 	if (Effects.Cinema->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
+
+	// debug shader allows to display some of the buffers
+	if (Effects.Debug->Enabled) Effects.Debug->Render(Device, RenderTarget, RenderedSurface, false, false);
 
 	//if (EffectsSettings->Extra) {
 	//	for (EffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
