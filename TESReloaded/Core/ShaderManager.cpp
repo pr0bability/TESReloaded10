@@ -1180,7 +1180,6 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.fogData.z = ShaderConst.sunGlare;
 		ShaderConst.fogData.w = WorldSky->fogPower;
 
-
 		ShaderConst.fogDistance.x = ShaderConst.fogData.x;
 		ShaderConst.fogDistance.y = ShaderConst.fogData.y;
 		ShaderConst.fogDistance.z = 1.0f;
@@ -1188,34 +1187,24 @@ void ShaderManager::UpdateConstants() {
 
 		//if (weatherPercent == 1.0f) ShaderConst.pWeather = currentWeather;
 
-		//Logger::Log("Night? %f", ShaderConst.SunAmount.w);
-		//Logger::Log("weather percent %f", weatherPercent);
-		//Logger::Log("fog power %f", ShaderConst.fogData.w);
-		//Logger::Log("fog near %f", ShaderConst.fogData.x);
-		//Logger::Log("fog far %f", ShaderConst.fogData.y);
-		//Logger::Log("sun r %f", ShaderConst.sunColor.x);
-		//Logger::Log("sun g %f", ShaderConst.sunColor.y);
-		//Logger::Log("sun b %f", ShaderConst.sunColor.z);
-		//Logger::Log("sunglare %f", ShaderConst.fogData.z);
-		//Logger::Log("sunglare %f", WorldSky->sun->glareScale);3
 
 		if (TheSettingManager->GetMenuShaderEnabled("Water") || Effects.Underwater->Enabled) {
 			RGBA* rgba = NULL;
 			SettingsWaterStruct* sws = NULL;
 			TESWaterForm* currentWater = currentCell->GetWaterForm();
 			
+			sectionName = "Shaders.Water.Default";
 			if (currentWater) {
 				UInt32 WaterType = currentWater->GetWaterType();
 				if (WaterType == TESWaterForm::WaterType::kWaterType_Blood)
-					sws = TheSettingManager->GetSettingsWater("Blood");
+					sectionName = "Shaders.Water.Blood";
 				else if (WaterType == TESWaterForm::WaterType::kWaterType_Lava)
-					sws = TheSettingManager->GetSettingsWater("Lava");
-				else if (!(sws = TheSettingManager->GetSettingsWater(currentCell->GetEditorName())) && currentWorldSpace)
-					sws = TheSettingManager->GetSettingsWater(currentWorldSpace->GetEditorName());
-			}
-			if (!sws) sws = TheSettingManager->GetSettingsWater("Default");
+					sectionName = "Shaders.Water.Lava";
 
-			if (currentWater) {
+				// world space specific settings. TODO Reimplement with Toml
+				//else if (!(sws = TheSettingManager->GetSettingsWater(currentCell->GetEditorName())) && currentWorldSpace)
+				//	sws = TheSettingManager->GetSettingsWater(currentWorldSpace->GetEditorName());
+
 				rgba = currentWater->GetDeepColor();
 				ShaderConst.Water.deepColor.x = rgba->r / 255.0f;
 				ShaderConst.Water.deepColor.y = rgba->g / 255.0f;
@@ -1226,26 +1215,33 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.Water.shallowColor.y = rgba->g / 255.0f;
 				ShaderConst.Water.shallowColor.z = rgba->b / 255.0f;
 				ShaderConst.Water.shallowColor.w = rgba->a / 255.0f;
+
+				//if (isUnderwater) {
+				//	ShaderConst.fogData.x = currentWater->properties.fogNearUW;
+				//	ShaderConst.fogData.y = currentWater->properties.fogFarUW;
+				//	ShaderConst.fogData.z = ShaderConst.sunGlare;
+				//	ShaderConst.fogData.w = currentWater->properties.fogAmountUW;
+				//}
 			}
 
-			ShaderConst.Water.waterCoefficients.x = sws->inExtCoeff_R;
-			ShaderConst.Water.waterCoefficients.y = sws->inExtCoeff_G;
-			ShaderConst.Water.waterCoefficients.z = sws->inExtCoeff_B;
-			ShaderConst.Water.waterCoefficients.w = sws->inScattCoeff;
+			ShaderConst.Water.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
+			ShaderConst.Water.waterCoefficients.y = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_G");
+			ShaderConst.Water.waterCoefficients.z = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_B");
+			ShaderConst.Water.waterCoefficients.w = TheSettingManager->GetSettingF(sectionName, "inScattCoeff");
 
-			ShaderConst.Water.waveParams.x = sws->choppiness;
-			ShaderConst.Water.waveParams.y = sws->waveWidth;
-			ShaderConst.Water.waveParams.z = sws->waveSpeed;
-			ShaderConst.Water.waveParams.w = sws->reflectivity;
+			ShaderConst.Water.waveParams.x = TheSettingManager->GetSettingF(sectionName, "choppiness");
+			ShaderConst.Water.waveParams.y = TheSettingManager->GetSettingF(sectionName, "waveWidth");
+			ShaderConst.Water.waveParams.z = TheSettingManager->GetSettingF(sectionName, "waveSpeed");
+			ShaderConst.Water.waveParams.w = TheSettingManager->GetSettingF(sectionName, "reflectivity");
 
-			ShaderConst.Water.waterSettings.y = sws->depthDarkness;
+			ShaderConst.Water.waterSettings.y = TheSettingManager->GetSettingF(sectionName, "depthDarkness");
 
-			ShaderConst.Water.waterVolume.x = sws->causticsStrength * ShaderConst.sunGlare;
-			ShaderConst.Water.waterVolume.y = sws->shoreFactor;
-			ShaderConst.Water.waterVolume.z = sws->turbidity;
-			ShaderConst.Water.waterVolume.w = sws->causticsStrengthS;
+			ShaderConst.Water.waterVolume.x = TheSettingManager->GetSettingF(sectionName, "causticsStrength") * ShaderConst.sunGlare;
+			ShaderConst.Water.waterVolume.y = TheSettingManager->GetSettingF(sectionName, "shoreFactor");
+			ShaderConst.Water.waterVolume.z = TheSettingManager->GetSettingF(sectionName, "turbidity");
+			ShaderConst.Water.waterVolume.w = TheSettingManager->GetSettingF(sectionName, "causticsStrengthS");
 			
-			ShaderConst.Water.shorelineParams.x = sws->shoreMovement;
+			ShaderConst.Water.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
 		}		
 
 		if (isUnderwater) {
@@ -1662,18 +1658,18 @@ void ShaderManager::UpdateConstants() {
 
 		if (Effects.Specular->Enabled) {
 			float rainyPercent = ShaderConst.Animators.RainAnimator.GetValue();
-			SettingsSpecularStruct::ExteriorStruct* ext = &TheSettingManager->SettingsSpecular.Exterior;
-			SettingsSpecularStruct::RainStruct* rain = &TheSettingManager->SettingsSpecular.Rain;
+			const char* ext = "Shaders.Specular.Exterior";
+			const char* rain = "Shaders.Specular.Rain";
 
 			// handle transition by interpolating previous and current weather settings
-			ShaderConst.Specular.Data.x = lerp(ext->SpecLumaTreshold, rain->SpecLumaTreshold, rainyPercent);
-			ShaderConst.Specular.Data.y = lerp(ext->BlurMultiplier, rain->BlurMultiplier, rainyPercent);
-			ShaderConst.Specular.Data.z = lerp(ext->Glossiness, rain->Glossiness, rainyPercent);
-			ShaderConst.Specular.Data.w = lerp(ext->DistanceFade, rain->DistanceFade, rainyPercent);
-			ShaderConst.Specular.EffectStrength.x = lerp(ext->SpecularStrength, rain->SpecularStrength, rainyPercent);
-			ShaderConst.Specular.EffectStrength.y = lerp(ext->SkyTintStrength, rain->SkyTintStrength, rainyPercent);
-			ShaderConst.Specular.EffectStrength.z = lerp(ext->FresnelStrength, rain->FresnelStrength, rainyPercent);
-			ShaderConst.Specular.EffectStrength.w = lerp(ext->SkyTintSaturation, rain->SkyTintSaturation, rainyPercent);
+			ShaderConst.Specular.Data.x = lerp(TheSettingManager->GetSettingF(ext, "SpecLumaTreshold"), TheSettingManager->GetSettingF(rain, "SpecLumaTreshold"), rainyPercent);
+			ShaderConst.Specular.Data.y = lerp(TheSettingManager->GetSettingF(ext, "BlurMultiplier"), TheSettingManager->GetSettingF(rain, "BlurMultiplier"), rainyPercent);
+			ShaderConst.Specular.Data.z = lerp(TheSettingManager->GetSettingF(ext, "Glossiness"), TheSettingManager->GetSettingF(rain, "Glossiness"), rainyPercent);
+			ShaderConst.Specular.Data.w = lerp(TheSettingManager->GetSettingF(ext, "DistanceFade"), TheSettingManager->GetSettingF(rain, "DistanceFade"), rainyPercent);
+			ShaderConst.Specular.EffectStrength.x = lerp(TheSettingManager->GetSettingF(ext, "SpecularStrength"), TheSettingManager->GetSettingF(rain, "SpecularStrength"), rainyPercent);
+			ShaderConst.Specular.EffectStrength.y = lerp(TheSettingManager->GetSettingF(ext, "SkyTintStrength"), TheSettingManager->GetSettingF(rain, "SkyTintStrength"), rainyPercent);
+			ShaderConst.Specular.EffectStrength.z = lerp(TheSettingManager->GetSettingF(ext, "FresnelStrength"), TheSettingManager->GetSettingF(rain, "FresnelStrength"), rainyPercent);
+			ShaderConst.Specular.EffectStrength.w = lerp(TheSettingManager->GetSettingF(ext, "SkyTintSaturation"), TheSettingManager->GetSettingF(rain, "SkyTintSaturation"), rainyPercent);
 		}
 
 		if (Effects.VolumetricFog->Enabled) {
