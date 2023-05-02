@@ -207,6 +207,9 @@ Strength = 0.5
 [_Shaders.Coloring.Status]
 Enabled = false
 
+[_Shaders.Debug.Status]
+Enabled = true
+
 [_Shaders.DepthOfField.FirstPersonView]
 BaseBlurRadius = 2.0
 BlurFallOff = 1.5

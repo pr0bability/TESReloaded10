@@ -363,6 +363,7 @@ public:
 		EffectRecord*		Cinema;
 		EffectRecord*		Exposure;
 		EffectRecord*		DepthOfField;
+		EffectRecord*		Debug;
 		EffectRecord*		GodRays;
 		EffectRecord*		LowHF;
 		EffectRecord*		MotionBlur;
