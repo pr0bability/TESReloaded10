@@ -208,7 +208,7 @@ Strength = 0.5
 Enabled = false
 
 [_Shaders.Debug.Status]
-Enabled = true
+Enabled = false
 
 [_Shaders.DepthOfField.FirstPersonView]
 BaseBlurRadius = 2.0
@@ -234,7 +234,7 @@ DistantBlurEndRange = 150000
 DistantBlurStartRange = 30000
 Enabled = true
 Mode = 0
-NearBlurCutOff = 100
+NearBlurCutOff = 200
 Radius = 1.5
 
 [_Shaders.DepthOfField.VanityView]
@@ -246,17 +246,17 @@ DistantBlurEndRange = 150000
 DistantBlurStartRange = 30000
 Enabled = true
 Mode = 0
-NearBlurCutOff = 100
+NearBlurCutOff = 0
 Radius = 1.5
 
 [_Shaders.Exposure.Main]
 DarkAdaptSpeed = 0.01
 LightAdaptSpeed = 0.03
-MaxBrightness = 0.2
-MinBrightness = 0.7
+MaxBrightness = 0.7
+MinBrightness = 0.2
 
 [_Shaders.Exposure.Status]
-Enabled = false
+Enabled = true
 
 [_Shaders.ExtraEffects.Status]
 Enabled = false
@@ -587,7 +587,7 @@ Enabled = true
 
 [_Shaders.WetWorld.Main]
 Amount = 0.85
-Decrease = 1e-04
+Decrease = 0.001
 Increase = 0.001
 PuddleCoeff_B = 0.48
 PuddleCoeff_G = 0.62
