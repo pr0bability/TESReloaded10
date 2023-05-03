@@ -1,7 +1,7 @@
 import toml
 import xmltodict
 
-FILEPATH = r".\Extra\NewVegasReloaded.dll.config"
+FILEPATH = r".\NewVegasReloaded.dll.config"
 
 def convert_xml():
     toml_file = {}
