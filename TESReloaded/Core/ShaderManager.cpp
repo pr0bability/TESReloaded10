@@ -1419,24 +1419,27 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.GodRays->Enabled) {
-			ShaderConst.GodRays.Ray.x = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayIntensity");
-			ShaderConst.GodRays.Ray.y = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayLength");
-			ShaderConst.GodRays.Ray.z = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayDensity");
-			ShaderConst.GodRays.Ray.w = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayVisibility");
 
-			if (TheSettingManager->GetSettingI("Shaders.Godrays.Main", "SunGlareEnabled")) {
+			ShaderConst.GodRays.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
+			ShaderConst.GodRays.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
+			ShaderConst.GodRays.Ray.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayDensity");
+			ShaderConst.GodRays.Ray.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayVisibility");
+
+			if (TheSettingManager->GetSettingI("Shaders.GodRays.Main", "SunGlareEnabled")) {
 				ShaderConst.GodRays.Ray.z *= ShaderConst.sunGlare;
 				ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
 			}
 
-			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayR");
-			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayG");
-			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "RayB");
-			ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "Saturate");
-			ShaderConst.GodRays.Data.x = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "LightShaftPasses");
-			ShaderConst.GodRays.Data.y = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "Luminance");
-			ShaderConst.GodRays.Data.z = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "GlobalMultiplier");
-			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.Godrays.Main", "TimeEnabled");
+
+			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayR");
+			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayG");
+			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayB");
+			ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Saturate");
+			ShaderConst.GodRays.Data.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "LightShaftPasses");
+			ShaderConst.GodRays.Data.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Luminance");
+			ShaderConst.GodRays.Data.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "GlobalMultiplier");
+			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
+
 		}
 
 		if (Effects.AmbientOcclusion->Enabled) {
