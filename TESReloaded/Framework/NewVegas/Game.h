@@ -5375,16 +5375,16 @@ namespace Pointers {
 
 	}
 	namespace Settings {
-		static UInt32* MinGrassSize				= (UInt32*)0x00000000;
-		static float*  GrassStartFadeDistance	= (float*)0x00000000;
-		static float*  GrassEndDistance			= (float*)0x00000000;
-		static float*  GrassWindMagnitudeMin	= (float*)0x00000000;
-		static float*  GrassWindMagnitudeMax	= (float*)0x00000000;
-		static float*  TexturePctThreshold		= (float*)0x00000000;
+		static UInt32* MinGrassSize				= (UInt32*)0x011CA528;
+		static float*  GrassStartFadeDistance	= (float*)0x011CA454;
+		static float*  GrassEndDistance			= (float*)0x011CA49C; // grassFadeRange in NV
+		static float*  GrassWindMagnitudeMin	= (float*)0x01200500;
+		static float*  GrassWindMagnitudeMax	= (float*)0x01200504;
+		static float*  TexturePctThreshold		= (float*)0x011C9F3C;
 	}
 	namespace ShaderParams {
-		static float* GrassWindMagnitudeMax	= (float*)0x00000000;
-		static float* GrassWindMagnitudeMin	= (float*)0x00000000;
+		static float* GrassWindMagnitudeMax	= (float*)0x01200500;
+		static float* GrassWindMagnitudeMin	= (float*)0x01200500;
 		static UInt8* WaterHighResolution	= (UInt8*)0x01200059;
 		static float* RockParams			= (float*)0x01200658;
 		static float* RustleParams			= (float*)0x01200668;
