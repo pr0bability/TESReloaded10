@@ -1380,8 +1380,10 @@ void ShaderManager::UpdateConstants() {
 				default:
 					break;
 			}
-			*Pointers::Settings::GrassStartFadeDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MinDistance");
-			*Pointers::Settings::GrassEndDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MaxDistance");
+			float minDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MinDistance");
+			if (minDistance) *Pointers::Settings::GrassStartFadeDistance = minDistance;
+			float maxDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MaxDistance");
+			if (maxDistance) *Pointers::Settings::GrassEndDistance = maxDistance;
 			if (TheSettingManager->GetSettingI("Shaders.Grass.Main", "WindEnabled")) {
 				*Pointers::Settings::GrassWindMagnitudeMax = *Pointers::ShaderParams::GrassWindMagnitudeMax = TheSettingManager->GetSettingF("Shaders.Grass.Main", "WindCoefficient") * ShaderConst.windSpeed;
 				*Pointers::Settings::GrassWindMagnitudeMin = *Pointers::ShaderParams::GrassWindMagnitudeMin = *Pointers::Settings::GrassWindMagnitudeMax * 0.5f;
