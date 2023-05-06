@@ -65,6 +65,7 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 
 
 float4 LightMask(VSOUT IN) : COLOR0 {
+	// isolates the brightest parts of the sky to only use those for radial blur
 	
 	float2 uv = IN.UVCoord;
 	clip((uv <= scale) - 1);
@@ -91,14 +92,15 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 	float2 uv = IN.UVCoord;
 	clip((uv <= scale) - 1);
 	uv /= scale; // restore uv scale to do calculations in [0, 1] space
-	uv += 0.5 * TESR_ReciprocalResolution.xy;
+	uv -= 0.5 * TESR_ReciprocalResolution.xy;
 
 	// calculate vector from pixel to sun along which we'll sample
 	float2 sunPos = projectPosition(TESR_ViewSpaceLightDir.xyz * farZ).xy;
 
+	// vector from the given pixel to the sun position
 	float2 blurDirection = (sunPos.xy - uv) * float2(1.0f, raspect); // apply aspect ratio correction
-	float distance = length(blurDirection);
-	if (distance > 1 || expand(dot(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1))) < 0) return float4(0, 0, 0, 1);
+	float distance = length(blurDirection); // distance from pixel to radial blur center
+	if (dot(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1)) < 0) return float4(0, 0, 0, 1);
 
 	float2 dir = blurDirection/distance;
 
@@ -111,7 +113,7 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 	float total = 1;
 	for (float i=0; i < samples; i++){
 		float length = min(stepSize * i, distance); // clamp sampling vector to the distance from the pixel to the sun
-		samplePos = uv + (dir * length / float2(1, raspect)); // apply aspect ratio correction
+		samplePos = saturate(uv + (dir * length / float2(1, raspect))); // apply aspect ratio correction
 		float doStep = (i <= maxStep && samplePos.x > 0 && samplePos.y > 0 && samplePos.x < 1 && samplePos.y < 1); // check if we haven't overshot the sun position or exited the screen
 		
 		color += tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
@@ -137,10 +139,10 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	float4 rays = tex2D(TESR_RenderedBuffer, uv);
 
-	// attentuate intensity with distance from sun to fade the edges and reduce sunglare only on second pass
-	float heightAttenuation = lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1))));
 	float glareAttenuation = max(0.3, pows(saturate(distance), glareReduction));
-	float attenuation = saturate(pows(1 - distance, 1.5)) * glareAttenuation * heightAttenuation * 2;
+	// attentuate intensity with distance from sun to fade the edges and reduce sunglare
+	float heightAttenuation = lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1)))); // when the sun is high,  godrays strength is reduced
+	float attenuation = saturate(shades(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1))) * glareAttenuation * heightAttenuation * 2;
 
 	rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
 	rays = rays * attenuation;
