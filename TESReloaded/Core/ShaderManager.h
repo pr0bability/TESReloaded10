@@ -338,9 +338,9 @@ public:
 	void					PrepareShaderIncludes();
 	void					InitializeConstants();
 	void					UpdateConstants();
-	void					CreateShader(const char* Name);
-	void					LoadShader(NiD3DVertexShader* VertexShader);
-	void					LoadShader(NiD3DPixelShader* PixelShader);
+	bool					CreateShader(const char* Name);
+	bool					LoadShader(NiD3DVertexShader* VertexShader);
+	bool					LoadShader(NiD3DPixelShader* PixelShader);
 	void					DisposeShader(const char* Name);
 	EffectRecord*			CreateEffect(const char* Name, bool setEnabled);
 	void					DisposeEffect(EffectRecord** Effect);  // unused?

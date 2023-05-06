@@ -492,7 +492,6 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 */
 void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) {
 
-
 	D3DXCONSTANTTABLE_DESC ConstantTableDesc;
 	D3DXCONSTANT_DESC ConstantDesc;
 	D3DXHANDLE Handle;
@@ -802,7 +801,11 @@ bool EffectRecord::SwitchEffect(){
 		Enabled = !Enabled;
 	}
 	else {
-		Logger::Log("Couldn't switch status of effect %s", Path->data());
+		char Message[256] = "OutOfMemory: Couldn't enable effect ";
+		strcat(Message, Path->data());
+
+		InterfaceManager->ShowMessage(Message);
+		Logger::Log(Message);
 	}
 	return Enabled;
 }
@@ -1694,56 +1697,73 @@ void ShaderManager::UpdateConstants() {
 	timer.LogTime("ShaderManager::UpdateConstants");
 }
 
-void ShaderManager::CreateShader(const char* Name) {
+bool ShaderManager::CreateShader(const char* Name) {
 	
 	NiD3DVertexShader** Vertex = NULL;
 	NiD3DPixelShader** Pixel = NULL;
 	int WaterVertexShadersSize = sizeof(WaterVertexShaders) / 4;
 	int WaterPixelShadersSize = sizeof(WaterPixelShaders) / 4;
 	int Upperbound = 0;
+	bool success = true;
 
 	if (!strcmp(Name, "Terrain")) {
 		Upperbound = GetShader(Name, &Vertex, NULL, 0);
-		for (int i = 0; i < Upperbound; i++) if (Vertex[i] && strstr(TerrainShaders, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName)) LoadShader(Vertex[i]);
+		for (int i = 0; i < Upperbound; i++) if (Vertex[i] && strstr(TerrainShaders, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName)) success = LoadShader(Vertex[i]) && success;
 		Upperbound = GetShader(Name, &Pixel, NULL, 0);
-		for (int i = 0; i < Upperbound; i++) if (Pixel[i] && strstr(TerrainShaders, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName)) LoadShader(Pixel[i]);
+		for (int i = 0; i < Upperbound; i++) if (Pixel[i] && strstr(TerrainShaders, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName)) success = LoadShader(Pixel[i]) && success;
 	}
 	else if (!strcmp(Name, "ExtraShaders")) {
 		Upperbound = GetShader(Name, &Vertex, NULL, 0);
-		for (int i = 0; i < Upperbound; i++) if (Vertex[i] && !strstr(TerrainShaders, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName)) LoadShader(Vertex[i]);
+		for (int i = 0; i < Upperbound; i++) if (Vertex[i] && !strstr(TerrainShaders, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName)) success = LoadShader(Vertex[i]) && success;
 		Upperbound = GetShader(Name, &Pixel, NULL, 0);
-		for (int i = 0; i < Upperbound; i++) if (Pixel[i] && !strstr(TerrainShaders, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName)) LoadShader(Pixel[i]);
+		for (int i = 0; i < Upperbound; i++) if (Pixel[i] && !strstr(TerrainShaders, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName)) success = LoadShader(Pixel[i]) && success;
 	}
 	else {
 		Upperbound = GetShader(Name, &Vertex, WaterVertexShaders, WaterVertexShadersSize);
-		for (int i = 0; i < Upperbound; i++) if (Vertex[i]) LoadShader(Vertex[i]);
+		for (int i = 0; i < Upperbound; i++) if (Vertex[i]) success = LoadShader(Vertex[i]) && success;
 		Upperbound = GetShader(Name, &Pixel, WaterPixelShaders, WaterPixelShadersSize);
-		for (int i = 0; i < Upperbound; i++) if (Pixel[i]) LoadShader(Pixel[i]);
+		for (int i = 0; i < Upperbound; i++) if (Pixel[i]) success = LoadShader(Pixel[i]) && success;
 		if (!strcmp(Name, "Water")) {
 			Upperbound = GetShader("WaterHeightMap", &Vertex, WaterVertexShaders, WaterVertexShadersSize);
-			for (int i = 0; i < Upperbound; i++) if (Vertex[i]) LoadShader(Vertex[i]);
+			for (int i = 0; i < Upperbound; i++) if (Vertex[i]) success = LoadShader(Vertex[i]) && success;
 			Upperbound = GetShader("WaterHeightMap", &Pixel, WaterPixelShaders, WaterPixelShadersSize);
-			for (int i = 0; i < Upperbound; i++) if (Pixel[i]) LoadShader(Pixel[i]);
+			for (int i = 0; i < Upperbound; i++) if (Pixel[i]) success = LoadShader(Pixel[i]) && success;
 			Upperbound = GetShader("WaterDisplacement", &Vertex, WaterVertexShaders, WaterVertexShadersSize);
-			for (int i = 0; i < Upperbound; i++) if (Vertex[i]) LoadShader(Vertex[i]);
+			for (int i = 0; i < Upperbound; i++) if (Vertex[i]) success = LoadShader(Vertex[i]) && success;
 			Upperbound = GetShader("WaterDisplacement", &Pixel, WaterPixelShaders, WaterPixelShadersSize);
-			for (int i = 0; i < Upperbound; i++) if (Pixel[i]) LoadShader(Pixel[i]);
+			for (int i = 0; i < Upperbound; i++) if (Pixel[i]) success = LoadShader(Pixel[i]) && success;
 		}
 	}
 
+	if (!success) {
+		char Message[256] = "Out Of Memory: Could not load shader ";
+		strcat(Message, Name);
+		InterfaceManager->ShowMessage(Message);
+		Logger::Log(Message);
+	}
+
+	return success;
 }
 
-void ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
+/*
+* Load generic Vertex Shaders as well as the ones for interiors and exteriors if the exist. Returns false if generic one isn't found (as other ones are optional)
+*/
+bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
 	NiD3DVertexShaderEx* VertexShader = (NiD3DVertexShaderEx*)Shader;
-
+	
+	// Load generic, interior and exterior shaders
 	VertexShader->ShaderProg  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, NULL);
 	VertexShader->ShaderProgE = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Exteriors\\");
 	VertexShader->ShaderProgI = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Interiors\\");
 
+	return VertexShader->ShaderProg != nullptr;
 }
 
-void ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
+/*
+* Load generic Pixel Shaders as well as the ones for interiors and exteriors if the exist. Returns false if generic one isn't found (as other ones are optional)
+*/
+bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)Shader;
 
@@ -1751,6 +1771,7 @@ void ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 	PixelShader->ShaderProgE = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Exteriors\\");
 	PixelShader->ShaderProgI = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Interiors\\");
 
+	return PixelShader->ShaderProg != nullptr;;
 }
 
 void ShaderManager::DisposeShader(const char* Name) {
@@ -1876,7 +1897,8 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 * Renders the effect that have been set to enabled.
 */
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
-	
+	TheShaderManager->UpdateConstants();
+
 	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
 
 	auto timer = TimeLogger();
@@ -1898,8 +1920,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	bool terminalIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
 		InterfaceManager->IsActive(Menu::kMenuType_LockPick) || 
 		InterfaceManager->IsActive(Menu::kMenuType_Surgery);
-
-	TheShaderManager->UpdateConstants();
 
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
@@ -2002,9 +2022,9 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 	catch (std::out_of_range e){
 		// shaders
 		bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
-		TheSettingManager->SetMenuShaderEnabled(Name, enable);
 		DisposeShader(Name);
-		if (enable) CreateShader(Name);
+		if (enable) enable = CreateShader(Name);
+		TheSettingManager->SetMenuShaderEnabled(Name, enable);
 	}
 
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
