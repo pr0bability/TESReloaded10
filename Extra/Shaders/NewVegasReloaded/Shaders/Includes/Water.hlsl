@@ -168,8 +168,7 @@ float4 getShoreFade(PS_INPUT IN, float depth, float4 color){
     float scale = 20;
     float speed = TESR_WaterShorelineParams.x;
     float shoreAnimation = sin(IN.LTEXCOORD_1.x/scale - TESR_GameTime.x * speed) * 0.4 + 0.8; //reframe sin() from -1/1 to 0.2/1.2 to ensure some fading happens 
-    color.a = 1 - pow(abs(1 - depth), TESR_WaterVolume.y * 10) * shoreAnimation;
-    // return float2(color.a, 1).xxxy;
+    color.a = 1 - pow(saturate(1 - depth), TESR_WaterVolume.y * 10) * saturate(shoreAnimation);
     return color;
 }
 
