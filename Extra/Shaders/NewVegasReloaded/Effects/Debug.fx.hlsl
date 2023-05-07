@@ -4,6 +4,8 @@ float4 TESR_WaterShallowColor; // Shallow color used by the game for water
 float4 TESR_WaterDeepColor; // Deep color used by the game for water
 float4 TESR_HorizonColor;
 float4 TESR_SkyColor;
+float4 TESR_ViewSpaceLightDir;
+float4 TESR_SunDirection;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -54,6 +56,8 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
         if (IN.UVCoord.y > 0.4 && IN.UVCoord.y < 0.45) return TESR_WaterShallowColor;
         if (IN.UVCoord.y > 0.45 && IN.UVCoord.y < 0.5) return TESR_WaterDeepColor;
         if (IN.UVCoord.y > 0.55 && IN.UVCoord.y < 0.6) return tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5));
+        if (IN.UVCoord.y > 0.65 && IN.UVCoord.y < 0.7) return TESR_ViewSpaceLightDir;
+        if (IN.UVCoord.y > 0.7 && IN.UVCoord.y < 0.75) return TESR_SunDirection;
     }
 
     return color;
