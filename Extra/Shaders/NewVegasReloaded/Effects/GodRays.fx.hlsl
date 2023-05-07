@@ -114,7 +114,9 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 	for (float i=0; i < samples; i++){
 		float length = min(stepSize * i, distance); // clamp sampling vector to the distance from the pixel to the sun
 		samplePos = saturate(uv + (dir * length / float2(1, raspect))); // apply aspect ratio correction
+
 		float doStep = (i <= maxStep && samplePos.x > 0 && samplePos.y > 0 && samplePos.x < 1 && samplePos.y < 1); // check if we haven't overshot the sun position or exited the screen
+		// float doStep = (i <= maxStep); // check if we haven't overshot the sun position or exited the screen
 		
 		color += tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
 		total += doStep;
@@ -139,18 +141,16 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	float4 rays = tex2D(TESR_RenderedBuffer, uv);
 
-	float glareAttenuation = max(0.3, pows(saturate(distance), glareReduction));
 	// attentuate intensity with distance from sun to fade the edges and reduce sunglare
 	float heightAttenuation = lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1)))); // when the sun is high,  godrays strength is reduced
-	float attenuation = saturate(shades(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1))) * glareAttenuation * heightAttenuation * 2;
+	float glareAttenuation = max(0.3, pows(saturate(distance), glareReduction)); //
+	float attenuation = shades(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1)) * glareAttenuation * heightAttenuation * 2;
 
+	// return attenuation.xxxx;
 	rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
 	rays = rays * attenuation;
 
 	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
-
-
-	rays = lerp(rays, float4(0.0, 0.0, 0.0, 1), saturate(attenuation));
 
 	return float4(color.rgb + rays.rgb, 1.0f);
 }
