@@ -23,6 +23,10 @@ static const float raspect = 1.0f / TESR_ReciprocalResolution.z;
 static const float samples = 10;
 static const float stepLength = 1/samples;
 static const float scale = 0.5;
+static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
+									{0.7647, 0.2941, 0.8824, 0.4118},
+									{0.2353, 0.7059, 0.1176, 0.5882},
+									{0.9412, 0.4706, 0.8235, 0.3259}};
 
 static const float lumTreshold = TESR_GodRaysData.y;
 static const float multiplier = TESR_GodRaysData.z;
@@ -100,7 +104,6 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 	// vector from the given pixel to the sun position
 	float2 blurDirection = (sunPos.xy - uv) * float2(1.0f, raspect); // apply aspect ratio correction
 	float distance = length(blurDirection); // distance from pixel to radial blur center
-	if (dot(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1)) < 0) return float4(0, 0, 0, 1);
 
 	float2 dir = blurDirection/distance;
 
@@ -132,6 +135,7 @@ float4 Combine(VSOUT IN) : COLOR0
 	float scale = 0.5;
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float2 uv = IN.UVCoord;
+	float3 eyeDir = normalize(reconstructPosition(uv));
 
 	// calculate vector from pixel to sun along which we'll sample
 	float2 sunPos = projectPosition(TESR_ViewSpaceLightDir.xyz * farZ).xy;
@@ -142,17 +146,22 @@ float4 Combine(VSOUT IN) : COLOR0
 	float4 rays = tex2D(TESR_RenderedBuffer, uv);
 
 	// attentuate intensity with distance from sun to fade the edges and reduce sunglare
-	float heightAttenuation = lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1)))); // when the sun is high,  godrays strength is reduced
-	float glareAttenuation = max(0.3, pows(saturate(distance), glareReduction)); //
-	float attenuation = shades(TESR_ViewSpaceLightDir, float4(0, 0, 1, 1)) * glareAttenuation * heightAttenuation * 2;
+	float heightAttenuation = lerp(1, lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1)))), TESR_GodRaysData.w); // when the sun is high and timeEnabled is on, godrays strength is reduced
+	float glareAttenuation = max(0.3, pows(saturate(distance), glareReduction));
+	float attenuation = shade(TESR_ViewSpaceLightDir.xyz, eyeDir) * glareAttenuation * heightAttenuation;
 
-	// return attenuation.xxxx;
 	rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
+	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
 	rays = rays * attenuation;
 
-	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
+	// reduce banding
+	uv /= TESR_ReciprocalResolution.xy;
+	rays.rgb += ditherMat[ (uv.x)%4 ][ (uv.y)%4 ] / 255;
+
+	color.rgb += rays.rgb;
 
 	return float4(color.rgb + rays.rgb, 1.0f);
+	return color;
 }
  
 technique

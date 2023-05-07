@@ -284,19 +284,24 @@ Enabled = false
 Enabled = false
 
 [_Shaders.GodRays.Main]
-GlobalMultiplier = 2.0
+DayMultiplier = 0.5
+NightMultiplier = 0.5
 LightShaftPasses = 8
 Luminance = 0.6
-RayB = 1.0
 RayDensity = 1.0
-RayG = 1.0
 RayIntensity = 1.0
 RayLength = 1.0
-RayR = 1.0
 RayVisibility = 4.0
 Saturate = 0.0
 SunGlareEnabled = true
 TimeEnabled = false
+
+[_Shaders.GodRays.Coloring]
+RayR = 1.0
+RayG = 1.0
+RayB = 1.0
+Saturate = 0.0
+
 
 [_Shaders.GodRays.Status]
 Enabled = true

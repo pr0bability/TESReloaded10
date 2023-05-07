@@ -1377,10 +1377,12 @@ void ShaderManager::UpdateConstants() {
 				default:
 					break;
 			}
+
 			float minDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MinDistance");
 			if (minDistance) *Pointers::Settings::GrassStartFadeDistance = minDistance;
 			float maxDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MaxDistance");
 			if (maxDistance) *Pointers::Settings::GrassEndDistance = maxDistance;
+
 			if (TheSettingManager->GetSettingI("Shaders.Grass.Main", "WindEnabled")) {
 				*Pointers::Settings::GrassWindMagnitudeMax = *Pointers::ShaderParams::GrassWindMagnitudeMax = TheSettingManager->GetSettingF("Shaders.Grass.Main", "WindCoefficient") * ShaderConst.windSpeed;
 				*Pointers::Settings::GrassWindMagnitudeMin = *Pointers::ShaderParams::GrassWindMagnitudeMin = *Pointers::Settings::GrassWindMagnitudeMax * 0.5f;
@@ -1418,7 +1420,6 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.GodRays->Enabled) {
-
 			ShaderConst.GodRays.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
 			ShaderConst.GodRays.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
 			ShaderConst.GodRays.Ray.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayDensity");
@@ -1429,16 +1430,18 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
 			}
 
-
-			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayR");
-			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayG");
-			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayB");
-			ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Saturate");
+			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayR");
+			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayG");
+			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayB");
+			ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "Saturate");
 			ShaderConst.GodRays.Data.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "LightShaftPasses");
 			ShaderConst.GodRays.Data.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Luminance");
-			ShaderConst.GodRays.Data.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "GlobalMultiplier");
-			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
 
+			float dayMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "DayMultiplier");
+			float nightMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "NightMultiplier");
+			ShaderConst.GodRays.Data.z = isDayTime>0?dayMult:nightMult;
+
+			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
 		}
 
 		if (Effects.AmbientOcclusion->Enabled) {
@@ -1957,7 +1960,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 			if (isExterior) {
 				if (Effects.Rain->Enabled && ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false, true);
 				if (Effects.Snow->Enabled && ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false, false);
-				if (Effects.GodRays->Enabled && isDaytime) Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
+				if (Effects.GodRays->Enabled) Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
 			}
 		}
 	}
