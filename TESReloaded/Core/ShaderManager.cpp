@@ -243,7 +243,7 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 	else if (!strcmp(Name, "TESR_SkyColor"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.skyColor;
 	else if (!strcmp(Name, "TESR_SunAmbient"))
-		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.sunColor;
+		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.sunAmbient;
 	else if (!strcmp(Name, "TESR_FogData"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.fogData;
 	else if (!strcmp(Name, "TESR_FogDistance"))
