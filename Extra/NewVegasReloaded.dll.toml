@@ -249,11 +249,17 @@ Mode = 0
 NearBlurCutOff = 0
 Radius = 1.5
 
-[_Shaders.Exposure.Main]
+[_Shaders.Exposure.Day]
 DarkAdaptSpeed = 0.01
 LightAdaptSpeed = 0.03
-MaxBrightness = 0.7
-MinBrightness = 0.2
+MaxBrightness = 0.5
+MinBrightness = 0.3
+
+[_Shaders.Exposure.Night]
+DarkAdaptSpeed = 0.01
+LightAdaptSpeed = 0.03
+MaxBrightness = 0.9
+MinBrightness = 0.1
 
 [_Shaders.Exposure.Status]
 Enabled = true

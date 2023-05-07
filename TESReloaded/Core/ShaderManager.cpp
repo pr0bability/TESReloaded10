@@ -1088,26 +1088,28 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.ShadowFade.y = Effects.ShadowsInteriors->Enabled;
 		}
 
-		//Logger::Log("exterior");
-
-		// calculating fog color/fog amount based on sun amount
+		// calculating sun amount for shaders (currently not used by any shaders)
 		ShaderConst.SunDir.w = 1.0f;
-		if (ShaderConst.GameTime.y >= ShaderConst.SunTiming.y && ShaderConst.GameTime.y <= ShaderConst.SunTiming.z) {
+		float sunRise = smoothStep(SunriseStart, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
+		float sunSet = smoothStep(SunsetEnd, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+		float isDayTime = sunRise * sunSet;
+
+		if (isDayTime == 1) {
 			// Day time
 			ShaderConst.SunAmount.x = 0.0f;
 			ShaderConst.SunAmount.y = 1.0f;
 			ShaderConst.SunAmount.z = 0.0f;
 			ShaderConst.SunAmount.w = 0.0f;
 		}
-		else if ((ShaderConst.GameTime.y >= ShaderConst.SunTiming.w && ShaderConst.GameTime.y <= 23.59) || (ShaderConst.GameTime.y >= 0 && ShaderConst.GameTime.y <= ShaderConst.SunTiming.x)) {
+		else if (!isDayTime) {
 			// Night time
 			ShaderConst.SunAmount.x = 0.0f;
 			ShaderConst.SunAmount.y = 0.0f;
 			ShaderConst.SunAmount.z = 0.0f;
 			ShaderConst.SunAmount.w = 1.0f;
 		}
-		else if (ShaderConst.GameTime.y >= ShaderConst.SunTiming.x && ShaderConst.GameTime.y <= ShaderConst.SunTiming.y) {
-			// Sunrise
+		else if (sunRise > 0 && sunRise < 1) {
+			// Sunrise in progress
 			float delta = 2.0f * invLerp(ShaderConst.SunTiming.x, ShaderConst.SunTiming.y, ShaderConst.GameTime.y); // from 0 (transition start) to 2 (transition end)
 
 			if (delta <= 1.0f) {
@@ -1125,8 +1127,8 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.SunAmount.w = 0.0f;
 			}
 		}
-		else if (ShaderConst.GameTime.y >= ShaderConst.SunTiming.z && ShaderConst.GameTime.y <= ShaderConst.SunTiming.w) {
-			// Sunset
+		else if (sunSet > 0 && sunSet < 1) {
+			// Sunset in progress
 			float delta = 2.0f * invLerp(ShaderConst.SunTiming.w, ShaderConst.SunTiming.z, ShaderConst.GameTime.y); // from 0 (transition start) to 2 (transition end)
 
 			if (delta <= 1.0f) {
@@ -1190,7 +1192,6 @@ void ShaderManager::UpdateConstants() {
 
 		//if (weatherPercent == 1.0f) ShaderConst.pWeather = currentWeather;
 
-
 		if (TheSettingManager->GetMenuShaderEnabled("Water") || Effects.Underwater->Enabled) {
 			RGBA* rgba = NULL;
 			SettingsWaterStruct* sws = NULL;
@@ -1218,13 +1219,6 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.Water.shallowColor.y = rgba->g / 255.0f;
 				ShaderConst.Water.shallowColor.z = rgba->b / 255.0f;
 				ShaderConst.Water.shallowColor.w = rgba->a / 255.0f;
-
-				//if (isUnderwater) {
-				//	ShaderConst.fogData.x = currentWater->properties.fogNearUW;
-				//	ShaderConst.fogData.y = currentWater->properties.fogFarUW;
-				//	ShaderConst.fogData.z = ShaderConst.sunGlare;
-				//	ShaderConst.fogData.w = currentWater->properties.fogAmountUW;
-				//}
 			}
 
 			ShaderConst.Water.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
@@ -1654,10 +1648,13 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.Exposure->Enabled) {
-			ShaderConst.Exposure.Data.x = TheSettingManager->GetSettingF("Shaders.Exposure.Main", "MinBrightness");
-			ShaderConst.Exposure.Data.y = TheSettingManager->GetSettingF("Shaders.Exposure.Main", "MaxBrightness");
-			ShaderConst.Exposure.Data.z = TheSettingManager->GetSettingF("Shaders.Exposure.Main", "DarkAdaptSpeed");
-			ShaderConst.Exposure.Data.w = TheSettingManager->GetSettingF("Shaders.Exposure.Main", "LightAdaptSpeed");
+			char day[] = "Shaders.Exposure.Day";
+			char night [] = "Shaders.Exposure.Night";
+
+			ShaderConst.Exposure.Data.x = lerp(TheSettingManager->GetSettingF(night, "MinBrightness"), TheSettingManager->GetSettingF(day, "MinBrightness"), isDayTime);
+			ShaderConst.Exposure.Data.y = lerp(TheSettingManager->GetSettingF(night, "MaxBrightness"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
+			ShaderConst.Exposure.Data.z = lerp(TheSettingManager->GetSettingF(night, "DarkAdaptSpeed"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
+			ShaderConst.Exposure.Data.w = lerp(TheSettingManager->GetSettingF(night, "LightAdaptSpeed"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
 		}
 
 		ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");
