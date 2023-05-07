@@ -1,3 +1,4 @@
+float4 TESR_SunAmbient;
 float4 TESR_SunColor;
 float4 TESR_FogColor;
 float4 TESR_WaterShallowColor; // Shallow color used by the game for water
@@ -49,7 +50,8 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	color = displayBuffer(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15), TESR_DepthBuffer);
 
     if (IN.UVCoord.x > 0.9 && IN.UVCoord.x < 0.95){
-        if (IN.UVCoord.y > 0.2 && IN.UVCoord.y < 0.25) return TESR_SunColor;
+        if (IN.UVCoord.y > 0.15 && IN.UVCoord.y < 0.2) return TESR_SunColor;
+        if (IN.UVCoord.y > 0.2 && IN.UVCoord.y < 0.25) return TESR_SunAmbient;
         if (IN.UVCoord.y > 0.25 && IN.UVCoord.y < 0.3) return TESR_FogColor;
         if (IN.UVCoord.y > 0.3 && IN.UVCoord.y < 0.35) return TESR_HorizonColor;
         if (IN.UVCoord.y > 0.35 && IN.UVCoord.y < 0.4) return TESR_SkyColor;
