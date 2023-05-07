@@ -133,7 +133,7 @@ float4 BlurWetMap(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius)
 
 float4 Wet( VSOUT IN ) : COLOR0
 {
-	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	float4 baseColor = tex2D(TESR_SourceBuffer, IN.UVCoord);
 
 	float depth = readDepth(IN.UVCoord);
 	float3 eyeDirection = toWorld(IN.UVCoord);
@@ -145,9 +145,9 @@ float4 Wet( VSOUT IN ) : COLOR0
 	eyeDirection = normalize(eyeDirection);
 
 	// early out to avoid computing pixels that aren't puddles
-    if (depth > DrawD || floorAngle == 0) return color;
+    if (depth > DrawD || floorAngle == 0) return baseColor;
 
-	float LODfade = smoothstep(0, DrawD, depth);
+	float LODfade = smoothstep(DrawD, 0, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
 	// get puddle mask from ortho map
@@ -160,11 +160,8 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float belowGround = ortho_pos.z > ortho - thickness;
 
 	puddles = puddles * 2 * belowGround;
-	float puddlemask = pow(puddles, 3);  // sharpen puddle mask
-	// puddlemask *= ((ortho_pos.z < ortho + thickness) && (ortho_pos.z > ortho - thickness)); 
+	float puddlemask = pow(puddles, 3);  // sharpen puddle mask to get the deeper part of the puddle
 	puddlemask = saturate(puddlemask); 
-
-	// return float4(fullPuddle, puddlemask, puddles, 1);
 
 	// sample and combine rain ripples
 	float2 rippleUV = worldPos.xy / 160.0f;
@@ -178,21 +175,28 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 Z = lerp(1, float4(Ripple1.z, Ripple2.z, Ripple3.z, Ripple4.z), Weights);
 	float3 ripple = float3( Weights.x * Ripple1.xy + Weights.y * Ripple2.xy + Weights.z * Ripple3.xy + Weights.w * Ripple4.xy, Z.x * Z.y * Z.z * Z.w);
 	float3 ripnormal = normalize(ripple);
-	float3 combnom = float3(ripnormal.xy * aboveGround * puddlemask, 1);
+	float3 combnom = float3(ripnormal.xy * aboveGround * belowGround * LODfade, 1); //only add ripple to surfaces that match ortho depth
+
+	// refract image through ripple normals
+	float2 refractionUV = projectPosition(combnom).xy * IN.UVCoord * 2;
+	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV);
 
 	// calculate puddle color
-	float4 puddleColor = color * 0.3; // base color is just darkened ground color
+	float4 puddleColor = rippleColor * 0.6; // base color is just darkened ground color
 	float4 fresnelColor = TESR_HorizonColor * 0.8;
 	float glossiness = 300;
 	float fresnel = pow(1 - dot(-eyeDirection, combnom), 5);
-	
+
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
 	float specular = pow(shades(combnom, halfwayDir), glossiness * lerp(2, 5, puddlemask));
 
 	puddleColor = lerp(puddleColor, fresnelColor, saturate(fresnel * puddlemask));
 	puddleColor += specular * TESR_SunColor * 8;
-	
-    return lerp(color, puddleColor, lerp(saturate(puddles), 0, LODfade)); // fade out puddles
+
+	// transition between surface ripple and deeper puddles
+	float4 color = lerp(rippleColor, puddleColor, puddlemask);
+
+    return lerp(baseColor, color, LODfade); // fade out puddles
 }
 
 
