@@ -785,7 +785,7 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
-	bool isExterior = Player->GetWorldSpace() || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior;
+	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
 	if (isExterior && ShadowsExteriors->Enabled) {
 		ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
