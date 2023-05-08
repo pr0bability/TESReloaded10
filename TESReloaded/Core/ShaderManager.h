@@ -391,6 +391,8 @@ public:
 	NiD3DPixelShader*		WaterPixelShaders[51];
     TESObjectCELL*          PreviousCell;
     bool                    IsMenuSwitch;
+    bool                    orthoRequired;
+    bool                    avglumaRequired;
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];
 };

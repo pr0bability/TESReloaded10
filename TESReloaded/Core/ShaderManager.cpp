@@ -980,6 +980,8 @@ void ShaderManager::UpdateConstants() {
 	float weatherPercent = WorldSky->weatherPercent;
 	float lastGameTime = ShaderConst.GameTime.y;
 	const char* sectionName = NULL;
+	avglumaRequired = false; // toggle for rendering AvgLuma
+	orthoRequired = false; // toggle for rendering Ortho map
 
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
@@ -1282,6 +1284,8 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.WetWorld.Data.x = ShaderConst.Animators.RainAnimator.GetValue();
 			ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
 
+			if (ShaderConst.WetWorld.Data.x && ShaderConst.WetWorld.Data.z) orthoRequired = true;
+
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
 			ShaderConst.WetWorld.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
 			ShaderConst.WetWorld.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
@@ -1334,6 +1338,8 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.SnowAccumulation.Params.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
 				ShaderConst.SnowAccumulation.Params.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
 				ShaderConst.SnowAccumulation.Params.w = ShaderConst.Animators.SnowAccumulationAnimator.GetValue();
+
+				if (ShaderConst.SnowAccumulation.Params.w) orthoRequired = true;
 			}
 		}
 		
@@ -1543,6 +1549,8 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.DepthOfField->Enabled) {
+			avglumaRequired = true;
+
 			sectionName = "Shaders.DepthOfField.FirstPersonView";
 			if (TheCameraManager->IsVanity())
 				sectionName = "Shaders.DepthOfField.VanityView";
@@ -1579,6 +1587,7 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.Cinema->Enabled) {
+			avglumaRequired = true;
 			UInt8 Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
 
 			ShaderConst.Cinema.Data.x = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
@@ -1651,6 +1660,7 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.Exposure->Enabled) {
+			avglumaRequired = true;
 			char day[] = "Shaders.Exposure.Day";
 			char night [] = "Shaders.Exposure.Night";
 
@@ -1966,10 +1976,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	}
 
 	// calculate average luma for use by shaders
-	if (Effects.DepthOfField->Enabled || 
-		Effects.Cinema->Enabled ||
-		Effects.Exposure->Enabled) {
-
+	if (avglumaRequired) {
 		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
 		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
 	}
