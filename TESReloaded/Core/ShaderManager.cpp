@@ -736,7 +736,7 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(FloatShaderValuesCount * sizeof(ShaderValue));
 	if (TextureShaderValuesCount) TextureShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(TextureShaderValuesCount * sizeof(ShaderValue));
 
-	Logger::Log("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
+	Logger::Debug("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
 
 	for (UINT c = 0; c < ConstantTableDesc.Parameters; c++) {
 		Handle = Effect->GetParameter(NULL, c);
@@ -1270,14 +1270,14 @@ void ShaderManager::UpdateConstants() {
 			if (isRainy && ShaderConst.Animators.RainAnimator.switched == false) {
 				// it just started raining
 				ShaderConst.WetWorld.Data.y = 1.0f;
-				ShaderConst.Animators.PuddlesAnimator.Start(0.3, 1);
+				ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase"), 1);
 				ShaderConst.Animators.RainAnimator.switched = true;
 				ShaderConst.Animators.RainAnimator.Start(0.05, 1);
 			}
 			else if (!isRainy && ShaderConst.Animators.RainAnimator.switched) {
 				// it just stopped raining
 				ShaderConst.WetWorld.Data.y = 0.0f;
-				ShaderConst.Animators.PuddlesAnimator.Start(1.2, 0);
+				ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease"), 0);
 				ShaderConst.Animators.RainAnimator.switched = false;
 				ShaderConst.Animators.RainAnimator.Start(0.07, 0);
 			}
@@ -1327,12 +1327,12 @@ void ShaderManager::UpdateConstants() {
 					// it just started snowing
 					ShaderConst.Animators.SnowAccumulationAnimator.switched = true;
 					ShaderConst.Animators.SnowAccumulationAnimator.Initialize(0);
-					ShaderConst.Animators.SnowAccumulationAnimator.Start(0.8, 1);
+					ShaderConst.Animators.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Increase"), 1);
 				}
 				else if (!isSnow && ShaderConst.Animators.SnowAccumulationAnimator.switched) {
 					// it just stopped snowing
 					ShaderConst.Animators.SnowAccumulationAnimator.switched = false;
-					ShaderConst.Animators.SnowAccumulationAnimator.Start(12, 0);
+					ShaderConst.Animators.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Decrease"), 0);
 				}
 				ShaderConst.SnowAccumulation.Params.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
 				ShaderConst.SnowAccumulation.Params.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
