@@ -38,8 +38,8 @@ xcopy "%PROJECT%\Release\%PROJECT%.pdb" "build\%PROJECT%\%FOLDER%\Plugins\" /y /
 
 @REM Copy config
 xcopy "Extra\%PROJECT%.dll.config" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
-xcopy "Extra\%PROJECT%.dll.toml" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
 xcopy "Extra\%PROJECT%.dll.defaults.toml" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
+echo F|xcopy "Extra\%PROJECT%.dll.defaults.toml" "build\%PROJECT%\%FOLDER%\Plugins\%PROJECT%.dll.toml" /y /d
 
 @REM Copy Shaders
 robocopy /mir .\Extra\Shaders\%PROJECT%\ .\build\%PROJECT%\Shaders\%PROJECT%\
