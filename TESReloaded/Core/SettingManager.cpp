@@ -1068,16 +1068,7 @@ bool SettingManager::GetMenuShaderEnabled(const char* Name) {
 	}
 
 	strcat(settingString, ".Status");
-	// handle special case of shadows (To fix: remove this special case)
-	char settingName[12] = "";
-	if (!memcmp(Name, "Shadows", 7)) {
-		strcpy(settingName, "PostProcess");
-	}
-	else {
-		strcpy(settingName, "Enabled");
-	}
-
-	return (bool*)GetSettingI(settingString, settingName);
+	return (bool*)GetSettingI(settingString, "Enabled");
 }
 
 
@@ -1086,17 +1077,7 @@ void SettingManager::SetMenuShaderEnabled(const char* Name, bool enabled) {
 	strcpy(settingString, "Shaders.");
 	strcat(settingString, Name);
 	strcat(settingString, ".Status");
-
-	// handle special case of shadows (To fix: remove this special case)
-	char settingName[12] = "";
-	if (!memcmp(Name, "Shadows", 7)) {
-		strcpy(settingName, "PostProcess");
-	}
-	else {
-		strcpy(settingName, "Enabled");
-	}
-
-	SetSetting(settingString, settingName, enabled);
+	SetSetting(settingString, "Enabled", enabled);
 }
 
 

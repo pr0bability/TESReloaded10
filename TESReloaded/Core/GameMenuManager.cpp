@@ -269,13 +269,8 @@ void GameMenuManager::Render() {
 						Rect.left = Rect.right + 1;
 						Rect.right += 100;
 						SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-						strcpy(TextShaderStatus, "ENABLED");
-						if (TheSettingManager->GetMenuShaderEnabled(Text)) {
-							if (!memcmp(Text, "Shadows", 7)) strcat(TextShaderStatus, " POST");
-						}
-						else {
-							if (memcmp(Text, "Shadows", 7)) strcpy(TextShaderStatus, "DISABLED");
-						}
+						bool enabled = TheSettingManager->GetMenuShaderEnabled(Text);
+						strcpy(TextShaderStatus, enabled?"ENABLED":"DISABLED");
 						if (SelectedRow[1] == Rows[1] && SelectedColumn >= 1) {
 							if (!memcmp(TextShaderStatus, "ENABLED", 7)) {
 								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, TextShadowColorEnabled);
