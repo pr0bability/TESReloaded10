@@ -408,6 +408,7 @@ public:
 		void			CreateWeatherSection(const char* WeatherName, TESWeather* Weather);
 
 		toml::table		TomlConfig;
+		toml::table		DefaultConfig;
 		bool			configLoaded;
 		char*			Config;
 		char*			ConfigB;

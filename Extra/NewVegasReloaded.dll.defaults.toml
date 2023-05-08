@@ -1,0 +1,611 @@
+[_Main.CameraMode.Main]
+ChasingFirst = false
+ChasingThird = false
+Crosshair = 0
+Enabled = false
+FoV = 90.0
+
+[_Main.CameraMode.Positioning]
+AimingOffsetX = -1.0
+AimingOffsetY = 15.0
+AimingOffsetZ = 4.5
+DialogOffsetX = -50.0
+DialogOffsetY = -50.0
+DialogOffsetZ = 10.0
+OffsetX = 0.0
+OffsetY = 15.0
+OffsetZ = 5.0
+
+[_Main.Develop.Main]
+CompileEffects = 2
+CompileShaders = 2
+DebugMode = false
+DebugVar1 = 1.0
+DebugVar2 = 1.0
+DebugVar3 = 1.0
+DebugVar4 = 1.0
+TraceShaders = 25
+
+[_Main.FlyCam.Main]
+Enabled = true
+KeyAdd = 78
+KeySubtract = 74
+ScrollMultiplier = 2.0
+StepValue = 1.0
+
+[_Main.FrameRate.SmartControl]
+FlowControl = -0.5
+SmartControl = false
+SmartControlFPS = 60
+
+[_Main.FrameRate.Stuttering]
+BackgroundThreadPriority = 5
+SmartBackgroundProcess = false
+
+[_Main.LowHFSound.Main]
+FatigueCoeff = 0.5
+FatigueEnabled = true
+HealthCoeff = 0.5
+HealthEnabled = false
+
+[_Main.Main.Misc]
+ForceMSAA = false
+RenderEffects = true
+ReplaceIntro = false
+ScreenshotKey = 87
+
+[_Main.Main.Precipitations]
+RemovePrecipitations = false
+
+[_Main.Main.Water]
+ForceReflections = true
+RemoveUnderwater = false
+
+[_Main.Menu.Keys]
+KeyAdd = 74
+KeyDown = 208
+KeyEditing = 156
+KeyEnable = 24
+KeyLeft = 203
+KeyPageDown = 209
+KeyPageUp = 201
+KeyRight = 205
+KeySave = 28
+KeySubtract = 78
+KeyUp = 200
+
+[_Main.Menu.Style]
+ItemColumnSize = 300
+MainItemColumnSize = 100
+PositionX = 60
+PositionY = 60
+RowSpace = 0
+RowsPerPage = 35
+TextColorEditing = '255,100,50'
+TextColorEnabled = '100,170,90'
+TextColorNormal = '240,200,80'
+TextColorSelected = '255,255,255'
+TextFont = 'Calibri'
+TextFontStatus = 'Consolas'
+TextShadowColorEditing = '50,50,50'
+TextShadowColorEnabled = '50,50,50'
+TextShadowColorNormal = '50,50,50'
+TextShadowColorSelected = '50,50,50'
+TextSize = 22
+TextSizeStatus = 12
+TitleColumnSize = 850
+
+[_Main.SleepingMode.Main]
+Enabled = false
+Mode = 0
+
+[_Main.WeatherMode.General]
+CoeffFogB = 0.86
+CoeffFogG = 0.88
+CoeffFogR = 0.9
+CoeffNightB = 0.5
+CoeffNightG = 0.6
+CoeffNightR = 0.6
+CoeffSunB = 0.8
+CoeffSunG = 0.9
+CoeffSunR = 1.0
+
+[_Main.WeatherMode.Main]
+Enabled = false
+
+[_Shaders.AmbientOcclusion.Exteriors]
+AngleBias = 0.0
+BlurDropThreshold = 8.0
+BlurRadiusMultiplier = 2.0
+ClampStrength = 0.2
+Enabled = true
+LumThreshold = 0.7
+Range = 30.1
+Samples = 5
+StrengthMultiplier = 2.0
+
+[_Shaders.AmbientOcclusion.Interiors]
+AngleBias = 0.0
+BlurDropThreshold = 8.0
+BlurRadiusMultiplier = 2.0
+ClampStrength = 0.2
+Enabled = true
+LumThreshold = 0.5
+Range = 30.0
+Samples = 5
+StrengthMultiplier = 2.0
+
+[_Shaders.AmbientOcclusion.Status]
+Enabled = true
+
+[_Shaders.Blood.Status]
+Enabled = false
+
+[_Shaders.BloodLens.Main]
+Chance = 10.0
+ColorB = 0.16
+ColorG = 0.16
+ColorR = 0.92
+Intensity = 0.8
+Time = 900.0
+
+[_Shaders.BloodLens.Status]
+Enabled = false
+
+[_Shaders.Bloom.Exteriors]
+BloomIntensity = 1.4
+BloomSaturation = 1.2
+Luminance = 0.06
+MiddleGray = 0.18
+OriginalIntensity = 1.0
+OriginalSaturation = 1.0
+WhiteCutOff = 0.8
+
+[_Shaders.Bloom.Interiors]
+BloomIntensity = 1.4
+BloomSaturation = 1.2
+Luminance = 0.06
+MiddleGray = 0.18
+OriginalIntensity = 1.0
+OriginalSaturation = 1.0
+WhiteCutOff = 0.8
+
+[_Shaders.Bloom.Status]
+Enabled = false
+
+[_Shaders.Cinema.Main]
+AspectRatio = 2.39
+ChromaticAberration = 2.0
+DirtLensAmount = 0.3
+FilmGrainAmount = 0.5
+Mode = 1
+OverlayStrength = 0.3
+VignetteDarkness = 1.0
+VignetteRadius = 0.6
+
+[_Shaders.Cinema.Status]
+Enabled = true
+
+[_Shaders.Coloring.Default]
+BaseGamma = 1.6
+Bleach = 0.1
+BleachLuma = 0.2
+ColorCurve = 1.2
+ColorCurveB = 1.0
+ColorCurveG = 1.0
+ColorCurveR = 0.9
+Contrast = 0.8
+EffectGamma = 0.9
+EffectGammaB = 1.0
+EffectGammaG = 1.0
+EffectGammaR = 1.0
+Fade = 0.0
+Linearization = 1.1
+Saturation = -0.1
+Strength = 0.5
+
+[_Shaders.Coloring.Status]
+Enabled = false
+
+[_Shaders.Debug.Status]
+Enabled = false
+
+[_Shaders.DepthOfField.FirstPersonView]
+BaseBlurRadius = 2.0
+BlurFallOff = 1.5
+DiameterRange = 0.8
+DistantBlur = true
+DistantBlurEndRange = 150000
+DistantBlurStartRange = 30000
+Enabled = true
+Mode = 0
+NearBlurCutOff = 100
+Radius = 1.5
+
+[_Shaders.DepthOfField.Status]
+Enabled = true
+
+[_Shaders.DepthOfField.ThirdPersonView]
+BaseBlurRadius = 2.0
+BlurFallOff = 1.5
+DiameterRange = 0.8
+DistantBlur = true
+DistantBlurEndRange = 150000
+DistantBlurStartRange = 30000
+Enabled = true
+Mode = 0
+NearBlurCutOff = 200
+Radius = 1.5
+
+[_Shaders.DepthOfField.VanityView]
+BaseBlurRadius = 2.0
+BlurFallOff = 1.5
+DiameterRange = 0.8
+DistantBlur = true
+DistantBlurEndRange = 150000
+DistantBlurStartRange = 30000
+Enabled = true
+Mode = 0
+NearBlurCutOff = 0
+Radius = 1.5
+
+[_Shaders.Exposure.Day]
+DarkAdaptSpeed = 0.01
+LightAdaptSpeed = 0.03
+MaxBrightness = 0.5
+MinBrightness = 0.3
+
+[_Shaders.Exposure.Night]
+DarkAdaptSpeed = 0.01
+LightAdaptSpeed = 0.03
+MaxBrightness = 0.9
+MinBrightness = 0.1
+
+[_Shaders.Exposure.Status]
+Enabled = true
+
+[_Shaders.ExtraEffects.Status]
+Enabled = false
+
+[_Shaders.ExtraShaders.Status]
+Enabled = false
+
+[_Shaders.Grass.Main]
+	WindEnabled = false
+	GrassDensity = 1
+	WindCoefficient = 0.0
+	ScaleX = 1.0
+	ScaleY = 1.0
+	ScaleZ = 1.0
+	MinDistance = 0
+	MaxDistance = 0
+
+[_Shaders.Grass.Status]
+Enabled = false
+
+[_Shaders.GodRays.Main]
+DayMultiplier = 0.5
+NightMultiplier = 0.5
+LightShaftPasses = 8
+Luminance = 0.6
+RayDensity = 1.0
+RayIntensity = 1.0
+RayLength = 1.0
+RayVisibility = 4.0
+Saturate = 0.0
+SunGlareEnabled = true
+TimeEnabled = false
+
+[_Shaders.GodRays.Coloring]
+RayR = 1.0
+RayG = 1.0
+RayB = 1.0
+Saturate = 0.0
+
+
+[_Shaders.GodRays.Status]
+Enabled = true
+
+[_Shaders.HDR.Main]
+Linearization = 2.2
+ToneMapping = 1.0
+ToneMappingBlur = 0.0
+ToneMappingColor = 1.2
+
+[_Shaders.HDR.Status]
+Enabled = false
+
+[_Shaders.LowHF.Main]
+BlurMultiplier = 0.2
+DarknessMultiplier = 1.0
+FatigueLimit = 0.25
+HealthLimit = 0.5
+LumaMultiplier = 1.0
+VignetteMultiplier = 1.0
+
+[_Shaders.LowHF.Status]
+Enabled = false
+
+[_Shaders.MotionBlur.FirstPersonView]
+BlurCutOff = 15.0
+BlurOffsetMax = 24.0
+BlurScale = 4.0
+Enabled = true
+GaussianWeight = 6.0
+
+[_Shaders.MotionBlur.Status]
+Enabled = false
+
+[_Shaders.MotionBlur.ThirdPersonView]
+BlurCutOff = 15.0
+BlurOffsetMax = 24.0
+BlurScale = 4.0
+Enabled = false
+GaussianWeight = 6.0
+
+[_Shaders.POM.Main]
+HeightMapScale = 0.55
+MaxSamples = 32
+MinSamples = 8
+
+[_Shaders.POM.Status]
+Enabled = false
+
+[_Shaders.Precipitations.Main]
+Bloom = 0.1
+Coloring = 0.3
+Opacity = 1.0
+Refraction = 0.3
+Speed = 2.0
+VerticalScale = 1.0
+
+[_Shaders.Precipitations.Status]
+Enabled = true
+
+[_Shaders.ShadowsExteriors.Far]
+Activators = false
+Actors = true
+AlphaEnabled = true
+Apparatus = false
+Books = false
+Containers = true
+Doors = true
+Furniture = true
+Lod = false
+MinRadius = 10.0
+Misc = true
+Statics = true
+Terrain = true
+Trees = true
+
+[_Shaders.ShadowsExteriors.Lod]
+Activators = false
+Actors = false
+AlphaEnabled = false
+Apparatus = false
+Books = false
+Containers = false
+Doors = true
+Furniture = false
+Lod = false
+MinRadius = 100.0
+Misc = false
+Statics = true
+Terrain = true
+Trees = true
+
+[_Shaders.ShadowsExteriors.Main]
+PostProcess = true
+BlurShadowMaps = true
+Darkness = 0.5
+Enabled = true
+NightMinDarkness = 0.3
+Quality = 2
+ShadowMapFarPlane = 32768
+ShadowMapResolution = 1024
+ShadowMode = 1
+ShadowsRadius = 8000
+
+[_Shaders.ShadowsExteriors.Middle]
+Activators = false
+Actors = true
+AlphaEnabled = true
+Apparatus = false
+Books = false
+Containers = true
+Doors = true
+Furniture = true
+Lod = false
+MinRadius = 10.0
+Misc = true
+Statics = true
+Terrain = true
+Trees = true
+
+[_Shaders.ShadowsExteriors.Near]
+Activators = false
+Actors = true
+AlphaEnabled = true
+Apparatus = false
+Books = false
+Containers = true
+Doors = true
+Furniture = true
+Lod = false
+MinRadius = 10.0
+Misc = true
+Statics = true
+Terrain = true
+Trees = true
+
+[_Shaders.ShadowsExteriors.Ortho]
+Activators = false
+Actors = false
+AlphaEnabled = true
+Apparatus = false
+Books = false
+Containers = false
+Doors = false
+Furniture = false
+Lod = false
+MinRadius = 100.0
+Misc = false
+Statics = true
+Terrain = true
+Trees = false
+
+[_Shaders.ShadowsExteriors.ScreenSpace]
+BlurRadius = 1.0
+Enabled = true
+RenderDistance = 8000
+
+[_Shaders.ShadowsExteriors.Status]
+Enabled = true
+
+[_Shaders.ShadowsInteriors.Main]
+PostProcess = true
+Activators = true
+Actors = true
+AlphaEnabled = true
+Apparatus = true
+Books = true
+Containers = true
+Darkness = 0.7
+Doors = true
+Enabled = true
+Furniture = true
+LightPoints = 12
+LightRadiusMult = 1.0
+MinRadius = 10.0
+Misc = true
+Quality = 1
+ShadowCubeMapSize = 512
+Statics = true
+TorchesCastShadows = true
+
+[_Shaders.ShadowsInteriors.Status]
+Enabled = true
+
+[_Shaders.Sharpening.Main]
+Clamp = 0.1
+Offset = 2.0
+Strength = 0.75
+
+[_Shaders.Sharpening.Status]
+Enabled = false
+
+[_Shaders.Skin.Main]
+Attenuation = 0.84
+CoeffBlue = 0.12
+CoeffGreen = 0.22
+CoeffRed = 0.36
+MaterialThickness = 0.12
+RimScalar = 0.5
+SpecularPower = 0.78
+
+[_Shaders.Skin.Status]
+Enabled = false
+
+[_Shaders.Snow.Main]
+DepthStep = 2.5
+Flakes = 0.5
+Speed = 1.4
+
+[_Shaders.Snow.Status]
+Enabled = true
+
+[_Shaders.SnowAccumulation.Main]
+Amount = 1.6
+BlurNormDropThreshhold = 0.82
+BlurRadiusMultiplier = 0.6
+Decrease = 12
+Increase = 0.8
+SunPower = 0.3
+
+[_Shaders.SnowAccumulation.Status]
+Enabled = true
+
+[_Shaders.Specular.Exterior]
+BlurMultiplier = 1
+DistanceFade = 30000
+FresnelStrength = 0.7
+Glossiness = 16
+SkyTintSaturation = 1.8
+SkyTintStrength = 0.3
+SpecLumaTreshold = 0.5
+SpecularStrength = 0.7
+
+[_Shaders.Specular.Rain]
+BlurMultiplier = 3.0
+DistanceFade = 30000
+FresnelStrength = 1.0
+Glossiness = 7.0
+SkyTintSaturation = 1.0
+SkyTintStrength = 0.1
+SpecLumaTreshold = 0.1
+SpecularStrength = 4.0
+
+[_Shaders.Specular.Status]
+Enabled = true
+
+[_Shaders.Terrain.Main]
+DistantNoise = 0.6
+DistantSpecular = 0.2
+MiddleSpecular = 0.0
+NearSpecular = 0.0
+
+[_Shaders.Terrain.Status]
+Enabled = false
+
+[_Shaders.Underwater.Status]
+Enabled = true
+
+[_Shaders.VolumetricFog.Main]
+Amount = 1.0
+ColorCoeff = 0.5
+Exponent = 8.0
+MaxDistance = 80000
+
+[_Shaders.VolumetricFog.Status]
+Enabled = true
+
+[_Shaders.Water.Default]
+causticsStrength = 3.0
+causticsStrengthS = 0.2
+choppiness = 0.7
+depthDarkness = 1.0
+inExtCoeff_B = 1.0
+inExtCoeff_G = 1.0
+inExtCoeff_R = 1.0
+inScattCoeff = 1.0
+reflectivity = 1.0
+shoreFactor = 6.0
+shoreMovement = 0.3
+turbidity = 3.0
+waveSpeed = 0.7
+waveWidth = 0.8
+
+[_Shaders.Water.Status]
+Enabled = true
+
+[_Shaders.WaterLens.Main]
+Amount = 0.1
+Time = 180.0
+TimeMultA = 0.1
+TimeMultB = 0.2
+Viscosity = 0.05
+
+[_Shaders.WaterLens.Status]
+Enabled = true
+
+[_Shaders.WetWorld.Main]
+Amount = 0.85
+Decrease = 0.3
+Increase = 1.2
+PuddleCoeff_B = 0.48
+PuddleCoeff_G = 0.62
+PuddleCoeff_R = 0.72
+PuddleSpecularMultiplier = 0.2
+
+[_Shaders.WetWorld.Status]
+Enabled = true
