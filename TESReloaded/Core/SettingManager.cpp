@@ -756,8 +756,6 @@ void SettingManager::SetSettingS(const char* Section, const char* Key, char* Val
 void SettingManager::SetSetting(Configuration::ConfigNode* Node) {
 
 	Config.SetValue(Node);
-	LoadSettings();
-
 }
 
 void SettingManager::SetSettingWeather(const char* Section, const char* Key, float Value) {
@@ -777,7 +775,6 @@ void SettingManager::SetSettingWeather(const char* Section, const char* Key, flo
 	SettingsWeather = GetSettingsWeather(WeatherName);
 	if (!SettingsWeather) {
 		Config.CreateWeatherSection(WeatherName, Weather);
-		LoadSettings();
 		SettingsWeather = GetSettingsWeather(WeatherName);
 	}
 	if (Values[2] == "Main") {
