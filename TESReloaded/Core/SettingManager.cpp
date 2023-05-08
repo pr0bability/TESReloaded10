@@ -3,25 +3,49 @@
 void SettingManager::Configuration::Init() {
 
 	char TomlFilename[MAX_PATH];
+	char DefaultsFilename[MAX_PATH];
 
 	configLoaded = false;
 	GetCurrentDirectoryA(MAX_PATH, TomlFilename);
+	GetCurrentDirectoryA(MAX_PATH, DefaultsFilename);
 	strcat(TomlFilename, TomlSettingsFile);
+	strcat(DefaultsFilename, DefaultsSettingsFile);
 
 	Logger::Log("Loading settings from file %s", TomlFilename);
+	Logger::Log("Loading defaults from file %s", DefaultsFilename);
+
+	try {
+		DefaultConfig = toml::parse_file((std::string_view)DefaultsFilename);
+
+		// log config file contents
+		//std::stringstream buffer;
+		//buffer << DefaultConfig << std::endl;
+		//Logger::Log("%s", buffer.str().c_str());
+	}
+	catch (const std::exception& e) {
+		Logger::Log("error loading defaults toml: %s", e.what());
+	}
 
 	try {
 		TomlConfig = toml::parse_file((std::string_view)TomlFilename);
-		configLoaded = true;
+
+		//// log config file contents
+		//std::stringstream buffer;
+		//buffer << TomlConfig << std::endl;
+		//Logger::Log("%s", buffer.str().c_str());
+
 	}
 	catch(const std::exception& e){
-		Logger::Log("error loading toml: %s", e.what());
+		TomlConfig = toml::table();
+		Logger::Log("error loading toml: %s, new config will be created from defaults.", e.what());
 	}
+
+	configLoaded = true;
 }
 
 
 /*
-* Gets the value and type for the node based on section and key.
+* Gets the value and type for the node based on section and key. If the section and key isn't found, value will be obtained from defaults.
 */ 
 bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Section, const char* Key) {
 	
@@ -32,8 +56,10 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 	strcat(path, Key);
 
 	auto setting = TomlConfig.at_path(path);
-	
-	//infer the type and convert the value to string
+	auto defaultSetting = DefaultConfig.at_path(path);
+	bool fromDefault = false;
+
+	//infer the type and convert the value to string, first from the settings, and if not found from the defaults.
 	if (setting.is_integer()) {
 		Node->Type = NodeType::Integer;
 		value = ToString<int>((int)**setting.as_integer());
@@ -50,7 +76,28 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 		Node->Type = NodeType::String;
 		value = *setting.value<std::string>();
 	}
+	else if (defaultSetting.is_integer()) {
+		Node->Type = NodeType::Integer;
+		value = ToString<int>((int)**defaultSetting.as_integer());
+		fromDefault = true;
+	}
+	else if (defaultSetting.is_floating_point()) {
+		Node->Type = NodeType::Float;
+		value = ToString<float>((float)**defaultSetting.as_floating_point());
+		fromDefault = true;
+	}
+	else if (defaultSetting.is_boolean()) {
+		Node->Type = NodeType::Boolean;
+		value = ToString<bool>((bool)**defaultSetting.as_boolean());
+		fromDefault = true;
+	}
+	else if (defaultSetting.is_string()) {
+		Node->Type = NodeType::String;
+		value = *defaultSetting.value<std::string>();
+		fromDefault = true;
+	}
 	else {
+		// Key was not included in defaults, ignore
 		return false;
 	}
 
@@ -59,6 +106,11 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 	strcpy(Node->Key, Key);
 	strcpy(Node->Value, value.c_str());
 	Node->Reboot = 0;
+
+	//Logger::Log("FillNode %s value: %s (from defaults? %i)", path, value.c_str(), fromDefault);
+
+	// write the value in case it was obtained from defaults
+	if (fromDefault) SetValue(Node);
 
 	return true;
 }
@@ -72,14 +124,14 @@ void SettingManager::Configuration::FillSections(StringList* Sections, const cha
 	toml::v3::table* sectionsTable = NULL;
 
 	if (ParentSection == NULL) {
-		sectionsTable = &TomlConfig;
+		sectionsTable = &DefaultConfig;
 	}
 	else{
 		strcat(path, ParentSection); // add leading "_" TODO: Remove reliance on this leading "_"
-		auto section = TomlConfig.at_path(path);
+		auto section = DefaultConfig.at_path(path);
 		if (!section.is_table()) return; // table not found
 
-		sectionsTable = TomlConfig.at_path(path).as_table();
+		sectionsTable = DefaultConfig.at_path(path).as_table();
 	}
 
 	// iterate through the found keys in the table and adds the results to the list
@@ -99,7 +151,7 @@ void SettingManager::Configuration::FillSettings(SettingList* Nodes, const char*
 	char path[256] = "_";
 	strcat(path, Section);
 
-	auto settingsTable = TomlConfig.at_path(path);
+	auto settingsTable = DefaultConfig.at_path(path);
 	if (!settingsTable.is_table()) return; // table not found
 
 	Nodes->clear();
@@ -111,15 +163,32 @@ void SettingManager::Configuration::FillSettings(SettingList* Nodes, const char*
 }
 
 /*
-* Add the changes described by the node to the config
+* Add the changes described by the node to the config. Will create the entry in the config if it only exists in defaults
 */
 void SettingManager::Configuration::SetValue(ConfigNode* Node) {
 	char path[256] = "_";
 	strcat(path, Node->Section);
 
 	auto section = TomlConfig.at_path(path);
-	if (!section.is_table())return;
+	auto defaultSection = DefaultConfig.at_path(path);
 
+	if (!defaultSection.is_table()) return; // setting not in defaults, ignore
+
+	//setting values that don't exist in the config require building the section first.
+	if (!section.is_table()) {
+		// create the table
+		StringList tables;
+		SplitString(path, ".", &tables);
+		auto table = &TomlConfig;
+		for (auto address : tables) {
+			// create table if not found
+			if (!table->contains(address)) table->insert_or_assign(address, toml::v3::table());
+			table = table->at_path(address).as_table();
+		}
+		section = TomlConfig.at_path(path);
+	};
+
+	// setting value based on type
 	std::pair<toml::v3::table::iterator, bool> result;
 	if (Node->Type == NodeType::Integer) {
 		int value = atoi(Node->Value);
@@ -993,7 +1062,7 @@ bool SettingManager::GetMenuShaderEnabled(const char* Name) {
 	// handle enabling shaders that don't appear in settings (always on)
 	char path[256] = "_";
 	strcat(path, settingString);
-	if (!Config.TomlConfig.at_path(path).is_table()) {
+	if (!Config.TomlConfig.at_path(path).is_table() && !Config.DefaultConfig.at_path(path).is_table()) {
 		Logger::Log("No Shader setting for %s, defaults to true", settingString);
 		return true;
 	}
