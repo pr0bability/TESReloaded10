@@ -41,6 +41,8 @@ static const float time2 = TESR_GameTime.z * 0.97f; // Ripple timing, original 1
 static const float time3 = TESR_GameTime.z * 0.98f; // Ripple timing
 static const float time4 = TESR_GameTime.z * 0.99f; // Ripple timing
 static const float DrawD = 2000.0f; // Max draw distance for puddles 0-1000000
+static const float rippleScale = 80.0f;
+static const float refractionScale = 25;
 //------------------------------------------------------
 
 struct VSOUT
@@ -164,7 +166,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	puddlemask = saturate(puddlemask); 
 
 	// sample and combine rain ripples
-	float2 rippleUV = worldPos.xy / 160.0f;
+	float2 rippleUV = worldPos.xy / rippleScale;
 	float4 Weights = float4(1, 0.75, 0.5, 0.25) * TESR_WetWorldData.x;
 	Weights = saturate(Weights * 4);
 	float3 Ripple1 = ComputeRipple(rippleUV + float2( 0.25f,0.0f), time1, Weights.x);
@@ -175,20 +177,20 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 Z = lerp(1, float4(Ripple1.z, Ripple2.z, Ripple3.z, Ripple4.z), Weights);
 	float3 ripple = float3( Weights.x * Ripple1.xy + Weights.y * Ripple2.xy + Weights.z * Ripple3.xy + Weights.w * Ripple4.xy, Z.x * Z.y * Z.z * Z.w);
 	float3 ripnormal = normalize(ripple);
-	float3 combnom = float3(ripnormal.xy * aboveGround * belowGround * LODfade, 1); //only add ripple to surfaces that match ortho depth
+	float3 combinedNormals = float3(ripnormal.xy * aboveGround * belowGround * LODfade, 1); //only add ripple to surfaces that match ortho depth
 
 	// refract image through ripple normals
-	float2 refractionUV = projectPosition(combnom).xy * IN.UVCoord * 2;
-	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV);
+	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
+	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord);
 
 	// calculate puddle color
-	float4 puddleColor = rippleColor * 0.6; // base color is just darkened ground color
+	float4 puddleColor = rippleColor * 0.5; // base color is just darkened ground color
 	float4 fresnelColor = TESR_HorizonColor * 0.8;
 	float glossiness = 300;
-	float fresnel = pow(1 - dot(-eyeDirection, combnom), 5);
+	float fresnel = pow(1 - dot(-eyeDirection, combinedNormals), 5);
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
-	float specular = pow(shades(combnom, halfwayDir), glossiness * lerp(2, 5, puddlemask));
+	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(2, 5, puddlemask));
 
 	puddleColor = lerp(puddleColor, fresnelColor, saturate(fresnel * puddlemask));
 	puddleColor += specular * TESR_SunColor * 8;
