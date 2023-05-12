@@ -285,16 +285,16 @@ Enabled = false
 
 [_Shaders.GodRays.Main]
 DayMultiplier = 0.5
-NightMultiplier = 0.5
 LightShaftPasses = 8
-Luminance = 0.6
-RayDensity = 1.0
+Luminance = 0.8
+NightMultiplier = 1.0
+RayDensity = 0.0
 RayIntensity = 1.0
 RayLength = 1.0
 RayVisibility = 4.0
 Saturate = 0.0
 SunGlareEnabled = true
-TimeEnabled = false
+TimeEnabled = true
 
 [_Shaders.GodRays.Coloring]
 RayR = 1.0
