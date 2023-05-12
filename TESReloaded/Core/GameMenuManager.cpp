@@ -202,6 +202,9 @@ void GameMenuManager::Render() {
 			SetRect(&Rect, Rect.left, Rect.bottom + RowSpace, Rect.right, Rect.bottom + RowSpace + 2);
 			TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L);
 
+
+			D3DXCOLOR textColor = TextColorNormal;
+			D3DXCOLOR shadowColor = TextShadowColorNormal;
 			// render header
 			Rows[0] = 0;
 			SetRect(&Rect, Rect.left + MainItemColumnSize * 0, Rect.bottom + RowSpace, Rect.left + MainItemColumnSize * 1, Rect.bottom + RowSpace + MenuSettings->TextSize);
@@ -248,19 +251,17 @@ void GameMenuManager::Render() {
 					if (SelectedRow[1] == Rows[1]) {
 						strcat(SelectedNode.Section, ".");
 						strcat(SelectedNode.Section, Text);
-						if (SelectedColumn >= 1) {
-							FontSelected->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorSelected);
-							FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorSelected);
-						}
-						else {
-							FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-							FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
-						}
+
+						textColor = (SelectedColumn >= 1) ? TextColorSelected : TextColorNormal;
+						shadowColor = (SelectedColumn >= 1) ? TextShadowColorSelected : TextShadowColorNormal;
 					}
 					else {
-						FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-						FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
+						textColor = TextColorNormal;
+						shadowColor = TextShadowColorNormal;
 					}
+
+					FontSelected->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, shadowColor);
+					FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, textColor);
 
 					// if in shader mode, add indication wether each shader is activated
 					if (!memcmp(SelectedNode.Section, "Shaders", 7)) {
@@ -272,27 +273,20 @@ void GameMenuManager::Render() {
 						Rect.right += 100;
 						SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
 						bool enabled = TheSettingManager->GetMenuShaderEnabled(Text);
-						strcpy(TextShaderStatus, enabled?"ENABLED":"DISABLED");
+
 						if (SelectedRow[1] == Rows[1] && SelectedColumn >= 1) {
-							if (!memcmp(TextShaderStatus, "ENABLED", 7)) {
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, TextShadowColorEnabled);
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &Rect, DT_LEFT, TextColorEnabled);
-							}
-							else {
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, TextShadowColorSelected);
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &Rect, DT_LEFT, TextColorSelected);
-							}
+							textColor = enabled ? TextColorEnabled : TextColorSelected;
+							shadowColor = enabled ? TextShadowColorEnabled : TextShadowColorSelected;
 						}
 						else {
-							if (!memcmp(TextShaderStatus, "ENABLED", 7)) {
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, TextShadowColorEnabled);
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &Rect, DT_LEFT, TextColorEnabled);
-							}
-							else {
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-								FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &Rect, DT_LEFT, TextColorNormal);
-							}
+							textColor = enabled ? TextColorEnabled : TextColorNormal;
+							shadowColor = enabled ? TextShadowColorEnabled : TextShadowColorNormal;
 						}
+
+						strcpy(TextShaderStatus, enabled ? "ENABLED" : "DISABLED");
+						FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, shadowColor);
+						FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &Rect, DT_LEFT, textColor);
+
 						Rect.left = MenuRectX + ItemColumnSize * 0;
 						Rect.right = MenuRectX + ItemColumnSize * 1;
 					}
@@ -318,19 +312,17 @@ void GameMenuManager::Render() {
 					if (SelectedRow[2] == Rows[2]) {
 						strcat(SelectedNode.Section, ".");
 						strcat(SelectedNode.Section, Text);
-						if (SelectedColumn >= 2) {
-							FontSelected->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorSelected);
-							FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorSelected);
-						}
-						else {
-							FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-							FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
-						}
+	
+						textColor = (SelectedColumn >= 2) ? TextColorSelected : TextColorNormal;
+						shadowColor = (SelectedColumn >= 2) ? TextShadowColorSelected : TextShadowColorNormal;
 					}
 					else {
-						FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-						FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
+						textColor = TextColorNormal;
+						shadowColor = TextShadowColorNormal;
 					}
+					FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, shadowColor);
+					FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, textColor);
+
 					Rows[2]++;
 				}
 				Item++;
@@ -351,6 +343,9 @@ void GameMenuManager::Render() {
 					Rect.top += MenuSettings->TextSize + RowSpace;
 					Rect.bottom += MenuSettings->TextSize + RowSpace;
 					SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
+
+					textColor = TextColorNormal;
+					shadowColor = TextShadowColorNormal;
 					if (SelectedRow[3] == Rows[3]) {
 						memcpy((void*)&SelectedNode, Setting._Ptr, sizeof(SettingManager::Configuration::ConfigNode));
 						if (SelectedColumn >= 3) {
@@ -359,23 +354,15 @@ void GameMenuManager::Render() {
 								strcpy(SettingText, Setting->Key);
 								strcat(SettingText, " = ");
 								strcat(SettingText, EditingValue);
-								FontSelected->DrawTextA(NULL, SettingText, -1, &RectShadow, DT_LEFT, TextShadowColorEditing);
-								FontSelected->DrawTextA(NULL, SettingText, -1, &Rect, DT_LEFT, TextColorEditing);
 							}
-							else {
-								FontSelected->DrawTextA(NULL, SettingText, -1, &RectShadow, DT_LEFT, TextShadowColorSelected);
-								FontSelected->DrawTextA(NULL, SettingText, -1, &Rect, DT_LEFT, TextColorSelected);
-							}
-						}
-						else {
-							FontNormal->DrawTextA(NULL, SettingText, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-							FontNormal->DrawTextA(NULL, SettingText, -1, &Rect, DT_LEFT, TextColorNormal);
+							textColor = EditingMode ? TextColorEditing : TextColorSelected;
+							shadowColor = EditingMode ? TextShadowColorEditing : TextShadowColorSelected;
 						}
 					}
-					else {
-						FontNormal->DrawTextA(NULL, SettingText, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-						FontNormal->DrawTextA(NULL, SettingText, -1, &Rect, DT_LEFT, TextColorNormal);
-					}
+
+					FontNormal->DrawTextA(NULL, SettingText, -1, &RectShadow, DT_LEFT, shadowColor);
+					FontNormal->DrawTextA(NULL, SettingText, -1, &Rect, DT_LEFT, textColor);
+
 					Rows[3]++;
 				}
 				Setting++;
