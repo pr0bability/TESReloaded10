@@ -1289,7 +1289,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.WetWorld.Data.x = ShaderConst.Animators.RainAnimator.GetValue();
 			ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
 
-			if (ShaderConst.WetWorld.Data.x && ShaderConst.WetWorld.Data.z) orthoRequired = true;
+			if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true;
 
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
 			ShaderConst.WetWorld.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
