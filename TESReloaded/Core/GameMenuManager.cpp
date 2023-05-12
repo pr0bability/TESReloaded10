@@ -129,6 +129,7 @@ void GameMenuManager::Render() {
 									break;
 							}
 						}
+						TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 					}else if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
 						// react to user key input to reduce the value of the setting
 						if ((SelectedColumn == 1 && !memcmp(SelectedNode.Section, "Shaders", 7)) || ((SelectedColumn == 3 && !memcmp(SelectedNode.Section, "Shaders", 7) && !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6)))) {
@@ -155,6 +156,7 @@ void GameMenuManager::Render() {
 									break;
 							}
 						}
+						TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 					} else if (Global->OnKeyDown(MenuSettings->KeySave)) {
 						TheSettingManager->SaveSettings();
 						InterfaceManager->ShowMessage("Settings saved.");
