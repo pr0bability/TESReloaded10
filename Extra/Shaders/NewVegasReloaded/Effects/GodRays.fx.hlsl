@@ -153,7 +153,7 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
 	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
-	rays = rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1));
+	rays = saturate(rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1)));
 
 	// reduce banding by dithering areas
 	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLuma, float2(0.5, 0.5)) < TESR_DebugVar.z); // only dither when there is some ray & when average luma is low
@@ -161,8 +161,6 @@ float4 Combine(VSOUT IN) : COLOR0
 	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
 	color.rgb += rays.rgb;
-
-	return float4(color.rgb + rays.rgb, 1.0f);
 	return color;
 }
  
