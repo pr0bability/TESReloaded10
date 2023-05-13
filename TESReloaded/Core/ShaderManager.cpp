@@ -180,6 +180,14 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightPosition[6];
 	else if (!strcmp(Name, "TESR_LightPosition7"))
 		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightPosition[7];
+	else if (!strcmp(Name, "TESR_LightPosition8"))
+		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightPosition[8];
+	else if (!strcmp(Name, "TESR_LightPosition9"))
+		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightPosition[9];
+	else if (!strcmp(Name, "TESR_LightPosition10"))
+		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightPosition[10];
+	else if (!strcmp(Name, "TESR_LightPosition11"))
+		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightPosition[11];
 	else if (!strcmp(Name, "TESR_LightAttenuation0"))
 		FloatShaderValues[Index].Value = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[0];
 	else if (!strcmp(Name, "TESR_LightAttenuation1"))
@@ -1656,7 +1664,6 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.MotionBlur.BlurParams.x = TheSettingManager->GetSettingF(sectionName, "GaussianWeight");
 		ShaderConst.MotionBlur.BlurParams.y = TheSettingManager->GetSettingF(sectionName, "BlurScale");
 		ShaderConst.MotionBlur.BlurParams.z = TheSettingManager->GetSettingF(sectionName, "BlurOffsetMax");
-
 
 		if (Effects.Sharpening->Enabled) {
 			ShaderConst.Sharpening.Data.x = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Strength");
