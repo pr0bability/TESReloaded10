@@ -111,23 +111,7 @@ void GameMenuManager::Render() {
 							Tes->sky->ForceWeather(Weather);
 						}
 						else if (SelectedColumn == 3) {
-							// edit settings values
-							switch (SelectedNode.Type) {
-								int intvalue;
-								float floatvalue;
-								case SettingManager::Configuration::NodeType::Boolean:
-									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, (bool)!intvalue);
-									break;
-								case SettingManager::Configuration::NodeType::Integer:
-									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, (UINT8)(intvalue + 1));
-									break;
-								case SettingManager::Configuration::NodeType::Float:
-									floatvalue = TheSettingManager->GetSettingF(SelectedNode.Section, SelectedNode.Key);
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, floatvalue + 0.1f);
-									break;
-							}
+							TheSettingManager->Increment(SelectedNode.Section, SelectedNode.Key);
 						}
 						TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 					}else if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
@@ -138,23 +122,7 @@ void GameMenuManager::Render() {
 							bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
 							if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(MidSection);
 						}else if (SelectedColumn == 3) {
-							// edit settings values
-							int intvalue;
-							float floatvalue;
-							switch (SelectedNode.Type) {
-								case SettingManager::Configuration::NodeType::Boolean:
-									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, !intvalue);
-									break;
-								case SettingManager::Configuration::NodeType::Integer:
-									intvalue = TheSettingManager->GetSettingI(SelectedNode.Section, SelectedNode.Key);
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, UINT8(intvalue - 1));
-									break;
-								case SettingManager::Configuration::NodeType::Float:
-									floatvalue = TheSettingManager->GetSettingF(SelectedNode.Section, SelectedNode.Key);
-									TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, floatvalue - 0.1f);
-									break;
-							}
+							TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);
 						}
 						TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 					} else if (Global->OnKeyDown(MenuSettings->KeySave)) {

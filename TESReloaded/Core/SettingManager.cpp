@@ -1,5 +1,8 @@
 #include <../lib/tomlplusplus/include/toml++/toml.h>
 
+/*
+* The Config Class holds, accesses and maintains the current instance of config document and its keys.
+*/
 void SettingManager::Configuration::Init() {
 
 	char TomlFilename[MAX_PATH];
@@ -757,6 +760,52 @@ void SettingManager::SetSetting(Configuration::ConfigNode* Node) {
 
 	Config.SetValue(Node);
 }
+
+void SettingManager::Increment(const char* Section, const char* Key) {
+	Configuration::ConfigNode Node;
+	Config.FillNode(&Node, Section, Key);
+	float value = 0;
+	switch (Node.Type) {
+	case Configuration::NodeType::Integer:
+		SetSetting(Section, Key, (UINT8)(GetSettingI(Section, Key) + 1));
+		break;
+	case Configuration::NodeType::Float:
+		// handle the float precision issue by clamping precision and treating the operation as int
+		//Logger::Log("Incrementing float Value %f", GetSettingF(Section, Key));
+		value = (int)(GetSettingF(Section, Key) * 10000) + 1000;
+		SetSetting(Section, Key, value / 10000);
+		break;
+	case Configuration::NodeType::Boolean:
+		SetSetting(Section, Key, !(bool)GetSettingI(Section, Key));
+		break;
+	default:
+		Logger::Log("Node %s is of a type that can't be incremented", Key);
+	}
+}
+
+
+void SettingManager::Decrement(const char* Section, const char* Key) {
+	Configuration::ConfigNode Node;
+	Config.FillNode(&Node, Section, Key);
+	float value = 0;
+	switch (Node.Type) {
+	case Configuration::NodeType::Integer:
+		SetSetting(Section, Key, (UINT8)(GetSettingI(Section, Key) - 1));
+		break;
+	case Configuration::NodeType::Float:
+		// handle the float precision issue by clamping precision and treating the operation as int
+		//Logger::Log("Decrementing float Value %f", GetSettingF(Section, Key));
+		value = (int)(GetSettingF(Section, Key) * 10000) - 1000;
+		SetSetting(Section, Key, value / 10000);
+		break;
+	case Configuration::NodeType::Boolean:
+		SetSetting(Section, Key, !(bool)GetSettingI(Section, Key));
+		break;
+	default:
+		Logger::Log("Node %s is of a type that can't be decremented");
+	}
+}
+
 
 void SettingManager::SetSettingWeather(const char* Section, const char* Key, float Value) {
 

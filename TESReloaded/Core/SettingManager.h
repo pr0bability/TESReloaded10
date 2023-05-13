@@ -426,6 +426,8 @@ public:
 	void					SetSetting(const char* Section, const char* Key, bool Value);
 	void					SetSettingS(const char* Section, const char* Key, char* Value);
 	void					SetSetting(Configuration::ConfigNode* Node);
+	void					Increment(const char* Section, const char* Key);
+	void					Decrement(const char* Section, const char* Key);
 	void					SetSettingWeather(const char* Section, const char* Key, float Value);
 	void					FillMenuSections(StringList* Sections, const char* ParentSection);
 	void					FillMenuSettings(Configuration::SettingList* Settings, const char* Section);
