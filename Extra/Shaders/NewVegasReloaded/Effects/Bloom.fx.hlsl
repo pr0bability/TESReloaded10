@@ -1,6 +1,6 @@
 // Bloom for Oblivion Reloaded
 
-#define viewbloom 0
+#define viewbloom 1
 
 float4 TESR_ReciprocalResolution;
 float4 TESR_BloomData;
