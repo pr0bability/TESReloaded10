@@ -284,7 +284,7 @@ MaxDistance = 0
 Enabled = false
 
 [_Shaders.GodRays.Main]
-DayMultiplier = 0.5
+DayMultiplier = 0.8
 LightShaftPasses = 8
 Luminance = 0.8
 NightMultiplier = 1.0

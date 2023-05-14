@@ -576,9 +576,11 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 
 void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
 	
-	Logger::Log("Rendering ShadowCubeMap for Light index %i", LightIndex);
+	//Logger::Log("Rendering ShadowCubeMap for Light index %i", LightIndex);
 
 	if (Lights[LightIndex] == NULL) return; // LightIndex is higher than currently tracked lights number
+	//Logger::Log("Rendering ShadowCubeMap for Light index %i", LightIndex);
+
 	ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
@@ -738,7 +740,6 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 		else {
 			// reset values if number of lights in the scene becomes lower than previous iteration
 			if (LightIndex < TrackedLightsMax) {
-				Logger::Log("No light at index %i", LightIndex);
 
 				LightsList[LightIndex] = NULL;
 				TheShaderManager->LightPosition[LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
@@ -746,7 +747,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 				LightIndex++;
 			}
 			if (ShadowIndex < ShadowCubeMapsMax) {
-				Logger::Log("No shadow casting light at index %i", ShadowIndex);
+				//Logger::Log("No shadow casting light at index %i", ShadowIndex);
 
 				ShadowLightsList[ShadowIndex] = NULL;
 				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
