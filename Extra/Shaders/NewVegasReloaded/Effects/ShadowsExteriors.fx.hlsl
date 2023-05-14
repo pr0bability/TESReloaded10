@@ -13,6 +13,22 @@ float4 TESR_LightPosition4;
 float4 TESR_LightPosition5;
 float4 TESR_LightPosition6;
 float4 TESR_LightPosition7;
+float4 TESR_LightPosition8;
+float4 TESR_LightPosition9;
+float4 TESR_LightPosition10;
+float4 TESR_LightPosition11;
+float4 TESR_ShadowLightPosition0;
+float4 TESR_ShadowLightPosition1;
+float4 TESR_ShadowLightPosition2;
+float4 TESR_ShadowLightPosition3;
+float4 TESR_ShadowLightPosition4;
+float4 TESR_ShadowLightPosition5;
+float4 TESR_ShadowLightPosition6;
+float4 TESR_ShadowLightPosition7;
+float4 TESR_ShadowLightPosition8;
+float4 TESR_ShadowLightPosition9;
+float4 TESR_ShadowLightPosition10;
+float4 TESR_ShadowLightPosition11;
 float4 TESR_ReciprocalResolution;
 float4 TESR_ViewSpaceLightDir;
 float4 TESR_WaterSettings; //x: water height in the cell, y: water depth darkness, z: is camera underwater
@@ -239,11 +255,11 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 }
 
 float attenuation(float4 world_pos, float4 lightPosition){
-	float coeff = 6000; // conversion value between diffuse/dimmer strength and attenuation effect
-	float strength = distance(lightPosition.xyz, world_pos.xyz);
+	float strength = distance(lightPosition.xyz, world_pos.xyz) / lightPosition.w;
+	strength *= strength;
 
-	// inverse square law with conversion coeff and light strength influence
-	return 1/(strength * strength) * coeff * lightPosition.w;
+	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
+	return saturate(( 1 - strength) / ( 1 + strength));
 }
 
 float4 Shadow(VSOUT IN) : COLOR0
@@ -276,6 +292,22 @@ float4 Shadow(VSOUT IN) : COLOR0
 	Shadow += attenuation(world_pos, TESR_LightPosition5);
 	Shadow += attenuation(world_pos, TESR_LightPosition6);
 	Shadow += attenuation(world_pos, TESR_LightPosition7);
+	Shadow += attenuation(world_pos, TESR_LightPosition8);
+	Shadow += attenuation(world_pos, TESR_LightPosition9);
+	Shadow += attenuation(world_pos, TESR_LightPosition10);
+	Shadow += attenuation(world_pos, TESR_LightPosition11);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition0);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition1);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition2);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition3);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition4);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition5);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition6);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition7);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition8);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition9);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition10);
+	Shadow += attenuation(world_pos, TESR_ShadowLightPosition11);
 
 	// calculate fog impact
 	// float fog = fogCoeff(depth);
