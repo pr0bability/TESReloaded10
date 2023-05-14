@@ -271,14 +271,14 @@ Enabled = false
 Enabled = false
 
 [_Shaders.Grass.Main]
-	WindEnabled = false
-	GrassDensity = 1
-	WindCoefficient = 0.0
-	ScaleX = 1.0
-	ScaleY = 1.0
-	ScaleZ = 1.0
-	MinDistance = 0
-	MaxDistance = 0
+WindEnabled = false
+GrassDensity = 1
+WindCoefficient = 0.0
+ScaleX = 1.0
+ScaleY = 1.0
+ScaleZ = 1.0
+MinDistance = 0
+MaxDistance = 0
 
 [_Shaders.Grass.Status]
 Enabled = false
@@ -464,6 +464,7 @@ Enabled = true
 
 [_Shaders.ShadowsInteriors.Main]
 PostProcess = true
+UseCastShadowFlag = false
 Activators = true
 Actors = true
 AlphaEnabled = true
