@@ -15,15 +15,18 @@ float4 TESR_ShadowLightPosition8;
 float4 TESR_ShadowLightPosition9;
 float4 TESR_ShadowLightPosition10;
 float4 TESR_ShadowLightPosition11;
-float4 TESR_LightAttenuation0;
-float4 TESR_LightAttenuation1;
-float4 TESR_LightAttenuation2;
-float4 TESR_LightAttenuation3;
-float4 TESR_LightAttenuation4;
-float4 TESR_LightAttenuation5;
-float4 TESR_LightAttenuation6;
-float4 TESR_LightAttenuation7;
-float4 TESR_ShadowCubeMapBlend;
+float4 TESR_LightPosition0;
+float4 TESR_LightPosition1;
+float4 TESR_LightPosition2;
+float4 TESR_LightPosition3;
+float4 TESR_LightPosition4;
+float4 TESR_LightPosition5;
+float4 TESR_LightPosition6;
+float4 TESR_LightPosition7;
+float4 TESR_LightPosition8;
+float4 TESR_LightPosition9;
+float4 TESR_LightPosition10;
+float4 TESR_LightPosition11;
 float4 TESR_ReciprocalResolution;
 //sampler_state removed to avoid a artifact. TODO investigate
 sampler2D TESR_RenderedBuffer : register(s0);// = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -88,33 +91,30 @@ float GetLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir, floa
 }
 
 
-float GetLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, float4 LightPos, float4 normal, float4 attenuation) {
-	float LightAmount = 0.0f;
-	float3 LightDir;
-	float Distance;
-	
-	LightDir = LightPos.xyz - WorldPos.xyz;
-	float3 LightUV = LightDir * float3(-1, -1, 1);
+float GetLightAtten(float4 WorldPos, float4 LightPos, float4 normal) {
+	float3 LightDir = LightPos.xyz - WorldPos.xyz;
+	float Distance = length(LightDir);
 
-	Distance = length(LightDir);
-	LightDir = normalize(LightDir);
+	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
 	Distance = Distance / LightPos.w;
+	float s = Distance * Distance; 
+	float atten = saturate((1 - s) / (1 + s));
 
-	float radius = 1;
-	float atten = saturate(1/((Distance/radius + 1) * (Distance/radius + 1))) ;
-	// float atten = saturate(1/(attenuation.x + Distance * attenuation.y + Distance * Distance * attenuation.z)) * 0.01;
-
-	// return atten;
-
-	// return GetLightAmountValue(ShadowCubeMapBuffer, LightDir, Distance);
-	// float atten = saturate(1/(Distance * Distance)) * 0.5;
+	LightDir = normalize(LightDir);
 	float diffuse = dot(LightDir, normal.xyz);
 
-	LightAmount = GetLightAmountValue(ShadowCubeMapBuffer, LightUV, Distance) * diffuse * atten;
-	// LightAmount = lerp(1, GetLightAmountValue(ShadowCubeMapBuffer, LightDir, Distance) * atten, attenuation.w);
-	// LightAmount = lerp(1, GetLightAmountValue(ShadowCubeMapBuffer, LightDir, Distance) * atten, attenuation.w);
-	// LightAmount = GetLightAmountValue(ShadowCubeMapBuffer, LightDir, Distance) * atten;
+	return saturate(diffuse * atten);
+}
 
+
+float GetLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, float4 LightPos, float4 normal) {
+	float3 LightDir = LightPos.xyz - WorldPos.xyz;
+	float3 LightUV = LightDir * float3(-1, -1, 1);
+
+	float Distance = length(LightDir);
+	Distance = Distance / LightPos.w;
+
+	float LightAmount = GetLightAmountValue(ShadowCubeMapBuffer, LightUV, Distance) * GetLightAtten(WorldPos, LightPos, normal);
 	return saturate(LightAmount);
 }
 
@@ -125,23 +125,32 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	float depth = readDepth(IN.UVCoord);
     float3 camera_vector = toWorld(IN.UVCoord) * depth;
     float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);	
-	
-	float4 pos = mul(world_pos, TESR_WorldTransform);
-
 	float4 normal = float4(GetWorldNormal(IN.UVCoord), 1);
 
-	Shadow = GetLightAmount(TESR_ShadowCubeMapBuffer0, pos, TESR_ShadowLightPosition0, normal, TESR_LightAttenuation0);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer1, pos, TESR_ShadowLightPosition1, normal, TESR_LightAttenuation1);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer2, pos, TESR_ShadowLightPosition2,normal,  TESR_LightAttenuation2);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer3, pos, TESR_ShadowLightPosition3, normal, TESR_LightAttenuation3);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer4, pos, TESR_ShadowLightPosition4, normal, TESR_LightAttenuation4);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer5, pos, TESR_ShadowLightPosition5, normal, TESR_LightAttenuation5);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer6, pos, TESR_ShadowLightPosition6, normal, TESR_LightAttenuation6);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer7, pos, TESR_ShadowLightPosition7, normal, TESR_LightAttenuation7);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer8, pos, TESR_ShadowLightPosition8, normal, TESR_LightAttenuation7);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer9, pos, TESR_ShadowLightPosition9, normal, TESR_LightAttenuation7);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer10, pos, TESR_ShadowLightPosition10, normal, TESR_LightAttenuation7);
-	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer11, pos, TESR_ShadowLightPosition11, normal, TESR_LightAttenuation7);
+	Shadow = GetLightAmount(TESR_ShadowCubeMapBuffer0, world_pos, TESR_ShadowLightPosition0, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer1, world_pos, TESR_ShadowLightPosition1, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer2, world_pos, TESR_ShadowLightPosition2,normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer3, world_pos, TESR_ShadowLightPosition3, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer4, world_pos, TESR_ShadowLightPosition4, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer5, world_pos, TESR_ShadowLightPosition5, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer6, world_pos, TESR_ShadowLightPosition6, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer7, world_pos, TESR_ShadowLightPosition7, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer8, world_pos, TESR_ShadowLightPosition8, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer9, world_pos, TESR_ShadowLightPosition9, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer10, world_pos, TESR_ShadowLightPosition10, normal);
+	Shadow += GetLightAmount(TESR_ShadowCubeMapBuffer11, world_pos, TESR_ShadowLightPosition11, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition0, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition1, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition2, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition3, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition4, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition5, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition6, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition7, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition8, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition9, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition10, normal);
+	Shadow += GetLightAtten(world_pos, TESR_LightPosition11, normal);
 
 	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, depth)); // fade shadows with distance
 
