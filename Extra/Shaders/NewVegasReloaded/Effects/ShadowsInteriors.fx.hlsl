@@ -80,7 +80,7 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-#include "Includes/Blur.hlsl"
+#include "Includes/BlurDepth.hlsl"
 
 float GetLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir, float Distance) {
 	float lightDepth = texCUBE(ShadowCubeMapBuffer, LightDir).r;

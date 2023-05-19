@@ -50,7 +50,7 @@ VSOUT FrameVS(VSIN IN)
 }
  
 #include "Includes/Depth.hlsl"
-#include "Includes/Blur.hlsl"
+#include "Includes/BlurDepth.hlsl"
 #include "Includes/Helpers.hlsl"
 #include "Includes/Normals.hlsl"
 
