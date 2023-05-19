@@ -1300,7 +1300,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.WetWorld.Data.x = ShaderConst.Animators.RainAnimator.GetValue();
 			ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
 
-			if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true;
+			if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
 
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
 			ShaderConst.WetWorld.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
@@ -1355,7 +1355,7 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.SnowAccumulation.Params.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
 				ShaderConst.SnowAccumulation.Params.w = ShaderConst.Animators.SnowAccumulationAnimator.GetValue();
 
-				if (ShaderConst.SnowAccumulation.Params.w) orthoRequired = true;
+				if (ShaderConst.SnowAccumulation.Params.w) orthoRequired = true; // mark ortho map calculation as necessary
 			}
 		}
 		
@@ -1680,10 +1680,12 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.Exposure->Enabled) {
-			avglumaRequired = true;
+			avglumaRequired = true; // mark average luma calculation as necessary
 			char day[] = "Shaders.Exposure.Day";
-			char night [] = "Shaders.Exposure.Night";
+			char night[] = "Shaders.Exposure.Night";
+			if (!isExterior) strcpy(night, day); // in interiors, only day measures are used
 
+			// interpolate between day and night settings over day/night transitions
 			ShaderConst.Exposure.Data.x = lerp(TheSettingManager->GetSettingF(night, "MinBrightness"), TheSettingManager->GetSettingF(day, "MinBrightness"), isDayTime);
 			ShaderConst.Exposure.Data.y = lerp(TheSettingManager->GetSettingF(night, "MaxBrightness"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
 			ShaderConst.Exposure.Data.z = lerp(TheSettingManager->GetSettingF(night, "DarkAdaptSpeed"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
