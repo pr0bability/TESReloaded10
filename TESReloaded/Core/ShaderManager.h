@@ -112,6 +112,9 @@ struct ShaderConstants {
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		Settings;
 	};
+	struct LensStruct {
+		D3DXVECTOR4		Data;
+	};
 	struct BloomStruct {
 		D3DXVECTOR4		BloomData;
 		D3DXVECTOR4		BloomValues;
@@ -204,6 +207,7 @@ struct ShaderConstants {
 	AmbientOcclusionStruct	AmbientOcclusion;
 	ColoringStruct			Coloring;
 	CinemaStruct			Cinema;
+	LensStruct				Lens;
 	BloomStruct				Bloom;
 	SnowAccumulationStruct	SnowAccumulation;
 	BloodLensStruct			BloodLens;
@@ -365,6 +369,7 @@ public:
 		EffectRecord*		DepthOfField;
 		EffectRecord*		Debug;
 		EffectRecord*		GodRays;
+		EffectRecord*		Lens;
 		EffectRecord*		LowHF;
 		EffectRecord*		MotionBlur;
 		EffectRecord*		Normals;

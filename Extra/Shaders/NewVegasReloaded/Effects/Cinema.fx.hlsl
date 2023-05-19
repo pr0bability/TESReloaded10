@@ -6,16 +6,11 @@ float4 TESR_GameTime;
 float4 TESR_ReciprocalResolution;
 float4 TESR_CinemaData; // x: AspectRatio y: VignetteRadius z: VignetteDarkness, w: overlayStrength
 float4 TESR_CinemaSettings; //x: dirtlens opacity, y:grainAmount, z:chromatic aberration strength 
-float4 TESR_ViewSpaceLightDir;
-float4 TESR_SunColor;
-float4 TESR_RainAspect; // used for the luma threshold used for bloom
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_BlueNoiseSampler : register(s1) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
-sampler2D TESR_LensSampler : register(s2) < string ResourceName = "Effects\dirtlens.png"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_AvgLumaBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SourceBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SourceBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const float time = TESR_GameTime.z * 25; // Simulate cinema noise by using cinema framerate
 
@@ -62,7 +57,6 @@ VSOUT FrameVS(VSIN IN)
 #include "Includes/Helpers.hlsl"
 #include "Includes/Blending.hlsl"
 #include "Includes/Depth.hlsl"
-#include "Includes/Blur.hlsl"
 
 float3 random(float2 seed)
 {
@@ -95,18 +89,6 @@ float4 Cinema(VSOUT IN) : COLOR0
     color.r = tex2D(TESR_SourceBuffer, IN.UVCoord + posToCenter * chromaShift).r;
     color.b = tex2D(TESR_SourceBuffer, IN.UVCoord - posToCenter * chromaShift).b;
 
- 	//Dirt lens
-	//--------------------------------------------------
-    // Sample the the dirt texture
-    float4 dirtColor = tex2D(TESR_LensSampler, uv);
-
-	// get wether we are facing the sun to make the lens appear stronger
-	float bloom = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord));
-
-	// float sunProximity = shades(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(IN.UVCoord)));
-    // color = lerp(color, saturate(color + dirtColor * dirtAmount), sunProximity * luma(TESR_SunColor));
-    color = saturate(color + dirtColor * dirtAmount * bloom);
-
 	//Film grain 
 	//--------------------------------------------------
     // Add the grain by multiplying the color by a value between 1 and 1 + grainAmount while preserving brightness
@@ -126,83 +108,12 @@ float4 Cinema(VSOUT IN) : COLOR0
 		
     color.rgb *= vignette * intensity + (1 - intensity); // Darken vignette zone
 
-	//if (IN.UVCoord.x > 0.7 && IN.UVCoord.x < 0.8 && IN.UVCoord.y > 0.7 && IN.UVCoord.y < 0.8) return tex2D(TESR_AvgLumaBuffer, IN.UVCoord);
-
     return color;
-}
-
-
-
-float4 Bloom(VSOUT IN ):COLOR0{
-	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	float avgLuma = tex2D(TESR_AvgLumaBuffer, IN.UVCoord).b;
-
-	// scale the luma treshold and the bloom strength by the average luma
-	return color * smoothstep(min(TESR_RainAspect.z * avgLuma, luma(color)), 1, luma(color)) * (3/avgLuma);
 }
 
 
 technique
 {
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Bloom();
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(0.5);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(0.5);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(0.5);
-	}
-	
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(1, 0), 2, 0.125);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(0, 1), 2, 0.125);
-	}
-
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(1, 0), 1, 0.125);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(0, 1), 1, 0.125);
-	}
-
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(2);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(2);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(2);
-	}
-
     pass
     {
         VertexShader = compile vs_3_0 FrameVS();
