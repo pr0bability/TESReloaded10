@@ -72,7 +72,7 @@ struct VSIN
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
-#include "Includes/Blur.hlsl"
+#include "Includes/BlurDepth.hlsl"
 #include "Includes/Blending.hlsl"
 // #include "Includes/Normals.hlsl"
 
