@@ -7,7 +7,6 @@ float4 TESR_SunAmount;
 float4 TESR_GodRaysRay; // x: intensity, y:length, z: density, w: visibility
 float4 TESR_GodRaysRayColor; // x:r, y:g, z:b, w:saturate
 float4 TESR_GodRaysData; // x: passes amount, y: luminance, z:multiplier, w: time enabled
-float4 TESR_DebugVar;
 float4 TESR_ViewSpaceLightDir; // view space light vector
 float4 TESR_SunDirection; // worldspace sun vector
 float4 TESR_ShadowFade; // attenuation factor of sunsets/sunrises and moon phases
@@ -77,10 +76,10 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 
 	// quick average lum with 4 samples at corner pixels
 	float3 color;
-	color = tex2D(TESR_RenderedBuffer, IN.UVCoord + float2(-1, -1) * TESR_ReciprocalResolution.xy).rgb;
-	color += tex2D(TESR_RenderedBuffer, IN.UVCoord + float2(-1, 1) * TESR_ReciprocalResolution.xy).rgb;
-	color += tex2D(TESR_RenderedBuffer, IN.UVCoord + float2(1, -1) * TESR_ReciprocalResolution.xy).rgb;
-	color += tex2D(TESR_RenderedBuffer, IN.UVCoord + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb;
+	color = tex2D(TESR_RenderedBuffer, uv + float2(-1, -1) * TESR_ReciprocalResolution.xy).rgb;
+	color += tex2D(TESR_RenderedBuffer, uv + float2(-1, 1) * TESR_ReciprocalResolution.xy).rgb;
+	color += tex2D(TESR_RenderedBuffer, uv + float2(1, -1) * TESR_ReciprocalResolution.xy).rgb;
+	color += tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb;
 	color /= 4;
 
 	float threshold = lumTreshold * luma(TESR_SunColor.rgb); // scaling the luma treshold with sun intensity
@@ -120,7 +119,6 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 		samplePos = saturate(uv + (dir * length / float2(1, raspect))); // apply aspect ratio correction
 
 		float doStep = (i <= maxStep && samplePos.x > 0 && samplePos.y > 0 && samplePos.x < 1 && samplePos.y < 1); // check if we haven't overshot the sun position or exited the screen
-		// float doStep = (i <= maxStep); // check if we haven't overshot the sun position or exited the screen
 		
 		color += tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
 		total += doStep;
@@ -155,8 +153,9 @@ float4 Combine(VSOUT IN) : COLOR0
 	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
 	rays = saturate(rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1)));
 
-	// reduce banding by dithering areas
-	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLuma, float2(0.5, 0.5)) < TESR_DebugVar.z); // only dither when there is some ray & when average luma is low
+	// reduce banding by dithering areas impacted by the rays
+	float maxDitherLuma = 0.4;
+	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLuma, float2(0.5, 0.5)) < maxDitherLuma); // only dither when there is some ray & when average luma is low
 	uv /= TESR_ReciprocalResolution.xy;
 	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
