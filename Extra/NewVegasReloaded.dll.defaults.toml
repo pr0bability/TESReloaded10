@@ -315,6 +315,14 @@ ToneMappingColor = 1.2
 [_Shaders.HDR.Status]
 Enabled = false
 
+[_Shaders.Lens.Main]
+DirtLensAmount = 1.0
+ExteriorBloomTreshold = 0.8
+InteriorBloomTreshold = 2.0
+
+[_Shaders.Lens.Status]
+Enabled = true
+
 [_Shaders.LowHF.Main]
 BlurMultiplier = 0.2
 DarknessMultiplier = 1.0

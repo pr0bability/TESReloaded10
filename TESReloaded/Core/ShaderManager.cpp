@@ -292,6 +292,8 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.GodRays.RayColor;
 	else if (!strcmp(Name, "TESR_GodRaysData"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.GodRays.Data;
+	else if (!strcmp(Name, "TESR_LensData"))
+		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.Lens.Data;
 	else if (!strcmp(Name, "TESR_LowHFData"))
 		FloatShaderValues[Index].Value = &TheShaderManager->ShaderConst.LowHF.Data;
 	else if (!strcmp(Name, "TESR_MotionBlurParams"))
@@ -868,6 +870,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
+	TheShaderManager->EffectsNames["Lens"] = &TheShaderManager->Effects.Lens;
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
@@ -1671,6 +1674,11 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Sharpening.Data.z = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Offset");
 		}
 
+		if (Effects.Lens->Enabled) {
+			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
+			ShaderConst.Lens.Data.y = isExterior? TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"): ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
+		}
+
 		if (Effects.Exposure->Enabled) {
 			avglumaRequired = true;
 			char day[] = "Shaders.Exposure.Day";
@@ -2004,10 +2012,11 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	if (Effects.BloodLens->Enabled && ShaderConst.BloodLens.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, false, false);
 	if (Effects.WaterLens->Enabled && ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, false, false);
 	if (Effects.LowHF->Enabled && ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, false, false);
+	if (Effects.Lens->Enabled) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, false, true);
 	if (Effects.Sharpening->Enabled) Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, false, false);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
-	if (Effects.Cinema->Enabled && (ShaderConst.Cinema.Data.x != 0.0f || ShaderConst.Cinema.Data.y != 0.0f)) Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
+	if (Effects.Cinema->Enabled) Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 	// debug shader allows to display some of the buffers
 	if (Effects.Debug->Enabled) Effects.Debug->Render(Device, RenderTarget, RenderedSurface, false, false);
