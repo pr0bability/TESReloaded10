@@ -816,7 +816,7 @@ bool EffectRecord::SwitchEffect(){
 		Enabled = !Enabled;
 	}
 	else {
-		char Message[256] = "OutOfMemory: Couldn't enable effect ";
+		char Message[256] = "Error: Couldn't enable effect ";
 		strcat(Message, Path->data());
 
 		InterfaceManager->ShowMessage(Message);
