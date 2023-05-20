@@ -14,7 +14,7 @@ float4 TESR_ShadowFade; // attenuation factor of sunsets/sunrises and moon phase
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_AvgLuma : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_AvgLumaBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
@@ -155,7 +155,7 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	// reduce banding by dithering areas impacted by the rays
 	float maxDitherLuma = 0.4;
-	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLuma, float2(0.5, 0.5)) < maxDitherLuma); // only dither when there is some ray & when average luma is low
+	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)) < maxDitherLuma); // only dither when there is some ray & when average luma is low
 	uv /= TESR_ReciprocalResolution.xy;
 	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
