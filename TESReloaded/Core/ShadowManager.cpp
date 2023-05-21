@@ -673,6 +673,8 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 		float radius = Light->Spec.r;
 		bool lightCulled = Light->m_flags & NiAVObject::kFlag_AppCulled;
+		bool lightOn = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer > 5.0/255.0; // Check for low values in case of human error
+
 		D3DXVECTOR4 LightVector = LightPosition - PlayerPosition;
 		D3DXVec4Normalize(&LightVector, &LightVector);
 		float inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward);
@@ -680,7 +682,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
-		if ((inFront > 0 || Distance < radius) && !lightCulled) {
+		if ((inFront > 0 || Distance < radius) && !lightCulled && lightOn) {
 			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
 		}
 		Entry = Entry->next;
@@ -717,7 +719,6 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 				ShadowIndex++;
 			}
 			else if (LightIndex < TrackedLightsMax){
-				if ((Light->Diff.r + Light->Diff.g + Light->Diff.b)* Light->Dimmer == 0) continue; // ignore if light strength = 0
 				LightsList[LightIndex] = Light;
 
 				D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
@@ -808,7 +809,6 @@ void ShadowManager::RenderShadowMaps() {
 	TheRenderManager->SetupSceneCamera();
 	
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
-
 	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
 	// track point lights for interiors and exteriors
