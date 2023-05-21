@@ -380,6 +380,9 @@ public:
 		EffectRecord*		SnowAccumulation;
 		EffectRecord*		ShadowsExteriors;
 		EffectRecord*		ShadowsInteriors;
+		EffectRecord*		PointShadows;
+		EffectRecord*		PointShadows2;
+		EffectRecord*		SunShadows;
 		EffectRecord*		Underwater;
 		EffectRecord*		VolumetricFog;
 		EffectRecord*		WaterLens;

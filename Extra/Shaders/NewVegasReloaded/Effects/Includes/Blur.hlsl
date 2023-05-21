@@ -1,4 +1,6 @@
 #define cKernelSize 12
+static const float2 OffsetMaskH = float2(1.0f, 0.0f);
+static const float2 OffsetMaskV = float2(0.0f, 1.0f);
 
 static const float BlurWeights[cKernelSize] = 
 {
