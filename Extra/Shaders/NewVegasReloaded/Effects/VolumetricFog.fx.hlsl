@@ -86,6 +86,8 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float sunAmount = pows(dot(eyeDirection, TESR_SunDirection.xyz), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
 	fogColor = fogColor + TESR_SunColor.rgb * sunAmount; // add sun color to the fog
 
+	float3 originalFogColor = fogColor;
+	float originalFogLuma = luma(originalFog);
 	fogColor = lerp(color.rgb, fogColor.rgb, fogAmount); // calculate final color of scene through the fog
 
     // Blend back in some of the original color based on luma (brightest lights will come through):
@@ -94,8 +96,8 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
     color = lerp(fogColor, color, lumaDiff); 
 
     // Bring back any fog above 1 as additive (there usually isn't any, but it's good for HDR rendering):
-    float fogAdditiveLumaRatio = saturate(1.0f / fogLuma); // From (background) color luma to fog luma
-    float3 additiveFogColor = fogColor * (1.0f - fogAdditiveLumaRatio);
+    float fogAdditiveLumaRatio = saturate(1.0f / originalFogLuma); // From (background) color luma to fog luma
+    float3 additiveFogColor = originalFogColor * (1.0f - fogAdditiveLumaRatio);
     color += additiveFogColor;
 
 
@@ -106,7 +108,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	// 	if (IN.UVCoord.y > 0.6 && IN.UVCoord.y < 0.7) return TESR_SunAmbient;
 	// }
 
-	return float4(saturate(color), 1.0f);
+	return float4(color, 1.0f);
 }
 
 technique
