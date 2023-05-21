@@ -87,7 +87,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	fogColor = fogColor + TESR_SunColor.rgb * sunAmount; // add sun color to the fog
 
 	float3 originalFogColor = fogColor;
-	float originalFogLuma = luma(originalFog);
+	float originalFogLuma = luma(originalFogColor);
 	fogColor = lerp(color.rgb, fogColor.rgb, fogAmount); // calculate final color of scene through the fog
 
     // Blend back in some of the original color based on luma (brightest lights will come through):
