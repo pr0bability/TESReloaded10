@@ -29,6 +29,7 @@ public:
 	static const UInt32 LoadForm					= 0x004601D0;
 	static const UInt32 UpdateFlyCam				= 0x0094A8C0;
 	static const UInt32	RenderShadowMaps			= 0x00871290;
+	static const UInt32	CreateRenderedTexture		= 0x00B6B610;
 };
 
 class Jumpers {
