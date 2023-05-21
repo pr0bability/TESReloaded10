@@ -71,7 +71,7 @@ void AttachHooks() {
 	SafeWriteJump(0x00C03F49, 0x00C03F5A); // Fixes wrong rendering for image space effects
 
 	SafeWriteCall(0x9BB158, (UInt32)MuzzleLightCullingFix);
-	SafeWriteCall(0x879061, (UInt32)CreateSaveTextureHook);
+	SafeWriteCall(0x879061, (UInt32)CreateSaveTextureHook); // Fixes image corruption in save screenshots when using DXVK with the HDR mod 
 	
 	if (SettingsMain->Main.ForceReflections) {
 		//*Pointers::ShaderParams::WaterHighResolution = 1;

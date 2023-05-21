@@ -269,20 +269,16 @@ BSRenderedTexture* (__cdecl* CreateBSRenderedTexture)(BSString*, const UInt32, c
 BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 uiWidth, const UInt32 uiHeight, NiTexture::FormatPrefs* kPrefs, 
 	UInt32 eMSAAPref, bool bUseDepthStencil, NiDepthStencilBuffer* pkDSBuffer, UInt32 a7, UInt32 uiBackgroundColor) {
 	HMODULE hDLL = GetModuleHandle(L"d3d9.dll");
-	DisableFormatUpgradeFunc disable = nullptr;
-	EnableFormatUpgradeFunc enable = nullptr;
-	if (hDLL) {
-		disable = (DisableFormatUpgradeFunc)GetProcAddress(hDLL, "DXVK_D3D9_HDR_DisableRenderTargetUpgrade");
-		enable = (DisableFormatUpgradeFunc)GetProcAddress(hDLL, "DXVK_D3D9_HDR_EnableRenderTargetUpgrade");
 
-		if (disable)
-			disable();
-	}
+	// If the loaded library is DXVK-HDR (https://github.com/EndlesslyFlowering/dxvk), these will pass
+	DisableFormatUpgradeFunc disable = (DisableFormatUpgradeFunc)GetProcAddress(hDLL, "DXVK_D3D9_HDR_DisableRenderTargetUpgrade");
+	EnableFormatUpgradeFunc enable = (DisableFormatUpgradeFunc)GetProcAddress(hDLL, "DXVK_D3D9_HDR_EnableRenderTargetUpgrade");
+
+	if (disable)
+		disable(); // Temporarily disable the format upgrade for the texture
 	BSRenderedTexture* pTexture = CreateBSRenderedTexture(apName, uiWidth, uiHeight, kPrefs, eMSAAPref, bUseDepthStencil, pkDSBuffer, a7, uiBackgroundColor);
-	if (hDLL) {
-		if (enable)
-			enable();
-	}
+	if (enable)
+		enable(); // Restore the format upgrade functionality 
 
 	return pTexture;
 }
