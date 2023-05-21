@@ -261,3 +261,28 @@ void __fastcall MuzzleLightCullingFix(MuzzleFlash* This) {
 	}
 	ThisCall(0x9BB8A0, This);
 }
+
+typedef bool(__cdecl* DisableFormatUpgradeFunc)();
+typedef bool(__cdecl* EnableFormatUpgradeFunc)();
+
+BSRenderedTexture* (__cdecl* CreateBSRenderedTexture)(BSString*, const UInt32, const UInt32, NiTexture::FormatPrefs*, UInt32, bool, NiDepthStencilBuffer*, UInt32, UInt32) = (BSRenderedTexture * (__cdecl*)(BSString*, const UInt32, const UInt32, NiTexture::FormatPrefs*, UInt32, bool, NiDepthStencilBuffer*, UInt32, UInt32))Hooks::CreateRenderedTexture;
+BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 uiWidth, const UInt32 uiHeight, NiTexture::FormatPrefs* kPrefs, 
+	UInt32 eMSAAPref, bool bUseDepthStencil, NiDepthStencilBuffer* pkDSBuffer, UInt32 a7, UInt32 uiBackgroundColor) {
+	HMODULE hDLL = GetModuleHandle(L"d3d9.dll");
+	DisableFormatUpgradeFunc disable = nullptr;
+	EnableFormatUpgradeFunc enable = nullptr;
+	if (hDLL) {
+		disable = (DisableFormatUpgradeFunc)GetProcAddress(hDLL, "DXVK_D3D9_HDR_DisableRenderTargetUpgrade");
+		enable = (DisableFormatUpgradeFunc)GetProcAddress(hDLL, "DXVK_D3D9_HDR_EnableRenderTargetUpgrade");
+
+		if (disable)
+			disable();
+	}
+	BSRenderedTexture* pTexture = CreateBSRenderedTexture(apName, uiWidth, uiHeight, kPrefs, eMSAAPref, bUseDepthStencil, pkDSBuffer, a7, uiBackgroundColor);
+	if (hDLL) {
+		if (enable)
+			enable();
+	}
+
+	return pTexture;
+}
