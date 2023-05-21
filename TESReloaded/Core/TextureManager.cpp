@@ -83,6 +83,9 @@ bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
 		case OrthoMapBuffer:
 			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapOrtho];
 			break;
+		case PointShadowBuffer:
+			Texture = TheTextureManager->ShadowPassTexture;
+			break;
         default:
             return false; //Texture is invalid or not assigned here.
 	}
@@ -108,6 +111,7 @@ void TextureManager::Initialize() {
 	// create textures used by NVR and bind them to surfaces
 	InitTexture(&TheTextureManager->SourceTexture, &TheTextureManager->SourceSurface, Width, Height, D3DFMT_A8R8G8B8);
 	InitTexture(&TheTextureManager->RenderedTexture, &TheTextureManager->RenderedSurface, Width, Height, D3DFMT_A8R8G8B8);
+	InitTexture(&TheTextureManager->ShadowPassTexture, &TheTextureManager->ShadowPassSurface, Width, Height, D3DFMT_A8R8G8B8);
 	InitTexture(&TheTextureManager->NormalsTexture, &TheTextureManager->NormalsSurface, Width, Height, D3DFMT_A16B16G16R16F);
 	InitTexture(&TheTextureManager->AvgLumaTexture, &TheTextureManager->AvgLumaSurface, 1, 1, D3DFMT_A8R8G8B8);
 	//InitTexture(&TheTextureManager->BloomTexture, &TheTextureManager->BloomSurface, Width, Height, D3DFMT_A8R8G8B8);
@@ -173,6 +177,7 @@ TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DX
 	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferMiddle") ? TextureRecord::TextureRecordType::ShadowMapBufferMiddle : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferFar") ? TextureRecord::TextureRecordType::ShadowMapBufferFar : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferLod") ? TextureRecord::TextureRecordType::ShadowMapBufferLod : Type;
+	Type = !strcmp(ConstantName, "TESR_PointShadowBuffer") ? TextureRecord::TextureRecordType::PointShadowBuffer : Type;
 	Type = !strcmp(ConstantName, "TESR_OrthoMapBuffer") ? TextureRecord::TextureRecordType::OrthoMapBuffer : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer0") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer0 : Type;
 	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer1") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer1 : Type;
@@ -203,7 +208,7 @@ TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DX
 			size_t StartTexture = Source.find("<", SamplerPos +1);
 			size_t EndTexture = Source.find(">", SamplerPos +1);
 			if(StartTexture == std::string::npos || EndTexture == std::string::npos) {
-				Logger::Log("[ERROR] %s  cannot be binded", ConstantName);
+				Logger::Log("[ERROR] %s cannot be binded", ConstantName);
 				return nullptr;
 			}
 			std::string TextureString = Source.substr(StartTexture +1, EndTexture - StartTexture - 1);
@@ -212,7 +217,7 @@ TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DX
 		size_t StartStatePos = Source.find("{", SamplerPos);
 		size_t EndStatePos = Source.find("}", SamplerPos);
 		if(EndStatePos == std::string::npos || StartStatePos == std::string::npos) {
-			Logger::Log("[ERROR] %s  cannot be binded", ConstantName);
+			Logger::Log("[ERROR] %s cannot be binded", ConstantName);
 			return nullptr;
 		}
 		std::string SamplerString = Source.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);

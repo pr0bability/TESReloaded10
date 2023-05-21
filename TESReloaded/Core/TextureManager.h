@@ -34,6 +34,7 @@ public:
 		ShadowCubeMapBuffer9,
 		ShadowCubeMapBuffer10,
 		ShadowCubeMapBuffer11,
+		PointShadowBuffer,
 		WaterHeightMapBuffer, /*Textures assigned after init*/
         WaterReflectionMapBuffer,
 	};
@@ -65,6 +66,8 @@ public:
 	IDirect3DSurface9*		RenderedSurface;
 	IDirect3DTexture9* 		NormalsTexture;
 	IDirect3DSurface9*		NormalsSurface;
+	IDirect3DTexture9* 		ShadowPassTexture;
+	IDirect3DSurface9*		ShadowPassSurface;
 	IDirect3DTexture9* 		AvgLumaTexture;
 	IDirect3DSurface9*		AvgLumaSurface;
 	IDirect3DTexture9* 		BloomTexture;

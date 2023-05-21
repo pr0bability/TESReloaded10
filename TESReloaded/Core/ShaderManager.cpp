@@ -655,6 +655,7 @@ bool EffectRecord::LoadEffect(bool alwaysCompile){
 	ID3DXEffectCompiler* Compiler = NULL;
 	ID3DXBuffer* EffectBuffer = NULL;
 	HRESULT load = NULL;
+
 	if(alwaysCompile || ShouldCompileShader(Path->data(), SourcePath->data(), (ShaderCompileType)TheSettingManager->SettingsMain.Develop.CompileEffects) ){
 		HRESULT comp  = D3DXCreateEffectCompilerFromFileA(SourcePath->data(), NULL, NULL, NULL, &Compiler, &Errors);
 		if(FAILED(comp)) goto cleanup;
@@ -878,6 +879,9 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = &TheShaderManager->Effects.ShadowsExteriors;
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
+	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
+	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
+	TheShaderManager->EffectsNames["SunShadows"] = &TheShaderManager->Effects.SunShadows;
 	TheShaderManager->EffectsNames["Specular"] = &TheShaderManager->Effects.Specular;
 	TheShaderManager->EffectsNames["Snow"] = &TheShaderManager->Effects.Snow;
 	TheShaderManager->EffectsNames["SnowAccumulation"] = &TheShaderManager->Effects.SnowAccumulation;
@@ -1959,6 +1963,14 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, true);
 
+	// render a shadow pass for point lights
+	if ((isExterior && Effects.ShadowsExteriors->Enabled) || (!isExterior && Effects.ShadowsInteriors->Enabled)) {
+		// separate lights in 2 batches
+		RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.PointShadows, true);
+		if (TheShadowManager->PointLightsNum > 6) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.PointShadows2, false);
+		if (isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
+	}
+
 	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
@@ -1973,8 +1985,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 		// Disable shadows during VATS
 		if (!VATSIsOn) {
-			if (isExterior && Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
-			else if (!isExterior && Effects.ShadowsInteriors->Enabled) Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
+			if (isExterior && Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, false);
+			else if (!isExterior && Effects.ShadowsInteriors->Enabled) Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, true, true);
 		}
 
 		if (isUnderwater) {
@@ -1996,6 +2008,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 			}
 		}
 	}
+
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
