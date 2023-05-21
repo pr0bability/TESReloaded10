@@ -811,11 +811,7 @@ void ShadowManager::RenderShadowMaps() {
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
 	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
-	// track point lights for interiors and exteriors
-	NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
-	NiPointLight* Lights[TrackedLightsMax] = { NULL };
-	GetNearbyLights(ShadowLights, Lights);
-
+	// Render directional shadows for Sun/Moon
 	if (isExterior && ShadowsExteriors->Enabled) {
 		ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
 		NiNode* PlayerNode = Player->GetNode();
@@ -843,29 +839,42 @@ void ShadowManager::RenderShadowMaps() {
 			RenderShadowMap(ShadowMapType, ShadowsExteriors, &At, SunDir);
 			if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMapType);
 		}
-
-		// Update constants used by shadow shaders: x=quality, y=darkness
-		ShadowData->x = ShadowsExteriors->Quality;
-		if (TheShaderManager->Effects.ShadowsExteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
-		ShadowData->y = ShadowsExteriors->Darkness;
 	}
-	else if(ShadowsInteriors->Enabled){
+
+	// Render shadow maps for point lights
+	if (TheShaderManager->Effects.ShadowsExteriors->Enabled || TheShaderManager->Effects.ShadowsInteriors->Enabled) {
+		// track point lights for interiors and exteriors
+		NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
+		NiPointLight* Lights[TrackedLightsMax] = { NULL };
+		GetNearbyLights(ShadowLights, Lights);
 
 		CurrentVertex = ShadowCubeMapVertex;
 		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
 
+		//int lightsNum = isExterior ? 6 : ShadowsInteriors->LightPoints;
+
 		// render the cubemaps for each light
-		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
+		for (int i = 0; i < lightsNum; i++) {
 			RenderShadowCubeMap(ShadowLights, i, ShadowsInteriors);
 		}
 		CalculateBlend(ShadowLights, ShadowsInteriors->LightPoints);
 
-		ShadowData->x = ShadowsInteriors->Quality;
-		if (TheShaderManager->Effects.ShadowsInteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
-		ShadowData->y = ShadowsInteriors->Darkness;
-		ShadowData->z = 1.0f / (float)ShadowsInteriors->ShadowCubeMapSize;
+		if (isExterior) {
+			// Update constants used by shadow shaders: x=quality, y=darkness
+			ShadowData->x = ShadowsExteriors->Quality;
+			if (TheShaderManager->Effects.ShadowsExteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
+			ShadowData->y = ShadowsExteriors->Darkness;
+		}
+		else {
+			ShadowData->x = ShadowsInteriors->Quality;
+			if (TheShaderManager->Effects.ShadowsInteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
+			ShadowData->y = ShadowsInteriors->Darkness;
+			ShadowData->z = 1.0f / (float)ShadowsInteriors->ShadowCubeMapSize;
+		}
 	}
+
+	// reset renderer to previous state
 	Device->SetDepthStencilSurface(DepthSurface);
 	Device->SetRenderTarget(0, RenderSurface);
 	Device->SetViewport(&viewport);
