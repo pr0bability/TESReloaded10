@@ -259,7 +259,7 @@ MinBrightness = 0.3
 DarkAdaptSpeed = 0.01
 LightAdaptSpeed = 0.03
 MaxBrightness = 0.9
-MinBrightness = 0.1
+MinBrightness = 0.2
 
 [_Shaders.Exposure.Status]
 Enabled = true
@@ -405,7 +405,7 @@ Trees = true
 [_Shaders.ShadowsExteriors.Main]
 PostProcess = true
 BlurShadowMaps = true
-Darkness = 0.5
+Darkness = 0.8
 Enabled = true
 NightMinDarkness = 0.3
 Quality = 2
