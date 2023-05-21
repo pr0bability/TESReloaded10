@@ -1772,7 +1772,7 @@ bool ShaderManager::CreateShader(const char* Name) {
 	}
 
 	if (!success) {
-		char Message[256] = "Out Of Memory: Could not load shader ";
+		char Message[256] = "Error: Could not load shader ";
 		strcat(Message, Name);
 		InterfaceManager->ShowMessage(Message);
 		Logger::Log(Message);
@@ -1807,7 +1807,7 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 	PixelShader->ShaderProgE = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Exteriors\\");
 	PixelShader->ShaderProgI = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Interiors\\");
 
-	return PixelShader->ShaderProg != nullptr;;
+	return PixelShader->ShaderProg != nullptr;
 }
 
 void ShaderManager::DisposeShader(const char* Name) {
@@ -1985,7 +1985,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 		// Disable shadows during VATS
 		if (!VATSIsOn) {
-			if (isExterior && Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, false);
+			if (isExterior && Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
 			else if (!isExterior && Effects.ShadowsInteriors->Enabled) Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, true, true);
 		}
 
@@ -2062,8 +2062,9 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		bool setting = effect->SwitchEffect();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
 	}
-	catch (std::out_of_range e){
+	catch (std::exception e){
 		// shaders
+		Logger::Log("Toggling Shader %s", Name);
 		bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
 		DisposeShader(Name);
 		if (enable) enable = CreateShader(Name);
