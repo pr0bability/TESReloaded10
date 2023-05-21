@@ -667,6 +667,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 	// create a map of all nearby valid lights and sort them per distance to player
 	std::map<int, NiPointLight*> SceneLights;
 	NiTList<ShadowSceneLight>::Entry* Entry = SceneNode->lights.start;
+
 	while (Entry) {
 		NiPointLight* Light = Entry->data->sourceLight;
 		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
@@ -696,6 +697,8 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 	// get the data for all tracked lights
 	int ShadowIndex = 0;
 	int LightIndex = 0;
+	PointLightsNum = 0;
+
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
 		if (v != SceneLights.end())	{
 			NiPointLight* Light = v->second;
@@ -717,6 +720,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 				//Logger::Log("shadow casting light found at index % i", ShadowIndex);
 
 				ShadowIndex++;
+				PointLightsNum++; // Constant to track number of shadow casting lights are present
 			}
 			else if (LightIndex < TrackedLightsMax){
 				LightsList[LightIndex] = Light;
@@ -853,6 +857,7 @@ void ShadowManager::RenderShadowMaps() {
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
 
 		//int lightsNum = isExterior ? 6 : ShadowsInteriors->LightPoints;
+		int lightsNum = ShadowsInteriors->LightPoints;
 
 		// render the cubemaps for each light
 		for (int i = 0; i < lightsNum; i++) {

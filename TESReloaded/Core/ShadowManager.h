@@ -49,6 +49,7 @@ public:
 	NiVector4				BillboardUp;
 	ShaderRecordVertex*		ShadowCubeMapVertex;
 	ShaderRecordPixel*		ShadowCubeMapPixel;
+	int						PointLightsNum;
     
 	float					ShadowCascadesDepth[3];
 
