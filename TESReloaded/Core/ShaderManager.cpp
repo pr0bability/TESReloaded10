@@ -66,8 +66,12 @@ ShaderProgram::ShaderProgram() {
 
 ShaderProgram::~ShaderProgram() {
 
-	if (FloatShaderValues) free(FloatShaderValues);
-	if (TextureShaderValues) free(TextureShaderValues);
+	if (FloatShaderValues) {
+		delete FloatShaderValues;
+	}
+	if (TextureShaderValues) {
+		delete TextureShaderValues;
+	}
 
 }
 
@@ -518,8 +522,8 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
     }
 
 	auto timer = TimeLogger();
-	if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)malloc(FloatShaderValuesCount * sizeof(ShaderValue));
-	if (TextureShaderValuesCount) TextureShaderValues = (ShaderValue*)malloc(TextureShaderValuesCount * sizeof(ShaderValue));
+	if (FloatShaderValuesCount) FloatShaderValues = new ShaderValue [FloatShaderValuesCount];
+	if (TextureShaderValuesCount) TextureShaderValues = new ShaderValue [TextureShaderValuesCount];
 	
 	// Should be better but still crashes with NVHR -- TODO: Check how to fix it
 	//if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(FloatShaderValuesCount * sizeof(ShaderValue));
@@ -634,8 +638,10 @@ EffectRecord::~EffectRecord() {
 void EffectRecord::DisposeEffect(){
 	if (Effect) Effect->Release();
 	Effect = nullptr;
+	if (FloatShaderValues) delete FloatShaderValues;
 	if (FloatShaderValues) free(FloatShaderValues);
 	FloatShaderValues = nullptr;
+	if (TextureShaderValues) delete TextureShaderValues;
 	if (TextureShaderValues) free(TextureShaderValues);
 	TextureShaderValues = nullptr;
 	Enabled = false;
@@ -749,8 +755,8 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		if ((ConstantDesc.Class == D3DXPC_VECTOR || ConstantDesc.Class == D3DXPC_MATRIX_ROWS) && !memcmp(ConstantDesc.Name, "TESR_", 5)) FloatShaderValuesCount += 1;
 		if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE && !memcmp(ConstantDesc.Name, "TESR_", 5)) TextureShaderValuesCount += 1;
 	}
-	if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(FloatShaderValuesCount * sizeof(ShaderValue));
-	if (TextureShaderValuesCount) TextureShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(TextureShaderValuesCount * sizeof(ShaderValue));
+	FloatShaderValues = new ShaderValue[FloatShaderValuesCount];
+	TextureShaderValues = new ShaderValue[TextureShaderValuesCount];
 
 	Logger::Debug("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
 
