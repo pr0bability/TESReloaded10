@@ -66,12 +66,8 @@ ShaderProgram::ShaderProgram() {
 
 ShaderProgram::~ShaderProgram() {
 
-	if (FloatShaderValues) {
-		delete FloatShaderValues;
-	}
-	if (TextureShaderValues) {
-		delete TextureShaderValues;
-	}
+	delete[] FloatShaderValues;
+	delete[] TextureShaderValues;
 
 }
 
@@ -522,8 +518,8 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
     }
 
 	auto timer = TimeLogger();
-	if (FloatShaderValuesCount) FloatShaderValues = new ShaderValue [FloatShaderValuesCount];
-	if (TextureShaderValuesCount) TextureShaderValues = new ShaderValue [TextureShaderValuesCount];
+	FloatShaderValues = new ShaderValue [FloatShaderValuesCount];
+	TextureShaderValues = new ShaderValue [TextureShaderValuesCount];
 	
 	// Should be better but still crashes with NVHR -- TODO: Check how to fix it
 	//if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(FloatShaderValuesCount * sizeof(ShaderValue));
@@ -638,12 +634,8 @@ EffectRecord::~EffectRecord() {
 void EffectRecord::DisposeEffect(){
 	if (Effect) Effect->Release();
 	Effect = nullptr;
-	if (FloatShaderValues) delete FloatShaderValues;
-	if (FloatShaderValues) free(FloatShaderValues);
-	FloatShaderValues = nullptr;
-	if (TextureShaderValues) delete TextureShaderValues;
-	if (TextureShaderValues) free(TextureShaderValues);
-	TextureShaderValues = nullptr;
+	delete[] FloatShaderValues;
+	delete[] TextureShaderValues;
 	Enabled = false;
 }
 
