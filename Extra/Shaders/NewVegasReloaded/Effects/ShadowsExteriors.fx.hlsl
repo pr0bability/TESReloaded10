@@ -1,34 +1,22 @@
 // Image space shadows shader for Oblivion Reloaded
 
-float4x4 TESR_WorldViewProjectionTransform;
-// float4x4 TESR_ShadowCameraToLightTransformNear;
-// float4x4 TESR_ShadowCameraToLightTransformMiddle;
-// float4x4 TESR_ShadowCameraToLightTransformFar;
-// float4x4 TESR_ShadowCameraToLightTransformLod;
 float4 TESR_ReciprocalResolution;
-float4 TESR_ViewSpaceLightDir;
 float4 TESR_WaterSettings; //x: water height in the cell, y: water depth darkness, z: is camera underwater
 float4 TESR_ShadowData; // x: quality, y: darkness, z: nearmap resolution, w: farmap resolution
-float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
 float4 TESR_ShadowFade;
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SkyColor;
 float4 TESR_SunAmbient;
 float4 TESR_SunColor;
+float4 TESR_ShadowScreenSpaceData;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
-//sampler2D TESR_NormalsBuffer : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_PointShadowBuffer : register(s3)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-
-#define SSS_STEPNUM 10
+sampler2D TESR_NormalsBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
-static const float SSS_DIST = 20;
-static const float SSS_THICKNESS = 20;
-static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
-
 
 struct VSOUT
 {
@@ -45,6 +33,7 @@ struct VSIN
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
+#include "Includes/Normals.hlsl"
 #include "Includes/BlurDepth.hlsl"
 #include "Includes/Shadows.hlsl"
 
@@ -57,6 +46,9 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
+/*
+ * Load Shadows Buffer and filter water surfaces 
+*/
 float4 Shadow(VSOUT IN) : COLOR0
 {
 	float2 uv = IN.UVCoord;
@@ -65,16 +57,15 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float depth = readDepth(uv);
 	float3 camera_vector = toWorld(uv) * depth;
 	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+	float3 world_normal = GetWorldNormal(IN.UVCoord);
 
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
-	if (TESR_ShadowFade.y == 0 || (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 1.5 && world_pos.z > TESR_WaterSettings.x - 1.5)) return float4 (1.0f, 1.0, 1.0, 1.0);
-	// if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
+	// if (TESR_ShadowFade.y == 0 || (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 1.5 && world_pos.z > TESR_WaterSettings.x - 1.5)) return float4 (1.0f, 1.0, 1.0, 1.0);
+	if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
 
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 
 	// fade shadows to light when sun is low
-
-	// fade shadow close to light sources
 
 	// brighten shadow value from 0 to darkness from config value
 	Shadow = lerp(DARKNESS, 1.0f, Shadow);
@@ -109,13 +100,13 @@ technique {
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurRChannel(float2(1.0f, 0.0f), TESR_ShadowScreenSpaceData.y, 5, SSS_MAXDEPTH);
+		PixelShader = compile ps_3_0 BlurRChannel(float2(1.0f, 0.0f), TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
 	}
 	
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurRChannel(float2(0.0f, 1.0f), TESR_ShadowScreenSpaceData.y, 5, SSS_MAXDEPTH);
+		PixelShader = compile ps_3_0 BlurRChannel(float2(0.0f, 1.0f), TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
 	}
 
 	pass {
