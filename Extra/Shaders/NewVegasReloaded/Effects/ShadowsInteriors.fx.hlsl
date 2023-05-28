@@ -46,10 +46,12 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 	// combine Shadow pass and source using an overlay mode + alpha blending
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float depth = readDepth(IN.UVCoord);
+	float3 eyeDir = toWorld(IN.UVCoord);
+	float uniformDepth = length(depth * eyeDir);
 
 	//multiply by 2 to only use the lower half of values to impact darkness
 	float4 Shadow = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).r * 2);
-	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, depth)); // fade shadows with distance
+	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, uniformDepth)); // fade shadows with distance
     Shadow = saturate(lerp(1, Shadow, TESR_ShadowData.y * TESR_ShadowFade.y)); // shadow darkness (shadowFade.y is set to 0 when shadows are disabled)
 
 	Shadow *= color;
