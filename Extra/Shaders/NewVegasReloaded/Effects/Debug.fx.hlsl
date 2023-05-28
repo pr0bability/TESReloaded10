@@ -8,6 +8,7 @@ float4 TESR_SkyColor;
 float4 TESR_ViewSpaceLightDir;
 float4 TESR_SunDirection;
 float4 TESR_DebugVar;
+float4 TESR_ShadowRadius;
 
 float4 TESR_LightPosition0;
 float4 TESR_LightPosition1;
@@ -71,6 +72,12 @@ float4 displayBuffer(float4 color, float2 uv, float2 bufferPosition, float2 buff
 	return tex2D(buffer, float2(invlerp(bufferPosition, lowerCorner, uv)));
 }
 
+float4 displayDepth(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize){
+	float2 lowerCorner = bufferPosition + bufferSize;
+	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
+	return 2 * readDepth(float2(invlerp(bufferPosition, lowerCorner, uv))) / farZ;
+}
+
 
 float4 showLightInfluence(float4 color, float2 uv, float3 position, float4 lightPos, float4 tint){
 	float3 eyeDir = normalize(toWorld(uv));
@@ -98,7 +105,13 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	float3 eyeDir = toWorld(IN.UVCoord);
 	float3 position = eyeDir * depth + TESR_CameraPosition.xyz;
 
+
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	if (depth > 0 && depth < TESR_ShadowRadius.x) color *= float4(1, 0.5, 1, 1);
+	if (depth > TESR_ShadowRadius.x && depth < TESR_ShadowRadius.y) color *= float4(0.5, 1, 1, 1);
+	if (depth > TESR_ShadowRadius.y && depth < TESR_ShadowRadius.z) color *= float4(1, 1, 0.5, 1);
+	if (depth > TESR_ShadowRadius.z && depth < TESR_ShadowRadius.w) color *= float4(0.5, 1, 1, 1);
+
 	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition0, float4(0, 1, 0, 1));
 	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition1, float4(0, 1, 0, 1));
 	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition2, float4(0, 1, 0, 1));
@@ -137,7 +150,7 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
     }
 
 	color = displayBuffer(color, IN.UVCoord, float2(0.1, 0.05), float2(0.15, 0.15), TESR_NormalsBuffer);
-	color = displayBuffer(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15), TESR_DepthBuffer);
+	color = displayDepth(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15));
 	color = displayBuffer(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15), TESR_PointShadowBuffer);
 
     return color;
