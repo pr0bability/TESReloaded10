@@ -75,7 +75,7 @@ float4 displayBuffer(float4 color, float2 uv, float2 bufferPosition, float2 buff
 float4 displayDepth(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize){
 	float2 lowerCorner = bufferPosition + bufferSize;
 	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
-	return 2 * readDepth(float2(invlerp(bufferPosition, lowerCorner, uv))) / farZ;
+	return pows(readDepth(float2(invlerp(bufferPosition, lowerCorner, uv))) / farZ, 0.3);
 }
 
 
