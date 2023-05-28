@@ -561,6 +561,7 @@ void ShaderRecord::SetCT() {
 
 	if (HasRenderedBuffer) TheRenderManager->device->StretchRect(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface, NULL, TheTextureManager->RenderedSurface, NULL, D3DTEXF_NONE);
 	if (HasDepthBuffer) TheRenderManager->ResolveDepthBuffer();
+	// binds textures
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Value = &TextureShaderValues[c];
 		if (Value->Texture->Texture) TheRenderManager->renderState->SetTexture(Value->RegisterIndex, Value->Texture->Texture);
@@ -568,6 +569,7 @@ void ShaderRecord::SetCT() {
 			TheRenderManager->SetSamplerState(Value->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Value->Texture->SamplerStates[i]);
 		}
 	}
+	// update constants
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
 		Value = &FloatShaderValues[c];
 		SetShaderConstantF(Value->RegisterIndex, Value->Value, Value->RegisterCount);
@@ -1103,10 +1105,14 @@ void ShaderManager::UpdateConstants() {
 
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
 			ShaderConst.ShadowFade.y = Effects.ShadowsExteriors->Enabled;
+
+			// set to 0 when no lights are available for shadow maps rendering
+			ShaderConst.ShadowFade.z = TheSettingManager->SettingsShadows.Exteriors.UsePointShadows;
 		}
 		else {
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
 			ShaderConst.ShadowFade.y = Effects.ShadowsInteriors->Enabled;
+			ShaderConst.ShadowFade.z = 1;
 		}
 
 		// calculating sun amount for shaders (currently not used by any shaders)

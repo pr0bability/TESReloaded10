@@ -413,6 +413,7 @@ ShadowMapFarPlane = 32768
 ShadowMapResolution = 1024
 ShadowMode = 1
 ShadowsRadius = 8000
+UsePointShadows = true
 
 [_Shaders.ShadowsExteriors.Middle]
 Activators = false

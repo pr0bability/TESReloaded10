@@ -8,7 +8,8 @@ float GetPointLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir,
 
 	float Shadow = lightDepth + BIAS > Distance;
 
-	return lerp(1, Shadow, lightDepth > 0.0f && lightDepth < 1.0f);
+	// ignore shadow sample if lightDepth is not within range of cube map or if pointLights are disabled (ShadowFade.z set to 0)
+	return lerp(1, Shadow, lightDepth > 0.0f && lightDepth < 1.0f && (TESR_ShadowFade.z != 0));
 }
 
 
