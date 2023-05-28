@@ -130,13 +130,13 @@ technique
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurRChannel(float2(1.0f, 0.0f), BlurRadius, 1, 1000000);
+		PixelShader = compile ps_3_0 DepthBlur(OffsetMaskH, BlurRadius, 1, 1000000);
 	}
 	
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurRChannel(float2(0.0f, 1.0f), BlurRadius, 1, 1000000);
+		PixelShader = compile ps_3_0 DepthBlur(OffsetMaskV, BlurRadius, 1, 1000000);
 	}
 
 	// pass

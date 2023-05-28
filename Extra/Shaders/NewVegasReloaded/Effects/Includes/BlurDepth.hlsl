@@ -5,7 +5,7 @@
 */
 
 // perform depth aware 12 taps blur along the direction of the offsetmask
-float4 BlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius,uniform float depthDrop,uniform float endFade) : COLOR0
+float4 DepthBlur(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius,uniform float depthDrop,uniform float endFade) : COLOR0
 {
 	float WeightSum = 0.114725602f;
 	float4 color1 = tex2D(TESR_RenderedBuffer, IN.UVCoord) * WeightSum;
