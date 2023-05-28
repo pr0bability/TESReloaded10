@@ -12,6 +12,7 @@ float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistan
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
 float4 TESR_SunColor;
+float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows active
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
 sampler2D TESR_ShadowMapBufferNear : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
@@ -25,7 +26,7 @@ sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\blue
 #define SSS_STEPNUM 10
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
-static const float SSS_DIST = 20;
+static const float SSS_DIST = 40;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
@@ -118,7 +119,8 @@ float GetLightAmount(float4 coord, float depth)
 		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
 		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
 		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
-		clamp(0.0, 1.0, 1 - invlerp(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)),
+		// clamp(0.0, 1.0, 1 - smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)),
+		clamp(0.0, 1.0, 1), 
 	};
 
 	// apply blending to each cascade shadow
@@ -152,6 +154,7 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 
 	float occlusion = 0.0;
 	[unroll]
+	// Doing two steps at once to optimize the depth march
 	for (float i = 1; i < SSS_STEPNUM/2; i++){
 		float4 step = SSS_DIST / SSS_STEPNUM * i * TESR_ViewSpaceLightDir * rand;
 
@@ -175,9 +178,8 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	}
 	occlusion = saturate(occlusion);
 
-    // save result of SSS in red channel
-	// color.r = lerp(1.0f - occlusion, 1.0, saturate(pos.z/SSS_MAXDEPTH));
-	color.r = 1.0f - occlusion;
+    // save result of SSS in red channel, and fade contrribution with distance
+	color.r = lerp(1.0f - occlusion, 1.0, invlerps(200, SSS_MAXDEPTH, pos.z));
     return color;
 }
 
@@ -195,7 +197,12 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
 
 	Shadow.r = min(Shadow.r, GetLightAmount(pos, depth)); // get the darkest between Screenspace & Sun shadows
-	Shadow.r = Shadow.r * luma(TESR_SunColor) + luma(TESR_SunAmbient); // scale shadows strength to ambient before adding attenuation
+
+	// fade shadows to light when sun is low
+	Shadow.r = lerp(Shadow.r, 1.0f, TESR_ShadowFade.x);
+
+	// Shadow.r = Shadow.r * luma(TESR_SunColor) + luma(TESR_SunAmbient); // scale shadows strength to ambient before adding attenuation
+	Shadow.r = lerp(0, lerp(luma(TESR_SunAmbient), 1, TESR_ShadowFade.z == 0), Shadow.r); // scale shadows strength to ambient before adding attenuation
 
 	// Apply poing light attenuation
 	Shadow.r += Shadow.g;
