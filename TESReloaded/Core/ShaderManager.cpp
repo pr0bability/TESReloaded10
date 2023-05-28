@@ -831,12 +831,11 @@ bool EffectRecord::SwitchEffect(){
 */
 void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, bool ClearRenderTarget, bool useSourceBuffer) {
 
-	if (!Enabled) return; // skip rendering of disabled effects
+	if (!Enabled || Effect == nullptr) return; // skip rendering of disabled effects
 	if (useSourceBuffer) Device->StretchRect(RenderTarget, NULL, TheTextureManager->SourceSurface, NULL, D3DTEXF_NONE);
 
 	SetCT(); // update the constant table
 	UINT Passes;
-	if (!Enabled || Effect == nullptr) return;
 	Effect->Begin(&Passes, NULL);
 	for (UINT p = 0; p < Passes; p++) {
 		if (ClearRenderTarget) Device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L);
@@ -1951,16 +1950,22 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	TESObjectCELL* currentCell = Player->parentCell;
 	Sky* WorldSky = Tes->sky;
 	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
-	bool isUnderwater = Tes->sky->GetIsUnderWater(); /*TODO do this work in interior????*/
+	bool isUnderwater = Tes->sky->GetIsUnderWater();
 	bool isDaytime = (ShaderConst.GameTime.y >= ShaderConst.SunTiming.x && ShaderConst.GameTime.y <= ShaderConst.SunTiming.w); // gametime is between sunrise start and sunset end
 	bool isCellTransition = currentCell != PreviousCell;
 
 	//bool pipboyIsOn = InterfaceManager->IsActive(Menu::kMenuType_BigFour);
 	bool pipboyIsOn = InterfaceManager->getIsMenuOpen();
 	bool VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
-	bool terminalIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
-		InterfaceManager->IsActive(Menu::kMenuType_LockPick) || 
-		InterfaceManager->IsActive(Menu::kMenuType_Surgery);
+	bool overlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
+		InterfaceManager->IsActive(Menu::kMenuType_LockPick) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Surgery) ||
+		InterfaceManager->IsActive(Menu::kMenuType_SlotMachine) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Blackjack) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Roulette) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Caravan);
+
+	if (overlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
@@ -1981,36 +1986,32 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	if (!terminalIsOn) {
-		// disable these effects during terminal/lockpicking sequences because they bleed through the overlay
+	// Snow must be rendered first so other effects appear on top
+	if (ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
+	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
 
-		// Snow must be rendered first so other effects appear on top
-		if (ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
-		Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
+	// Disable shadows during VATS
+	if (!VATSIsOn) {
+		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
+		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, true, true);
+	}
 
-		// Disable shadows during VATS
-		if (!VATSIsOn) {
-			if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
-			else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, true, true);
+	if (isUnderwater) {
+		// underwater only effects
+		Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false, false);
+	}
+	else {
+		if (isExterior) {
+			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
+			if (ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
 		}
 
-		if (isUnderwater) {
-			// underwater only effects
-			Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false, false);
-		}
-		else {
-			if (isExterior) {
-				Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
-				if (ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
-			}
+		if (!pipboyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false, false);
 
-			if (!pipboyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false, false);
-
-			if (isExterior) {
-				if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false, true);
-				if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false, false);
-				Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
-			}
+		if (isExterior) {
+			if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, false, true);
+			if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, false, false);
+			Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
 		}
 	}
 
