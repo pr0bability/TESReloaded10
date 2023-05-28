@@ -18,6 +18,8 @@ float4 TESR_LightPosition8;
 float4 TESR_LightPosition9;
 float4 TESR_LightPosition10;
 float4 TESR_LightPosition11;
+float4 TESR_ShadowFade;
+
 //sampler_state removed to avoid a artifact. TODO investigate
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };

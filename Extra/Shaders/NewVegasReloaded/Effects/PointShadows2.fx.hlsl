@@ -6,6 +6,7 @@ float4 TESR_ShadowLightPosition8;
 float4 TESR_ShadowLightPosition9;
 float4 TESR_ShadowLightPosition10;
 float4 TESR_ShadowLightPosition11;
+float4 TESR_ShadowFade;
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };

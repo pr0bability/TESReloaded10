@@ -253,6 +253,7 @@ struct SettingsShadowStruct {
         UInt8               ShadowMode;
 		float				ShadowMapRadius[5];
 		float				ShadowMapFarPlane;
+		bool				UsePointShadows;
 		ExcludedFormsList	ExcludedForms;
 	};
 	

@@ -774,11 +774,15 @@ void ShadowManager::RenderShadowMaps() {
 
 	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
 	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
+		
+	// early out in case shadow rendering is not required
+	if (!ShadowsExteriors->Enabled && !ShadowsInteriors->Enabled) return;
+
+	// prepare some pointers to the device and surfaces
 	SettingsShadowStruct::FormsStruct* ShadowsInteriorsForms = &ShadowsInteriors->Forms;
 	SettingsShadowStruct::ExcludedFormsList* ShadowsInteriorsExcludedForms = &ShadowsInteriors->ExcludedForms;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
-	if (!ShadowsExteriors->Enabled && !ShadowsInteriors->Enabled) return;
 	IDirect3DSurface9* DepthSurface = NULL;
 	IDirect3DSurface9* RenderSurface = NULL;
 	D3DVIEWPORT9 viewport;
@@ -846,7 +850,7 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	if (TheShaderManager->Effects.ShadowsExteriors->Enabled || TheShaderManager->Effects.ShadowsInteriors->Enabled) {
+	if (TheShaderManager->Effects.ShadowsExteriors->Enabled && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows || TheShaderManager->Effects.ShadowsInteriors->Enabled) {
 		// track point lights for interiors and exteriors
 		NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
 		NiPointLight* Lights[TrackedLightsMax] = { NULL };
@@ -970,7 +974,6 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
 	Device->SetRenderTarget(0, TargetShadowMap);
 	
 	// Pass map resolution to shader as a constant
-//	ShadowMapBlurPixel->SetCT();
 	D3DXVECTOR4 inverseRes = { ShadowMapInverseResolution[ShadowMapType], ShadowMapInverseResolution[ShadowMapType], 0.0f, 0.0f };
 	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
 
