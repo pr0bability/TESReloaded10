@@ -56,6 +56,8 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// returns a shadow value from darkness setting value (full shadow) to 1 (full light)
 	float depth = readDepth(uv);
 	float3 camera_vector = toWorld(uv) * depth;
+	float uniformDepth = length(camera_vector);
+
 	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 	float3 world_normal = GetWorldNormal(IN.UVCoord);
 
@@ -69,7 +71,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	// brighten shadow value from 0 to darkness from config value
 	Shadow = lerp(DARKNESS, 1.0f, Shadow);
-	Shadow = lerp(Shadow, 1.0f, invlerps(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth));
+	Shadow = lerp(Shadow, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth));
 
 	// No point for the shadow buffer to be beyond the 0-1 range
 	Shadow = saturate(Shadow);
