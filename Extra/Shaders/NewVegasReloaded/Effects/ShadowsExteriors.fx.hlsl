@@ -34,7 +34,7 @@ struct VSIN
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
 #include "Includes/Normals.hlsl"
-#include "Includes/BlurDepth.hlsl"
+#include "Includes/Blur.hlsl"
 #include "Includes/Shadows.hlsl"
 
 
@@ -62,12 +62,12 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float3 world_normal = GetWorldNormal(IN.UVCoord);
 
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
-	// if (TESR_ShadowFade.y == 0 || (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 1.5 && world_pos.z > TESR_WaterSettings.x - 1.5)) return float4 (1.0f, 1.0, 1.0, 1.0);
 	if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
 
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 
 	// fade shadows to light when sun is low
+	Shadow = lerp(DARKNESS, 1.0f, Shadow);
 
 	// brighten shadow value from 0 to darkness from config value
 	Shadow = lerp(DARKNESS, 1.0f, Shadow);
@@ -76,7 +76,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// No point for the shadow buffer to be beyond the 0-1 range
 	Shadow = saturate(Shadow);
 
-	return Shadow.rrrr;
+	return Shadow;
 }
 
 
@@ -87,8 +87,42 @@ float4 CombineShadow (VSOUT IN) : COLOR0
 	float Shadow = tex2D(TESR_RenderedBuffer, IN.UVCoord).r;
 
 	float4 colorShadow = luma(color.rgb) * Shadow * TESR_SkyColor;
+	// float4 colorShadow = luma(color.rgb) * TESR_SkyColor;
 
 	return lerp(colorShadow, color * Shadow, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
+	// return lerp(colorShadow, color, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
+}
+
+
+// perform depth aware 12 taps blur along the direction of the offsetmask
+float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius,uniform float depthDrop,uniform float endFade) : COLOR0
+{
+	float WeightSum = 0.114725602f;
+	float4 color1 = tex2D(TESR_RenderedBuffer, IN.UVCoord) * WeightSum;
+	float3 normal = GetNormal(IN.UVCoord);
+	float depth = tex2D(TESR_DepthBuffer, IN.UVCoord).x;
+
+	float depth1 = readDepth(IN.UVCoord);
+	clip(endFade - depth1);
+
+	// coeff for blurring to increase blur depthDrop on surfaces facing away from the camera
+	float normalCoeff = (0.5 + 2 * compress(dot(normal, float3(0, 0, 1))));
+
+    for (int i = 0; i < cKernelSize; i++)
+    {
+		float2 uvOff = (BlurOffsets[i] * OffsetMask) * blurRadius/depth;
+		float4 color2 = tex2D(TESR_RenderedBuffer, IN.UVCoord + uvOff).r;
+		float depth2 = readDepth(IN.UVCoord + uvOff);
+		float3 normal2 = GetNormal(IN.UVCoord + uvOff);
+
+		float diff = abs(depth1 - depth2);
+
+		int useForBlur = (diff <= depthDrop * normalCoeff);
+		color1.r += BlurWeights[i] * color2.r * useForBlur;
+		WeightSum += BlurWeights[i] * useForBlur;
+    }
+	color1.r /= WeightSum;
+    return color1;
 }
 
 technique {
@@ -102,13 +136,13 @@ technique {
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurRChannel(float2(1.0f, 0.0f), TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+		PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
 	}
 	
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurRChannel(float2(0.0f, 1.0f), TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+		PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskV, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
 	}
 
 	pass {
