@@ -174,7 +174,7 @@ WhiteCutOff = 0.8
 Enabled = false
 
 [_Shaders.Cinema.Main]
-AspectRatio = 2.39
+AspectRatio = 1
 ChromaticAberration = 2.0
 DirtLensAmount = 0.3
 FilmGrainAmount = 0.5
@@ -284,7 +284,7 @@ MaxDistance = 0
 Enabled = false
 
 [_Shaders.GodRays.Main]
-DayMultiplier = 0.8
+DayMultiplier = 0.5
 LightShaftPasses = 8
 Luminance = 0.8
 NightMultiplier = 1.0
@@ -316,8 +316,8 @@ ToneMappingColor = 1.2
 Enabled = false
 
 [_Shaders.Lens.Main]
-DirtLensAmount = 1.0
-ExteriorBloomTreshold = 0.8
+DirtLensAmount = 0.2
+ExteriorBloomTreshold = 0.9
 InteriorBloomTreshold = 2.0
 
 [_Shaders.Lens.Status]
