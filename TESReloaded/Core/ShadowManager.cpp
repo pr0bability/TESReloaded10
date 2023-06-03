@@ -565,7 +565,7 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 
 void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
 	
-	//Logger::Log("Rendering ShadowCubeMap for Light index %i", LightIndex);
+	auto timer = TimeLogger();
 
 	if (Lights[LightIndex] == NULL) return; // LightIndex is higher than currently tracked lights number
 	//Logger::Log("Rendering ShadowCubeMap for Light index %i", LightIndex);
@@ -647,7 +647,8 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 		}
 		Device->EndScene();
 	}
-	
+
+	timer.LogTime("RenderShadowCubeMap");	
 }
 
 
@@ -841,7 +842,8 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	if (TheShaderManager->Effects.ShadowsExteriors->Enabled && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows || TheShaderManager->Effects.ShadowsInteriors->Enabled) {
+	if ((isExterior && TheShaderManager->Effects.ShadowsExteriors->Enabled && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows) ||
+		!isExterior && TheShaderManager->Effects.ShadowsInteriors->Enabled) {
 		// track point lights for interiors and exteriors
 		NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
 		NiPointLight* Lights[TrackedLightsMax] = { NULL };
