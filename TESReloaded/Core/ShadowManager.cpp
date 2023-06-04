@@ -566,10 +566,9 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 
 void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
 	
-	auto timer = TimeLogger();
+	if (Lights[LightIndex] == NULL) return; // No light at current index
 
-	if (Lights[LightIndex] == NULL) return; // LightIndex is higher than currently tracked lights number
-	//Logger::Log("Rendering ShadowCubeMap for Light index %i", LightIndex);
+	auto timer = TimeLogger();
 
 	ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;

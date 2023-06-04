@@ -88,7 +88,7 @@ float GetLightAmountValue(sampler2D shadowBuffer, float4x4 lightTransform, float
 
 float GetLightAmount(float4 coord, float depth)
 {
-	float blendArea = 0.8; // 20 % of each cascade to overlap
+	float blendArea = 0.9; // 20 % of each cascade to overlap
 	float shadow;
 
 	// getting all shadow values from cascades as negative (to be able to use the dot product to chose the correct one)
