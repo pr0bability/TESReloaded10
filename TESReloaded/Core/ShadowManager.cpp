@@ -400,27 +400,26 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 	float zfar;
 	switch (ShadowMapType) {
 	case ShadowMapTypeEnum::MapNear:
-		znear = 0.0f;
+		znear = 10;
 		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear];
 		break;
 	case ShadowMapTypeEnum::MapMiddle:
-		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear] * 0.8;
+		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear] * 0.9;
 		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle];
 		break;
 	case ShadowMapTypeEnum::MapFar:
-		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle] * 0.8;
+		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle] * 0.9;
 		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
 		break;
 	case ShadowMapTypeEnum::MapLod:
-		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar]* 0.8;
+		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar]* 0.9;
 		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapLod];
 		break;
-	default:
-		D3DXMatrixOrthoOffCenterRH(&Proj, -Radius * 2, Radius * 2, -Radius * 2, Radius * 2, FarPlane * 0.8f, 1.2f * FarPlane);
-		return View * Proj;
+	case ShadowMapTypeEnum::MapOrtho:
+		znear = 10;
+		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
 	}
 
-	float safety = 1.0f;
 	NiCamera* Camera = WorldSceneGraph->camera;
 	float w = Camera->Frustum.Right - Camera->Frustum.Left;
 	float h = Camera->Frustum.Top - Camera->Frustum.Bottom;
@@ -431,8 +430,8 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 	float fov = TheRenderManager->FOVData.z;
 	float fovY = TheRenderManager->FOVData.w;
 
-	float tanHalfHFOV = tanf(fov * 0.5f) * safety;
-	float tanHalfVFOV = tanf(fovY * 0.5f) * safety;
+	float tanHalfHFOV = tanf(fov * 0.5f);
+	float tanHalfVFOV = tanf(fovY * 0.5f);
 
 	float xn = znear * tanHalfHFOV;
 	float xf = zfar * tanHalfHFOV;
