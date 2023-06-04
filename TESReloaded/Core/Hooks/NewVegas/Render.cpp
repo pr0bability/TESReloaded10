@@ -95,8 +95,9 @@ float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 	float r = This->waterHeight;
 	if (TheSettingManager->SettingsMain.Main.ForceReflections) {
 		if (*(void**)This == (void*)0x0103195C) r = TheShaderManager->ShaderConst.Water.waterSettings.x;
-		return r;
 	}
+	return r;
+
 }
 
 void (__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void (__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
