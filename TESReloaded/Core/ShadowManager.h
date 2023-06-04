@@ -26,7 +26,7 @@ public:
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, SettingsShadowStruct::FormsStruct* Forms, SettingsShadowStruct::ExcludedFormsList* ExcludedForms);
 	void					RenderExterior(NiAVObject* Object, float MinRadius);
 	void					RenderInterior(NiAVObject* Object, float MinRadius);
-	void					RenderTerrain(NiAVObject* Object);
+	void					RenderTerrain(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType);
 	void					RenderLod(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType);
 	void					RenderGeometry(NiGeometry* Geo);
 	void					Render(NiGeometry* Geo);

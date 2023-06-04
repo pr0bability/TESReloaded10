@@ -213,7 +213,7 @@ void ShadowManager::RenderInterior(NiAVObject* Object, float MinRadius) {
 	}
 }
 
-void ShadowManager::RenderTerrain(NiAVObject* Object) {
+void ShadowManager::RenderTerrain(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType) {
 	// culling
 	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled) return;
 
@@ -224,8 +224,10 @@ void ShadowManager::RenderTerrain(NiAVObject* Object) {
 	// if container, render children
 	else if (VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode ||  VFT == Pointers::VirtualTables::BSMultiBoundNode ) {
 		NiNode* Node = (NiNode*)Object;
-		for (int i = 0; i < Node->m_children.numObjs; i++) {
-			RenderTerrain(Node->m_children.data[i]);
+		if (InFrustum(ShadowMapType, Node)) {
+			for (int i = 0; i < Node->m_children.numObjs; i++) {
+				RenderTerrain(Node->m_children.data[i], ShadowMapType);
+			}
 		}
 	}
     //else {
@@ -547,10 +549,10 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType) {
 	if (ShadowsExteriors->Forms[ShadowMapType].Terrain) {
 		NiNode* CellNode = Cell->GetNode();
-		//			if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
 		NiNode* TerrainNode = (NiNode*)CellNode->m_children.data[2]; //0 Actor, 2 Land, 3 Static, 4 Dynamic,5 Multibound, 1 Marker
 		for (int i = 0; i < TerrainNode->m_children.numObjs; i++) {
-			if (InFrustum(ShadowMapType, TerrainNode)) RenderTerrain(TerrainNode->m_children.data[i]);
+			RenderTerrain(TerrainNode->m_children.data[i], ShadowMapType);
 		}
 	}
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
