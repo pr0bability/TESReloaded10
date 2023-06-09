@@ -848,7 +848,7 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	if ((isExterior && ExteriorEnabled && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows) || (!isExterior && InteriorEnabled)) {
+	if ((isExterior && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;
 		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
