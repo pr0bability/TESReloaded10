@@ -767,8 +767,11 @@ void ShadowManager::RenderShadowMaps() {
 	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
 	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
 		
+	bool ExteriorEnabled = TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
+	bool InteriorEnabled = TheShaderManager->Effects.ShadowsInteriors->Enabled && ShadowsInteriors->Enabled;
+
 	// early out in case shadow rendering is not required
-	if (!ShadowsExteriors->Enabled && !ShadowsInteriors->Enabled) return;
+	if (!ExteriorEnabled &&	!InteriorEnabled && !TheShaderManager->orthoRequired) return;
 
 	// prepare some pointers to the device and surfaces
 	SettingsShadowStruct::FormsStruct* ShadowsInteriorsForms = &ShadowsInteriors->Forms;
@@ -812,26 +815,25 @@ void ShadowManager::RenderShadowMaps() {
 	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
 	// Render directional shadows for Sun/Moon
-	if (isExterior && ShadowsExteriors->Enabled) {
-		ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
-		NiNode* PlayerNode = Player->GetNode();
-		D3DXVECTOR3 At;
 
-		At.x = PlayerNode->m_worldTransform.pos.x - TheRenderManager->CameraPosition.x;
-		At.y = PlayerNode->m_worldTransform.pos.y - TheRenderManager->CameraPosition.y;
-		At.z = PlayerNode->m_worldTransform.pos.z - TheRenderManager->CameraPosition.z;
+	ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
+	NiNode* PlayerNode = Player->GetNode();
+	D3DXVECTOR3 At;
 
-		CurrentVertex = ShadowMapVertex;
-		CurrentPixel = ShadowMapPixel;
+	At.x = PlayerNode->m_worldTransform.pos.x - TheRenderManager->CameraPosition.x;
+	At.y = PlayerNode->m_worldTransform.pos.y - TheRenderManager->CameraPosition.y;
+	At.z = PlayerNode->m_worldTransform.pos.z - TheRenderManager->CameraPosition.z;
 
-		// render ortho map if one of the effects using ortho is active
-		if (TheShaderManager->orthoRequired) {
-			ShadowData->z = 1; // identify ortho map in shader constant
-			D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
-			RenderShadowMap(MapOrtho, ShadowsExteriors, &At, &OrthoDir);
-		}
+	CurrentVertex = ShadowMapVertex;
+	CurrentPixel = ShadowMapPixel;
 
-		// Render all other shadow maps
+	// track point lights for interiors and exteriors
+	NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
+	NiPointLight* Lights[TrackedLightsMax] = { NULL };
+	GetNearbyLights(ShadowLights, Lights);
+
+	// Render all shadow maps
+	if (isExterior && ExteriorEnabled) {
 		ShadowData->z = 0; // set shader constant to identify other shadow maps
 		D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
 		for (int i = MapNear; i < MapOrtho; i++) {
@@ -841,19 +843,19 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
-	// Render shadow maps for point lights
-	if ((isExterior && TheShaderManager->Effects.ShadowsExteriors->Enabled && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows) ||
-		!isExterior && TheShaderManager->Effects.ShadowsInteriors->Enabled) {
-		// track point lights for interiors and exteriors
-		NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
-		NiPointLight* Lights[TrackedLightsMax] = { NULL };
-		GetNearbyLights(ShadowLights, Lights);
+	// render ortho map if one of the effects using ortho is active
+	if (TheShaderManager->orthoRequired) {
+		ShadowData->z = 1; // identify ortho map in shader constant
+		D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
+		RenderShadowMap(MapOrtho, ShadowsExteriors, &At, &OrthoDir);
+	}
 
+	// Render shadow maps for point lights
+	if ((isExterior && ExteriorEnabled && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;
 		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
 
-		//int lightsNum = isExterior ? 6 : ShadowsInteriors->LightPoints;
 		int lightsNum = ShadowsInteriors->LightPoints;
 
 		// render the cubemaps for each light
@@ -861,19 +863,19 @@ void ShadowManager::RenderShadowMaps() {
 			RenderShadowCubeMap(ShadowLights, i, ShadowsInteriors);
 		}
 		CalculateBlend(ShadowLights, ShadowsInteriors->LightPoints);
+	}
 
-		if (isExterior) {
-			// Update constants used by shadow shaders: x=quality, y=darkness
-			ShadowData->x = ShadowsExteriors->Quality;
-			if (TheShaderManager->Effects.ShadowsExteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
-			ShadowData->y = ShadowsExteriors->Darkness;
-		}
-		else {
-			ShadowData->x = ShadowsInteriors->Quality;
-			if (TheShaderManager->Effects.ShadowsInteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
-			ShadowData->y = ShadowsInteriors->Darkness;
-			ShadowData->z = 1.0f / (float)ShadowsInteriors->ShadowCubeMapSize;
-		}
+	if (isExterior) {
+		// Update constants used by shadow shaders: x=quality, y=darkness
+		ShadowData->x = ShadowsExteriors->Quality;
+		if (TheShaderManager->Effects.ShadowsExteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
+		ShadowData->y = ShadowsExteriors->Darkness;
+	}
+	else {
+		ShadowData->x = ShadowsInteriors->Quality;
+		if (TheShaderManager->Effects.ShadowsInteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
+		ShadowData->y = ShadowsInteriors->Darkness;
+		ShadowData->z = 1.0f / (float)ShadowsInteriors->ShadowCubeMapSize;
 	}
 
 	// reset renderer to previous state
