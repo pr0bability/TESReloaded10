@@ -22,7 +22,7 @@ float4 TESR_HorizonColor;
 float4 TESR_SunColor;
 float4 TESR_WetWorldCoeffs; // Puddle color R, G, B + spec multiplier
 float4 TESR_WaterSettings; // for water height to avoid rendering puddles underwater
-float4 TESR_WetWorldData; // x: current rain amount, y: max rain amount z: puddle amount
+float4 TESR_WetWorldData; // x: current rain amount, y: max rain amount, z: puddle amount, w:puddle darkness/intensity
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -184,10 +184,10 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord);
 
 	// calculate puddle color
-	float4 puddleColor = rippleColor * 0.5; // base color is just darkened ground color
+	float4 puddleColor = rippleColor * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
 	float4 fresnelColor = TESR_HorizonColor * 0.8;
 	float glossiness = 300;
-	float fresnel = pow(1 - dot(-eyeDirection, combinedNormals), 5);
+	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5), TESR_WetWorldData.w) ;
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
 	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(2, 5, puddlemask));
