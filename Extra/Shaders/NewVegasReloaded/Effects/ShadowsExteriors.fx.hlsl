@@ -90,6 +90,10 @@ float4 CombineShadow (VSOUT IN) : COLOR0
 	float4 colorShadow = luma(color.rgb) * Shadow * TESR_SkyColor;
 	// float4 colorShadow = luma(color.rgb) * TESR_SkyColor;
 
+#if viewshadows == 1
+	return Shadow;
+#endif
+
 	return lerp(colorShadow, color * Shadow, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 	// return lerp(colorShadow, color, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 }
