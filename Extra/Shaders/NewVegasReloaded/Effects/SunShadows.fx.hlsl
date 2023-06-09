@@ -12,7 +12,7 @@ float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistan
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
 float4 TESR_SunColor;
-float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows active
+float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
 sampler2D TESR_ShadowMapBufferNear : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
@@ -30,6 +30,42 @@ static const float SSS_DIST = 40;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
+// blur constants
+#define cKernelSize 12
+static const float2 OffsetMaskH = float2(1.0f, 0.0f);
+static const float2 OffsetMaskV = float2(0.0f, 1.0f);
+
+static const float BlurWeights[cKernelSize] = 
+{
+	0.057424882f,
+	0.058107773f,
+	0.061460144f,
+	0.071020611f,
+	0.088092873f,
+	0.106530916f,
+	0.106530916f,
+	0.088092873f,
+	0.071020611f,
+	0.061460144f,
+	0.058107773f,
+	0.057424882f
+};
+ 
+static const float2 BlurOffsets[cKernelSize] = 
+{
+	float2(-6.0f * TESR_ReciprocalResolution.x, -6.0f * TESR_ReciprocalResolution.y),
+	float2(-5.0f * TESR_ReciprocalResolution.x, -5.0f * TESR_ReciprocalResolution.y),
+	float2(-4.0f * TESR_ReciprocalResolution.x, -4.0f * TESR_ReciprocalResolution.y),
+	float2(-3.0f * TESR_ReciprocalResolution.x, -3.0f * TESR_ReciprocalResolution.y),
+	float2(-2.0f * TESR_ReciprocalResolution.x, -2.0f * TESR_ReciprocalResolution.y),
+	float2(-1.0f * TESR_ReciprocalResolution.x, -1.0f * TESR_ReciprocalResolution.y),
+	float2( 1.0f * TESR_ReciprocalResolution.x,  1.0f * TESR_ReciprocalResolution.y),
+	float2( 2.0f * TESR_ReciprocalResolution.x,  2.0f * TESR_ReciprocalResolution.y),
+	float2( 3.0f * TESR_ReciprocalResolution.x,  3.0f * TESR_ReciprocalResolution.y),
+	float2( 4.0f * TESR_ReciprocalResolution.x,  4.0f * TESR_ReciprocalResolution.y),
+	float2( 5.0f * TESR_ReciprocalResolution.x,  5.0f * TESR_ReciprocalResolution.y),
+	float2( 6.0f * TESR_ReciprocalResolution.x,  6.0f * TESR_ReciprocalResolution.y)
+};
 
 struct VSOUT
 {
@@ -47,6 +83,7 @@ struct VSIN
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
 #include "Includes/Shadows.hlsl"
+#include "Includes/Normals.hlsl"
 
 
 VSOUT FrameVS(VSIN IN)
@@ -196,21 +233,50 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
 
-	Shadow.r = min(Shadow.r, GetLightAmount(pos, depth)); // get the darkest between Screenspace & Sun shadows
+	// float sunShadows = lerp(1, GetLightAmount(pos, depth), TESR_ShadowFade.y); // disable shadow maps if ShadowFade.y == 0
+	float sunShadows = lerp(1, GetLightAmount(pos, depth), TESR_ShadowFade.y); // disable shadow maps if ShadowFade.y == 0
+	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
-	// fade shadows to light when sun is low
-	Shadow.r = lerp(Shadow.r, 1.0f, TESR_ShadowFade.x);
+	Shadow.r = lerp(Shadow.r, 1.0f, TESR_ShadowFade.x); // apply darkness fading when sun is low or moon is not full
 
 	// Shadow.r = Shadow.r * luma(TESR_SunColor) + luma(TESR_SunAmbient); // scale shadows strength to ambient before adding attenuation
-	Shadow.r = lerp(0, lerp(luma(TESR_SunAmbient), 1, TESR_ShadowFade.z == 0), Shadow.r); // scale shadows strength to ambient before adding attenuation
-
-	// Apply poing light attenuation
-	Shadow.r += Shadow.g;
-
-	// No point for the shadow buffer to be beyond the 0-1 range
-	Shadow = saturate(Shadow);
+	Shadow.r = lerp(0, lerp(1, luma(TESR_SunAmbient), TESR_ShadowFade.z), Shadow.r); // scale shadows strength to ambient before adding attenuation
+	Shadow.r += Shadow.g; // Apply poing light attenuation
+	Shadow = saturate(Shadow); // No point for the shadow buffer to be beyond the 0-1 range
 
 	return Shadow.rrrr;
+}
+
+
+// perform depth aware 12 taps blur along the direction of the offsetmask
+float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius,uniform float depthDrop,uniform float endFade) : COLOR0
+{
+	float WeightSum = 0.114725602f;
+	float4 color1 = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	float3 normal = GetNormal(IN.UVCoord);
+
+	float blurPower = OffsetMask * (blurRadius / pow(tex2D(TESR_DepthBuffer, IN.UVCoord).r, 2));
+	float depth1 = readDepth(IN.UVCoord);
+	clip(endFade - depth1);
+
+	// coeff for blurring to increase blur depthDrop on surfaces facing away from the camera
+	float normalCoeff = (0.5 + 2 * compress(dot(normal, float3(0, 0, 1))));
+	color1.rg = color1.rg * WeightSum;
+    for (int i = 0; i < cKernelSize; i++)
+    {
+		float2 uvOff = BlurOffsets[i] * blurPower;
+		float2 color2 = tex2D(TESR_PointShadowBuffer, IN.UVCoord + uvOff).rg;
+		float depth2 = readDepth(IN.UVCoord + uvOff);
+		//float3 normal2 = GetNormal(IN.UVCoord + uvOff);
+
+		float diff = abs(depth1 - depth2);
+
+		int useForBlur = (diff <= depthDrop * normalCoeff);
+		color1.rg += BlurWeights[i] * color2.rg * useForBlur;
+		WeightSum += BlurWeights[i] * useForBlur;
+    }
+	color1.rg /= WeightSum;
+    return color1;
 }
 
 
@@ -226,4 +292,13 @@ technique {
 		PixelShader = compile ps_3_0 Shadow();
 	}
 
+	pass {
+		VertexShader = compile vs_3_0 FrameVS();
+	 	PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+	}
+
+	pass {
+		VertexShader = compile vs_3_0 FrameVS();
+	 	PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+	}
 }

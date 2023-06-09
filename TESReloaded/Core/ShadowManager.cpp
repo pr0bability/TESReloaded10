@@ -379,10 +379,7 @@ void ShadowManager::Render(NiGeometry* Geo) {
 			CurrentVertex->SetCT();
 			CurrentPixel->SetCT();
 			for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-				if (GeoData->ArrayLengths)
-					PrimitiveCount = GeoData->ArrayLengths[i] - 2;
-				else
-					PrimitiveCount = GeoData->TriCount;
+				PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2: GeoData->TriCount;
 				Device->DrawIndexedPrimitive(PrimitiveType, GeoData->BaseVertexIndex, 0, Partition->Vertices, StartIndex, PrimitiveCount);
 				StartIndex += PrimitiveCount + 2;
 			}

@@ -1,4 +1,5 @@
 // Image space shadows shader for Oblivion Reloaded
+# define viewshadows 0
 
 float4 TESR_ReciprocalResolution;
 float4 TESR_WaterSettings; //x: water height in the cell, y: water depth darkness, z: is camera underwater
@@ -15,6 +16,7 @@ sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; A
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
 sampler2D TESR_PointShadowBuffer : register(s3)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
 
@@ -34,7 +36,6 @@ struct VSIN
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
 #include "Includes/Normals.hlsl"
-#include "Includes/Blur.hlsl"
 #include "Includes/Shadows.hlsl"
 
 
@@ -48,12 +49,12 @@ VSOUT FrameVS(VSIN IN)
 
 /*
  * Load Shadows Buffer and filter water surfaces 
+ * returns a shadow value from darkness setting value (full shadow) to 1 (full light)
 */
 float4 Shadow(VSOUT IN) : COLOR0
 {
 	float2 uv = IN.UVCoord;
 
-	// returns a shadow value from darkness setting value (full shadow) to 1 (full light)
 	float depth = readDepth(uv);
 	float3 camera_vector = toWorld(uv) * depth;
 	float uniformDepth = length(camera_vector);
@@ -67,10 +68,10 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 
 	// fade shadows to light when sun is low
-	Shadow = lerp(DARKNESS, 1.0f, Shadow);
+	float darkness = lerp(DARKNESS, 1.0f, TESR_ShadowFade.x);
 
 	// brighten shadow value from 0 to darkness from config value
-	Shadow = lerp(DARKNESS, 1.0f, Shadow);
+	Shadow = lerp(darkness, 1.0f, Shadow);
 	Shadow = lerp(Shadow, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth));
 
 	// No point for the shadow buffer to be beyond the 0-1 range
@@ -95,35 +96,6 @@ float4 CombineShadow (VSOUT IN) : COLOR0
 
 
 // perform depth aware 12 taps blur along the direction of the offsetmask
-float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius,uniform float depthDrop,uniform float endFade) : COLOR0
-{
-	float WeightSum = 0.114725602f;
-	float4 color1 = tex2D(TESR_RenderedBuffer, IN.UVCoord) * WeightSum;
-	float3 normal = GetNormal(IN.UVCoord);
-	float depth = tex2D(TESR_DepthBuffer, IN.UVCoord).x;
-
-	float depth1 = readDepth(IN.UVCoord);
-	clip(endFade - depth1);
-
-	// coeff for blurring to increase blur depthDrop on surfaces facing away from the camera
-	float normalCoeff = (0.5 + 2 * compress(dot(normal, float3(0, 0, 1))));
-
-    for (int i = 0; i < cKernelSize; i++)
-    {
-		float2 uvOff = (BlurOffsets[i] * OffsetMask) * blurRadius/depth;
-		float4 color2 = tex2D(TESR_RenderedBuffer, IN.UVCoord + uvOff).r;
-		float depth2 = readDepth(IN.UVCoord + uvOff);
-		float3 normal2 = GetNormal(IN.UVCoord + uvOff);
-
-		float diff = abs(depth1 - depth2);
-
-		int useForBlur = (diff <= depthDrop * normalCoeff);
-		color1.r += BlurWeights[i] * color2.r * useForBlur;
-		WeightSum += BlurWeights[i] * useForBlur;
-    }
-	color1.r /= WeightSum;
-    return color1;
-}
 
 technique {
 
@@ -133,17 +105,7 @@ technique {
 		PixelShader = compile ps_3_0 Shadow();
 	}
 
-	pass
-	{ 
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
-	}
 	
-	pass
-	{ 
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskV, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
-	}
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
