@@ -1,24 +1,22 @@
 static const float BIAS = 0.005f;
 static const float MIN_VARIANCE = 0.000005;
-static const float BLEED_CORRECTION = 0.4;
+static const float BLEED_CORRECTION = 0.6;
 
 
 float GetPointLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir, float Distance) {
-	float lightDepth = texCUBE(ShadowCubeMapBuffer, LightDir).r;
+	if (TESR_ShadowFade.z == 0) return 1;
 
+	float lightDepth = texCUBE(ShadowCubeMapBuffer, LightDir).r;
 	float Shadow = lightDepth + BIAS > Distance;
 
 	// ignore shadow sample if lightDepth is not within range of cube map or if pointLights are disabled (ShadowFade.z set to 0)
-	return lerp(1, Shadow, lightDepth > 0.0f && lightDepth < 1.0f && (TESR_ShadowFade.z != 0));
+	return lerp(1, Shadow, lightDepth > 0.0f && lightDepth < 1.0f);
 }
 
 
-float GetPointLightAtten(float4 WorldPos, float4 LightPos, float4 normal) {
-	float3 LightDir = LightPos.xyz - WorldPos.xyz;
-	float Distance = length(LightDir);
+float GetPointLightAtten(float3 LightDir, float Distance, float4 normal) {
 
 	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
-	Distance = Distance / LightPos.w;
 	float s = Distance * Distance; 
 	float atten = saturate((1 - s) / (1 + s));
 
@@ -30,15 +28,14 @@ float GetPointLightAtten(float4 WorldPos, float4 LightPos, float4 normal) {
 
 
 float GetPointLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, float4 LightPos, float4 normal) {
-	if (!LightPos.w) return 0;
+	if (!LightPos.w) return 0; // w is light radius.
 
 	float3 LightDir = LightPos.xyz - WorldPos.xyz;
 	float3 LightUV = LightDir * float3(-1, -1, 1);
 
-	float Distance = length(LightDir);
-	Distance = Distance / LightPos.w;
+	float Distance = length(LightDir) / LightPos.w; // normalize distance over light range
 
-	float LightAmount = GetPointLightAmountValue(ShadowCubeMapBuffer, LightUV, Distance) * GetPointLightAtten(WorldPos, LightPos, normal);
+	float LightAmount = GetPointLightAmountValue(ShadowCubeMapBuffer, LightUV, Distance) * GetPointLightAtten(LightDir, Distance, normal);
 	return saturate(LightAmount);
 }
 
