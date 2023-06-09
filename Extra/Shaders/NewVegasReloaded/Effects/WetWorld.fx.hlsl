@@ -20,6 +20,7 @@ float4 TESR_GameTime;
 float4 TESR_SkyColor;
 float4 TESR_HorizonColor;
 float4 TESR_SunColor;
+float4 TESR_SunAmbient;
 float4 TESR_WetWorldCoeffs; // Puddle color R, G, B + spec multiplier
 float4 TESR_WaterSettings; // for water height to avoid rendering puddles underwater
 float4 TESR_WetWorldData; // x: current rain amount, y: max rain amount, z: puddle amount, w:puddle darkness/intensity
@@ -30,6 +31,7 @@ sampler2D TESR_SourceBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; A
 sampler2D TESR_RippleSampler : register(s3) < string ResourceName = "Precipitations\ripples.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_OrthoMapBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_PointShadowBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 
 //------------------------------------------------------
@@ -183,14 +185,18 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
 	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord);
 
+	// sample and strenghten the shadow map
+	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord) / luma(TESR_SunAmbient), 5));
+
 	// calculate puddle color
 	float4 puddleColor = rippleColor * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
 	float4 fresnelColor = TESR_HorizonColor * 0.8;
 	float glossiness = 300;
-	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5), TESR_WetWorldData.w) ;
+	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, TESR_WetWorldData.w);
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
-	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(2, 5, puddlemask));
+
+	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(2, 5, puddlemask)) * inShadow;
 
 	puddleColor = lerp(puddleColor, fresnelColor, saturate(fresnel * puddlemask));
 	puddleColor += specular * TESR_SunColor * 8;
