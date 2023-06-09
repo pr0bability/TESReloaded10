@@ -1003,6 +1003,8 @@ void ShaderManager::UpdateConstants() {
 	avglumaRequired = false; // toggle for rendering AvgLuma
 	orthoRequired = false; // toggle for rendering Ortho map
 
+	if (Effects.Debug->Enabled) avglumaRequired = true;
+
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
 
@@ -1103,9 +1105,7 @@ void ShaderManager::UpdateConstants() {
 			}
 
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-			ShaderConst.ShadowFade.y = Effects.ShadowsExteriors->Enabled;
-
-			// set to 0 when no lights are available for shadow maps rendering
+			ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled;
 			ShaderConst.ShadowFade.z = TheSettingManager->SettingsShadows.Exteriors.UsePointShadows;
 		}
 		else {
@@ -2097,7 +2097,7 @@ void ShaderManager::SetExtraEffectEnabled(const char* Name, bool Value) {
 }
 
 float ShaderManager::lerp(float a, float b, float t) {
-	return (1 - t) * a + t * b;
+	return std::lerp(a, b, t);
 }
 
 float ShaderManager::invLerp(float a, float b, float t) {
