@@ -36,43 +36,43 @@ static const float2 BlurOffsets[cKernelSize] =
 
 
 // downsample/upsample a part of the screen given by the scaleFactor
-float4 Scale(VSOUT IN, uniform float scaleFactor) : COLOR0
+float4 Scale(VSOUT IN, uniform sampler2D buffer, uniform float scaleFactor) : COLOR0
 {
 	float2 uv = IN.UVCoord / scaleFactor;// scale the uv by wanted scale
 	clip((uv < 1) - 1); // discard uvs outside of [0-1]range
 
-	return tex2D(TESR_RenderedBuffer, uv);	
+	return tex2D(buffer, uv);	
 }
 
 // simple local average without weights. Use scaleFactor to only blur a portion of the screen starting from the top left corner
-float4 BoxBlur (VSOUT IN, uniform float2 offsetMask, uniform float scaleFactor) :COLOR0
+float4 BoxBlur (VSOUT IN, uniform sampler2D buffer, uniform float2 offsetMask, uniform float scaleFactor) :COLOR0
 {
 	clip((IN.UVCoord <= scaleFactor) - 1);
 
 	float2 maxuv = scaleFactor - 1.5 * TESR_ReciprocalResolution.xy;
-	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * 1 * TESR_ReciprocalResolution.xy, maxuv));
-	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * -1 * TESR_ReciprocalResolution.xy, maxuv));
-	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * -2 * TESR_ReciprocalResolution.xy, maxuv));
-	color += tex2D(TESR_RenderedBuffer, min(IN.UVCoord + offsetMask * 2 * TESR_ReciprocalResolution.xy, maxuv));
+	float4 color = tex2D(buffer, IN.UVCoord);
+	color += tex2D(buffer, min(IN.UVCoord + offsetMask * 1 * TESR_ReciprocalResolution.xy, maxuv));
+	color += tex2D(buffer, min(IN.UVCoord + offsetMask * -1 * TESR_ReciprocalResolution.xy, maxuv));
+	color += tex2D(buffer, min(IN.UVCoord + offsetMask * -2 * TESR_ReciprocalResolution.xy, maxuv));
+	color += tex2D(buffer, min(IN.UVCoord + offsetMask * 2 * TESR_ReciprocalResolution.xy, maxuv));
 
 	// return color;
 	return color /= 5;
 }
 
-float4 Blur(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius, uniform float scale) : COLOR0
+float4 Blur(VSOUT IN, uniform sampler2D buffer,  uniform float2 OffsetMask, uniform float blurRadius, uniform float scale) : COLOR0
 {
 	// blur using a gaussian blur
 	float WeightSum = 0.114725602f;
 	float2 uv = IN.UVCoord;
-	float4 color = tex2D(TESR_RenderedBuffer, uv) * WeightSum;
+	float4 color = tex2D(buffer, uv) * WeightSum;
 	clip ((uv <= scale) - 1);
 
     for (int i = 0; i < cKernelSize; i++)
     {
 		float2 uvOff = (BlurOffsets[i] * OffsetMask) * blurRadius;
 		float isValid = ((uv.x + uvOff.x) < scale) && ((uv.y + uvOff.y) < scale); //discard samples outside the screen area
-		color += BlurWeights[i] * tex2D(TESR_RenderedBuffer, uv + uvOff) * isValid;
+		color += BlurWeights[i] * tex2D(buffer, uv + uvOff) * isValid;
 		WeightSum += BlurWeights[i] * isValid;
     }
 	color /= WeightSum;

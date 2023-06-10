@@ -84,6 +84,7 @@ struct VSIN
 #include "Includes/Depth.hlsl"
 #include "Includes/Shadows.hlsl"
 #include "Includes/Normals.hlsl"
+#include "Includes/BlurDepth.hlsl"
 
 
 VSOUT FrameVS(VSIN IN)
@@ -294,11 +295,11 @@ technique {
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
 	}
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 NormalBlurRChannel(OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
 	}
 }
