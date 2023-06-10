@@ -47,6 +47,12 @@ float3 toWorld(float2 tex)
 	return v;
 }
 
+float getHomogenousDepth(float2 uv){
+	float depth = readDepth(uv);
+	float3 camera_vector = toWorld(uv) * depth;
+	return length(camera_vector);
+}
+
 float4 reconstructWorldPosition(float2 uv){
     // float4 screenpos = float4(uv * 2.0 - 1.0f, tex2D(TESR_DepthBuffer, uv).x, 1.0f);
     // screenpos.y = -screenpos.y;
