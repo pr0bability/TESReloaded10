@@ -70,13 +70,13 @@ technique {
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 DepthBlur(OffsetMaskH, 1, 5, MAXDISTANCE);
+		PixelShader = compile ps_3_0 DepthBlur(TESR_RenderedBuffer, OffsetMaskH, 1, 5, MAXDISTANCE);
 	}
 	
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 DepthBlur(OffsetMaskV, 1, 5, MAXDISTANCE);
+		PixelShader = compile ps_3_0 DepthBlur(TESR_RenderedBuffer, OffsetMaskV, 1, 5, MAXDISTANCE);
 	}
 	
 	pass {
