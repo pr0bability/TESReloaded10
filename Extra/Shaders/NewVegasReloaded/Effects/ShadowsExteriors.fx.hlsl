@@ -12,10 +12,9 @@ float4 TESR_SunColor;
 float4 TESR_ShadowScreenSpaceData;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
-sampler2D TESR_PointShadowBuffer : register(s3)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_NormalsBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
+sampler2D TESR_PointShadowBuffer : register(s2)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
@@ -53,6 +52,7 @@ VSOUT FrameVS(VSIN IN)
 */
 float4 Shadow(VSOUT IN) : COLOR0
 {
+	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	float2 uv = IN.UVCoord;
 
 	float depth = readDepth(uv);
@@ -65,7 +65,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
 	if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
 
-	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).r;
 
 	// fade shadows to light when sun is low
 	float darkness = lerp(DARKNESS, 1.0f, TESR_ShadowFade.x);
@@ -77,43 +77,19 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// No point for the shadow buffer to be beyond the 0-1 range
 	Shadow = saturate(Shadow);
 
-	return Shadow;
-}
-
-
-float4 CombineShadow (VSOUT IN) : COLOR0 
-{
-	// old style multiply blending (for testing)
-	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	float Shadow = tex2D(TESR_RenderedBuffer, IN.UVCoord).r;
-
-	float4 colorShadow = luma(color.rgb) * Shadow * TESR_SkyColor;
-	// float4 colorShadow = luma(color.rgb) * TESR_SkyColor;
-
 #if viewshadows == 1
 	return Shadow;
 #endif
 
+	// tint shadowed areas with Sky color before blending
+	float4 colorShadow = luma(color.rgb) * Shadow * TESR_SkyColor;
 	return lerp(colorShadow, color * Shadow, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
-	// return lerp(colorShadow, color, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 }
 
 
-// perform depth aware 12 taps blur along the direction of the offsetmask
-
 technique {
-
-
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
 		PixelShader = compile ps_3_0 Shadow();
 	}
-
-	
-
-	pass {
-		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 CombineShadow();
-	}
-
 }
