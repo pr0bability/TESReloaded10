@@ -880,7 +880,7 @@ void ShadowManager::RenderShadowMaps() {
 	Device->SetRenderTarget(0, RenderSurface);
 	Device->SetViewport(&viewport);
 
-	if (TheSettingManager->SettingsMain.Develop.DebugMode) {
+	if (TheSettingManager->SettingsMain.Develop.DebugMode && !InterfaceManager->IsActive(Menu::MenuType::kMenuType_Console)) {
 		if (Global->OnKeyDown(0x17)) { // TODO: setting for debug key ?
 			char Filename[MAX_PATH];
 
