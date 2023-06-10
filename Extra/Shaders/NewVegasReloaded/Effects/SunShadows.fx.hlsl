@@ -23,49 +23,13 @@ sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; 
 sampler2D TESR_PointShadowBuffer : register(s6)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-#define SSS_STEPNUM 10
+#define SSS_STEPNUM 5
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
-static const float SSS_DIST = 40;
+static const float SSS_DIST = 2000;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
-// blur constants
-#define cKernelSize 12
-static const float2 OffsetMaskH = float2(1.0f, 0.0f);
-static const float2 OffsetMaskV = float2(0.0f, 1.0f);
-
-static const float BlurWeights[cKernelSize] = 
-{
-	0.057424882f,
-	0.058107773f,
-	0.061460144f,
-	0.071020611f,
-	0.088092873f,
-	0.106530916f,
-	0.106530916f,
-	0.088092873f,
-	0.071020611f,
-	0.061460144f,
-	0.058107773f,
-	0.057424882f
-};
- 
-static const float2 BlurOffsets[cKernelSize] = 
-{
-	float2(-6.0f * TESR_ReciprocalResolution.x, -6.0f * TESR_ReciprocalResolution.y),
-	float2(-5.0f * TESR_ReciprocalResolution.x, -5.0f * TESR_ReciprocalResolution.y),
-	float2(-4.0f * TESR_ReciprocalResolution.x, -4.0f * TESR_ReciprocalResolution.y),
-	float2(-3.0f * TESR_ReciprocalResolution.x, -3.0f * TESR_ReciprocalResolution.y),
-	float2(-2.0f * TESR_ReciprocalResolution.x, -2.0f * TESR_ReciprocalResolution.y),
-	float2(-1.0f * TESR_ReciprocalResolution.x, -1.0f * TESR_ReciprocalResolution.y),
-	float2( 1.0f * TESR_ReciprocalResolution.x,  1.0f * TESR_ReciprocalResolution.y),
-	float2( 2.0f * TESR_ReciprocalResolution.x,  2.0f * TESR_ReciprocalResolution.y),
-	float2( 3.0f * TESR_ReciprocalResolution.x,  3.0f * TESR_ReciprocalResolution.y),
-	float2( 4.0f * TESR_ReciprocalResolution.x,  4.0f * TESR_ReciprocalResolution.y),
-	float2( 5.0f * TESR_ReciprocalResolution.x,  5.0f * TESR_ReciprocalResolution.y),
-	float2( 6.0f * TESR_ReciprocalResolution.x,  6.0f * TESR_ReciprocalResolution.y)
-};
 
 struct VSOUT
 {
@@ -168,7 +132,7 @@ float GetLightAmount(float4 coord, float depth)
 	return 1 - dot(shadows, cascade);
 }
 
-// returns a semi random float3 between 0 and 1 based on the given seed.
+// returns a semi random float3 between 0 and 1 based on the given seed. (blue noise)
 // tailored to return a different value for each uv coord of the screen.
 float3 random(float2 seed)
 {
@@ -184,37 +148,44 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 
     float4 color = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 
-	float rand = lerp(0.2, 1, random(uv).r); // some noise to vary the ray length
-	float3 pos = reconstructPosition(uv) ; 
+	float3 random3 = random(uv);
+	float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
+	float3 pos = reconstructPosition(uv) + expand(random3); 
 
-	float bias = 0.0;
+	float bias = 0.01;
 	if (pos.z > SSS_MAXDEPTH) return float4(1.0, color.g, 0, 1); // early out for pixels further away than the max render distance
 
-	float occlusion = 0.0;
-	[unroll]
-	// Doing two steps at once to optimize the depth march
-	for (float i = 1; i < SSS_STEPNUM/2; i++){
-		float4 step = SSS_DIST / SSS_STEPNUM * i * TESR_ViewSpaceLightDir * rand;
+	// scale the step with distance, and randomize length
+	float3 step = pows(getHomogenousDepth(uv) / farZ, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
 
-		float3 pos1 = pos + step.xyz; // we move to the light
-		float3 pos2 = pos1 + step.xyz; // we move to the light
-		float3 screen_pos1 = projectPosition(pos1);
-		float3 screen_pos2 = projectPosition(pos2);
+	float occlusion = 0.0;
+	float total = 0;
+
+	// Doing two steps at once to optimize the depth march
+	[unroll]
+	for (float i = 1; i < SSS_STEPNUM; i+=2){
+		float step1 = i;
+		float step2 = i + 1;
+
+		float3 pos1 = pos + step1 * step; // we move to the light with bigger steps each time
+		float3 pos2 = pos1 + step2 * step; // we move to the light with bigger steps each time
 		
 		// if (screen_pos.x > 0 && screen_pos.x < 1.0 && screen_pos.y > 0 && screen_pos.y <1){
 		float2 depth = {pos1.z, pos2.z};
 		float2 depthCompare = {
-			readDepth(screen_pos1.xy),
-			readDepth(screen_pos2.xy),
+			readDepth(projectPosition(pos1).xy),
+			readDepth(projectPosition(pos2).xy),
 		};
 
 		float2 depthDelta = depth - depthCompare;
 
-		occlusion += depthDelta.x > bias && depthDelta.x < SSS_THICKNESS; // in Shadow
-		occlusion += depthDelta.y > bias && depthDelta.y < SSS_THICKNESS; // in Shadow
-		pos = pos2;
+		occlusion += (depthDelta.x > bias && depthDelta.x < SSS_THICKNESS)/step1; // in Shadow
+		occlusion += (depthDelta.y > bias && depthDelta.y < SSS_THICKNESS)/step2; // in Shadow
+		pos = pos2; 
+		total += 1/step1 + 1/step2; // weight samples inversely with distance
 	}
-	occlusion = saturate(occlusion);
+
+	occlusion = pows(occlusion/total, 0.3); // get an average shading based on total weights
 
     // save result of SSS in red channel, and fade contrribution with distance
 	color.r = lerp(1.0f - occlusion, 1.0, invlerps(200, SSS_MAXDEPTH, pos.z));
@@ -240,44 +211,12 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	Shadow.r = lerp(Shadow.r, 1.0f, TESR_ShadowFade.x); // apply darkness fading when sun is low or moon is not full
 
-	// Shadow.r = Shadow.r * luma(TESR_SunColor) + luma(TESR_SunAmbient); // scale shadows strength to ambient before adding attenuation
-	Shadow.r = lerp(0, lerp(1, luma(TESR_SunAmbient), TESR_ShadowFade.z), Shadow.r); // scale shadows strength to ambient before adding attenuation
+	float ambient = lerp(1, luma(TESR_SunAmbient), TESR_ShadowFade.z);
+	Shadow.r = lerp(0, ambient, Shadow.r); // scale shadows strength to ambient before adding attenuation
 	Shadow.r += Shadow.g; // Apply poing light attenuation
 	Shadow = saturate(Shadow); // No point for the shadow buffer to be beyond the 0-1 range
 
 	return Shadow.rrrr;
-}
-
-
-// perform depth aware 12 taps blur along the direction of the offsetmask
-float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius,uniform float depthDrop,uniform float endFade) : COLOR0
-{
-	float WeightSum = 0.114725602f;
-	float4 color1 = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
-	float3 normal = GetNormal(IN.UVCoord);
-
-	float blurPower = OffsetMask * (blurRadius / pow(tex2D(TESR_DepthBuffer, IN.UVCoord).r, 2));
-	float depth1 = readDepth(IN.UVCoord);
-	clip(endFade - depth1);
-
-	// coeff for blurring to increase blur depthDrop on surfaces facing away from the camera
-	float normalCoeff = (0.5 + 2 * compress(dot(normal, float3(0, 0, 1))));
-	color1.rg = color1.rg * WeightSum;
-    for (int i = 0; i < cKernelSize; i++)
-    {
-		float2 uvOff = BlurOffsets[i] * blurPower;
-		float2 color2 = tex2D(TESR_PointShadowBuffer, IN.UVCoord + uvOff).rg;
-		float depth2 = readDepth(IN.UVCoord + uvOff);
-		//float3 normal2 = GetNormal(IN.UVCoord + uvOff);
-
-		float diff = abs(depth1 - depth2);
-
-		int useForBlur = (diff <= depthDrop * normalCoeff);
-		color1.rg += BlurWeights[i] * color2.rg * useForBlur;
-		WeightSum += BlurWeights[i] * useForBlur;
-    }
-	color1.rg /= WeightSum;
-    return color1;
 }
 
 
