@@ -11,7 +11,6 @@ float4 TESR_ShadowData; // x: quality, y: darkness, z: nearmap resolution, w: fa
 float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
-float4 TESR_SunColor;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
@@ -150,7 +149,7 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 
 	float3 random3 = random(uv);
 	float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
-	float3 pos = reconstructPosition(uv) + expand(random3); 
+	float3 pos = reconstructPosition(uv);// + expand(random3); 
 
 	float bias = 0.01;
 	if (pos.z > SSS_MAXDEPTH) return float4(1.0, color.g, 0, 1); // early out for pixels further away than the max render distance
