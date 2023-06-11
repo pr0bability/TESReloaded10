@@ -12,7 +12,7 @@ sampler2D TESR_PointShadowBuffer : register(s3) = sampler_state { ADDRESSU = CLA
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
-static const float MAXDISTANCE = 4000;
+static const float MAXDISTANCE = TESR_ShadowFade.w;
 
 struct VSOUT
 {

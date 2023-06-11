@@ -672,7 +672,8 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
-		if ((inFront > 0 || Distance < radius) && !lightCulled && lightOn) {
+		float drawDistance = Player->GetWorldSpace() ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
+		if ((inFront > 0 || Distance < radius) && !lightCulled && lightOn && (Distance + radius) < drawDistance) {
 			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
 		}
 		Entry = Entry->next;

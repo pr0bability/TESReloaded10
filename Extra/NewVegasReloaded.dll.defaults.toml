@@ -492,6 +492,7 @@ Quality = 1
 ShadowCubeMapSize = 512
 Statics = true
 TorchesCastShadows = true
+DrawDistance = 4000
 
 [_Shaders.ShadowsInteriors.Status]
 Enabled = true
