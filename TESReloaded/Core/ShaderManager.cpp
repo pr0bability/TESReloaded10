@@ -834,17 +834,22 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 	if (!Enabled || Effect == nullptr) return; // skip rendering of disabled effects
 	if (useSourceBuffer) Device->StretchRect(RenderTarget, NULL, TheTextureManager->SourceSurface, NULL, D3DTEXF_NONE);
 
-	SetCT(); // update the constant table
-	UINT Passes;
-	Effect->Begin(&Passes, NULL);
-	for (UINT p = 0; p < Passes; p++) {
-		if (ClearRenderTarget) Device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L);
-		Effect->BeginPass(p);
-		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-		Effect->EndPass();
-		Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
+	try {
+		SetCT(); // update the constant table
+		UINT Passes;
+		Effect->Begin(&Passes, NULL);
+		for (UINT p = 0; p < Passes; p++) {
+			if (ClearRenderTarget) Device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 0), 1.0f, 0L);
+			Effect->BeginPass(p);
+			Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+			Effect->EndPass();
+			Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
+		}
+		Effect->End();
 	}
-	Effect->End();
+	catch (std::exception e) {
+		Logger::Log("Error during rendering of effect %s: %s", Path->c_str(), e.what());
+	}
 }
 
 /**
@@ -1096,12 +1101,12 @@ void ShaderManager::UpdateConstants() {
 				float MoonPhase = (fmod(DaysPassed, 8 * currentClimate->phaseLength & 0x3F)) / (currentClimate->phaseLength & 0x3F);
 
 				float PI = 3.1416; // use cos curve to fade moon light shadows strength
-				MoonPhase = lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
+				MoonPhase = std::lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
 
 				// map MoonVisibility to MinNightDarkness/1 range
 				float nightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-				float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
-				ShaderConst.ShadowFade.x = lerp(MoonVisibility, 1, ShaderConst.ShadowFade.x);
+				float MoonVisibility = lerp(0.0, (double)nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
+				ShaderConst.ShadowFade.x = lerp (MoonVisibility, 1, ShaderConst.ShadowFade.x);
 			}
 
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant

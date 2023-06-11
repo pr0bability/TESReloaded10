@@ -22,8 +22,13 @@ void __fastcall SetShadersHook(BSShader* This, UInt32 edx, UInt32 PassIndex) {
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)Pass->PixelShader;
 
 	if (VertexShader && PixelShader) {
-		VertexShader->SetupShader(TheRenderManager->renderState->GetVertexShader());
-		PixelShader->SetupShader(TheRenderManager->renderState->GetPixelShader());
+		try {
+			VertexShader->SetupShader(TheRenderManager->renderState->GetVertexShader());
+			PixelShader->SetupShader(TheRenderManager->renderState->GetPixelShader());
+		}
+		catch (std::exception e) {
+			Logger::Log("Error during shader setup for pass %s: %s", Pointers::Functions::GetPassDescription(PassIndex), e.what());
+		}
 
 		// trace pipeline active shaders
 		if (TheSettingManager->SettingsMain.Develop.DebugMode && !InterfaceManager->IsActive(Menu::MenuType::kMenuType_Console) && Global->OnKeyDown(0x17)) {
