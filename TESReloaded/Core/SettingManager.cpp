@@ -638,6 +638,7 @@ void SettingManager::LoadSettings() {
 	SettingsShadows.Interiors.ShadowCubeMapSize = GetSettingI("Shaders.ShadowsInteriors.Main", "ShadowCubeMapSize");
 	SettingsShadows.Interiors.Darkness = GetSettingF("Shaders.ShadowsInteriors.Main", "Darkness");
 	SettingsShadows.Interiors.LightRadiusMult = GetSettingF("Shaders.ShadowsInteriors.Main", "LightRadiusMult");
+	SettingsShadows.Interiors.DrawDistance = GetSettingF("Shaders.ShadowsInteriors.Main", "DrawDistance");
 
 	Config.FillSections(&List, "Shaders.ShadowsInteriors.ExcludedFormID");
 	SettingsShadows.Interiors.ExcludedForms.reserve(List.size());

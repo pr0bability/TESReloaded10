@@ -1107,11 +1107,13 @@ void ShaderManager::UpdateConstants() {
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
 			ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled;
 			ShaderConst.ShadowFade.z = TheSettingManager->SettingsShadows.Exteriors.UsePointShadows;
+			ShaderConst.ShadowFade.w = ShaderConst.ShadowMap.ShadowMapRadius.w; //furthest distance for point lights shadows
 		}
 		else {
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
 			ShaderConst.ShadowFade.y = Effects.ShadowsInteriors->Enabled;
 			ShaderConst.ShadowFade.z = 1;
+			ShaderConst.ShadowFade.w = TheSettingManager->SettingsShadows.Interiors.DrawDistance; //furthest distance for point lights shadows
 		}
 
 		// calculating sun amount for shaders (currently not used by any shaders)
