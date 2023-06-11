@@ -339,8 +339,13 @@ void ShadowManager::Render(NiGeometry* Geo) {
 			RenderState->SetFVF(GeoData->FVF, false);
 		else
 			RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-		CurrentVertex->SetCT();
-		CurrentPixel->SetCT();
+		try {
+			CurrentVertex->SetCT();
+			CurrentPixel->SetCT();
+		}
+		catch (std::exception e) {
+			Logger::Log("Error setting Constant Table during shadow map render: %s", e.what());
+		}
 		for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
 			if (GeoData->ArrayLengths)
 				PrimitiveCount = GeoData->ArrayLengths[i] - 2;
