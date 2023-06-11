@@ -81,8 +81,23 @@ float4 Shadow(VSOUT IN) : COLOR0
 	return Shadow;
 #endif
 
+	// quick average lum with 4 samples at corner pixels
+	float4 emissives = tex2D(TESR_RenderedBuffer, uv + float2(-0.5, -0.5) * TESR_ReciprocalResolution.xy);
+	emissives += tex2D(TESR_RenderedBuffer, uv + float2(-0.5, 0.5) * TESR_ReciprocalResolution.xy);
+	emissives += tex2D(TESR_RenderedBuffer, uv + float2(0.5, -0.5) * TESR_ReciprocalResolution.xy);
+	emissives += tex2D(TESR_RenderedBuffer, uv + float2(0.5, 0.5) * TESR_ReciprocalResolution.xy);
+	emissives /= 4;
+
+	float threshold = 0.9 * max(luma(TESR_SunAmbient), luma(TESR_SunColor)); // scaling the luma treshold with sun intensity // 2
+	float brightness = luma(color);
+	float bloomScale = 0.1; 
+
+	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
+	bloom *= brightness * 100;
+	bloom = 1 - saturate(bloom);
+
 	// tint shadowed areas with Sky color before blending
-	float4 colorShadow = luma(color.rgb) * Shadow * TESR_SkyColor;
+	float4 colorShadow = luma(color.rgb) * (Shadow * bloom) * TESR_SkyColor;
 	return lerp(colorShadow, color * Shadow, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 }
 
