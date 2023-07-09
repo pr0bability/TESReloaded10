@@ -179,7 +179,7 @@ void SettingManager::Configuration::FillSections(StringList* Sections, const cha
 
 	for (const auto& [key, value] : sectionsTable->as_table()) {
 		const char* name = key.c_str();
-		if (!memcmp(name, "Status", 6)) continue; // Ignore status subsections
+		//if (!memcmp(name, "Status", 6)) continue; // Ignore status subsections (TODO: breaks Menu, needs fixing)
 		if (!memcmp(name, "_", 1)) name = name + 1; //discard first "_"
 		Sections->push_back(name);
 	}
