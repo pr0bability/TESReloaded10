@@ -1,5 +1,6 @@
 #pragma once
-#include <../lib/tomlplusplus/include/toml++/toml.h>
+//#include <../lib/tomlplusplus/include/toml++/toml.h>
+#include <../lib/toml11/toml.hpp>
 
 
 struct SettingsMainStruct {
@@ -408,9 +409,10 @@ public:
 		void			FillSettings(SettingList* Nodes, const char* Section);
 		void			SetValue(ConfigNode* Node);
 		void			CreateWeatherSection(const char* WeatherName, TESWeather* Weather);
+		toml::value*	FindSection(toml::value* table, StringList* keys);
 
-		toml::table		TomlConfig;
-		toml::table		DefaultConfig;
+		toml::value		TomlConfig;
+		toml::value		DefaultConfig;
 		bool			configLoaded;
 		char*			Config;
 		char*			ConfigB;

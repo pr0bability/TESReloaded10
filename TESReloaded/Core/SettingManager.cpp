@@ -1,4 +1,5 @@
-#include <../lib/tomlplusplus/include/toml++/toml.h>
+//#include <../lib/tomlplusplus/include/toml++/toml.h>
+#include <../lib/toml11/toml.hpp>
 
 /*
 * The Config Class holds, accesses and maintains the current instance of config document and its keys.
@@ -18,9 +19,9 @@ void SettingManager::Configuration::Init() {
 	Logger::Log("Loading defaults from file %s", DefaultsFilename);
 
 	try {
-		DefaultConfig = toml::parse_file((std::string_view)DefaultsFilename);
+		DefaultConfig = toml::parse<toml::preserve_comments>((std::string_view)DefaultsFilename).as_table();
 
-		// log config file contents
+		//// log config file contents
 		//std::stringstream buffer;
 		//buffer << DefaultConfig << std::endl;
 		//Logger::Log("%s", buffer.str().c_str());
@@ -30,7 +31,7 @@ void SettingManager::Configuration::Init() {
 	}
 
 	try {
-		TomlConfig = toml::parse_file((std::string_view)TomlFilename);
+		TomlConfig = toml::parse<toml::discard_comments>((std::string_view)TomlFilename).as_table();
 
 		//// log config file contents
 		//std::stringstream buffer;
@@ -44,6 +45,7 @@ void SettingManager::Configuration::Init() {
 	}
 
 	configLoaded = true;
+	Logger::Log("Loading configs finished");
 }
 
 
@@ -52,56 +54,90 @@ void SettingManager::Configuration::Init() {
 */ 
 bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Section, const char* Key) {
 	
+	//Logger::Log("Config.FillNode %s %s", Section, Key);
 	std::string value; //at the moment settings are always stored as string. Should fix as it results in lots of conversions
 	char path[MAX_PATH] = "_";
 	strcat(path, Section);
-	strcat(path, ".");
-	strcat(path, Key);
+	
+	bool fromDefault = true;
 
-	auto setting = TomlConfig.at_path(path);
-	auto defaultSetting = DefaultConfig.at_path(path);
-	bool fromDefault = false;
+	StringList keys;
+	SplitString(path, ".", &keys);
+	toml::value* settingSection = FindSection(&TomlConfig, &keys);
 
 	//infer the type and convert the value to string, first from the settings, and if not found from the defaults.
-	if (setting.is_integer()) {
-		Node->Type = NodeType::Integer;
-		value = ToString<int>((int)**setting.as_integer());
+	if (settingSection) {
+
+		toml::table* settingTable = &settingSection->as_table();
+		
+		try {
+			toml::value setting = settingTable->at(Key);
+			fromDefault = false;
+
+			if (setting.is_integer()) {
+
+				Node->Type = NodeType::Integer;
+				value = toml::format(setting);
+			}
+			else if (setting.is_floating()) {
+
+				Node->Type = NodeType::Float;
+				value = toml::format(setting);
+			}
+			else if (setting.is_boolean()) {
+
+				Node->Type = NodeType::Boolean;
+				value = ToString<bool>((bool)setting.as_boolean());
+			}
+			else if (setting.is_string()) {
+
+				Node->Type = NodeType::String;
+				value = setting.as_string();
+			}
+			else {
+				fromDefault = true;
+			}
+		}
+		catch (std::out_of_range) {
+			fromDefault = true;
+		}
 	}
-	else if (setting.is_floating_point()) {
-		Node->Type = NodeType::Float;
-		value = ToString<float>((float)**setting.as_floating_point());
-	}
-	else if (setting.is_boolean()) {
-		Node->Type = NodeType::Boolean;
-		value = ToString<bool>((bool)**setting.as_boolean());
-	}
-	else if (setting.is_string()) {
-		Node->Type = NodeType::String;
-		value = *setting.value<std::string>();
-	}
-	else if (defaultSetting.is_integer()) {
-		Node->Type = NodeType::Integer;
-		value = ToString<int>((int)**defaultSetting.as_integer());
-		fromDefault = true;
-	}
-	else if (defaultSetting.is_floating_point()) {
-		Node->Type = NodeType::Float;
-		value = ToString<float>((float)**defaultSetting.as_floating_point());
-		fromDefault = true;
-	}
-	else if (defaultSetting.is_boolean()) {
-		Node->Type = NodeType::Boolean;
-		value = ToString<bool>((bool)**defaultSetting.as_boolean());
-		fromDefault = true;
-	}
-	else if (defaultSetting.is_string()) {
-		Node->Type = NodeType::String;
-		value = *defaultSetting.value<std::string>();
-		fromDefault = true;
-	}
-	else {
-		// Key was not included in defaults, ignore
-		return false;
+	
+	if (fromDefault){
+
+		SplitString(path, ".", &keys);
+		toml::value* defaultSettingSection = FindSection(&DefaultConfig, &keys);
+
+		if (!defaultSettingSection) return false;  // setting doesn't exist in defaults
+		toml::table* defaultTable = &defaultSettingSection->as_table();
+
+		try {
+			toml::value defaultSetting = defaultSettingSection->at(Key);
+			if (defaultSetting.is_integer()) {
+				Node->Type = NodeType::Integer;
+				value = toml::format(defaultSetting);
+			}
+			else if (defaultSetting.is_floating()) {
+				Node->Type = NodeType::Float;
+				value = ToString<float>((float)defaultSetting.as_floating());
+			}
+			else if (defaultSetting.is_boolean()) {
+				Node->Type = NodeType::Boolean;
+				value = ToString<bool>((bool)defaultSetting.as_boolean());
+			}
+			else if (defaultSetting.is_string()) {
+				Node->Type = NodeType::String;
+				value = defaultSetting.as_string();
+			}
+			else {
+				// Key was not included in defaults, ignore
+				return false;
+			}
+		}
+		catch (std::out_of_range) {
+			//Logger::Log("Key %s not found in default section %s", Key, path);
+			return false;
+		}
 	}
 
 	// populate node fields
@@ -110,7 +146,7 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 	strcpy(Node->Value, value.c_str());
 	Node->Reboot = 0;
 
-	//Logger::Log("FillNode %s value: %s (from defaults? %i)", path, value.c_str(), fromDefault);
+	//Logger::Log("FillNode %s.%s value: %s (from defaults? %i)", path, Key, value.c_str(), fromDefault);
 
 	// write the value in case it was obtained from defaults
 	if (fromDefault) SetValue(Node);
@@ -124,25 +160,43 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 void SettingManager::Configuration::FillSections(StringList* Sections, const char* ParentSection) {
 
 	char path[256] = "_";
-	toml::v3::table* sectionsTable = NULL;
+	toml::value* sectionsTable = NULL;
 
 	if (ParentSection == NULL) {
 		sectionsTable = &DefaultConfig;
 	}
 	else{
 		strcat(path, ParentSection); // add leading "_" TODO: Remove reliance on this leading "_"
-		auto section = DefaultConfig.at_path(path);
-		if (!section.is_table()) return; // table not found
+		StringList keys;
+		SplitString(path, ".", &keys);
+		sectionsTable = FindSection(&DefaultConfig, &keys);
 
-		sectionsTable = DefaultConfig.at_path(path).as_table();
+		if (!sectionsTable) return; // table not found
 	}
 
 	// iterate through the found keys in the table and adds the results to the list
 	Sections->clear();
-	for (auto& [key, value] : *sectionsTable) {
-		const char* name = key.data();
+
+	for (const auto& [key, value] : sectionsTable->as_table()) {
+		const char* name = key.c_str();
+		if (!memcmp(name, "Status", 6)) continue; // Ignore status subsections
 		if (!memcmp(name, "_", 1)) name = name + 1; //discard first "_"
 		Sections->push_back(name);
+	}
+
+}
+
+toml::value* SettingManager::Configuration::FindSection(toml::value* table, StringList* keys) {
+
+	try {
+		toml::value* sub = &table->at(keys->front().c_str());
+		if (keys->size() == 1) return sub;
+
+		keys->erase(keys->begin()); // remove first element
+		return FindSection(sub, std::move(keys));
+	}
+	catch (std::out_of_range e) {
+		return NULL;
 	}
 }
 
@@ -154,11 +208,13 @@ void SettingManager::Configuration::FillSettings(SettingList* Nodes, const char*
 	char path[256] = "_";
 	strcat(path, Section);
 
-	auto settingsTable = DefaultConfig.at_path(path);
-	if (!settingsTable.is_table()) return; // table not found
+	StringList keys;
+	SplitString(path, ".", &keys);
+	toml::value* settingsTable = FindSection(&DefaultConfig, &keys);
+	if (!settingsTable) return; // table not found
 
 	Nodes->clear();
-	for (auto& [key, value] : *settingsTable.as_table()) {
+	for (const auto& [key, value] : settingsTable->as_table()) {
 		ConfigNode Node;
 		FillNode(&Node, Section, key.data());
 		Nodes->push_back(Node);
@@ -172,40 +228,40 @@ void SettingManager::Configuration::SetValue(ConfigNode* Node) {
 	char path[256] = "_";
 	strcat(path, Node->Section);
 
-	auto section = TomlConfig.at_path(path);
-	auto defaultSection = DefaultConfig.at_path(path);
+	StringList keys;
+	SplitString(path, ".", &keys);
+	toml::value* section = FindSection(&TomlConfig, &keys);
+	SplitString(path, ".", &keys);
+	toml::value* defaultSection = FindSection(&DefaultConfig, &keys);
 
-	if (!defaultSection.is_table()) return; // setting not in defaults, ignore
+	if (!defaultSection) return; // setting not in defaults, ignore
 
 	//setting values that don't exist in the config require building the section first.
-	if (!section.is_table()) {
+	if (!section) {
 		// create the table
-		StringList tables;
-		SplitString(path, ".", &tables);
-		auto table = &TomlConfig;
-		for (auto address : tables) {
+		toml::value* table = &TomlConfig;
+		for (auto address : keys) {
 			// create table if not found
-			if (!table->contains(address)) table->insert_or_assign(address, toml::v3::table());
-			table = table->at_path(address).as_table();
+			Logger::Log("table section %s not found, create", address);
+			if (!table->contains(address)) (*table)[address] = toml::table();
+			table = &table->at(address);
 		}
-		section = TomlConfig.at_path(path);
-	};
+		section = table;
+	}
 
 	// setting value based on type
-	std::pair<toml::v3::table::iterator, bool> result;
 	if (Node->Type == NodeType::Integer) {
 		int value = atoi(Node->Value);
-		result = section.as_table()->insert_or_assign(Node->Key, value);
-	}else if (Node->Type == NodeType::Float) {
+		(*section)[Node->Key] = value;
+	} else if (Node->Type == NodeType::Float) {
 		float value = atof(Node->Value);
-		result = section.as_table()->insert_or_assign(Node->Key, value);
-	}else if (Node->Type == NodeType::String) {
+		(*section)[Node->Key] = value;
+	} else if (Node->Type == NodeType::String) {
 		char* value = Node->Value;
-		result = section.as_table()->insert_or_assign(Node->Key, value);
-	}
-	else if (Node->Type == NodeType::Boolean) {
+		(*section)[Node->Key] = value;
+	} else if (Node->Type == NodeType::Boolean) {
 		bool value = (bool)atoi(Node->Value);
-		result = section.as_table()->insert_or_assign(Node->Key, value);
+		(*section)[Node->Key] = value;
 	}
 }
 
@@ -448,6 +504,7 @@ void SettingManager::LoadSettings() {
 	FillFromString(GetSettingS("Main.Menu.Style", "TextShadowColorEditing", Value), ",", SettingsMain.Menu.TextShadowColorEditing);
 	FillFromString(GetSettingS("Main.Menu.Style", "TextColorEnabled", Value), ",", SettingsMain.Menu.TextColorEnabled);
 	FillFromString(GetSettingS("Main.Menu.Style", "TextShadowColorEnabled", Value), ",", SettingsMain.Menu.TextShadowColorEnabled);
+
 	SettingsMain.Menu.PositionX = GetSettingI("Main.Menu.Style", "PositionX");
 	SettingsMain.Menu.PositionY = GetSettingI("Main.Menu.Style", "PositionY");
 	SettingsMain.Menu.TitleColumnSize = GetSettingI("Main.Menu.Style", "TitleColumnSize");
@@ -738,7 +795,6 @@ void SettingManager::SetSetting(const char* Section, const char* Key, float Valu
 
 	Configuration::ConfigNode Node;
 	CreateNode(&Node, Section, Key, Value, false);
-
 	SetSetting(&Node);
 }
 
@@ -1110,7 +1166,13 @@ bool SettingManager::GetMenuShaderEnabled(const char* Name) {
 	// handle enabling shaders that don't appear in settings (always on)
 	char path[256] = "_";
 	strcat(path, settingString);
-	if (!Config.TomlConfig.at_path(path).is_table() && !Config.DefaultConfig.at_path(path).is_table()) {
+	StringList keys;
+	SplitString(path, ".", &keys);
+
+	auto section = Config.FindSection(&Config.TomlConfig, &keys);
+	auto defaultSection = Config.FindSection(&Config.DefaultConfig, &keys);
+
+	if (!section && !defaultSection) {
 		Logger::Log("No Shader setting for %s, defaults to true", settingString);
 		return true;
 	}
@@ -1223,15 +1285,14 @@ void SettingManager::SplitString(const char* String, const char* Delimiter, Stri
 
 	char StringB[256];
 	char* Finder = NULL;
-
 	strcpy(StringB, String);
+
 	Finder = strtok(StringB, Delimiter);
 	Values->clear();
 	while (Finder != NULL) {
 		Values->push_back(Finder);
 		Finder = strtok(NULL, Delimiter);
 	}
-
 }
 
 template<typename T>
