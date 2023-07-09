@@ -155,7 +155,7 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	// reduce banding by dithering areas impacted by the rays
 	float maxDitherLuma = 0.4;
-	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)) < maxDitherLuma); // only dither when there is some ray & when average luma is low
+	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
 	uv /= TESR_ReciprocalResolution.xy;
 	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 

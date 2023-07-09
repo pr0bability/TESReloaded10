@@ -108,11 +108,12 @@ float4 WetMap (VSOUT IN ) : COLOR0
 
 	float radius = 0.05 * TESR_WetWorldData.z;// radius will increase with rain status
 	float center = tex2D(TESR_OrthoMapBuffer, IN.UVCoord).r - bias;
-	float left = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + normalize(float2(-1, -0.3)) * radius).r;
-	float right = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + normalize(float2(1, -0.3)) * radius).r;
-	float top = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(0, 1) * radius).r;
+	float left = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(0, -1) * radius).r;
+	float right = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(0, 1) * radius).r;
+	float top = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(-1, 0) * radius).r;
+	float bottom = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(1, 0) * radius).r;
 
-	float crease = (center > left && center > right && center > top);
+	float crease = (center > left && center > right && center > top && center > bottom);
 
 	return float4(crease, center, 0, 1);
 }
@@ -186,7 +187,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord);
 
 	// sample and strenghten the shadow map
-	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord) / luma(TESR_SunAmbient), 5));
+	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord).r / luma(TESR_SunAmbient), 5));
 
 	// calculate puddle color
 	float4 puddleColor = rippleColor * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
