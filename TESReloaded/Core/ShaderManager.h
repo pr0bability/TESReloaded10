@@ -241,7 +241,6 @@ public:
 	static bool ShouldCompileShader(const char* fileBin, const char* fileHlsl, ShaderCompileType CompileStatus);
 
 	ShaderValue*			FloatShaderValues;
-	std::unordered_map<LPCSTR, D3DXVECTOR4*>	tableShaderStringsToConstants;
 	UInt32					FloatShaderValuesCount;
 	ShaderValue*			TextureShaderValues;
 	UInt32					TextureShaderValuesCount;
@@ -395,6 +394,7 @@ public:
 	EffectsList				EffectsNames;
 	ShaderConstants			ShaderConst;
 	CustomConstants			CustomConst;
+	std::map<const char*, D3DXVECTOR4*>	ConstantsTable;
 	IDirect3DVertexBuffer9*	FrameVertex;
 	NiD3DVertexShader*		WaterVertexShaders[51];
 	NiD3DPixelShader*		WaterPixelShaders[51];
