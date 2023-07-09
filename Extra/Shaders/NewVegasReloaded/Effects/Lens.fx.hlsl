@@ -86,49 +86,49 @@ technique
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(0.5);
+		PixelShader = compile ps_3_0 Scale(TESR_RenderedBuffer, 0.5);
 	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(0.5);
+		PixelShader = compile ps_3_0 Scale(TESR_RenderedBuffer, 0.5);
 	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(1, 0), 2, 0.125);
+		PixelShader = compile ps_3_0 Blur(TESR_RenderedBuffer, OffsetMaskH, 2, 0.125);
 	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(0, 1), 2, 0.125);
-	}
-
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(1, 0), 1, 0.125);
-	}
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Blur(float2(0, 1), 1, 0.125);
+		PixelShader = compile ps_3_0 Blur(TESR_RenderedBuffer, OffsetMaskV, 2, 0.125);
 	}
 
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(2);
+		PixelShader = compile ps_3_0 Blur(TESR_RenderedBuffer, OffsetMaskH, 1, 0.125);
 	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(2);
+		PixelShader = compile ps_3_0 Blur(TESR_RenderedBuffer, OffsetMaskV, 1, 0.125);
+	}
+
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(TESR_RenderedBuffer, 2);
 	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Scale(2);
+		PixelShader = compile ps_3_0 Scale(TESR_RenderedBuffer, 2);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(TESR_RenderedBuffer, 2);
 	}
 
     pass
