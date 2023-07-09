@@ -58,7 +58,7 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer9, world_pos, TESR_ShadowLightPosition9, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer10, world_pos, TESR_ShadowLightPosition10, normal);
 	// Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer11, world_pos, TESR_ShadowLightPosition11, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_ShadowLightPosition11, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_ShadowLightPosition11, normal);
 
 
 	Shadow = saturate(Shadow);

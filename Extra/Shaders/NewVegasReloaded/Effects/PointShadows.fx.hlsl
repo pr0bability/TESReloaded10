@@ -70,18 +70,18 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer3, world_pos, TESR_ShadowLightPosition3, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer4, world_pos, TESR_ShadowLightPosition4, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer5, world_pos, TESR_ShadowLightPosition5, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition0, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition1, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition2, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition3, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition4, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition5, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition6, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition7, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition8, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition9, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition10, normal);
-	Shadow += GetPointLightAtten(world_pos, TESR_LightPosition11, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition0, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition1, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition2, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition3, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition4, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition5, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition6, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition7, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition8, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition9, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition10, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition11, normal);
 
 	Shadow = saturate(Shadow);
 	
