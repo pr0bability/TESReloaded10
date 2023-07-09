@@ -2,14 +2,15 @@
 
 float4 TESR_MotionBlurData;
 float4 TESR_DepthOfFieldData;
+float4 TESR_FrameTime; // x: frame time (in seconds), y: fps
 float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-static const float decreaseRate = -TESR_ExposureData.z; // max value for adaptation speed towards darker screens
-static const float increaseRate = TESR_ExposureData.w; // max value for adaptation speed towards brighter screens
+static const float decreaseRate = -TESR_ExposureData.z * 0.001; // max value for adaptation speed towards darker screens
+static const float increaseRate = TESR_ExposureData.w * 0.001; // max value for adaptation speed towards brighter screens
 static const float2 center = float2(0.5, 0.5); // this shader is to be applied on a 1x1 texture so we sample at the center
 
 #include "Includes/Helpers.hlsl"
@@ -53,6 +54,10 @@ static float2 taps[12] =
 
 // returns a value from start to end within a min and max step from start
 float stepTo(float startValue, float endValue, float minStep, float maxStep){
+	// make sure min is negative and max is positive
+	minStep = abs(minStep) * -1;
+	maxStep = abs(maxStep);
+
 	float diff = clamp(endValue - startValue, minStep, maxStep);
 	return startValue + diff;
 }
@@ -78,7 +83,7 @@ float getFocalDistance() {
 	depth = saturate(depth/HyperFocalDistance); // remaps to [0-1] to save as color value in the texture
 
 	float step = pow(max(oldFocus, depth), 0.1); // because of the nature of depth, we scale the speed with distance
-	return stepTo(oldFocus, depth, -0.3 * step, 0.1 * step);
+	return stepTo(oldFocus, depth, 3 * step * TESR_FrameTime.x, 1 * step * TESR_FrameTime.x);
 }
 
 float4 AvgLuma(VSOUT IN) : COLOR0
@@ -97,7 +102,7 @@ float4 AvgLuma(VSOUT IN) : COLOR0
 	float newLuma = luma(color);
 
 	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
-	return float4(newLuma, stepTo(oldLuma, newLuma, -0.01, 0.03), getFocalDistance(), 1);
+	return float4(newLuma, stepTo(oldLuma, newLuma, decreaseRate/TESR_FrameTime.x, increaseRate/TESR_FrameTime.x), getFocalDistance(), 1);
 }
  
 technique

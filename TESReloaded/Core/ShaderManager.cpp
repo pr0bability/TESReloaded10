@@ -82,7 +82,6 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 	for (auto const& imap : TheShaderManager->ConstantsTable) {
 		if (!strcmp(imap.first, Name)) {
 			FloatShaderValues[Index].Value = TheShaderManager->ConstantsTable.at(imap.first);
-			Logger::Log("key found: %s is equal to %s ?%i", imap.first, Name, !strcmp(imap.first, Name));
 			return;
 		}
 	}
@@ -739,7 +738,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
 	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowFade;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
-	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.FrameTime;
+	TheShaderManager->ConstantsTable["TESR_FrameTime"] = &TheShaderManager->ShaderConst.FrameTime;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
 	TheShaderManager->ConstantsTable["TESR_WaterVolume"] = &TheShaderManager->ShaderConst.Water.waterVolume;
@@ -928,6 +927,9 @@ void ShaderManager::UpdateConstants() {
 
 	ShaderConst.FrameTime.x = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 	ShaderConst.FrameTime.y = 1 / ShaderConst.FrameTime.x;
+	//Logger::Log("frametime: %f, fps %f", ShaderConst.FrameTime.x, ShaderConst.FrameTime.y);
+	//Logger::Log("exposure data z: %f, w %f", ShaderConst.Exposure.Data.z, ShaderConst.Exposure.Data.w);
+
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
 	ShaderConst.GameTime.z = (float)TheFrameRateManager->Time;
@@ -1597,8 +1599,8 @@ void ShaderManager::UpdateConstants() {
 			// interpolate between day and night settings over day/night transitions
 			ShaderConst.Exposure.Data.x = lerp(TheSettingManager->GetSettingF(night, "MinBrightness"), TheSettingManager->GetSettingF(day, "MinBrightness"), isDayTime);
 			ShaderConst.Exposure.Data.y = lerp(TheSettingManager->GetSettingF(night, "MaxBrightness"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
-			ShaderConst.Exposure.Data.z = lerp(TheSettingManager->GetSettingF(night, "DarkAdaptSpeed"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
-			ShaderConst.Exposure.Data.w = lerp(TheSettingManager->GetSettingF(night, "LightAdaptSpeed"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
+			ShaderConst.Exposure.Data.z = lerp(TheSettingManager->GetSettingF(night, "DarkAdaptSpeed"), TheSettingManager->GetSettingF(day, "DarkAdaptSpeed"), isDayTime);
+			ShaderConst.Exposure.Data.w = lerp(TheSettingManager->GetSettingF(night, "LightAdaptSpeed"), TheSettingManager->GetSettingF(day, "LightAdaptSpeed"), isDayTime);
 		}
 
 		ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");

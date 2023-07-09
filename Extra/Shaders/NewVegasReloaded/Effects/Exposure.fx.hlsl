@@ -2,11 +2,15 @@
 #define debug 0
 
 float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
+float4 TESR_FrameTime; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 #include "Includes/Helpers.hlsl"
+
+static const float minBrightness = TESR_ExposureData.x;
+static const float maxBrightness = TESR_ExposureData.y;
 
 struct VSOUT
 {
@@ -34,8 +38,8 @@ float4 Exposure(VSOUT IN) : COLOR0
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	float averageLuma = tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).g;
 
-	float negativeLumaDiff = invlerps(TESR_ExposureData.x, 0, averageLuma) * TESR_ExposureData.x;
-	float additiveLumaDiff = invlerps(TESR_ExposureData.y, 1, averageLuma) * (1 - TESR_ExposureData.y) * 2;
+	float negativeLumaDiff = invlerps(minBrightness, 0, averageLuma) * minBrightness;
+	float additiveLumaDiff = invlerps(maxBrightness, 1, averageLuma) * (1 - maxBrightness) * 2;
 	float lumaDiff = additiveLumaDiff - negativeLumaDiff;
 
 #if debug
