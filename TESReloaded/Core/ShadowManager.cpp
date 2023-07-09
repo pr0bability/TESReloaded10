@@ -343,7 +343,7 @@ void ShadowManager::Render(NiGeometry* Geo) {
 			CurrentVertex->SetCT();
 			CurrentPixel->SetCT();
 		}
-		catch (std::exception e) {
+		catch (const std::exception& e) {
 			Logger::Log("Error setting Constant Table during shadow map render: %s", e.what());
 		}
 		for (UInt32 i = 0; i < GeoData->NumArrays; i++) {

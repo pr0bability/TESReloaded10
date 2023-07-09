@@ -847,7 +847,7 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 		}
 		Effect->End();
 	}
-	catch (std::exception e) {
+	catch (const std::exception& e) {
 		Logger::Log("Error during rendering of effect %s: %s", Path->c_str(), e.what());
 	}
 }
@@ -2076,7 +2076,7 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		bool setting = effect->SwitchEffect();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
 	}
-	catch (std::exception e){
+	catch (const std::exception& e){
 		// shaders
 		Logger::Log("Toggling Shader %s", Name);
 		bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
