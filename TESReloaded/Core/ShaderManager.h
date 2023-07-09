@@ -241,6 +241,7 @@ public:
 	static bool ShouldCompileShader(const char* fileBin, const char* fileHlsl, ShaderCompileType CompileStatus);
 
 	ShaderValue*			FloatShaderValues;
+	std::unordered_map<LPCSTR, D3DXVECTOR4*>	tableShaderStringsToConstants;
 	UInt32					FloatShaderValuesCount;
 	ShaderValue*			TextureShaderValues;
 	UInt32					TextureShaderValuesCount;
