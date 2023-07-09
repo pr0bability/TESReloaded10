@@ -739,6 +739,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
 	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowFade;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
+	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.FrameTime;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
 	TheShaderManager->ConstantsTable["TESR_WaterVolume"] = &TheShaderManager->ShaderConst.Water.waterVolume;
@@ -925,6 +926,8 @@ void ShaderManager::UpdateConstants() {
 	float SunsetStart = WorldSky->GetSunsetBegin();
 	float SunsetEnd = WorldSky->GetSunsetEnd();
 
+	ShaderConst.FrameTime.x = TheFrameRateManager->ElapsedTime; // frameTime in seconds
+	ShaderConst.FrameTime.y = 1 / ShaderConst.FrameTime.x;
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
 	ShaderConst.GameTime.z = (float)TheFrameRateManager->Time;
