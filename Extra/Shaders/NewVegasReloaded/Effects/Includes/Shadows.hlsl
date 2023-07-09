@@ -27,6 +27,7 @@ float GetPointLightAtten(float3 LightDir, float Distance, float4 normal) {
 }
 
 
+// returns a point light contribution using a shadow map
 float GetPointLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, float4 LightPos, float4 normal) {
 	if (!LightPos.w) return 0; // w is light radius.
 
@@ -37,6 +38,21 @@ float GetPointLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, floa
 
 	float LightAmount = GetPointLightAmountValue(ShadowCubeMapBuffer, LightUV, Distance) * GetPointLightAtten(LightDir, Distance, normal);
 	return saturate(LightAmount);
+}
+
+
+// get the normalized distance between the light and a point as a ratio of the light radius
+float4 GetPointLightDistance(float4 WorldPos, float4 LightPos){
+	float3 LightDir = LightPos.xyz - WorldPos.xyz;
+	float Distance = length(LightDir) / LightPos.w; // normalize distance over light range
+	return float4(LightDir, Distance);
+}
+
+
+// returns a point light contribution with no shadow map sampling
+float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal){
+	float4 light = GetPointLightDistance(worldPos, LightPos);
+	return GetPointLightAtten(light.xyz, light.w, normal);
 }
 
 float ChebyshevUpperBound(float2 moments, float distance)
