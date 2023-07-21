@@ -1,5 +1,6 @@
 #pragma once
 //#include <../lib/tomlplusplus/include/toml++/toml.h>
+#define TOML11_PRESERVE_COMMENTS_BY_DEFAULT
 #include <../lib/toml11/toml.hpp>
 
 
@@ -395,6 +396,7 @@ public:
 			char		Section[40];
 			char		Key[40];
 			char		Value[80];
+			std::string	Description;
 			bool		Reboot;
 			UInt32		Type;
 			
