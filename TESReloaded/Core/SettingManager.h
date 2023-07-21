@@ -426,7 +426,7 @@ public:
 	float					GetSettingF(const char* Section, const char* Key);
 	char*					GetSettingS(const char* Section, const char* Key, char* Value);
 	void					SetSetting(const char* Section, const char* Key, float Value);
-	void					SetSetting(const char* Section, const char* Key, UINT8 Value);
+	void					SetSetting(const char* Section, const char* Key, int Value);
 	void					SetSetting(const char* Section, const char* Key, bool Value);
 	void					SetSettingS(const char* Section, const char* Key, char* Value);
 	void					SetSetting(Configuration::ConfigNode* Node);
@@ -436,7 +436,7 @@ public:
 	void					FillMenuSections(StringList* Sections, const char* ParentSection);
 	void					FillMenuSettings(Configuration::SettingList* Settings, const char* Section);
 	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, float Value, bool Reboot);
-	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, UINT8 Value, bool Reboot);
+	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, int Value, bool Reboot);
 	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, bool Value, bool Reboot);
 	void					CreateNodeS(Configuration::ConfigNode* Node, const char* Section, const char* Key, const char* Value, bool Reboot);
 	bool					GetMenuShaderEnabled(const char* Name);
