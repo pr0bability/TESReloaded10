@@ -35,7 +35,7 @@ void SettingManager::Configuration::Init() {
 
 		//// log config file contents
 		//std::stringstream buffer;
-		//buffer << TomlConfig << std::endl;
+		//buffer << toml::format(TomlConfig, /*width = */ 0, /*prec = */ 4) << std::endl;
 		//Logger::Log("%s", buffer.str().c_str());
 
 	}
@@ -64,80 +64,76 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 	StringList keys;
 	SplitString(path, ".", &keys);
 	toml::value* settingSection = FindSection(&TomlConfig, &keys);
+	SplitString(path, ".", &keys);
+	toml::value* defaultSettingSection = FindSection(&DefaultConfig, &keys);
 
-	//infer the type and convert the value to string, first from the settings, and if not found from the defaults.
-	if (settingSection) {
+	if (!defaultSettingSection) return false;  // setting doesn't exist in defaults
 
-		toml::table* settingTable = &settingSection->as_table();
-		
+	try {
+		toml::value defaultSetting = defaultSettingSection->at(Key);
+		toml::value setting = defaultSetting;
+
 		try {
-			toml::value setting = settingTable->at(Key);
-			fromDefault = false;
-
-			if (setting.is_integer()) {
-
-				Node->Type = NodeType::Integer;
-				value = toml::format(setting);
-			}
-			else if (setting.is_floating()) {
-
-				Node->Type = NodeType::Float;
-				value = toml::format(setting);
-			}
-			else if (setting.is_boolean()) {
-
-				Node->Type = NodeType::Boolean;
-				value = ToString<bool>((bool)setting.as_boolean());
-			}
-			else if (setting.is_string()) {
-
-				Node->Type = NodeType::String;
-				value = setting.as_string();
+			// attempt to get the setting from the user config
+			if (settingSection) {
+				toml::table* section = &settingSection->as_table();
+				setting = section->at(Key);
 			}
 			else {
 				fromDefault = true;
 			}
 		}
-		catch (std::out_of_range) {
+		catch (const std::exception& e) {
+			Logger::Log("Setting %s.%s not found in user config, getting from defaults (%s)", Section, Key, e.what());
 			fromDefault = true;
 		}
-	}
-	
-	if (fromDefault){
 
-		SplitString(path, ".", &keys);
-		toml::value* defaultSettingSection = FindSection(&DefaultConfig, &keys);
 
-		if (!defaultSettingSection) return false;  // setting doesn't exist in defaults
-		toml::table* defaultTable = &defaultSettingSection->as_table();
+		// base type on defaults
+		if (defaultSetting.is_integer()) {
+			if (!setting.is_integer()) {
+				Logger::Log("Setting %s.%s has wrong type in user config: Should be an int.", Section, Key);
+				setting = defaultSetting;
+			}
 
-		try {
-			toml::value defaultSetting = defaultSettingSection->at(Key);
-			if (defaultSetting.is_integer()) {
-				Node->Type = NodeType::Integer;
-				value = toml::format(defaultSetting);
-			}
-			else if (defaultSetting.is_floating()) {
-				Node->Type = NodeType::Float;
-				value = ToString<float>((float)defaultSetting.as_floating());
-			}
-			else if (defaultSetting.is_boolean()) {
-				Node->Type = NodeType::Boolean;
-				value = ToString<bool>((bool)defaultSetting.as_boolean());
-			}
-			else if (defaultSetting.is_string()) {
-				Node->Type = NodeType::String;
-				value = defaultSetting.as_string();
-			}
-			else {
-				// Key was not included in defaults, ignore
-				return false;
-			}
+			Node->Type = NodeType::Integer;
+			value = toml::format(setting);
 		}
-		catch (std::out_of_range) {
-			//Logger::Log("Key %s not found in default section %s", Key, path);
+		else if (defaultSetting.is_floating()) {
+			if (!setting.is_floating()) {
+				Logger::Log("Setting %s.%s has wrong type in user config: Should be a float.", Section, Key);
+				setting = defaultSetting;
+			}
+
+			Node->Type = NodeType::Float;
+			value = toml::format(setting, 0, 5);
+		}
+		else if (defaultSetting.is_boolean()) {
+			if (!setting.is_boolean()) {
+				Logger::Log("Setting %s.%s has wrong type in user config: Should be a bool.", Section, Key);
+				setting = defaultSetting;
+			}
+
+			Node->Type = NodeType::Boolean;
+			value = ToString<bool>((bool)setting.as_boolean());
+		}
+		else if (defaultSetting.is_string()) {
+			if (!setting.is_string()) {
+				Logger::Log("Setting %s.%s has wrong type in user config: Should be a string.", Section, Key);
+				setting = defaultSetting;
+			}
+
+			Node->Type = NodeType::String;
+			value = setting.as_string();
+		}
+		else {
+			// Key was not included in defaults, ignore
 			return false;
 		}
+	}
+	catch (std::out_of_range) {
+		//Logger::Log("Key %s not found in default section %s", Key, path);
+		return false;
 	}
 
 	// populate node fields
@@ -777,7 +773,7 @@ char* SettingManager::GetSettingS(const char* Section, const char* Key, char* Va
 	return Value;
 }
 
-void SettingManager::SetSetting(const char* Section, const char* Key, UINT8 Value) {
+void SettingManager::SetSetting(const char* Section, const char* Key, int Value) {
 
 	Configuration::ConfigNode Node;
 	CreateNode(&Node, Section, Key, Value, false);
@@ -825,7 +821,7 @@ void SettingManager::Increment(const char* Section, const char* Key) {
 	float value = 0;
 	switch (Node.Type) {
 	case Configuration::NodeType::Integer:
-		SetSetting(Section, Key, (UINT8)(GetSettingI(Section, Key) + 1));
+		SetSetting(Section, Key, GetSettingI(Section, Key) + 1);
 		break;
 	case Configuration::NodeType::Float:
 		// handle the float precision issue by clamping precision and treating the operation as int
@@ -848,7 +844,7 @@ void SettingManager::Decrement(const char* Section, const char* Key) {
 	float value = 0;
 	switch (Node.Type) {
 	case Configuration::NodeType::Integer:
-		SetSetting(Section, Key, (UINT8)(GetSettingI(Section, Key) - 1));
+		SetSetting(Section, Key, GetSettingI(Section, Key) - 1);
 		break;
 	case Configuration::NodeType::Float:
 		// handle the float precision issue by clamping precision and treating the operation as int
@@ -1127,7 +1123,7 @@ void SettingManager::CreateNode(Configuration::ConfigNode* Node, const char* Sec
 /*
 * Creates a Config Node to hold the info for a given setting, based on section, key, type and value.
 */
-void SettingManager::CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, UINT8 Value, bool Reboot) {
+void SettingManager::CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, int Value, bool Reboot) {
 	strcpy(Node->Section, Section);
 	strcpy(Node->Key, Key);
 	strcpy(Node->Value, ToString<int>(Value).c_str()); // convert to string to store value (TODO: store values in native format)
