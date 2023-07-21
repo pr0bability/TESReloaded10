@@ -738,7 +738,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
 	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowFade;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
-	TheShaderManager->ConstantsTable["TESR_FrameTime"] = &TheShaderManager->ShaderConst.FrameTime;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
 	TheShaderManager->ConstantsTable["TESR_WaterVolume"] = &TheShaderManager->ShaderConst.Water.waterVolume;
@@ -925,14 +924,10 @@ void ShaderManager::UpdateConstants() {
 	float SunsetStart = WorldSky->GetSunsetBegin();
 	float SunsetEnd = WorldSky->GetSunsetEnd();
 
-	ShaderConst.FrameTime.x = TheFrameRateManager->ElapsedTime; // frameTime in seconds
-	ShaderConst.FrameTime.y = 1 / ShaderConst.FrameTime.x;
-	//Logger::Log("frametime: %f, fps %f", ShaderConst.FrameTime.x, ShaderConst.FrameTime.y);
-	//Logger::Log("exposure data z: %f, w %f", ShaderConst.Exposure.Data.z, ShaderConst.Exposure.Data.w);
-
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
 	ShaderConst.GameTime.z = (float)TheFrameRateManager->Time;
+	ShaderConst.GameTime.w = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 
 	// get water height based on player position
 	ShaderConst.Water.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);

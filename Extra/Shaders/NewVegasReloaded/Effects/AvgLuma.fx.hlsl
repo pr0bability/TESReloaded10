@@ -2,7 +2,7 @@
 
 float4 TESR_MotionBlurData;
 float4 TESR_DepthOfFieldData;
-float4 TESR_FrameTime; // x: frame time (in seconds), y: fps
+float4 TESR_GameTime;
 float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -83,7 +83,7 @@ float getFocalDistance() {
 	depth = saturate(depth/HyperFocalDistance); // remaps to [0-1] to save as color value in the texture
 
 	float step = pow(max(oldFocus, depth), 0.1); // because of the nature of depth, we scale the speed with distance
-	return stepTo(oldFocus, depth, 3 * step * TESR_FrameTime.x, 1 * step * TESR_FrameTime.x);
+	return stepTo(oldFocus, depth, 3 * step * TESR_GameTime.w, 1 * step * TESR_GameTime.w);
 }
 
 float4 AvgLuma(VSOUT IN) : COLOR0
@@ -102,7 +102,7 @@ float4 AvgLuma(VSOUT IN) : COLOR0
 	float newLuma = luma(color);
 
 	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
-	return float4(newLuma, stepTo(oldLuma, newLuma, decreaseRate/TESR_FrameTime.x, increaseRate/TESR_FrameTime.x), getFocalDistance(), 1);
+	return float4(newLuma, stepTo(oldLuma, newLuma, decreaseRate/TESR_GameTime.w, increaseRate/TESR_GameTime.w), getFocalDistance(), 1);
 }
  
 technique
