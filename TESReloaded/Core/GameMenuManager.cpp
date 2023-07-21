@@ -234,7 +234,7 @@ void GameMenuManager::Render() {
 					// if in shader mode, add indication wether each shader is activated
 					if (!memcmp(SelectedNode.Section, "Shaders", 7)) {
 						if (SelectedRow[1] == Rows[1] && SelectedColumn >= 1)
-							FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_CALCRECT, TextColorSelected);
+							FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_CALCRECT, TextColorSelected);
 						else
 							FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_CALCRECT, TextColorNormal);
 						Rect.left = Rect.right + 1;
