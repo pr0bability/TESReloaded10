@@ -1,4 +1,5 @@
 //#include <../lib/tomlplusplus/include/toml++/toml.h>
+#define TOML11_PRESERVE_COMMENTS_BY_DEFAULT
 #include <../lib/toml11/toml.hpp>
 
 /*
@@ -31,7 +32,7 @@ void SettingManager::Configuration::Init() {
 	}
 
 	try {
-		TomlConfig = toml::parse<toml::discard_comments>((std::string_view)TomlFilename).as_table();
+		TomlConfig = toml::parse<toml::preserve_comments>((std::string_view)TomlFilename).as_table();
 
 		//// log config file contents
 		//std::stringstream buffer;
@@ -76,8 +77,7 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 		try {
 			// attempt to get the setting from the user config
 			if (settingSection) {
-				toml::table* section = &settingSection->as_table();
-				setting = section->at(Key);
+				setting = settingSection->at(Key);
 			}
 			else {
 				fromDefault = true;
@@ -88,6 +88,13 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 			fromDefault = true;
 		}
 
+		try {
+			Node->Description = defaultSetting.comments().at(0);
+			Logger::Log("%s.%s Comment? %s", Section, Key, Node->Description.c_str());
+		}
+		catch (const std::exception& e) {
+			Node->Description = "";
+		}
 
 		// base type on defaults
 		if (defaultSetting.is_integer()) {
