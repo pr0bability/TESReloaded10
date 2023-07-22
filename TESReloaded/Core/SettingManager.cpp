@@ -89,8 +89,9 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 		}
 
 		try {
+			// attempt to get the first comment of the value
 			Node->Description = defaultSetting.comments().at(0);
-			Logger::Log("%s.%s Comment? %s", Section, Key, Node->Description.c_str());
+			//Logger::Log("%s.%s Comment? %s", Section, Key, Node->Description.c_str());
 		}
 		catch (const std::exception& e) {
 			Node->Description = "";
