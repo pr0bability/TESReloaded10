@@ -1536,7 +1536,6 @@ void ShaderManager::UpdateConstants() {
 			}
 			ShaderConst.Cinema.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
 			ShaderConst.Cinema.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
-			ShaderConst.Cinema.Settings.x = isUnderwater?0:TheSettingManager->GetSettingF("Shaders.Cinema.Main", "DirtLensAmount"); // disable dirt lens underwater
 			ShaderConst.Cinema.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
 			ShaderConst.Cinema.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
 		}
@@ -1931,7 +1930,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	if (ShaderConst.BloodLens.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, false, false);
 	if (ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, false, false);
 	if (ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, false, false);
-	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, false, true);
+	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, false, true);
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, false, false);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
