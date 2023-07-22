@@ -83,7 +83,7 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 			}
 		}
 		catch (const std::exception& e) {
-			Logger::Log("Setting %s.%s not found in user config, getting from defaults (%s)", Section, Key, e.what());
+			Logger::Log("Setting %s.%s not found in user config, getting from defaults", Section, Key);
 			fromDefault = true;
 		}
 
