@@ -396,7 +396,7 @@ public:
 			char		Section[40];
 			char		Key[40];
 			char		Value[80];
-			std::string	Description;
+			std::string Description;
 			bool		Reboot;
 			UInt32		Type;
 			

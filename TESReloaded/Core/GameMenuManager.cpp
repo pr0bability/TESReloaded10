@@ -362,6 +362,34 @@ void GameMenuManager::Render() {
 		Setting++;
 	}
 
+	const char* DescriptionText = "";
+
+	if (SelectedColumn == 3) {
+		DescriptionText = SelectedNode.Description.c_str();
+	}
+	else if (isShaderSection && SelectedColumn == 1) {
+		// Get the general description of the effect from the Status.Enabled node of the Shader settings
+		SettingManager::Configuration::ConfigNode StatusNode;
+		char statusSection[256];
+		strcpy(statusSection, "Shaders.");
+		GetMidSection(MidSection);
+		strcat(statusSection, MidSection);
+		strcat(statusSection, ".Status");
+		bool success = TheSettingManager->Config.FillNode(&StatusNode, statusSection, "Enabled");
+
+		DescriptionText = success?StatusNode.Description.c_str():"";
+	}
+
+	int right = MenuRectX + ItemColumnSize * 3;
+	int bottom = MenuRectY + (RowsPerPage * MenuSettings->TextSize);
+
+	// render description
+	SetRect(&Rect, PositionX, bottom - MenuSettings->TextSize, right, bottom + MenuSettings->TextSize);
+	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
+
+	FontNormal->DrawTextA(NULL, DescriptionText, -1, &RectShadow, DT_RIGHT, TextShadowColorNormal);
+	FontNormal->DrawTextA(NULL, DescriptionText, -1, &Rect, DT_RIGHT, TextColorNormal);
+
 }
 
 // For a given Node, get the Shader/Effect name (Part of the section between the _Shader header and the subcategory)
