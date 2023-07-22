@@ -418,8 +418,10 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapLod];
 		break;
 	case ShadowMapTypeEnum::MapOrtho:
-		znear = 10;
-		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
+		D3DXMatrixOrthoOffCenterRH(&Proj, -Radius * 2, Radius * 2, -Radius * 2, Radius * 2, FarPlane * 0.8f, 1.2f * FarPlane);
+		return View * Proj;
+		//znear = 10;
+		//zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
 	}
 
 	NiCamera* Camera = WorldSceneGraph->camera;
