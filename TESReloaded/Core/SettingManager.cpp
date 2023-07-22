@@ -16,11 +16,9 @@ void SettingManager::Configuration::Init() {
 	strcat(TomlFilename, TomlSettingsFile);
 	strcat(DefaultsFilename, DefaultsSettingsFile);
 
-	Logger::Log("Loading settings from file %s", TomlFilename);
-	Logger::Log("Loading defaults from file %s", DefaultsFilename);
-
 	try {
-		DefaultConfig = toml::parse<toml::preserve_comments>((std::string_view)DefaultsFilename).as_table();
+		Logger::Log("Loading defaults from file %s", DefaultsFilename);
+		DefaultConfig = toml::parse<toml::preserve_comments, std::map>((std::string_view)DefaultsFilename).as_table();
 
 		//// log config file contents
 		//std::stringstream buffer;
@@ -32,7 +30,8 @@ void SettingManager::Configuration::Init() {
 	}
 
 	try {
-		TomlConfig = toml::parse<toml::preserve_comments>((std::string_view)TomlFilename).as_table();
+		Logger::Log("Loading settings from file %s", TomlFilename);
+		TomlConfig = toml::parse<toml::discard_comments, std::map>((std::string_view)TomlFilename).as_table();
 
 		//// log config file contents
 		//std::stringstream buffer;
@@ -41,8 +40,8 @@ void SettingManager::Configuration::Init() {
 
 	}
 	catch(const std::exception& e){
-		TomlConfig = toml::table();
 		Logger::Log("error loading toml: %s, new config will be created from defaults.", e.what());
+		TomlConfig = toml::table();
 	}
 
 	configLoaded = true;
@@ -190,6 +189,7 @@ void SettingManager::Configuration::FillSections(StringList* Sections, const cha
 
 }
 
+// finds a section recursively from a list of keys. This function will alter the contents of the keys Stringlist.
 toml::value* SettingManager::Configuration::FindSection(toml::value* table, StringList* keys) {
 
 	try {
@@ -242,11 +242,12 @@ void SettingManager::Configuration::SetValue(ConfigNode* Node) {
 
 	//setting values that don't exist in the config require building the section first.
 	if (!section) {
+		SplitString(path, ".", &keys);
+
 		// create the table
 		toml::value* table = &TomlConfig;
 		for (auto address : keys) {
 			// create table if not found
-			Logger::Log("table section %s not found, create", address);
 			if (!table->contains(address)) (*table)[address] = toml::table();
 			table = &table->at(address);
 		}
@@ -1172,8 +1173,9 @@ bool SettingManager::GetMenuShaderEnabled(const char* Name) {
 	strcat(path, settingString);
 	StringList keys;
 	SplitString(path, ".", &keys);
-
 	auto section = Config.FindSection(&Config.TomlConfig, &keys);
+
+	SplitString(path, ".", &keys);
 	auto defaultSection = Config.FindSection(&Config.DefaultConfig, &keys);
 
 	if (!section && !defaultSection) {
