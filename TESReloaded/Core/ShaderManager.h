@@ -410,6 +410,7 @@ public:
     bool                    IsMenuSwitch;
     bool                    orthoRequired;
     bool                    avglumaRequired;
+	float					isDayTime;
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];
 };

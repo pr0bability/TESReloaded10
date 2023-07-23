@@ -1004,8 +1004,11 @@ void ShaderManager::UpdateConstants() {
 			}
 
 			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
+			const char* PointLightsSettingName = (TheShaderManager->isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
+			bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
+			
 			ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled;
-			ShaderConst.ShadowFade.z = TheSettingManager->SettingsShadows.Exteriors.UsePointShadows;
+			ShaderConst.ShadowFade.z = usePointLights;
 			ShaderConst.ShadowFade.w = ShaderConst.ShadowMap.ShadowMapRadius.w; //furthest distance for point lights shadows
 		}
 		else {
@@ -1019,7 +1022,7 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.SunDir.w = 1.0f;
 		float sunRise = smoothStep(SunriseStart, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 		float sunSet = smoothStep(SunsetEnd, SunsetStart, GameHour);  // 1 before sunset to 0 at night
-		float isDayTime = sunRise * sunSet;
+		isDayTime = sunRise * sunSet;
 
 		if (isDayTime == 1) {
 			// Day time
