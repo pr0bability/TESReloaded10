@@ -80,8 +80,25 @@ void GameMenuManager::Render() {
 
 	if (!Enabled) return; // skip rendering of menu if it isn't enabled
 
+	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
+
+	//handle entry using numpad keys
+	int startEntry = useNumpad ? MenuSettings->KeyEditing : 13;
+	int key0 = useNumpad ? 82 : 11;
+	int key1 = useNumpad ? 79 : 2;
+	int key2 = useNumpad ? 80 : 3;
+	int key3 = useNumpad ? 81 : 4;
+	int key4 = useNumpad ? 75 : 5;
+	int key5 = useNumpad ? 76 : 6;
+	int key6 = useNumpad ? 77 : 7;
+	int key7 = useNumpad ? 71 : 8;
+	int key8 = useNumpad ? 72 : 9;
+	int key9 = useNumpad ? 73 : 10;
+	int keyDot = useNumpad ? 83 : 52;
+	int keyMinus = useNumpad ? 74 : 12;
+
 	// value editing mode toggle
-	if (Global->OnKeyDown(MenuSettings->KeyEditing) && SelectedColumn == 3) {
+	if (Global->OnKeyDown(startEntry) && SelectedColumn == 3) {
 		if (!EditingMode)
 			strcpy(EditingValue, SelectedNode.Value);
 		else
@@ -90,30 +107,30 @@ void GameMenuManager::Render() {
 	}
 
 	if (EditingMode) {
-		//handle entry using numpad keys
-		if (Global->OnKeyDown(82))
+
+		if (Global->OnKeyDown(key0))
 			strcat(EditingValue, "0");
-		else if (Global->OnKeyDown(79))
+		else if (Global->OnKeyDown(key1))
 			strcat(EditingValue, "1");
-		else if (Global->OnKeyDown(80))
+		else if (Global->OnKeyDown(key2))
 			strcat(EditingValue, "2");
-		else if (Global->OnKeyDown(81))
+		else if (Global->OnKeyDown(key3))
 			strcat(EditingValue, "3");
-		else if (Global->OnKeyDown(75))
+		else if (Global->OnKeyDown(key4))
 			strcat(EditingValue, "4");
-		else if (Global->OnKeyDown(76))
+		else if (Global->OnKeyDown(key5))
 			strcat(EditingValue, "5");
-		else if (Global->OnKeyDown(77))
+		else if (Global->OnKeyDown(key6))
 			strcat(EditingValue, "6");
-		else if (Global->OnKeyDown(71))
+		else if (Global->OnKeyDown(key7))
 			strcat(EditingValue, "7");
-		else if (Global->OnKeyDown(72))
+		else if (Global->OnKeyDown(key8))
 			strcat(EditingValue, "8");
-		else if (Global->OnKeyDown(73))
+		else if (Global->OnKeyDown(key9))
 			strcat(EditingValue, "9");
-		else if (Global->OnKeyDown(83))
+		else if (Global->OnKeyDown(keyDot))
 			strcat(EditingValue, ".");
-		else if (Global->OnKeyDown(74))
+		else if (Global->OnKeyDown(keyMinus))
 			strcat(EditingValue, "-");
 		if (strlen(EditingValue) > 0 && Global->OnKeyDown(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
 	}
