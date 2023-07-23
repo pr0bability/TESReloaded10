@@ -373,6 +373,7 @@ typedef std::map<std::string, SettingsWaterStruct> SettingsWaterMap;
 typedef std::map<std::string, SettingsColoringStruct> SettingsColoringMap;
 typedef std::map<std::string, SettingsWeatherStruct> SettingsWeatherMap;
 typedef std::vector<std::string> StringList;
+typedef toml::basic_value<toml::preserve_comments, std::map, std::vector> tomlValue;
 
 class SettingManager : public SettingManagerBase {
 public:
@@ -411,10 +412,10 @@ public:
 		void			FillSettings(SettingList* Nodes, const char* Section);
 		void			SetValue(ConfigNode* Node);
 		void			CreateWeatherSection(const char* WeatherName, TESWeather* Weather);
-		toml::value*	FindSection(toml::value* table, StringList* keys);
+		tomlValue*		FindSection(tomlValue* table, StringList* keys);
 
-		toml::value		TomlConfig;
-		toml::value		DefaultConfig;
+		tomlValue		TomlConfig;
+		tomlValue		DefaultConfig;
 		bool			configLoaded;
 		char*			Config;
 		char*			ConfigB;
