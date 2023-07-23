@@ -63,15 +63,15 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 
 	StringList keys;
 	SplitString(path, ".", &keys);
-	toml::value* settingSection = FindSection(&TomlConfig, &keys);
+	tomlValue* settingSection = FindSection(&TomlConfig, &keys);
 	SplitString(path, ".", &keys);
-	toml::value* defaultSettingSection = FindSection(&DefaultConfig, &keys);
+	tomlValue* defaultSettingSection = FindSection(&DefaultConfig, &keys);
 
 	if (!defaultSettingSection) return false;  // setting doesn't exist in defaults
 
 	try {
-		toml::value defaultSetting = defaultSettingSection->at(Key);
-		toml::value setting = defaultSetting;
+		tomlValue defaultSetting = defaultSettingSection->at(Key);
+		tomlValue setting = defaultSetting;
 
 		try {
 			// attempt to get the setting from the user config
@@ -163,7 +163,7 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 void SettingManager::Configuration::FillSections(StringList* Sections, const char* ParentSection) {
 
 	char path[256] = "_";
-	toml::value* sectionsTable = NULL;
+	tomlValue* sectionsTable = NULL;
 
 	if (ParentSection == NULL) {
 		sectionsTable = &DefaultConfig;
@@ -190,10 +190,10 @@ void SettingManager::Configuration::FillSections(StringList* Sections, const cha
 }
 
 // finds a section recursively from a list of keys. This function will alter the contents of the keys Stringlist.
-toml::value* SettingManager::Configuration::FindSection(toml::value* table, StringList* keys) {
+tomlValue* SettingManager::Configuration::FindSection(tomlValue* table, StringList* keys) {
 
 	try {
-		toml::value* sub = &table->at(keys->front().c_str());
+		tomlValue* sub = &table->at(keys->front().c_str());
 		if (keys->size() == 1) return sub;
 
 		keys->erase(keys->begin()); // remove first element
@@ -214,7 +214,7 @@ void SettingManager::Configuration::FillSettings(SettingList* Nodes, const char*
 
 	StringList keys;
 	SplitString(path, ".", &keys);
-	toml::value* settingsTable = FindSection(&DefaultConfig, &keys);
+	tomlValue* settingsTable = FindSection(&DefaultConfig, &keys);
 	if (!settingsTable) return; // table not found
 
 	Nodes->clear();
@@ -234,9 +234,9 @@ void SettingManager::Configuration::SetValue(ConfigNode* Node) {
 
 	StringList keys;
 	SplitString(path, ".", &keys);
-	toml::value* section = FindSection(&TomlConfig, &keys);
+	tomlValue* section = FindSection(&TomlConfig, &keys);
 	SplitString(path, ".", &keys);
-	toml::value* defaultSection = FindSection(&DefaultConfig, &keys);
+	tomlValue* defaultSection = FindSection(&DefaultConfig, &keys);
 
 	if (!defaultSection) return; // setting not in defaults, ignore
 
@@ -245,7 +245,7 @@ void SettingManager::Configuration::SetValue(ConfigNode* Node) {
 		SplitString(path, ".", &keys);
 
 		// create the table
-		toml::value* table = &TomlConfig;
+		tomlValue* table = &TomlConfig;
 		for (auto address : keys) {
 			// create table if not found
 			if (!table->contains(address)) (*table)[address] = toml::table();
