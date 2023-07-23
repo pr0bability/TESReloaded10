@@ -21,4 +21,6 @@ public:
 	ID3DXFont*									FontStatus;
 	RECT										Rect;
 	RECT										RectShadow;
+	std::chrono::system_clock::time_point		MainMenuStartTime;
+	bool										MainMenuOn;
 };

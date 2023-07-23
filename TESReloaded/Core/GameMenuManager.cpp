@@ -26,6 +26,8 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->SelectedPage[4] = { 0 };
 	TheGameMenuManager->Enabled = false;
 	TheGameMenuManager->EditingMode = false;
+	TheGameMenuManager->MainMenuOn = false;
+
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings->TextSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings->TextFont, &TheGameMenuManager->FontNormal);
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings->TextSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings->TextFont, &TheGameMenuManager->FontSelected);
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings->TextSizeStatus, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings->TextFontStatus, &TheGameMenuManager->FontStatus);
@@ -51,6 +53,13 @@ void GameMenuManager::Render() {
 
 	if (InterfaceManager->IsActive(Menu::MenuType::kMenuType_Main)) {
 		// on main menu, only draw the bottom text as signal the mod has loaded
+		if (!MainMenuOn) {
+			MainMenuOn = true;
+			MainMenuStartTime = std::chrono::system_clock::now();
+		}
+
+		std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - MainMenuStartTime;
+		if (elapsed_seconds.count() > 3.0) return; // only show message at the bottom of the screen for 3 seconds
 
 		SetRect(&Rect, 0, TheRenderManager->height - MenuSettings->TextSize - 10, TheRenderManager->width, TheRenderManager->height + MenuSettings->TextSize);
 		SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
