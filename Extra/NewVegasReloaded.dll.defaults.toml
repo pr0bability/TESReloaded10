@@ -322,39 +322,39 @@ Enabled = false                       # Not currently used. Replaces HDR tonemap
 
 
 [_Shaders.ImageAdjust.Main]
-Brightness = 1.0                      # Overall image brightness.
-Saturation = 1.0                      # Overall image saturation.
-Contrast = 1.0                        # Overall image contrast.
+Brightness = 1.1                      # Overall image brightness.
+Saturation = 0.7                      # Overall image saturation.
+Contrast = 1.2                        # Overall image contrast.
 Strength = 1.0                        # Strength of the effect.
-DarkColorR = 1.0                      # Red channel multiplier for darker tones.
-DarkColorG = 1.0                      # Green channel multiplier for darker tones.
-DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
+DarkColorR = 0.9                      # Red channel multiplier for darker tones.
+DarkColorG = 0.7                      # Green channel multiplier for darker tones.
+DarkColorB = 0.7                      # Blue channel multiplier for darker tones.
 LightColorR = 1.0                     # Red channel multiplier for lighter tones.
 LightColorG = 1.0                     # Green channel multiplier for lighter tones.
 LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
 
-[_Shaders.ImageAdjust.Nights]
-Brightness = 1.0                      # Overall image brightness.
-Saturation = 1.0                      # Overall image saturation.
-Contrast = 1.0                        # Overall image contrast.
-Strength = 1.0                        # Strength of the effect.
-DarkColorR = 1.0                      # Red channel multiplier for darker tones.
-DarkColorG = 1.0                      # Green channel multiplier for darker tones.
-DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
-LightColorR = 1.0                     # Red channel multiplier for lighter tones.
+[_Shaders.ImageAdjust.Night]
+Brightness = 1.4                      # Overall image brightness.
+Saturation = 0.8                      # Overall image saturation.
+Contrast = 1.2                        # Overall image contrast.
+Strength = 0.8                        # Strength of the effect.
+DarkColorR = 0.8                      # Red channel multiplier for darker tones.
+DarkColorG = 0.8                      # Green channel multiplier for darker tones.
+DarkColorB = 1.2                      # Blue channel multiplier for darker tones.
+LightColorR = 0.8                     # Red channel multiplier for lighter tones.
 LightColorG = 1.0                     # Green channel multiplier for lighter tones.
 LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Interiors]
-Brightness = 1.0                      # Overall image brightness.
-Saturation = 1.0                      # Overall image saturation.
-Contrast = 1.0                        # Overall image contrast.
+Brightness = 1.215                    # Overall image brightness.
+Saturation = 1.2                      # Overall image saturation.
+Contrast = 1.45                       # Overall image contrast.
 Strength = 1.0                        # Strength of the effect.
-DarkColorR = 1.0                      # Red channel multiplier for darker tones.
-DarkColorG = 1.0                      # Green channel multiplier for darker tones.
+DarkColorR = 0.9                      # Red channel multiplier for darker tones.
+DarkColorG = 0.7                      # Green channel multiplier for darker tones.
 DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
-LightColorR = 1.0                     # Red channel multiplier for lighter tones.
-LightColorG = 1.0                     # Green channel multiplier for lighter tones.
+LightColorR = 0.8                     # Red channel multiplier for lighter tones.
+LightColorG = 0.8                     # Green channel multiplier for lighter tones.
 LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Status]
