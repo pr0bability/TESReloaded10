@@ -313,6 +313,47 @@ ToneMappingColor = 1.2
 [_Shaders.HDR.Status]
 Enabled = false                       # Not currently used. Replaces HDR tonemapping shaders with custom ones.
 
+
+[_Shaders.ImageAdjust.Main]
+Brightness = 1.0                      # Overall image brightness.
+Saturation = 1.0                      # Overall image saturation.
+Contrast = 1.0                        # Overall image contrast.
+Strength = 1.0                        # Strength of the effect.
+DarkColorR = 1.0                      # Red channel multiplier for darker tones.
+DarkColorG = 1.0                      # Green channel multiplier for darker tones.
+DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
+LightColorR = 1.0                     # Red channel multiplier for lighter tones.
+LightColorG = 1.0                     # Green channel multiplier for lighter tones.
+LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
+
+[_Shaders.ImageAdjust.Nights]
+Brightness = 1.0                      # Overall image brightness.
+Saturation = 1.0                      # Overall image saturation.
+Contrast = 1.0                        # Overall image contrast.
+Strength = 1.0                        # Strength of the effect.
+DarkColorR = 1.0                      # Red channel multiplier for darker tones.
+DarkColorG = 1.0                      # Green channel multiplier for darker tones.
+DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
+LightColorR = 1.0                     # Red channel multiplier for lighter tones.
+LightColorG = 1.0                     # Green channel multiplier for lighter tones.
+LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
+
+[_Shaders.ImageAdjust.Interiors]
+Brightness = 1.0                      # Overall image brightness.
+Saturation = 1.0                      # Overall image saturation.
+Contrast = 1.0                        # Overall image contrast.
+Strength = 1.0                        # Strength of the effect.
+DarkColorR = 1.0                      # Red channel multiplier for darker tones.
+DarkColorG = 1.0                      # Green channel multiplier for darker tones.
+DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
+LightColorR = 1.0                     # Red channel multiplier for lighter tones.
+LightColorG = 1.0                     # Green channel multiplier for lighter tones.
+LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
+
+[_Shaders.ImageAdjust.Status]
+Enabled = true                        # Basic Image adjustment controls.
+
+
 [_Shaders.Lens.Main]
 DirtLensAmount = 0.2                  # Global effect strength multiplier.
 ExteriorBloomTreshold = 0.9           # Treshold for the max brightness to trigger the effect in exteriors.

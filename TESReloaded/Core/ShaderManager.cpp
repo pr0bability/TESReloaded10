@@ -642,6 +642,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
+	TheShaderManager->EffectsNames["ImageAdjust"] = &TheShaderManager->Effects.ImageAdjust;
 	TheShaderManager->EffectsNames["Lens"] = &TheShaderManager->Effects.Lens;
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
@@ -770,6 +771,9 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->ShaderConst.GodRays.Ray;
 	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->ShaderConst.GodRays.RayColor;
 	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &TheShaderManager->ShaderConst.GodRays.Data;
+	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &TheShaderManager->ShaderConst.ImageAdjust.Data;
+	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &TheShaderManager->ShaderConst.ImageAdjust.DarkColor;
+	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->ShaderConst.ImageAdjust.LightColor;
 	TheShaderManager->ConstantsTable["TESR_LensData"] = &TheShaderManager->ShaderConst.Lens.Data;
 	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->ShaderConst.LowHF.Data;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->ShaderConst.MotionBlur.BlurParams;
@@ -1372,6 +1376,40 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
 		}
 
+		if (Effects.ImageAdjust->Enabled) {
+			const char* day = "Shaders.ImageAdjust.Main";
+			const char* night = "Shaders.ImageAdjust.Night";
+
+			if (isExterior) {
+				ShaderConst.ImageAdjust.Data.x = lerp(TheSettingManager->GetSettingF(night, "Brightness"), TheSettingManager->GetSettingF(day, "Brightness"), isDayTime);
+				ShaderConst.ImageAdjust.Data.y = lerp(TheSettingManager->GetSettingF(night, "Contrast"), TheSettingManager->GetSettingF(day, "Contrast"), isDayTime);
+				ShaderConst.ImageAdjust.Data.z = lerp(TheSettingManager->GetSettingF(night, "Saturation"), TheSettingManager->GetSettingF(day, "Saturation"), isDayTime);
+				ShaderConst.ImageAdjust.Data.w = lerp(TheSettingManager->GetSettingF(night, "Strength"), TheSettingManager->GetSettingF(day, "Strength"), isDayTime);
+
+				ShaderConst.ImageAdjust.DarkColor.x = lerp(TheSettingManager->GetSettingF(night, "DarkColorR"), TheSettingManager->GetSettingF(day, "DarkColorR"), isDayTime);
+				ShaderConst.ImageAdjust.DarkColor.y = lerp(TheSettingManager->GetSettingF(night, "DarkColorG"), TheSettingManager->GetSettingF(day, "DarkColorG"), isDayTime);
+				ShaderConst.ImageAdjust.DarkColor.z = lerp(TheSettingManager->GetSettingF(night, "DarkColorB"), TheSettingManager->GetSettingF(day, "DarkColorB"), isDayTime);
+
+				ShaderConst.ImageAdjust.LightColor.x = lerp(TheSettingManager->GetSettingF(night, "LightColorR"), TheSettingManager->GetSettingF(day, "LightColorR"), isDayTime);
+				ShaderConst.ImageAdjust.LightColor.y = lerp(TheSettingManager->GetSettingF(night, "LightColorG"), TheSettingManager->GetSettingF(day, "LightColorG"), isDayTime);
+				ShaderConst.ImageAdjust.LightColor.z = lerp(TheSettingManager->GetSettingF(night, "LightColorB"), TheSettingManager->GetSettingF(day, "LightColorB"), isDayTime);
+			}
+			else {
+				ShaderConst.ImageAdjust.Data.x = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "Brightness");
+				ShaderConst.ImageAdjust.Data.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "Contrast");
+				ShaderConst.ImageAdjust.Data.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "Saturation");
+				ShaderConst.ImageAdjust.Data.w = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "Strength");
+
+				ShaderConst.ImageAdjust.DarkColor.x = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorR");
+				ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorR");
+				ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorR");
+
+				ShaderConst.ImageAdjust.LightColor.x = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorR");
+				ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorR");
+				ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorR");
+			}
+		}
+
 		if (Effects.AmbientOcclusion->Enabled) {
 			sectionName = "Shaders.AmbientOcclusion.Exteriors";
 			if (!isExterior) sectionName = "Shaders.AmbientOcclusion.Interiors";
@@ -1935,6 +1973,9 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
 	Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, false, true);
+
+	// final adjustments
+	Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 	// debug shader allows to display some of the buffers
 	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, false, false);

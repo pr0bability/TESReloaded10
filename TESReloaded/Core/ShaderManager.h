@@ -143,6 +143,11 @@ struct ShaderConstants {
 		float			HealthCoeff;
 		float			FatigueCoeff;
 	};
+	struct ImageAdjustStruct {
+		D3DXVECTOR4		Data;
+		D3DXVECTOR4		DarkColor;
+		D3DXVECTOR4		LightColor;
+	};
 	struct WetWorldStruct {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
@@ -204,6 +209,7 @@ struct ShaderConstants {
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
 	GodRaysStruct			GodRays;
+	ImageAdjustStruct		ImageAdjust;
 	DepthOfFieldStruct		DepthOfField;
 	AmbientOcclusionStruct	AmbientOcclusion;
 	ColoringStruct			Coloring;
@@ -370,6 +376,7 @@ public:
 		EffectRecord*		DepthOfField;
 		EffectRecord*		Debug;
 		EffectRecord*		GodRays;
+		EffectRecord*		ImageAdjust;
 		EffectRecord*		Lens;
 		EffectRecord*		LowHF;
 		EffectRecord*		MotionBlur;
