@@ -110,7 +110,11 @@ void GameMenuManager::Render() {
 	}
 	else {
 		// handle other types of user input
-		if (SelectedColumn == 0) {
+		if (Global->OnKeyDown(MenuSettings->KeySave)) {
+			TheSettingManager->SaveSettings();
+			InterfaceManager->ShowMessage("Settings saved.");
+		}
+		else if (SelectedColumn == 0) {
 			// header is a column tilted to the side (column 0). Left and Right change rows and Down moves to column 1 (or the actual menu)
 			if (Global->OnKeyDown(MenuSettings->KeyDown)) {
 				SelectedColumn = 1;
@@ -146,13 +150,11 @@ void GameMenuManager::Render() {
 				SelectedPage[SelectedColumn] += 1;
 				SelectedRow[SelectedColumn] = 0;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeySave)) {
-				TheSettingManager->SaveSettings();
-				InterfaceManager->ShowMessage("Settings saved.");
-			}
 			else {
 				// handle value add/subtract keys
 				if (Global->OnKeyDown(MenuSettings->KeyAdd)) {
+					//Logger::Log("Add for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i",SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
+
 					// react to user key input to reduce the value of the setting
 					if (isShaderSection && (SelectedColumn == 1 || (SelectedColumn == 3 && isStatusSection))) {
 						// enable shaders and effects
@@ -171,6 +173,8 @@ void GameMenuManager::Render() {
 					TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 				}
 				else if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
+					//Logger::Log("Subtract for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i", SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
+
 					// react to user key input to reduce the value of the setting
 					if (isShaderSection && (SelectedColumn == 1 || (SelectedColumn == 3 && isStatusSection))) {
 						// disable shaders and effects
