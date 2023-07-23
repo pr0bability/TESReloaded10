@@ -1626,13 +1626,19 @@ void ShaderManager::UpdateConstants() {
 			avglumaRequired = true; // mark average luma calculation as necessary
 			char day[] = "Shaders.Exposure.Day";
 			char night[] = "Shaders.Exposure.Night";
-			if (!isExterior) strcpy(night, day); // in interiors, only day measures are used
-
-			// interpolate between day and night settings over day/night transitions
-			ShaderConst.Exposure.Data.x = lerp(TheSettingManager->GetSettingF(night, "MinBrightness"), TheSettingManager->GetSettingF(day, "MinBrightness"), isDayTime);
-			ShaderConst.Exposure.Data.y = lerp(TheSettingManager->GetSettingF(night, "MaxBrightness"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
-			ShaderConst.Exposure.Data.z = lerp(TheSettingManager->GetSettingF(night, "DarkAdaptSpeed"), TheSettingManager->GetSettingF(day, "DarkAdaptSpeed"), isDayTime);
-			ShaderConst.Exposure.Data.w = lerp(TheSettingManager->GetSettingF(night, "LightAdaptSpeed"), TheSettingManager->GetSettingF(day, "LightAdaptSpeed"), isDayTime);
+			if (!isExterior) {
+				ShaderConst.Exposure.Data.x = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "MinBrightness");
+				ShaderConst.Exposure.Data.y = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "MaxBrightness");
+				ShaderConst.Exposure.Data.z = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "DarkAdaptSpeed");
+				ShaderConst.Exposure.Data.w = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "LightAdaptSpeed");
+			}
+			else {
+				// interpolate between day and night settings over day/night transitions
+				ShaderConst.Exposure.Data.x = lerp(TheSettingManager->GetSettingF(night, "MinBrightness"), TheSettingManager->GetSettingF(day, "MinBrightness"), isDayTime);
+				ShaderConst.Exposure.Data.y = lerp(TheSettingManager->GetSettingF(night, "MaxBrightness"), TheSettingManager->GetSettingF(day, "MaxBrightness"), isDayTime);
+				ShaderConst.Exposure.Data.z = lerp(TheSettingManager->GetSettingF(night, "DarkAdaptSpeed"), TheSettingManager->GetSettingF(day, "DarkAdaptSpeed"), isDayTime);
+				ShaderConst.Exposure.Data.w = lerp(TheSettingManager->GetSettingF(night, "LightAdaptSpeed"), TheSettingManager->GetSettingF(day, "LightAdaptSpeed"), isDayTime);
+			}
 		}
 
 		ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");

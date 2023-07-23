@@ -255,6 +255,12 @@ LightAdaptSpeed = 0.5                  # Speed for the exposure to adjust when t
 MaxBrightness = 0.5                    # Brightness treshold above which the screen will be darkened.
 MinBrightness = 0.3                    # Brightness treshold below which the screen will be brightened.
 
+[_Shaders.Exposure.Interiors]
+DarkAdaptSpeed = 1.5                   # Speed for the exposure to adjust when the screen gets darker.
+LightAdaptSpeed = 0.5                  # Speed for the exposure to adjust when the screen gets brighter.
+MaxBrightness = 0.9                    # Brightness treshold above which the screen will be darkened.
+MinBrightness = 0.2                    # Brightness treshold below which the screen will be brightened.
+
 [_Shaders.Exposure.Night]
 DarkAdaptSpeed = 1.5                   # Speed for the exposure to adjust when the screen gets darker.
 LightAdaptSpeed = 0.5                  # Speed for the exposure to adjust when the screen gets brighter.
@@ -622,13 +628,13 @@ Enabled = true                      # Volumetric fog shader tinted by the sun. R
 
 [_Shaders.Water.Default]
 causticsStrength = 3.0              # Caustic strength underwater. Caustics seen from above water not currently supported
-causticsStrengthS = 0.2
+causticsStrengthS = 0.2             # Not used.
 choppiness = 0.7                    # Exponent for the waves normals. A higher value will create more defined wave crests.
 depthDarkness = 1.0                 # How much light reaches the bottom of the water.
-inExtCoeff_B = 1.0
-inExtCoeff_G = 1.0
-inExtCoeff_R = 1.0
-inScattCoeff = 1.0
+inExtCoeff_B = 1.0                  # Not used.
+inExtCoeff_G = 1.0                  # Not used.
+inExtCoeff_R = 1.0                  # Not used.
+inScattCoeff = 1.0                  # Not used.
 reflectivity = 1.0                  # Multiplier for the strength of reflections on the surface.
 shoreFactor = 6.0                   # Size of the shore fading area on shallow slope areas.
 shoreMovement = 0.3                 # Speed of wave movement in the shore.
