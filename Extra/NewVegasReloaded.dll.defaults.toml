@@ -73,6 +73,7 @@ KeyRight = 205              # Keycode for the hotkey to navigate right in the ma
 KeySave = 28                # Keycode for the hotkey to save changes done in the main menu (if not used, will revert upon restart).
 KeySubtract = 78            # Keycode for decrement value shortcut in menu.
 KeyUp = 200                 # Keycode for the hotkey to navigate up in the main menu.
+EntryUseNumpad = true       # Wether to use the numpad numbers or the other numbers. Start entry with "=" or numpad "Enter"
 
 [_Main.Menu.Style]
 ItemColumnSize = 300                    # Custom size for menu columns.
