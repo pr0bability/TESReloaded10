@@ -773,7 +773,7 @@ void ShadowManager::RenderShadowMaps() {
 	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
 		
 	bool ExteriorEnabled = TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
-	bool InteriorEnabled = TheShaderManager->Effects.ShadowsInteriors->Enabled && ShadowsInteriors->Enabled;
+	bool InteriorEnabled = TheShaderManager->Effects.ShadowsInteriors->Enabled;
 
 	// early out in case shadow rendering is not required
 	if (!ExteriorEnabled &&	!InteriorEnabled && !TheShaderManager->orthoRequired) return;
