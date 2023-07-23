@@ -66,7 +66,7 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 
 	float Shadow = GetPointLightAmount(TESR_ShadowCubeMapBuffer0, world_pos, TESR_ShadowLightPosition0, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer1, world_pos, TESR_ShadowLightPosition1, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer2, world_pos, TESR_ShadowLightPosition2,normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer2, world_pos, TESR_ShadowLightPosition2, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer3, world_pos, TESR_ShadowLightPosition3, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer4, world_pos, TESR_ShadowLightPosition4, normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer5, world_pos, TESR_ShadowLightPosition5, normal);

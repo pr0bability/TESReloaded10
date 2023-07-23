@@ -856,7 +856,10 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	if ((isExterior && TheSettingManager->SettingsShadows.Exteriors.UsePointShadows) || (!isExterior && InteriorEnabled)) {
+	const char* PointLightsSettingName = (TheShaderManager->isDayTime > 0.5 ) ? "UsePointShadowsDay" : "UsePointShadowsNight";
+	bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
+
+	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;
 		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;

@@ -459,7 +459,8 @@ ShadowMapFarPlane = 32768            # Used for shadow frustum. Don't change thi
 ShadowMapResolution = 1024           # Resolution of the texture used to store the shadow maps. LOD map is twice this value. Needs restart to take effect.
 ShadowMode = 1                       # Shadow algorithm used. 1: Variance Shadow Maps, 2: unfiltered Exponenial Shadow Map, 3: filtered ESM.
 ShadowsRadius = 8000                 # Max distance for rendering of shadow from the camera.
-UsePointShadows = true               # Wether to cast shadows from point lights. Requires a slight darkening of the entire screen.
+UsePointShadowsDay = false           # Wether to cast shadows from point lights. Requires a slight darkening of the entire screen.
+UsePointShadowsNight = true          # Wether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
 
 [_Shaders.ShadowsExteriors.Middle]
 Activators = false                   # Wether to include objects with "Activator" flag when rendering shadowmaps.
