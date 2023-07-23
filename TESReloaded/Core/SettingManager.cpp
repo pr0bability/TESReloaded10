@@ -828,6 +828,7 @@ void SettingManager::Increment(const char* Section, const char* Key) {
 	Configuration::ConfigNode Node;
 	Config.FillNode(&Node, Section, Key);
 	float value = 0;
+	bool boolValue = false;
 	switch (Node.Type) {
 	case Configuration::NodeType::Integer:
 		SetSetting(Section, Key, GetSettingI(Section, Key) + 1);
@@ -839,7 +840,8 @@ void SettingManager::Increment(const char* Section, const char* Key) {
 		SetSetting(Section, Key, value / 10000);
 		break;
 	case Configuration::NodeType::Boolean:
-		SetSetting(Section, Key, !(bool)GetSettingI(Section, Key));
+		boolValue = (bool)GetSettingI(Section, Key);
+		if (!boolValue) SetSetting(Section, Key, !boolValue); // only switch to true if value is false
 		break;
 	default:
 		Logger::Log("Node %s is of a type that can't be incremented", Key);
@@ -851,6 +853,7 @@ void SettingManager::Decrement(const char* Section, const char* Key) {
 	Configuration::ConfigNode Node;
 	Config.FillNode(&Node, Section, Key);
 	float value = 0;
+	bool boolValue = false;
 	switch (Node.Type) {
 	case Configuration::NodeType::Integer:
 		SetSetting(Section, Key, GetSettingI(Section, Key) - 1);
@@ -862,7 +865,8 @@ void SettingManager::Decrement(const char* Section, const char* Key) {
 		SetSetting(Section, Key, value / 10000);
 		break;
 	case Configuration::NodeType::Boolean:
-		SetSetting(Section, Key, !(bool)GetSettingI(Section, Key));
+		boolValue = (bool)GetSettingI(Section, Key);
+		if (boolValue) SetSetting(Section, Key, !boolValue); // only switch to false if value is true
 		break;
 	default:
 		Logger::Log("Node %s is of a type that can't be decremented");
