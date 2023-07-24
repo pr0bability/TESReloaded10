@@ -2194,11 +2194,28 @@ public:
 		TList<void>							list54;		// 54
 		TList<TESObjectREFR>				list5C;		// 5C
 	};
+
+	enum CellNodes : UInt32 {
+		kCellNode_Actor = 0x0,
+		kCellNode_Marker = 0x1,
+		kCellNode_Land = 0x2,
+		kCellNode_Static = 0x3,
+		kCellNode_Dynamic = 0x4,
+		kCellNode_Occlusion = 0x5,
+		kCellNode_Water = 0x6,
+		kCellNode_Unk_7 = 0x7,
+		kCellNode_Collision = 0x8,
+		kCellNode_Unk_9 = 0x9,
+		kCellNode_Unk_10 = 0xA,
+		kCellNode_Water_LOD = 0xB,
+	};
 	
 	TESWaterForm*			GetWaterForm() { return (TESWaterForm*)ThisCall(0x00547770, this); }
 	float					GetWaterHeight() { return ThisCallF(0x005471E0, this); }
 	ExtraHavok*				GetExtraHavok() { return (ExtraHavok*)extraDataList.GetExtraData(BSExtraData::ExtraDataType::kExtraData_Havok); }
-	NiNode*					GetNode() { return structC4->niNode; }
+	NiNode*					GetNode()		{ return structC4 ? structC4->niNode : NULL; }
+	NiNode*					GetChildNode(CellNodes aeNode);
+	bool					IsInterior() { return (flags0 & kFlags0_Interior) != 0; }
 
 	TESFullName				fullName;			// 018	// 030 in GECK
 	UInt8					flags0;				// 024

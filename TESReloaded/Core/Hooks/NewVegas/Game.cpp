@@ -1,3 +1,4 @@
+#include "Game.h"
 #pragma once
 
 Main* (__thiscall* NewMain)(Main*, HWND, HINSTANCE) = (Main* (__thiscall*)(Main*, HWND, HINSTANCE))Hooks::NewMain;
@@ -23,4 +24,16 @@ MainDataHandler* __fastcall NewMainDataHandlerHook(MainDataHandler* This, UInt32
 	DataHandler = (*NewMainDataHandler)(This);
 	return DataHandler;
 
+}
+
+NiNode* TESObjectCELL::GetChildNode(CellNodes aeNode) {
+	NiNode* pMaster = GetNode();
+	if (pMaster)
+		return static_cast<NiNode*>(pMaster->m_children.data[aeNode]);
+	else {
+#if _DEBUG
+		Logger::Log("[ TESObjectCELL::GetChildNode ] %s has no master node", fullName.name.m_data);
+#endif
+		return nullptr;
+	}
 }
