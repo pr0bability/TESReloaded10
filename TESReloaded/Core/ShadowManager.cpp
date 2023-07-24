@@ -550,12 +550,31 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 
 
 void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType) {
+	if (Cell->IsInterior())
+		return;
+
+	// Log paranoia incoming - can remove later if everything gets confirmed to be safe
 	if (ShadowsExteriors->Forms[ShadowMapType].Terrain) {
-		NiNode* CellNode = Cell->GetNode();
-		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
-		NiNode* TerrainNode = (NiNode*)CellNode->m_children.data[2]; //0 Actor, 2 Land, 3 Static, 4 Dynamic,5 Multibound, 1 Marker
-		for (int i = 0; i < TerrainNode->m_children.numObjs; i++) {
-			RenderTerrain(TerrainNode->m_children.data[i], ShadowMapType);
+		if (Cell) {
+			NiNode* LandNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Land);
+			// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+			if (LandNode) {
+				for (int i = 0; i < LandNode->m_children.numObjs; i++) {
+					NiAVObject* TerrainChunk = LandNode->m_children.data[i];
+					if (TerrainChunk) {
+						RenderTerrain(TerrainChunk, ShadowMapType);
+					}
+					else {
+						Logger::Log("[ ShadowManager::RenderExteriorCell ] TerrainChunk of %s is null", Cell->fullName.name.m_data);
+					}
+				}
+			}
+			else {
+				Logger::Log("[ ShadowManager::RenderExteriorCell ] Landscape of %s is null", Cell->fullName.name.m_data);
+			}
+		}
+		else {
+			Logger::Log("[ ShadowManager::RenderExteriorCell ] Cell is null - how?");
 		}
 	}
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
