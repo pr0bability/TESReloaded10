@@ -1551,7 +1551,7 @@ void ShaderManager::UpdateConstants() {
 
 		if (Effects.Cinema->Enabled) {
 			avglumaRequired = true;
-			UInt8 Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
+			int Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
 
 			ShaderConst.Cinema.Data.x = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
 			ShaderConst.Cinema.Data.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
@@ -1571,8 +1571,9 @@ void ShaderManager::UpdateConstants() {
 				default:
 					break;
 			}
+
 			if (Mode == -1) {
-				ShaderConst.Cinema.Data.x = ShaderConst.ReciprocalResolution.z; // set cinema aspect ratio to native ar
+				ShaderConst.Cinema.Data.x = 1.0f; // set cinema aspect ratio to native ar
 				ShaderConst.Cinema.Data.y = 0.0f;
 			}
 			ShaderConst.Cinema.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
