@@ -255,7 +255,8 @@ struct SettingsShadowStruct {
         UInt8               ShadowMode;
 		float				ShadowMapRadius[5];
 		float				ShadowMapFarPlane;
-		bool				UsePointShadows;
+		bool				UsePointShadowsDay;
+		bool				UsePointShadowsNight;
 		ExcludedFormsList	ExcludedForms;
 	};
 	
@@ -270,6 +271,7 @@ struct SettingsShadowStruct {
 		int					DrawDistance;
 		float				Darkness;
 		float				LightRadiusMult;
+		bool				UseCastShadowFlag;
 		ExcludedFormsList	ExcludedForms;
 	};
 

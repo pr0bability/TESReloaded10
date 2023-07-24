@@ -633,7 +633,8 @@ void SettingManager::LoadSettings() {
 	SettingsShadows.Exteriors.ShadowMapFarPlane = GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowMapFarPlane");
 	SettingsShadows.Exteriors.ShadowMode = GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
 	SettingsShadows.Exteriors.BlurShadowMaps = GetSettingI("Shaders.ShadowsExteriors.Main", "BlurShadowMaps");
-	SettingsShadows.Exteriors.UsePointShadows = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadows");
+	SettingsShadows.Exteriors.UsePointShadowsDay = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
+	SettingsShadows.Exteriors.UsePointShadowsNight = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
 	SettingsShadows.ScreenSpace.Enabled = GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");
 	SettingsShadows.ScreenSpace.BlurRadius = GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
@@ -701,6 +702,7 @@ void SettingManager::LoadSettings() {
 	SettingsShadows.Interiors.Darkness = GetSettingF("Shaders.ShadowsInteriors.Main", "Darkness");
 	SettingsShadows.Interiors.LightRadiusMult = GetSettingF("Shaders.ShadowsInteriors.Main", "LightRadiusMult");
 	SettingsShadows.Interiors.DrawDistance = GetSettingF("Shaders.ShadowsInteriors.Main", "DrawDistance");
+	SettingsShadows.Interiors.UseCastShadowFlag = GetSettingF("Shaders.ShadowsInteriors.Main", "UseCastShadowFlag");
 
 	Config.FillSections(&List, "Shaders.ShadowsInteriors.ExcludedFormID");
 	SettingsShadows.Interiors.ExcludedForms.reserve(List.size());

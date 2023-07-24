@@ -719,7 +719,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 			NiPointLight* Light = v->second;
 
 			// determin if light is a shadow caster
-			bool CastShadow = TheSettingManager->GetSettingI("Shaders.ShadowsInterior.Main", "UseCastShadowFlag") ? Light->CastShadows : true;
+			bool CastShadow = TheSettingManager->SettingsShadows.Interiors.UseCastShadowFlag ? Light->CastShadows : true;
 			// Oblivion exception for carried torch lights 
 			bool TorchOnBeltEnabled = TheSettingManager->SettingsMain.EquipmentMode.Enabled && TheSettingManager->SettingsMain.EquipmentMode.TorchKey != 255;
 			if (TorchOnBeltEnabled && Light->CanCarry == 2) {
@@ -873,8 +873,7 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	const char* PointLightsSettingName = (TheShaderManager->isDayTime > 0.5 ) ? "UsePointShadowsDay" : "UsePointShadowsNight";
-	bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
+	bool usePointLights = TheShaderManager->isDayTime ? TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsDay : TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsNight;
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;
