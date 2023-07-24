@@ -181,14 +181,15 @@ void ShadowManager::RenderExterior(NiAVObject* Object, float MinRadius) {
 	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled || Object->GetWorldBoundRadius() < MinRadius) return; 
 
 	// if geo, render
-	void* VFT = *(void**)Object;
-	if (VFT == Pointers::VirtualTables::NiTriShape || VFT == Pointers::VirtualTables::NiTriStrips) RenderGeometry((NiGeometry*)Object);
+	if (Object->IsGeometry())
+		RenderGeometry(static_cast<NiGeometry*>(Object));
 
 	// if container, render children
-	else if (VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode || VFT == Pointers::VirtualTables::BSFaceGenNiNode || VFT == Pointers::VirtualTables::BSTreeNode) {
-		if (VFT == Pointers::VirtualTables::BSFadeNode && ((BSFadeNode*)Object)->FadeAlpha < 0.75f) return;
+	else if (Object->IsNiNode()) {
+		if (Object->IsFadeNode() && static_cast<BSFadeNode*>(Object)->FadeAlpha < 0.75f)
+			return;
 
-		NiNode* Node = (NiNode*)Object;
+		NiNode* Node = static_cast<NiNode*>(Object);
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
 			RenderExterior(Node->m_children.data[i], MinRadius);
 		}
@@ -197,16 +198,16 @@ void ShadowManager::RenderExterior(NiAVObject* Object, float MinRadius) {
 
 void ShadowManager::RenderInterior(NiAVObject* Object, float MinRadius) {
 	// culling
-	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled || Object->GetWorldBoundRadius() < MinRadius) return;
+	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled || Object->GetWorldBoundRadius() < MinRadius) 
+		return;
 
 	// if geo, render
-	void* VFT = *(void**)Object;
-	if (VFT == Pointers::VirtualTables::NiTriShape || VFT == Pointers::VirtualTables::NiTriStrips) RenderGeometry((NiGeometry*)Object);
+	if (Object->IsGeometry()) 
+		RenderGeometry(static_cast<NiGeometry*>(Object));
 
 	// if container, render children
-	else if (VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode || VFT == Pointers::VirtualTables::BSFaceGenNiNode) {
-
-		NiNode* Node = (NiNode*)Object;
+	else if (Object->IsNiNode()) {
+		NiNode* Node = static_cast<NiNode*>(Object);
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
 			RenderInterior(Node->m_children.data[i], MinRadius);
 		}
@@ -215,24 +216,22 @@ void ShadowManager::RenderInterior(NiAVObject* Object, float MinRadius) {
 
 void ShadowManager::RenderTerrain(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType) {
 	// culling
-	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled) return;
+	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled) 
+		return;
 
 	// if geo, render
-	void* VFT = *(void**)Object;
-	if ((VFT == Pointers::VirtualTables::NiTriShape || VFT == Pointers::VirtualTables::NiTriStrips)) RenderGeometry((NiGeometry*)Object);
+	if (Object->IsGeometry()) 
+		RenderGeometry(static_cast<NiGeometry*>(Object));
 
 	// if container, render children
-	else if (VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode ||  VFT == Pointers::VirtualTables::BSMultiBoundNode ) {
-		NiNode* Node = (NiNode*)Object;
+	else if (Object->IsNiNode()) {
+		NiNode* Node = static_cast<NiNode*>(Object);
 		if (InFrustum(ShadowMapType, Node)) {
 			for (int i = 0; i < Node->m_children.numObjs; i++) {
 				RenderTerrain(Node->m_children.data[i], ShadowMapType);
 			}
 		}
 	}
-    //else {
-    //   Logger::Log("Unknown %0X", VFT);                
-    //}
 }
 
 void ShadowManager::RenderLod(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType){
@@ -785,7 +784,6 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 * Renders the different shadow maps: Near, Far, Ortho.
 */
 void ShadowManager::RenderShadowMaps() {
-	
 	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // cancel out if rendering effects is disabled
 
 	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
