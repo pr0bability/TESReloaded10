@@ -97,12 +97,32 @@ void GameMenuManager::Render() {
 	int keyDot = useNumpad ? 83 : 52;
 	int keyMinus = useNumpad ? 74 : 12;
 
-	// value editing mode toggle
-	if (Global->OnKeyDown(startEntry) && SelectedColumn == 3) {
-		if (!EditingMode)
+	// value editing mode toggle (disabled in Status sections because it's more complex to deal with switching effects)
+	if (Global->OnKeyDown(startEntry) && SelectedColumn == 3 && !isStatusSection) {
+		if (!EditingMode) {
+			// start editing, copy the current value to the edited string
 			strcpy(EditingValue, SelectedNode.Value);
-		else
-			TheSettingManager->SetSetting(SelectedNode.Section, SelectedNode.Key, (float)atof(SelectedNode.Value));
+		}
+		else {
+			// finished editing, sets the value. 
+			// convert the value from the string to the given type and back to the string to ensure the right type format
+			switch (SelectedNode.Type){
+			case SettingManager::Configuration::NodeType::Boolean:
+				strcpy(SelectedNode.Value, TheSettingManager->ToString<bool>(atof(EditingValue)).c_str());
+				break;
+			case SettingManager::Configuration::NodeType::Integer:
+				strcpy(SelectedNode.Value, TheSettingManager->ToString<int>(atof(EditingValue)).c_str());
+				break;
+			case SettingManager::Configuration::NodeType::Float:
+				strcpy(SelectedNode.Value, TheSettingManager->ToString<float>(atof(EditingValue)).c_str());
+				break;
+			default:
+				break;
+			}
+			TheSettingManager->SetSetting(&SelectedNode);
+			TheSettingManager->LoadSettings(); // refresh settings struct
+		}
+
 		EditingMode = !EditingMode;
 	}
 
