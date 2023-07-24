@@ -19,6 +19,7 @@ class NiDynamicEffect;
 class NiControllerManager;
 class NiVisibleArray;
 class NiAdditionalGeometryData;
+class NiGeometryData;
 class NiGeometryGroup;
 class NiRenderedCubeMap;
 class NiTexture;
@@ -52,6 +53,10 @@ class NiDX9RenderState;
 class NiDX92DBufferData;
 
 class BSShaderAccumulator;
+class BSFadeNode;
+class BSMultiBoundNode;
+class BSSegmentedTriShape;
+class BSResizableTriShape;
 
 class ShadowSceneLight;
 class AnimSequenceBase;
@@ -59,7 +64,10 @@ class AnimSequenceBase;
 class TESObjectREFR;
 class TESWaterCullingProcess;
 
+class bhkRigidBody;
 class bhkCollisionObject;
+class bhkBlendCollisionObject;
+class bhkLimitedHingeConstraint;
 
 struct NiRTTI {
 	const char* name;
@@ -388,39 +396,39 @@ assert(sizeof(NiRefObject) == 0x008);
 
 class NiObject : public NiRefObject {
 public:
-	virtual NiRTTI*		GetType();		// 02
-	virtual NiNode*		GetAsNiNode();	// 03 
-	virtual UInt32		Unk_04();		// 04
-	virtual UInt32		Unk_05();		// 05
-	virtual UInt32		Unk_06();		// 06
-	virtual UInt32		Unk_07();		// 07
-	virtual UInt32		Unk_08();		// 08
-	virtual UInt32		Unk_09();		// 09
-	virtual UInt32		Unk_0A();		// 0A
-	virtual UInt32		Unk_0B();		// 0B
-	virtual UInt32		Unk_0C();		// 0C
-	virtual UInt32		Unk_0D();		// 0D
-	virtual UInt32		Unk_0E();		// 0E
-	virtual UInt32		Unk_0F();		// 0F
-	virtual UInt32		Unk_10();		// 10
-	virtual UInt32		Unk_11();		// 11
-	virtual NiObject*	Copy();			// 12
-	virtual void		Load(NiStream* stream);
-	virtual void		PostLoad(NiStream* stream);
-	virtual void		FindNodes(NiStream* stream);
-	virtual void		Save(NiStream* stream);
-	virtual bool		Compare(NiObject* obj);
-	virtual void		DumpAttributes(NiTArray <char*>* dst);
-	virtual void		DumpChildAttributes(NiTArray <char*>* dst);
-	virtual void		Unk_1A();
-	virtual void		Unk_1B(UInt32 arg);
-	virtual void		Unk_1C();
-	virtual void		GetType2();	
-	virtual void		Unk_1E(UInt32 arg);
-	virtual void		Unk_1F();
-	virtual void		Unk_20();
-	virtual void		Unk_21();
-	virtual void		Unk_22();
+	virtual const NiRTTI*					GetRTTI();
+	virtual NiNode*							IsNiNode();
+	virtual BSFadeNode*						IsFadeNode();
+	virtual BSMultiBoundNode*				IsMultiBoundNode();
+	virtual NiGeometryData*					IsGeometry();
+	virtual NiTriBasedGeom*					IsTriBasedGeometry();
+	virtual NiTriStrips*					IsTriStrips();
+	virtual NiTriShape*						IsTriShape();
+	virtual BSSegmentedTriShape*			IsSegmentedTriShape();
+	virtual BSResizableTriShape*			IsResizableTriShape();
+	virtual NiParticles*					IsParticlesGeom();
+	virtual NiLines*						IsLinesGeom();
+	virtual bhkCollisionObject*				IsBhkNiCollisionObject();
+	virtual bhkBlendCollisionObject*		IsBhkBlendCollisionObject();
+	virtual bhkRigidBody*					IsBhkRigidBody();
+	virtual bhkLimitedHingeConstraint*		IsBhkLimitedHingeConstraint();
+	virtual NiObject*						Copy();			// 12
+	virtual void							Load(NiStream* stream);
+	virtual void							PostLoad(NiStream* stream);
+	virtual void							FindNodes(NiStream* stream);
+	virtual void							Save(NiStream* stream);
+	virtual bool							Compare(NiObject* obj);
+	virtual void							DumpAttributes(NiTArray <char*>* dst);
+	virtual void							DumpChildAttributes(NiTArray <char*>* dst);
+	virtual void							Unk_1A();
+	virtual void							Unk_1B(UInt32 arg);
+	virtual void							Unk_1C();
+	virtual void							GetType2();	
+	virtual void							Unk_1E(UInt32 arg);
+	virtual void							Unk_1F();
+	virtual void							Unk_20();
+	virtual void							Unk_21();
+	virtual void							Unk_22();
     
     
     void LogObjectAttributes();
@@ -1380,11 +1388,12 @@ public:
 
 	UInt32					Unk008[126];				// 008
 	UInt32					SceneState;					// 200
-	UInt32					Unk204;						// 204
-	UInt32					Unk208;						// 208
-	UInt32					Unk20C;						// 20C
+	UInt32					m_uiFrameID;
+	bool					m_bRenderTargetGroupActive;
+	bool					m_bBatchRendering;
+	int						unk20C[29];
 };
-assert(sizeof(NiRenderer) == 0x210);
+assert(sizeof(NiRenderer) == 0x280);
 
 class NiDX9Renderer : public NiRenderer {
 public:
@@ -1470,7 +1479,8 @@ public:
 	void							PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiSkinPartition::Partition* Partition, NiD3DShaderDeclaration* ShaderDeclaration);
 	void							CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform);
 
-	UInt32							pad210[(0x288 - 0x210) >> 2];	// 210
+	LPDIRECT3D9						ms_pkD3D9;
+	UInt32							unk284;
 	IDirect3DDevice9*				device;							// 288
 	D3DCAPS9						caps;							// 28C
 	HANDLE							deviceWindow;					// 3BC
@@ -1513,6 +1523,8 @@ public:
 	UInt32							backBufferCount;			// AC8
 	RefreshRate						refreshRate;				// ACC
 	UInt32							UnkAD0[44];					// AD0
+
+	static NiDX9Renderer* GetSingleton() { return *(NiDX9Renderer**)0x11C73B4; };
 };
 assert(sizeof(NiDX9Renderer) == 0xB80);
 
