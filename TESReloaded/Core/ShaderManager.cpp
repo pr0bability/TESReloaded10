@@ -1020,8 +1020,11 @@ void ShaderManager::UpdateConstants() {
 
 		// calculating sun amount for shaders (currently not used by any shaders)
 		ShaderConst.SunDir.w = 1.0f;
-		float sunRise = smoothStep(SunriseStart, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
-		float sunSet = smoothStep(SunsetEnd, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+		float sunRiseTransitionTime = SunriseEnd - SunriseStart; // sunriseEnd is only the middle point of the transition before nights get fully dark
+		float sunSetTransitionTime = SunsetEnd - SunsetStart; // sunsetStart is only the middle point of the transition
+
+		float sunRise = smoothStep(SunriseStart - sunRiseTransitionTime, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
+		float sunSet = smoothStep(SunsetEnd + sunSetTransitionTime, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 		isDayTime = sunRise * sunSet;
 
 		if (isDayTime == 1) {
