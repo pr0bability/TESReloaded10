@@ -1248,6 +1248,8 @@ void ShaderManager::UpdateConstants() {
 				}
 				ShaderConst.Snow.SnowData.x = ShaderConst.Animators.SnowAnimator.GetValue();
 
+				if (ShaderConst.Snow.SnowData.x) orthoRequired = true; // mark ortho map calculation as necessary
+
 				ShaderConst.Snow.SnowData.y = TheSettingManager->GetSettingF("Shaders.Snow.Main", "DepthStep");
 				ShaderConst.Snow.SnowData.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
 				ShaderConst.Snow.SnowData.w = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Flakes");
