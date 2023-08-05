@@ -873,7 +873,7 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	bool usePointLights = TheShaderManager->isDayTime ? TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsDay : TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsNight;
+	bool usePointLights = (TheShaderManager->isDayTime > 0.5) ? TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsDay : TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsNight;
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;
