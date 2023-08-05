@@ -1404,12 +1404,12 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.ImageAdjust.Data.w = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "Strength");
 
 				ShaderConst.ImageAdjust.DarkColor.x = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorR");
-				ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorR");
-				ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorR");
+				ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorG");
+				ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "DarkColorB");
 
 				ShaderConst.ImageAdjust.LightColor.x = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorR");
-				ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorR");
-				ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorR");
+				ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorG");
+				ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingF("Shaders.ImageAdjust.Interiors", "LightColorB");
 			}
 		}
 

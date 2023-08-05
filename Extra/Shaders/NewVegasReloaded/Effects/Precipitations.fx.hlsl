@@ -118,9 +118,6 @@ float4 Rain( VSOUT IN ) : COLOR0
 	float4 refractedColor = tex2D(TESR_SourceBuffer, refractedUV);
 	refractedColor += tex2D(TESR_RenderedBuffer, refractedUV);
 
-
-	// return tex2D(TESR_SourceBuffer, IN.UVCoord);
-	// return TESR_RainAspect.yyyy;
 	return lerp(color, refractedColor + rainColor * TESR_RainAspect.y, totalRain* TESR_RainData.w);
 }
 
