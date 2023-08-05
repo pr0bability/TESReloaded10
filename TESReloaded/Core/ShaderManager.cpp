@@ -1555,7 +1555,6 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.Cinema->Enabled) {
-			avglumaRequired = true;
 			int Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
 
 			ShaderConst.Cinema.Data.x = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
@@ -1585,6 +1584,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Cinema.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
 			ShaderConst.Cinema.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
 			ShaderConst.Cinema.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
+			ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
 		}
 
 		// camera/position change data
@@ -1627,6 +1627,8 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.Lens->Enabled) {
+			avglumaRequired = true;
+
 			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
 			ShaderConst.Lens.Data.y = isExterior? TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"): ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
 		}
