@@ -62,7 +62,7 @@ ForceReflections = true     # Always render the full world in reflection for HD 
 RemoveUnderwater = false    # Disables fog underwater. Not compatible with custom underwater shader.
 
 [_Main.Menu.Keys]
-KeyAdd = 74                 # Keycode for increment value shortcut in menu.
+KeyAdd = 78                 # Keycode for increment value shortcut in menu.
 KeyDown = 208               # Keycode for the hotkey to navigate down in the main menu.
 KeyEditing = 156            # Keycode for the hotkey to toggle custom value entry mode in menu.
 KeyEnable = 24              # Keycode for the hotkey to activate the main menu.
@@ -71,7 +71,7 @@ KeyPageDown = 209           # Keycode for the hotkey to go to next page of optio
 KeyPageUp = 201             # Keycode for the hotkey to go to previous page of options in the main menu.
 KeyRight = 205              # Keycode for the hotkey to navigate right in the main menu.
 KeySave = 28                # Keycode for the hotkey to save changes done in the main menu (if not used, will revert upon restart).
-KeySubtract = 78            # Keycode for decrement value shortcut in menu.
+KeySubtract = 74            # Keycode for decrement value shortcut in menu.
 KeyUp = 200                 # Keycode for the hotkey to navigate up in the main menu.
 EntryUseNumpad = true       # Wether to use the numpad numbers or the other numbers. Start entry with "=" or numpad "Enter"
 
@@ -182,6 +182,7 @@ Mode = 2                                # Chose when the letterbox effect is act
 OverlayStrength = 0.3                   # Overlays the screen image onto itself to increase color intensity and contrast.
 VignetteDarkness = 1.0                  # Darkening of the edges of the screen.
 VignetteRadius = 0.6                    # Distance to the center for the start of the Vignette effect.
+LetterBoxDepth = 0.0                    # Depth of the letter box bars
 
 [_Shaders.Cinema.Status]
 Enabled = true                          # A collection of tweaks to give a more cinematic post processing feel.
