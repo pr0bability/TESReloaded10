@@ -237,7 +237,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
-	if (depth < 100 || worldPos.z <= (TESR_WaterSettings.x + BIAS) || !GetOrtho(worldPos)) return color;
+	if (length(camera_vector) < 80 || worldPos.z <= (TESR_WaterSettings.x + BIAS) || !GetOrtho(worldPos)) return color;
 	
 	float2 uv = worldPos.xy / 200.0f;
 	float3 norm = normalize(expand(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb));
