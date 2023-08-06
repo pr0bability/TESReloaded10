@@ -1,36 +1,58 @@
 // Snow accumulation fullscreen shader for Oblivion Reloaded
 
 float4x4 TESR_WorldViewProjectionTransform;
-float4x4 TESR_ViewTransform;
-float4x4 TESR_ProjectionTransform;
 float4x4 TESR_ShadowCameraToLightTransformOrtho;
-float4 TESR_CameraPosition;
 float4 TESR_SunDirection;
 float4 TESR_SunColor;
+float4 TESR_SunAmbient;
 float4 TESR_ReciprocalResolution;
 float4 TESR_SnowAccumulationParams;
 float4 TESR_WaterSettings;
-float4 TESR_FogData;
-float4 TESR_FogColor;
 float4 TESR_OrthoData;
+float4 TESR_DebugVar;
+
+float4 TESR_ShadowLightPosition0;
+float4 TESR_ShadowLightPosition1;
+float4 TESR_ShadowLightPosition2;
+float4 TESR_ShadowLightPosition3;
+float4 TESR_ShadowLightPosition4;
+float4 TESR_ShadowLightPosition5;
+float4 TESR_ShadowLightPosition6;
+float4 TESR_ShadowLightPosition7;
+float4 TESR_ShadowLightPosition8;
+float4 TESR_ShadowLightPosition9;
+float4 TESR_ShadowLightPosition10;
+float4 TESR_ShadowLightPosition11;
+float4 TESR_LightPosition0;
+float4 TESR_LightPosition1;
+float4 TESR_LightPosition2;
+float4 TESR_LightPosition3;
+float4 TESR_LightPosition4;
+float4 TESR_LightPosition5;
+float4 TESR_LightPosition6;
+float4 TESR_LightPosition7;
+float4 TESR_LightPosition8;
+float4 TESR_LightPosition9;
+float4 TESR_LightPosition10;
+float4 TESR_LightPosition11;
+
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_OrthoMapBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SnowSampler : register(s4) < string ResourceName = "Precipitations\snow.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SnowNormSampler : register(s5) < string ResourceName = "Precipitations\snow_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_NormalsBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_PointShadowBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SnowNormSampler : register(s6) < string ResourceName = "Precipitations\snow_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_BlueNoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-static const float2 OffsetMaskH = float2(1.0f, 0.0f);
-static const float2 OffsetMaskV = float2(0.0f, 1.0f);
-static const float nearZ = TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33;
-static const float farZ = (TESR_ProjectionTransform._33 * nearZ) / (TESR_ProjectionTransform._33 - 1.0f);
-static const float Zmul = nearZ * farZ;
-static const float Zdiff = farZ - nearZ;
-static const int cKernelSize = 24;
-static const float BIAS = 0.02f;
+static const int KernelSize = 24;
+static const float BIAS = 0.003f;
+static const float diffusePower = 0.3f;
+static const float specularPower = 0.5f;
+static const float fresnelPower = 0.2f;
 
-static const float BlurWeights[cKernelSize] = 
+static const float BlurNormalsWeights[KernelSize] = 
 {
 	0.019956226f,
 	0.021463016f,
@@ -58,7 +80,7 @@ static const float BlurWeights[cKernelSize] =
 	0.019956226f
 };
 
-static const float2 BlurOffsets[cKernelSize] = 
+static const float2 BlurNormalsOffsets[KernelSize] = 
 {
 	float2(-12.0f * TESR_ReciprocalResolution.x, -12.0f * TESR_ReciprocalResolution.y),
 	float2(-11.0f * TESR_ReciprocalResolution.x, -11.0f * TESR_ReciprocalResolution.y),
@@ -106,146 +128,136 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-float readDepth(in float2 coord : TEXCOORD0)
+#include "Includes/Helpers.hlsl"
+#include "Includes/Depth.hlsl"
+#include "Includes/BlurDepth.hlsl"
+#include "Includes/Normals.hlsl"
+
+float4 GetNormals(VSOUT IN) : COLOR0
 {
-	float posZ = tex2D(TESR_DepthBuffer, coord).x;
-	posZ = Zmul / ((posZ * Zdiff) - farZ);
-	return posZ;
+	return float4(compress(GetWorldNormal(IN.UVCoord)), 1.0);
 }
 
-float readDepth01(in float2 coord : TEXCOORD0)
-{
-	float posZ = tex2D(TESR_DepthBuffer, coord).x;
-	return (2.0f * nearZ) / (nearZ + farZ - posZ * (farZ - nearZ));
+
+float GetOrtho(float4 worldPos){
+	float thickness = BIAS; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
+
+	// get puddle mask from ortho map
+	float4 pos = mul(worldPos, TESR_WorldViewProjectionTransform);
+	float4 ortho_pos = mul(pos, TESR_ShadowCameraToLightTransformOrtho);
+
+	// apply perspective (perspective division) and convert from -1/1 to range to 0/1 (shadowMap range);
+	ortho_pos.xyz /= ortho_pos.w;
+	ortho_pos.x = ortho_pos.x * 0.5f + 0.5f;
+	ortho_pos.y = ortho_pos.y * -0.5f + 0.5f;
+
+	float outOfBounds = (saturate(ortho_pos.x) != ortho_pos) || (saturate(ortho_pos.y) != ortho_pos.y);
+
+	float ortho = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r; // ortho height
+
+	float aboveGround = ortho_pos.z < ortho + thickness;
+	float belowGround = ortho_pos.z > ortho - thickness;
+
+	return outOfBounds || belowGround;
 }
 
-float3 toWorld(float2 tex)
-{
-    float3 v = float3(TESR_ViewTransform[0][2], TESR_ViewTransform[1][2], TESR_ViewTransform[2][2]);
-    v += (1 / TESR_ProjectionTransform[0][0] * (2 * tex.x - 1)).xxx * float3(TESR_ViewTransform[0][0], TESR_ViewTransform[1][0], TESR_ViewTransform[2][0]);
-    v += (-1 / TESR_ProjectionTransform[1][1] * (2 * tex.y - 1)).xxx * float3(TESR_ViewTransform[0][1], TESR_ViewTransform[1][1], TESR_ViewTransform[2][1]);
-    return v;
-}
-
-float3 getPosition(in float2 tex, in float depth)
-{
-	return (TESR_CameraPosition.xyz + toWorld(tex) * depth);
-}
-
-float Lookup(float4 ShadowPos, float2 OffSet) {
-	
-	float Shadow = tex2D(TESR_OrthoMapBuffer, ShadowPos.xy + float2(OffSet.x * TESR_OrthoData.z, OffSet.y * TESR_OrthoData.z)).r;
-	if (Shadow < ShadowPos.z - BIAS) return 0.25f;
-	return 1.0f;
-	
-}
-
-float GetOrtho(float4 OrthoPos) {
-	
-	float Ortho;
-	float x;
-	float y;
-	
-	OrthoPos.xyz /= OrthoPos.w;
-    if (OrthoPos.x < -1.0f || OrthoPos.x > 1.0f ||
-        OrthoPos.y < -1.0f || OrthoPos.y > 1.0f ||
-        OrthoPos.z <  0.0f || OrthoPos.z > 1.0f)
-		return 1.0f;
- 
-    OrthoPos.x = OrthoPos.x *  0.5f + 0.5f;
-    OrthoPos.y = OrthoPos.y * -0.5f + 0.5f;
-	for (y = -0.5f; y <= 0.5f; y += 0.25f) {
-		for (x = -0.5f; x <= 0.5f; x += 0.25f) {
-			Ortho += Lookup(OrthoPos, float2(x, y));
-		}
-	}
-	Ortho /= 25.0f;	
-	return Ortho;
-	
-}
-
-float4 GetNormals( VSOUT IN ) : COLOR0
-{
-	float depth = readDepth(IN.UVCoord);
-	float3 pos = getPosition(IN.UVCoord, depth);
-
-    float3 left = pos - getPosition(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(-1, 0), readDepth(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(-1, 0)));
-    float3 right = getPosition(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(1, 0), readDepth(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(1, 0))) - pos;
-    float3 up = pos - getPosition(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(0, -1), readDepth(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(0, -1)));
-    float3 down = getPosition(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(0, 1), readDepth(IN.UVCoord + TESR_ReciprocalResolution.xy * float2(0, 1))) - pos;
-    float3 dx = length(left) < length(right) ? left : right;
-    float3 dy = length(up) < length(down) ? up : down;
-	float3 norm = normalize(cross(dx,dy));
-	
-	norm.z *= -1;
-
-	return float4((norm + 1) / 2, 1);
-}
-
-//float4 GetNormals2( VSOUT IN ) : COLOR0
-//{
-//	float2 uv0 = IN.UVCoord;
-//	float2 uv1 = IN.UVCoord + TESR_ReciprocalResolution.xy * float2(1, 0);
-//	float2 uv2 = IN.UVCoord + TESR_ReciprocalResolution.xy * float2(0, -1);
-//	float depth0 = readDepth(uv0);
-//	float depth1 = readDepth(uv1);
-//	float depth2 = readDepth(uv2);
-//	float3 pos0 = getPosition(uv0, depth0);
-//	float3 pos1 = getPosition(uv1, depth1);
-//	float3 pos2 = getPosition(uv2, depth2);
-//	float3 norm = normalize(cross(pos2 - pos0, pos1 - pos0));
-//	
-//	norm.z *= -1;
-//	return float4((norm + 1) / 2, 1);
-//
-//}
 
 float4 BlurNormals(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 {
 	float WeightSum = 0.12f * saturate(1 - TESR_SnowAccumulationParams.x);
-	float3 oColor = tex2D(TESR_RenderedBuffer,IN.UVCoord).rgb;
-	float3 finalColor = oColor * WeightSum;
-	float depth = readDepth01(IN.UVCoord);
-	if (depth == 0.0f || depth >= 0.9f) discard;
+	float3 normal = tex2D(TESR_RenderedBuffer,IN.UVCoord).rgb;
+	float3 finalNormal = normal * WeightSum;
+	float depth = readDepth(IN.UVCoord)/farZ;
 	
-	for (int i = 0; i < cKernelSize; i++) {
-		float2 uvOff = (BlurOffsets[i] * OffsetMask) * TESR_SnowAccumulationParams.y * abs(log(depth));
-		float3 Color = tex2D(TESR_RenderedBuffer, IN.UVCoord + uvOff).rgb;
-		float weight = BlurWeights[i] * saturate(dot(Color.xyz * 2 - 1, oColor.xyz * 2 - 1) - TESR_SnowAccumulationParams.x * 0.75f);
-		finalColor += weight * Color;
+	for (int i = 0; i < KernelSize; i++) {
+		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * TESR_SnowAccumulationParams.y * abs(log(depth));
+		float3 newNormal = tex2D(TESR_RenderedBuffer, IN.UVCoord + uvOff).rgb;
+		float weight = BlurNormalsWeights[i] * saturate(dot(expand(newNormal), expand(normal)) - TESR_SnowAccumulationParams.x * 0.75f);
+		finalNormal += weight * newNormal;
 		WeightSum += weight;
 	}
 	
-	finalColor /= WeightSum;
-    return float4(finalColor, 1.0f);
+	finalNormal /= WeightSum;
+    return float4(finalNormal, 1.0f);
+}
+
+
+// returns a point light contribution with no shadow map sampling
+float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal){
+
+	float3 LightDir = LightPos.xyz - worldPos.xyz;
+	float Distance = length(LightDir) / LightPos.w; // normalize distance over light range
+	float4 light = float4(LightDir, Distance);
+
+	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
+	float s = Distance * Distance; 
+	float atten = saturate((1 - s) / (1 + s));
+
+	LightDir = normalize(LightDir); // normalize
+	float diffuse = dot(LightDir, normal.xyz);
+
+	return saturate(diffuse * atten);
 }
 
 float4 Snow( VSOUT IN ) : COLOR0
 {
-	float3 color = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float3 world = toWorld(IN.UVCoord);
 	
 	float depth = readDepth(IN.UVCoord);
 	float3 camera_vector = world * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
-	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
-	float4 ortho_pos = mul(pos, TESR_ShadowCameraToLightTransformOrtho);	
-	float ortho = GetOrtho(ortho_pos);
-	
-    if (world_pos.z >= TESR_WaterSettings.x + 1) {
-		float2 uv = world_pos.xy / 200.0f;
-		float3 norm = tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb * 2 - 1;
-		float3 detail_norm = reflect(tex2D(TESR_SnowNormSampler, uv).rgb * 2 - 1, norm);
-		detail_norm.z *= -1;
-		
-		float3 snow_tex = tex2D(TESR_SnowSampler, uv).rgb;
-		float3 snow_light = TESR_FogColor.rgb + (min(TESR_FogData.z, 0.4) * TESR_SnowAccumulationParams.z) + (TESR_SunColor.rgb * TESR_SnowAccumulationParams.z) * dot(TESR_SunDirection.xyz, detail_norm);
-		float3 snow_diffuse = snow_light * snow_tex;
-		float sat = saturate(saturate(norm.z * ortho * TESR_SnowAccumulationParams.w) * 2 - 1) * saturate(lerp(1, 0, (depth * 0.5 - TESR_FogData.x) / (TESR_FogData.y - TESR_FogData.x)));
+	float3 eyeDirection = -1 * normalize(world);
+	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
-		color.rgb = color * (1 - sat) + snow_diffuse * sat;
-    }
-    return float4(color, 1.0f);
+	// early out for the character gun, water surfaces/areas and 
+	if (depth < 50 || worldPos.z <= (TESR_WaterSettings.x + BIAS) || !GetOrtho(worldPos)) return color;
+	
+	float2 uv = worldPos.xy / 200.0f;
+	float3 norm = normalize(expand(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb));
+	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
+	float3 surfaceNormal = normalize(float3(localNorm.xy + norm.xy, localNorm.z * norm.z));
+
+	float3 snow_tex = float3(1, 1, 1);
+
+	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
+	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
+
+	float3 ambient = snow_tex * TESR_SunAmbient.rgb;
+	float shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	float3 diffuse = snow_tex * shade(TESR_SunDirection.xyz, surfaceNormal) * TESR_SunColor.rgb * diffusePower * shadow;
+	float3 spec = snowSpec * TESR_SunColor.rgb * specularPower * shadow;
+	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
+	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.4;
+
+	float4 snowColor = float4(ambient + diffuse + spec + fresnel + sparkles, 1);
+
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition0, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition1, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition2, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition3, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition4, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition5, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition6, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition7, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition8, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition9, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition10, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition0, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition1, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition2, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition3, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition4, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition5, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition6, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition7, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition8, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition9, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition10, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition11, float4(surfaceNormal, 1)) * shadow;
+
+	color = lerp(color, snowColor, shade(float3(0, 0, 1), norm));
+
+    return color;
 }
 
 technique
