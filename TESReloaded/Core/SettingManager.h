@@ -460,6 +460,7 @@ public:
 				
 	Configuration					Config;
 	bool							GameLoading;
+	bool							SettingsChanged;
 	SettingsMainStruct				SettingsMain;
 	SettingsShadowStruct			SettingsShadows;
 	SettingsWaterMap				SettingsWater;
