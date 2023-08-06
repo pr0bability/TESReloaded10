@@ -186,7 +186,7 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 
 	occlusion = pows(occlusion/total, 0.3); // get an average shading based on total weights
 
-    // save result of SSS in red channel, and fade contrribution with distance
+    // save result of SSS in red channel, and fade contribution with distance
 	color.r = lerp(1.0f - occlusion, 1.0, invlerps(200, SSS_MAXDEPTH, pos.z));
     return color;
 }
