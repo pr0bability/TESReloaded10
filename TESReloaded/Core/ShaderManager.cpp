@@ -1938,15 +1938,15 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	// Snow must be rendered first so other effects appear on top
-	if (ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
-	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
-
 	// Disable shadows during VATS
 	if (!VATSIsOn) {
 		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, false, true);
 		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, true, true);
 	}
+
+	// Snow must be rendered first so other effects appear on top
+	if (ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
+	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 	if (isUnderwater) {
 		// underwater only effects
