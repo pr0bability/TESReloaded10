@@ -6,10 +6,9 @@ float4 TESR_SunDirection;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
 float4 TESR_ReciprocalResolution;
-float4 TESR_SnowAccumulationParams;
+float4 TESR_SnowAccumulationParams; // x:BlurNormDropThreshhold, y:BlurRadiusMultiplier, z:SunPower, w:SnowAmount 
 float4 TESR_WaterSettings;
 float4 TESR_OrthoData;
-float4 TESR_DebugVar;
 
 float4 TESR_ShadowLightPosition0;
 float4 TESR_ShadowLightPosition1;
@@ -182,8 +181,36 @@ float4 BlurNormals(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 }
 
 
+// hash based 3d value noise
+// function taken from https://www.shadertoy.com/view/XslGRr
+// Created by inigo quilez - iq/2013
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+// ported from GLSL to HLSL by https://stackoverflow.com/questions/15628039/simplex-noise-shader
+
+float hash( float n )
+{
+    return frac(sin(n)*43758.5453);
+}
+
+float noise( float3 x )
+{
+    // The noise function returns a value in the range -1.0f -> 1.0f
+
+    float3 p = floor(x);
+    float3 f = frac(x);
+
+    f       = f*f*(3.0-2.0*f);
+    float n = p.x + p.y*57.0 + 113.0*p.z;
+
+    return lerp(lerp(lerp( hash(n+0.0), hash(n+1.0),f.x),
+            lerp( hash(n+57.0), hash(n+58.0),f.x),f.y),
+            lerp(lerp( hash(n+113.0), hash(n+114.0),f.x),
+            lerp( hash(n+170.0), hash(n+171.0),f.x),f.y),f.z);
+}
+
 // returns a point light contribution with no shadow map sampling
 float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal){
+	if (LightPos.w == 0) return 0;
 
 	float3 LightDir = LightPos.xyz - worldPos.xyz;
 	float Distance = length(LightDir) / LightPos.w; // normalize distance over light range
@@ -209,8 +236,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 eyeDirection = -1 * normalize(world);
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
-	// early out for the character gun, water surfaces/areas and 
-	if (depth < 50 || worldPos.z <= (TESR_WaterSettings.x + BIAS) || !GetOrtho(worldPos)) return color;
+	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
+	if (depth < 100 || worldPos.z <= (TESR_WaterSettings.x + BIAS) || !GetOrtho(worldPos)) return color;
 	
 	float2 uv = worldPos.xy / 200.0f;
 	float3 norm = normalize(expand(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb));
@@ -227,37 +254,42 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 diffuse = snow_tex * shade(TESR_SunDirection.xyz, surfaceNormal) * TESR_SunColor.rgb * diffusePower * shadow;
 	float3 spec = snowSpec * TESR_SunColor.rgb * specularPower * shadow;
 	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
-	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.4;
+	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.4 * shadow;
 
 	float4 snowColor = float4(ambient + diffuse + spec + fresnel + sparkles, 1);
+	float pointLightsPower = 0.5;
 
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition0, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition1, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition2, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition3, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition4, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition5, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition6, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition7, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition8, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition9, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition10, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition0, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition1, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition2, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition3, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition4, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition5, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition6, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition7, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition8, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition9, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition10, float4(surfaceNormal, 1)) * shadow;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition11, float4(surfaceNormal, 1)) * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition0, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition1, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition2, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition3, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition4, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition5, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition6, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition7, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition8, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition9, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition10, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition11, float4(surfaceNormal, 1)) * pointLightsPower * shadow;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition0, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition1, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition2, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition3, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition4, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition5, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition6, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition7, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition8, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition9, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition10, float4(surfaceNormal, 1)) * pointLightsPower;
+	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition11, float4(surfaceNormal, 1)) * pointLightsPower;
 
-	color = lerp(color, snowColor, shade(float3(0, 0, 1), norm));
+	// create a noisy pattern of accumulation over time
+	float noiseSize = 70;
+	float coverage = saturate(pow(noise(worldPos.xyz / (noiseSize * 0.5)) * noise(worldPos.xyz / (noiseSize * 3)) * noise(worldPos.xyz / noiseSize), 2 - 2 * TESR_SnowAccumulationParams.w));
 
-    return color;
+	color = lerp(color, snowColor, coverage * shades(float3(0, 0, 1), norm));
+	return color;
 }
 
 technique
