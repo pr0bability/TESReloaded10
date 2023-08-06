@@ -338,6 +338,7 @@ void SettingManager::Initialize() {
 	TheSettingManager = new SettingManager();
 
 	TheSettingManager->GameLoading = false;
+	TheSettingManager->SettingsChanged = true;
 
 }
 
@@ -736,6 +737,7 @@ void SettingManager::LoadSettings() {
 		}
 	}
 
+	SettingsChanged = true;
 	timer.LogTime("SettingsManager::InitSettings for loop");
 }
 

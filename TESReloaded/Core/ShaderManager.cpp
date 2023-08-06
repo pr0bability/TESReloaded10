@@ -31,7 +31,7 @@ void Animator::Start(float duration, float finalValue) {
 	endTime = currenttime + duration;
 	running = true;
 
-	startValue = endValue;
+	startValue = GetValue();
 	endValue = finalValue;
 }
 
@@ -1154,24 +1154,26 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.Water.shallowColor.w = rgba->a / 255.0f;
 			}
 
-			ShaderConst.Water.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
-			ShaderConst.Water.waterCoefficients.y = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_G");
-			ShaderConst.Water.waterCoefficients.z = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_B");
-			ShaderConst.Water.waterCoefficients.w = TheSettingManager->GetSettingF(sectionName, "inScattCoeff");
+			if (TheSettingManager->SettingsChanged) {
+				ShaderConst.Water.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
+				ShaderConst.Water.waterCoefficients.y = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_G");
+				ShaderConst.Water.waterCoefficients.z = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_B");
+				ShaderConst.Water.waterCoefficients.w = TheSettingManager->GetSettingF(sectionName, "inScattCoeff");
 
-			ShaderConst.Water.waveParams.x = TheSettingManager->GetSettingF(sectionName, "choppiness");
-			ShaderConst.Water.waveParams.y = TheSettingManager->GetSettingF(sectionName, "waveWidth");
-			ShaderConst.Water.waveParams.z = TheSettingManager->GetSettingF(sectionName, "waveSpeed");
-			ShaderConst.Water.waveParams.w = TheSettingManager->GetSettingF(sectionName, "reflectivity");
+				ShaderConst.Water.waveParams.x = TheSettingManager->GetSettingF(sectionName, "choppiness");
+				ShaderConst.Water.waveParams.y = TheSettingManager->GetSettingF(sectionName, "waveWidth");
+				ShaderConst.Water.waveParams.z = TheSettingManager->GetSettingF(sectionName, "waveSpeed");
+				ShaderConst.Water.waveParams.w = TheSettingManager->GetSettingF(sectionName, "reflectivity");
 
-			ShaderConst.Water.waterSettings.y = TheSettingManager->GetSettingF(sectionName, "depthDarkness");
+				ShaderConst.Water.waterSettings.y = TheSettingManager->GetSettingF(sectionName, "depthDarkness");
 
-			ShaderConst.Water.waterVolume.x = TheSettingManager->GetSettingF(sectionName, "causticsStrength") * ShaderConst.sunGlare;
-			ShaderConst.Water.waterVolume.y = TheSettingManager->GetSettingF(sectionName, "shoreFactor");
-			ShaderConst.Water.waterVolume.z = TheSettingManager->GetSettingF(sectionName, "turbidity");
-			ShaderConst.Water.waterVolume.w = TheSettingManager->GetSettingF(sectionName, "causticsStrengthS");
-			
-			ShaderConst.Water.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
+				ShaderConst.Water.waterVolume.x = TheSettingManager->GetSettingF(sectionName, "causticsStrength") * ShaderConst.sunGlare;
+				ShaderConst.Water.waterVolume.y = TheSettingManager->GetSettingF(sectionName, "shoreFactor");
+				ShaderConst.Water.waterVolume.z = TheSettingManager->GetSettingF(sectionName, "turbidity");
+				ShaderConst.Water.waterVolume.w = TheSettingManager->GetSettingF(sectionName, "causticsStrengthS");
+
+				ShaderConst.Water.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
+			}
 		}		
 
 		if (isUnderwater) {
@@ -1182,13 +1184,15 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.WaterLens->Enabled) {
+			if (TheSettingManager->SettingsChanged) {
+				ShaderConst.WaterLens.Time.x = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
+				ShaderConst.WaterLens.Time.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
+				ShaderConst.WaterLens.Time.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
+			}
 
 			if (!isUnderwater && ShaderConst.Animators.WaterLensAnimator.switched == true) {
 				ShaderConst.Animators.WaterLensAnimator.switched = false;
 				// start the waterlens effect and animate it fading
-				ShaderConst.WaterLens.Time.x = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
-				ShaderConst.WaterLens.Time.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
-				ShaderConst.WaterLens.Time.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
 				ShaderConst.Animators.WaterLensAnimator.Initialize(1);
 				ShaderConst.Animators.WaterLensAnimator.Start(0.01, 0);
 			}
@@ -1218,19 +1222,22 @@ void ShaderManager::UpdateConstants() {
 
 			if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
 
-			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
-			ShaderConst.WetWorld.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
-			ShaderConst.WetWorld.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
-			ShaderConst.WetWorld.Coeffs.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
+			if (TheSettingManager->SettingsChanged) {
 
-			ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
-			ShaderConst.Rain.RainData.y = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "VerticalScale");
-			ShaderConst.Rain.RainData.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Speed");
-			ShaderConst.Rain.RainData.w = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Opacity");
+				ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
+				ShaderConst.WetWorld.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
+				ShaderConst.WetWorld.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
+				ShaderConst.WetWorld.Coeffs.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
 
-			ShaderConst.Rain.RainAspect.x = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Refraction");
-			ShaderConst.Rain.RainAspect.y = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Coloring");
-			ShaderConst.Rain.RainAspect.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Bloom");
+				ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
+				ShaderConst.Rain.RainData.y = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "VerticalScale");
+				ShaderConst.Rain.RainData.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Speed");
+				ShaderConst.Rain.RainData.w = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Opacity");
+
+				ShaderConst.Rain.RainAspect.x = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Refraction");
+				ShaderConst.Rain.RainAspect.y = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Coloring");
+				ShaderConst.Rain.RainAspect.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Bloom");
+			}
 
 			if (Effects.Snow->Enabled) {
 				// Snow fall
@@ -1250,9 +1257,11 @@ void ShaderManager::UpdateConstants() {
 
 				if (ShaderConst.Snow.SnowData.x) orthoRequired = true; // mark ortho map calculation as necessary
 
-				ShaderConst.Snow.SnowData.y = TheSettingManager->GetSettingF("Shaders.Snow.Main", "DepthStep");
-				ShaderConst.Snow.SnowData.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
-				ShaderConst.Snow.SnowData.w = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Flakes");
+				if (TheSettingManager->SettingsChanged) {
+					ShaderConst.Snow.SnowData.y = TheSettingManager->GetSettingF("Shaders.Snow.Main", "DepthStep");
+					ShaderConst.Snow.SnowData.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
+					ShaderConst.Snow.SnowData.w = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Flakes");
+				}
 			}
 
 			if (Effects.SnowAccumulation->Enabled) {
@@ -1260,17 +1269,21 @@ void ShaderManager::UpdateConstants() {
 				if (isSnow && !ShaderConst.Animators.SnowAccumulationAnimator.switched) {
 					// it just started snowing
 					ShaderConst.Animators.SnowAccumulationAnimator.switched = true;
-					ShaderConst.Animators.SnowAccumulationAnimator.Initialize(0);
 					ShaderConst.Animators.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Increase"), 1);
 				}
 				else if (!isSnow && ShaderConst.Animators.SnowAccumulationAnimator.switched) {
 					// it just stopped snowing
 					ShaderConst.Animators.SnowAccumulationAnimator.switched = false;
 					ShaderConst.Animators.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Decrease"), 0);
+
 				}
-				ShaderConst.SnowAccumulation.Params.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
-				ShaderConst.SnowAccumulation.Params.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
-				ShaderConst.SnowAccumulation.Params.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
+				if (TheSettingManager->SettingsChanged) {
+
+					ShaderConst.SnowAccumulation.Params.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
+					ShaderConst.SnowAccumulation.Params.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
+					ShaderConst.SnowAccumulation.Params.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
+				}
+
 				ShaderConst.SnowAccumulation.Params.w = ShaderConst.Animators.SnowAccumulationAnimator.GetValue();
 
 				if (ShaderConst.SnowAccumulation.Params.w) orthoRequired = true; // mark ortho map calculation as necessary
@@ -1278,10 +1291,12 @@ void ShaderManager::UpdateConstants() {
 		}
 		
 		if (TheSettingManager->GetMenuShaderEnabled("Grass")) {
-			ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
-			ShaderConst.Grass.Scale.y = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleY");
-			ShaderConst.Grass.Scale.z = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleZ");
-			switch (TheSettingManager->GetSettingI("Shaders.Grass.Main", "GrassDensity")) {
+			if (TheSettingManager->SettingsChanged) {
+				ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
+				ShaderConst.Grass.Scale.y = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleY");
+				ShaderConst.Grass.Scale.z = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleZ");
+
+				switch (TheSettingManager->GetSettingI("Shaders.Grass.Main", "GrassDensity")) {
 				case 1:
 					*Pointers::Settings::MinGrassSize = 240;
 					*Pointers::Settings::TexturePctThreshold = 0.3f;
@@ -1316,40 +1331,41 @@ void ShaderManager::UpdateConstants() {
 					break;
 				default:
 					break;
-			}
+				}
 
-			float minDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MinDistance");
-			if (minDistance) *Pointers::Settings::GrassStartFadeDistance = minDistance;
-			float maxDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MaxDistance");
-			if (maxDistance) *Pointers::Settings::GrassEndDistance = maxDistance;
+				float minDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MinDistance");
+				if (minDistance) *Pointers::Settings::GrassStartFadeDistance = minDistance;
+				float maxDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MaxDistance");
+				if (maxDistance) *Pointers::Settings::GrassEndDistance = maxDistance;
 
-			if (TheSettingManager->GetSettingI("Shaders.Grass.Main", "WindEnabled")) {
-				*Pointers::Settings::GrassWindMagnitudeMax = *Pointers::ShaderParams::GrassWindMagnitudeMax = TheSettingManager->GetSettingF("Shaders.Grass.Main", "WindCoefficient") * ShaderConst.windSpeed;
-				*Pointers::Settings::GrassWindMagnitudeMin = *Pointers::ShaderParams::GrassWindMagnitudeMin = *Pointers::Settings::GrassWindMagnitudeMax * 0.5f;
+				if (TheSettingManager->GetSettingI("Shaders.Grass.Main", "WindEnabled")) {
+					*Pointers::Settings::GrassWindMagnitudeMax = *Pointers::ShaderParams::GrassWindMagnitudeMax = TheSettingManager->GetSettingF("Shaders.Grass.Main", "WindCoefficient") * ShaderConst.windSpeed;
+					*Pointers::Settings::GrassWindMagnitudeMin = *Pointers::ShaderParams::GrassWindMagnitudeMin = *Pointers::Settings::GrassWindMagnitudeMax * 0.5f;
+				}
 			}
 		}
 
-		if (TheSettingManager->GetMenuShaderEnabled("HDR")) {
+		if (TheSettingManager->GetMenuShaderEnabled("HDR") && TheSettingManager->SettingsChanged) {
 			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingF("Shaders.HDR.Main", "ToneMapping");
 			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingF("Shaders.HDR.Main", "ToneMappingBlur");
 			ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingF("Shaders.HDR.Main", "ToneMappingColor");
 			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingF("Shaders.HDR.Main", "Linearization");
 		}
 
-		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
+		if (TheSettingManager->GetMenuShaderEnabled("POM") && TheSettingManager->SettingsChanged) {
 			ShaderConst.POM.ParallaxData.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");
 			ShaderConst.POM.ParallaxData.y = TheSettingManager->GetSettingF("Shaders.POM.Main", "MinSamples");
 			ShaderConst.POM.ParallaxData.z = TheSettingManager->GetSettingF("Shaders.POM.Main", "MaxSamples");
 		}
 	
-		if (TheSettingManager->GetMenuShaderEnabled("Terrain")) {
+		if (TheSettingManager->GetMenuShaderEnabled("Terrain") && TheSettingManager->SettingsChanged) {
 			ShaderConst.Terrain.Data.x = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "DistantSpecular"); 
 			ShaderConst.Terrain.Data.y = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "DistantNoise");
 			ShaderConst.Terrain.Data.z = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "NearSpecular");
 			ShaderConst.Terrain.Data.w = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "MiddleSpecular");
 		}
 	
-		if (TheSettingManager->GetMenuShaderEnabled("Skin")) {
+		if (TheSettingManager->GetMenuShaderEnabled("Skin") && TheSettingManager->SettingsChanged) {
 			ShaderConst.Skin.SkinData.x = TheSettingManager->GetSettingF("Shaders.Skin.Main", "Attenuation");
 			ShaderConst.Skin.SkinData.y = TheSettingManager->GetSettingF("Shaders.Skin.Main", "SpecularPower");
 			ShaderConst.Skin.SkinData.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "MaterialThickness");
@@ -1360,28 +1376,32 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.GodRays->Enabled) {
-			ShaderConst.GodRays.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
-			ShaderConst.GodRays.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
-			ShaderConst.GodRays.Ray.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayDensity");
-			ShaderConst.GodRays.Ray.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayVisibility");
 
-			if (TheSettingManager->GetSettingI("Shaders.GodRays.Main", "SunGlareEnabled")) {
-				ShaderConst.GodRays.Ray.z *= ShaderConst.sunGlare;
-				ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
+			if (TheSettingManager->SettingsChanged) {
+
+				ShaderConst.GodRays.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
+				ShaderConst.GodRays.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
+				ShaderConst.GodRays.Ray.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayDensity");
+				ShaderConst.GodRays.Ray.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayVisibility");
+
+				if (TheSettingManager->GetSettingI("Shaders.GodRays.Main", "SunGlareEnabled")) {
+					ShaderConst.GodRays.Ray.z *= ShaderConst.sunGlare;
+					ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
+				}
+
+				ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayR");
+				ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayG");
+				ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayB");
+				ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "Saturate");
+				ShaderConst.GodRays.Data.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "LightShaftPasses");
+				ShaderConst.GodRays.Data.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Luminance");
+
+				float dayMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "DayMultiplier");
+				float nightMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "NightMultiplier");
+				ShaderConst.GodRays.Data.z = isDayTime > 0 ? dayMult : nightMult;
+
+				ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
 			}
-
-			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayR");
-			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayG");
-			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayB");
-			ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "Saturate");
-			ShaderConst.GodRays.Data.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "LightShaftPasses");
-			ShaderConst.GodRays.Data.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Luminance");
-
-			float dayMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "DayMultiplier");
-			float nightMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "NightMultiplier");
-			ShaderConst.GodRays.Data.z = isDayTime>0?dayMult:nightMult;
-
-			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
 		}
 
 		if (Effects.ImageAdjust->Enabled) {
@@ -1558,7 +1578,6 @@ void ShaderManager::UpdateConstants() {
 			int Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
 
 			ShaderConst.Cinema.Data.x = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
-			ShaderConst.Cinema.Data.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
 			switch (Mode) {
 				case 1:
 					if (isDialog || isPersuasion) Mode = -1; // disabled during dialog an persuation menus
@@ -1578,13 +1597,16 @@ void ShaderManager::UpdateConstants() {
 
 			if (Mode == -1) {
 				ShaderConst.Cinema.Data.x = 1.0f; // set cinema aspect ratio to native ar
-				ShaderConst.Cinema.Data.y = 0.0f;
 			}
-			ShaderConst.Cinema.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
-			ShaderConst.Cinema.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
-			ShaderConst.Cinema.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
-			ShaderConst.Cinema.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
-			ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
+
+			if (TheSettingManager->SettingsChanged) {
+				ShaderConst.Cinema.Data.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
+				ShaderConst.Cinema.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
+				ShaderConst.Cinema.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
+				ShaderConst.Cinema.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
+				ShaderConst.Cinema.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
+				ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
+			}
 		}
 
 		// camera/position change data
@@ -1620,7 +1642,7 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.MotionBlur.BlurParams.y = TheSettingManager->GetSettingF(sectionName, "BlurScale");
 		ShaderConst.MotionBlur.BlurParams.z = TheSettingManager->GetSettingF(sectionName, "BlurOffsetMax");
 
-		if (Effects.Sharpening->Enabled) {
+		if (Effects.Sharpening->Enabled && TheSettingManager->SettingsChanged) {
 			ShaderConst.Sharpening.Data.x = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Strength");
 			ShaderConst.Sharpening.Data.y = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Clamp");
 			ShaderConst.Sharpening.Data.z = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Offset");
@@ -1652,9 +1674,11 @@ void ShaderManager::UpdateConstants() {
 			}
 		}
 
-		ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");
-		ShaderConst.Shadow.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
-		ShaderConst.Shadow.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
+		if (TheSettingManager->SettingsChanged) {
+			ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");
+			ShaderConst.Shadow.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
+			ShaderConst.Shadow.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
+		}
 
 		if (Effects.Specular->Enabled) {
 			float rainyPercent = ShaderConst.Animators.RainAnimator.GetValue();
@@ -1672,7 +1696,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Specular.EffectStrength.w = lerp(TheSettingManager->GetSettingF(ext, "SkyTintSaturation"), TheSettingManager->GetSettingF(rain, "SkyTintSaturation"), rainyPercent);
 		}
 
-		if (Effects.VolumetricFog->Enabled) {
+		if (Effects.VolumetricFog->Enabled && TheSettingManager->SettingsChanged) {
 			ShaderConst.VolumetricFog.Data.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Exponent");
 			ShaderConst.VolumetricFog.Data.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "ColorCoeff");
 			ShaderConst.VolumetricFog.Data.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount");
@@ -1681,11 +1705,14 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
-	ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
-	ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
-	ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
-	ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
+	if (TheSettingManager->SettingsChanged) {
+		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
+		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
+		ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
+		ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
+	}
 
+	TheSettingManager->SettingsChanged = false;
 	timer.LogTime("ShaderManager::UpdateConstants");
 }
 
