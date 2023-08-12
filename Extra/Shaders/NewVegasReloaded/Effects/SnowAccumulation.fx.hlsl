@@ -144,7 +144,7 @@ float4 GetNormals(VSOUT IN) : COLOR0
 
 
 float GetOrtho(float4 worldPos){
-	float thickness = 0.001f; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
+	float thickness = 0.002f; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
 	// get puddle mask from ortho map
 	float4 pos = mul(worldPos, TESR_WorldViewProjectionTransform);
@@ -245,8 +245,10 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 eyeDirection = -1 * normalize(world);
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
+	float ortho = tex2D(TESR_OrthoMapBuffer, IN.UVCoord).r; // ortho height
+
 	// sample an average ortho
-	float ortho = GetOrtho(worldPos);
+	// float ortho = GetOrtho(worldPos);
 	ortho += GetOrtho(worldPos + float4(-1, 0, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(1, 0, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0, -1, 0, 0) * orthoRadius);
@@ -255,14 +257,14 @@ float4 Snow( VSOUT IN ) : COLOR0
 	ortho += GetOrtho(worldPos + float4(-0.7, 0.7, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0.7, -0.7, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0.7, 0.7, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(-0.25, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0.25, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, -0.25, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, 0.25, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(-0.3, 0, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(0.3, 0, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(0, -0.3, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(0, 0.3, 0, 0) * orthoRadius);
 	ortho /= 13;
 	
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
-	if (length(camera_vector) < 80 || worldPos.z <= (TESR_WaterSettings.x + 0.001) || !(ortho > 0)) return color;
+	if (worldPos.z <= (TESR_WaterSettings.x + 0.001) || !(ortho > 0)) return color;
 	
 	float2 uv = worldPos.xy / 200.0f;
 	float3 norm = normalize(expand(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb));
@@ -319,7 +321,10 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float coverage = saturate(pow(noise(worldPos.xyz / (noiseSize * 0.5)) * noise(worldPos.xyz / (noiseSize * 3)) * noise(worldPos.xyz / noiseSize), 2 - 2 * TESR_SnowAccumulationParams.w));
 	coverage = saturate(smoothstep(0.2, 0.4, coverage));
 
-	color = lerp(color, snowColor, coverage * shades(float3(0, 0, 1), norm) * smoothstep(0, 0.5, ortho));
+	ortho = lerp(ortho, 1, smoothstep(0.6 * 4000, 4000, length(camera_vector))); // fade out ortho with distance
+	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
+
+	color = lerp(color, snowColor, coverage * min(vertical, ortho));
 	return color;
 }
 
