@@ -157,7 +157,7 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 
 	// scale the step with distance, and randomize length
 	float depth = getHomogenousDepth(uv) / farZ;
-	float3 step = pows(depth, 0.6) * TESR_DebugVar.z * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
+	float3 step = pows(depth, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
 	float thickness = pows(depth, 0.6) * SSS_THICKNESS;
 
 	float occlusion = 0.0;
@@ -190,8 +190,7 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	occlusion = pows(occlusion/total, 0.3); // get an average shading based on total weights
 
     // save result of SSS in red channel, and fade contribution with distance
-	// color.r = lerp(1.0f - occlusion, 1.0, invlerps(200, SSS_MAXDEPTH, pos.z));
-	color.r = 1.0f - occlusion;
+	color.r = lerp(1.0f - occlusion, 1.0, smoothstep(SSS_MAXDEPTH * 0.8, SSS_MAXDEPTH, pos.z));
     return color;
 }
 

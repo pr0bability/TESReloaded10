@@ -11,6 +11,7 @@ float4 TESR_WaterSettings;
 float4 TESR_OrthoData;
 float4 TESR_ShadowFade;
 float4 TESR_ShadowData;
+float4 TESR_ShadowScreenSpaceData;
 
 float4 TESR_ShadowLightPosition0;
 float4 TESR_ShadowLightPosition1;
@@ -37,7 +38,6 @@ float4 TESR_LightPosition9;
 float4 TESR_LightPosition10;
 float4 TESR_LightPosition11;
 
-
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -48,13 +48,13 @@ sampler2D TESR_SnowNormSampler : register(s6) < string ResourceName = "Precipita
 sampler2D TESR_BlueNoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const int KernelSize = 24;
-static const float diffusePower = 0.15f;
+static const float diffusePower = 0.17f;
 static const float specularPower = 0.3f;
 static const float fresnelPower = 0.2f;
 static const float DARKNESS = 1-TESR_ShadowData.y;
 static const float orthoRadius = 150; // radius of the area to sample ortho from
 static const float noiseSize = 200; // scale for the noise used for snow coverage
-
+static const float useShadows = TESR_ShadowScreenSpaceData.x || TESR_ShadowFade.y;
 
 static const float BlurNormalsWeights[KernelSize] = 
 {
@@ -245,8 +245,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 eyeDirection = -1 * normalize(world);
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
+	// sample an average ortho
 	float ortho = GetOrtho(worldPos);
-
 	ortho += GetOrtho(worldPos + float4(-1, 0, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(1, 0, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0, -1, 0, 0) * orthoRadius);
@@ -255,45 +255,40 @@ float4 Snow( VSOUT IN ) : COLOR0
 	ortho += GetOrtho(worldPos + float4(-0.7, 0.7, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0.7, -0.7, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0.7, 0.7, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(-0.3, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0.3, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, -0.3, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, 0.3, 0, 0) * orthoRadius);
-
+	ortho += GetOrtho(worldPos + float4(-0.25, 0, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(0.25, 0, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(0, -0.25, 0, 0) * orthoRadius);
+	ortho += GetOrtho(worldPos + float4(0, 0.25, 0, 0) * orthoRadius);
 	ortho /= 13;
 	
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
 	if (length(camera_vector) < 80 || worldPos.z <= (TESR_WaterSettings.x + 0.001) || !(ortho > 0)) return color;
 	
-	// return ortho.xxxx;
-
 	float2 uv = worldPos.xy / 200.0f;
 	float3 norm = normalize(expand(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb));
 	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
 	float3 surfaceNormal = normalize(float3(localNorm.xy + norm.xy, localNorm.z * norm.z));
 	float4 normal =  float4(surfaceNormal, 1);
 
-	float3 snow_tex = float3(1, 1, 1);
+	float3 snow_tex = float3(1, 1, 1); //base color of the snow is just a uniform white
 
 	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
 	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
 
 	float3 ambient = snow_tex * TESR_SunAmbient.rgb;
-	float2 shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	float2 shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;
+	shadow.r = lerp(1.0f, shadow.r, useShadows); // disable shadow sampling if shadows are disabled in game
 	shadow.r = lerp(shadow.r, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
 
 	float3 diffuse = snow_tex * shade(TESR_SunDirection, normal) * TESR_SunColor.rgb * diffusePower * shadow.r;
 	float3 spec = snowSpec * TESR_SunColor.rgb * specularPower * shadow.r;
 	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
-	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.4 * shadow * fresnelCoeff;
+	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.4 * shadow.r * fresnelCoeff;
 
 	float4 snowColor = float4(ambient + diffuse + spec + fresnel + sparkles, 1);
 	float pointLightsPower = 0.5;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition10, float4(surfaceNormal, 1)) * pointLightsPower;
-	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition11, float4(surfaceNormal, 1)) * pointLightsPower;
-	// float pointLightsPower = TESR_DebugVar.w;
 
-	shadow.g = 1; // disable shadows for debug
+	shadow.g = 1; // disable point light shadows for debug
 
 	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition0, normal) * pointLightsPower * shadow.g;
 	snowColor += GetPointLightContribution(worldPos, TESR_ShadowLightPosition1, normal) * pointLightsPower * shadow.g;
