@@ -395,6 +395,7 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 	D3DXMATRIX Proj;
 	float FarPlane = ShadowsExteriors->ShadowMapFarPlane;
 	float Radius = ShadowsExteriors->ShadowMapRadius[ShadowMapType];
+	NiCamera* Camera = WorldSceneGraph->camera;
 
 	// calculating the size of the shadow cascade
 	float znear;
@@ -417,13 +418,18 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapLod];
 		break;
 	case ShadowMapTypeEnum::MapOrtho:
-		D3DXMatrixOrthoOffCenterRH(&Proj, -Radius * 2, Radius * 2, -Radius * 2, Radius * 2, FarPlane * 0.8f, 1.2f * FarPlane);
+		// shift the covered area in the direction of the camera vector
+		D3DXVECTOR4 Center = D3DXVECTOR4(TheRenderManager->CameraForward.x, TheRenderManager->CameraForward.y, 0.0, 1.0);
+		D3DXVec4Normalize(&Center, &Center);
+		Radius *= 2;
+		Center.x *= Radius;
+		Center.y *= Radius;
+		D3DXVec4Transform(&Center, &Center, &View);
+		D3DXMatrixOrthoOffCenterRH(&Proj, Center.x - Radius, Center.x + Radius, Center.y -Radius, Center.y + Radius, FarPlane * 0.8f, 1.2f * FarPlane);
+		//D3DXMatrixOrthoOffCenterRH(&Proj, -Radius * 2, Radius * 2, -Radius * 2, Radius * 2, FarPlane * 0.8f, 1.2f * FarPlane);
 		return View * Proj;
-		//znear = 10;
-		//zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
 	}
 
-	NiCamera* Camera = WorldSceneGraph->camera;
 	float w = Camera->Frustum.Right - Camera->Frustum.Left;
 	float h = Camera->Frustum.Top - Camera->Frustum.Bottom;
 
@@ -686,19 +692,23 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 		NiPointLight* Light = Entry->data->sourceLight;
 		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
 
-		float radius = Light->Spec.r;
 		bool lightCulled = Light->m_flags & NiAVObject::kFlag_AppCulled;
 		bool lightOn = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer > 5.0/255.0; // Check for low values in case of human error
+		if (lightCulled || !lightOn) {
+			Entry = Entry->next;
+			continue;
+		}
 
 		D3DXVECTOR4 LightVector = LightPosition - PlayerPosition;
 		D3DXVec4Normalize(&LightVector, &LightVector);
 		float inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward);
 		float Distance = Light->GetDistance(&Player->pos);
+		float radius = Light->Spec.r;
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
 		float drawDistance = Player->GetWorldSpace() ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
-		if ((inFront > 0 || Distance < radius) && !lightCulled && lightOn && (Distance + radius) < drawDistance) {
+		if ((inFront > 0 || Distance < radius) && (Distance + radius) < drawDistance) {
 			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
 		}
 		Entry = Entry->next;
@@ -714,6 +724,8 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 	int LightIndex = 0;
 	PointLightsNum = 0;
 
+	bool TorchOnBeltEnabled = TheSettingManager->SettingsMain.EquipmentMode.Enabled && TheSettingManager->SettingsMain.EquipmentMode.TorchKey != 255;
+
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
 		if (v != SceneLights.end())	{
 			NiPointLight* Light = v->second;
@@ -721,7 +733,6 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 			// determin if light is a shadow caster
 			bool CastShadow = TheSettingManager->SettingsShadows.Interiors.UseCastShadowFlag ? Light->CastShadows : true;
 			// Oblivion exception for carried torch lights 
-			bool TorchOnBeltEnabled = TheSettingManager->SettingsMain.EquipmentMode.Enabled && TheSettingManager->SettingsMain.EquipmentMode.TorchKey != 255;
 			if (TorchOnBeltEnabled && Light->CanCarry == 2) {
 				HighProcessEx* Process = (HighProcessEx*)Player->process;
 				if (Process->OnBeltState == HighProcessEx::State::In) CastShadow = false;
