@@ -187,35 +187,33 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	occlusion = pows(occlusion/total, 0.3); // get an average shading based on total weights
 
     // save result of SSS in red channel, and fade contribution with distance
-	color.r = lerp(1.0f - occlusion, 1.0, invlerps(200, SSS_MAXDEPTH, pos.z));
+	// color.r = lerp(1.0f - occlusion, 1.0, invlerps(200, SSS_MAXDEPTH, pos.z));
+	color.r = 1.0f - occlusion;
     return color;
 }
 
+// returns a shadow value from darkness setting value (full shadow) to 1 (full light)
 float4 Shadow(VSOUT IN) : COLOR0
 {
 	float2 uv = IN.UVCoord;
 	// clip((uv < 0.5) - 1); // compute in half res
 	// uv *= 2;
 
-	// returns a shadow value from darkness setting value (full shadow) to 1 (full light)
-	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 	float depth = readDepth(uv);
 	float3 camera_vector = toWorld(uv) * depth;
 	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
+	float uniformDepth = length(camera_vector);
 
-	// float sunShadows = lerp(1, GetLightAmount(pos, depth), TESR_ShadowFade.y); // disable shadow maps if ShadowFade.y == 0
+	// Sample shadows from shadowmaps
 	float sunShadows = lerp(1, GetLightAmount(pos, depth), TESR_ShadowFade.y); // disable shadow maps if ShadowFade.y == 0
+	sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth)); //fade shadows along last cascade
+
+	// Sample Screen Space shadows
+	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
-	Shadow.r = lerp(Shadow.r, 1.0f, TESR_ShadowFade.x); // apply darkness fading when sun is low or moon is not full
-
-	float ambient = lerp(1, luma(TESR_SunAmbient), TESR_ShadowFade.z);
-	Shadow.r = lerp(0, ambient, Shadow.r); // scale shadows strength to ambient before adding attenuation
-	Shadow.r += Shadow.g; // Apply poing light attenuation
-	Shadow = saturate(Shadow); // No point for the shadow buffer to be beyond the 0-1 range
-
-	return Shadow.rrrr;
+	return Shadow;
 }
 
 
