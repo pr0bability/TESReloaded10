@@ -13,6 +13,8 @@ float4 DepthBlur(VSOUT IN, uniform sampler2D buffer, uniform float2 OffsetMask, 
 	float depth1 = readDepth(IN.UVCoord);
 	clip(endFade - depth1);
 
+	depthDrop *= (depth1 / farZ);
+
 	[unroll]
     for (int i = 0; i < cKernelSize; i++)
     {

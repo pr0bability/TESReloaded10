@@ -146,6 +146,7 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	// uv *= 2;
 
     float4 color = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	if (!TESR_ShadowScreenSpaceData.x) return float4(1.0, color.g, 0, 1); // skip is screenspace shadows are disabled
 
 	float3 random3 = random(uv);
 	float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
@@ -155,7 +156,9 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	if (pos.z > SSS_MAXDEPTH) return float4(1.0, color.g, 0, 1); // early out for pixels further away than the max render distance
 
 	// scale the step with distance, and randomize length
-	float3 step = pows(getHomogenousDepth(uv) / farZ, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
+	float depth = getHomogenousDepth(uv) / farZ;
+	float3 step = pows(depth, 0.6) * TESR_DebugVar.z * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
+	float thickness = pows(depth, 0.6) * SSS_THICKNESS;
 
 	float occlusion = 0.0;
 	float total = 0;
@@ -205,12 +208,14 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
 	float uniformDepth = length(camera_vector);
 
-	// Sample shadows from shadowmaps
-	float sunShadows = lerp(1, GetLightAmount(pos, depth), TESR_ShadowFade.y); // disable shadow maps if ShadowFade.y == 0
-	sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth)); //fade shadows along last cascade
-
 	// Sample Screen Space shadows
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	if (!TESR_ShadowFade.y) return Shadow; // disable shadow maps if ShadowFade.y == 0 (setting for shadow map disabled)
+
+	// Sample shadows from shadowmaps
+	float sunShadows = GetLightAmount(pos, depth); 
+	sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth)); //fade shadows along last cascade
+
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
 	return Shadow;
@@ -231,11 +236,11 @@ technique {
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
 	}
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 5, TESR_ShadowRadius.w);
+	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
 	}
 }
