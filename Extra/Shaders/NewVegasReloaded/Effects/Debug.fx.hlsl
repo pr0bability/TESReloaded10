@@ -78,6 +78,13 @@ float4 displayDepth(float4 color, float2 uv, float2 bufferPosition, float2 buffe
 	return pows(readDepth(float2(invlerp(bufferPosition, lowerCorner, uv))) / farZ, 0.3);
 }
 
+float4 displayShadows(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize){
+	float2 lowerCorner = bufferPosition + bufferSize;
+	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
+	float4 Shadows = tex2D(TESR_PointShadowBuffer, float2(invlerp(bufferPosition, lowerCorner, uv)));
+	return Shadows.rrrr * 0.5 + Shadows.gggg;
+}
+
 
 float4 showLightInfluence(float4 color, float2 uv, float3 position, float4 lightPos, float4 tint){
 	float3 eyeDir = normalize(toWorld(uv));
@@ -107,10 +114,10 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 
 
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	if (depth > 0 && depth < TESR_ShadowRadius.x) color *= float4(1, 0.5, 1, 1);
-	if (depth > TESR_ShadowRadius.x && depth < TESR_ShadowRadius.y) color *= float4(0.5, 1, 1, 1);
-	if (depth > TESR_ShadowRadius.y && depth < TESR_ShadowRadius.z) color *= float4(1, 1, 0.5, 1);
-	if (depth > TESR_ShadowRadius.z && depth < TESR_ShadowRadius.w) color *= float4(0.5, 1, 1, 1);
+	// if (depth > 0 && depth < TESR_ShadowRadius.x) color *= float4(1, 0.5, 1, 1);
+	// if (depth > TESR_ShadowRadius.x && depth < TESR_ShadowRadius.y) color *= float4(0.5, 1, 1, 1);
+	// if (depth > TESR_ShadowRadius.y && depth < TESR_ShadowRadius.z) color *= float4(1, 1, 0.5, 1);
+	// if (depth > TESR_ShadowRadius.z && depth < TESR_ShadowRadius.w) color *= float4(0.5, 1, 1, 1);
 
 	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition0, float4(0, 1, 0, 1));
 	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition1, float4(0, 1, 0, 1));
@@ -151,7 +158,7 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 
 	color = displayBuffer(color, IN.UVCoord, float2(0.1, 0.05), float2(0.15, 0.15), TESR_NormalsBuffer);
 	color = displayDepth(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15));
-	color = displayBuffer(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15), TESR_PointShadowBuffer);
+	color = displayShadows(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15));
 
     return color;
 }

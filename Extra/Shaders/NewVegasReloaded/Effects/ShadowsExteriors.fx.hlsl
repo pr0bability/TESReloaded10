@@ -65,14 +65,16 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
 	if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
 
-	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).r;
+	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 
-	// fade shadows to light when sun is low
-	float darkness = lerp(DARKNESS, 1.0f, TESR_ShadowFade.x);
+	Shadow.r = lerp(Shadow.r, 1.0f, TESR_ShadowFade.x); // apply darkness fading when sun is low or moon is not full
 
-	// brighten shadow value from 0 to darkness from config value
-	Shadow = lerp(darkness, 1.0f, Shadow);
-	Shadow = lerp(Shadow, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth));
+	float ambient = lerp(1, luma(TESR_SunAmbient), TESR_ShadowFade.z * TESR_ShadowFade.x); //ShadowFade.z means point Lights are on
+	Shadow.r = lerp(0, ambient, Shadow.r); // scale shadows strength to ambient before adding attenuation
+	Shadow.r += Shadow.g; // Apply poing light attenuation
+
+	float darkness = lerp(DARKNESS, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
+	Shadow = lerp(darkness, 1.0f, Shadow); 	// brighten shadow value from 0 to darkness from config value
 
 	// No point for the shadow buffer to be beyond the 0-1 range
 	Shadow = saturate(Shadow);
@@ -97,8 +99,8 @@ float4 Shadow(VSOUT IN) : COLOR0
 	bloom = 1 - saturate(bloom);
 
 	// tint shadowed areas with Sky color before blending
-	float4 colorShadow = luma(color.rgb) * (Shadow * bloom) * TESR_SkyColor;
-	return lerp(colorShadow, color * Shadow, saturate(Shadow + 0.2)); // bias the transition between the 2 colors to make it less noticeable
+	float4 colorShadow = luma(color.rgb) * (Shadow.r * bloom) * TESR_SkyColor;
+	return lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 }
 
 
