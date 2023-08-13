@@ -21,6 +21,7 @@ float4 TESR_SkyColor;
 float4 TESR_HorizonColor;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
+float4 TESR_OrthoData; // max ortho radius
 float4 TESR_WetWorldCoeffs; // Puddle color R, G, B + spec multiplier
 float4 TESR_WaterSettings; // for water height to avoid rendering puddles underwater
 float4 TESR_WetWorldData; // x: current rain amount, y: max rain amount, z: puddle amount, w:puddle darkness/intensity
@@ -42,7 +43,7 @@ static const float time1 = TESR_GameTime.z * 0.96f; // Ripple timing, make sure 
 static const float time2 = TESR_GameTime.z * 0.97f; // Ripple timing, original 1.0-1.4
 static const float time3 = TESR_GameTime.z * 0.98f; // Ripple timing
 static const float time4 = TESR_GameTime.z * 0.99f; // Ripple timing
-static const float DrawD = 2000.0f; // Max draw distance for puddles 0-1000000
+static const float DrawD = TESR_OrthoData * 0.9; // Max draw distance for puddles 0-1000000
 static const float rippleScale = 80.0f;
 static const float refractionScale = 25;
 //------------------------------------------------------
@@ -150,7 +151,9 @@ float4 Wet( VSOUT IN ) : COLOR0
 	eyeDirection = normalize(eyeDirection);
 
 	// early out to avoid computing pixels that aren't puddles
-    if (depth > DrawD || floorAngle == 0) return baseColor;
+	float waterTreshold = (depth/farZ) * 200;
+	float isWaterSurface = (dot(normal, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
+    if (depth > DrawD || floorAngle == 0 || isWaterSurface) return baseColor;
 
 	float LODfade = smoothstep(DrawD, 0, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
