@@ -850,7 +850,10 @@ void ShadowManager::RenderShadowMaps() {
 	TheRenderManager->SetupSceneCamera();
 	
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
-	bool isExterior = Player->GetWorldSpace();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
+	TESObjectCELL* currentCell = Player->parentCell;
+
+	bool isExterior = false;
+	if (currentCell) isExterior = !currentCell->IsInterior();// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
 	// Render directional shadows for Sun/Moon
 
