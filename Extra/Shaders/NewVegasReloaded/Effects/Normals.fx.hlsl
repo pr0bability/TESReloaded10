@@ -1,5 +1,69 @@
 float4 TESR_ReciprocalResolution;
+float4 TESR_SnowAccumulationParams; 
+
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_NormalsBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+
+static const int KernelSize = 24;
+static const float2 OffsetMaskH = float2(1.0f, 0.0f);
+static const float2 OffsetMaskV = float2(0.0f, 1.0f);
+
+static const float BlurNormalsWeights[KernelSize] = 
+{
+	0.019956226f,
+	0.021463016f,
+	0.032969806f,
+	0.044476596f,
+	0.055983386f,
+	0.067490176f,
+	0.078996966f,
+	0.080503756f,
+	0.092010546f,
+	0.105024126f,
+	0.116530916f,
+	0.128037706f,
+	0.128037706f,
+	0.116530916f,
+	0.105024126f,
+	0.092010546f,
+	0.080503756f,
+	0.078996966f,
+	0.067490176f,
+	0.055983386f,
+	0.044476596f,
+	0.032969806f,
+	0.021463016f,
+	0.019956226f
+};
+
+static const float2 BlurNormalsOffsets[KernelSize] = 
+{
+	float2(-12.0f * TESR_ReciprocalResolution.x, -12.0f * TESR_ReciprocalResolution.y),
+	float2(-11.0f * TESR_ReciprocalResolution.x, -11.0f * TESR_ReciprocalResolution.y),
+	float2(-10.0f * TESR_ReciprocalResolution.x, -10.0f * TESR_ReciprocalResolution.y),
+	float2( -9.0f * TESR_ReciprocalResolution.x,  -9.0f * TESR_ReciprocalResolution.y),
+	float2( -8.0f * TESR_ReciprocalResolution.x,  -8.0f * TESR_ReciprocalResolution.y),
+	float2( -7.0f * TESR_ReciprocalResolution.x,  -7.0f * TESR_ReciprocalResolution.y),
+	float2( -6.0f * TESR_ReciprocalResolution.x,  -6.0f * TESR_ReciprocalResolution.y),
+	float2( -5.0f * TESR_ReciprocalResolution.x,  -5.0f * TESR_ReciprocalResolution.y),
+	float2( -4.0f * TESR_ReciprocalResolution.x,  -4.0f * TESR_ReciprocalResolution.y),
+	float2( -3.0f * TESR_ReciprocalResolution.x,  -3.0f * TESR_ReciprocalResolution.y),
+	float2( -2.0f * TESR_ReciprocalResolution.x,  -2.0f * TESR_ReciprocalResolution.y),
+	float2( -1.0f * TESR_ReciprocalResolution.x,  -1.0f * TESR_ReciprocalResolution.y),
+	float2(  1.0f * TESR_ReciprocalResolution.x,   1.0f * TESR_ReciprocalResolution.y),
+	float2(  2.0f * TESR_ReciprocalResolution.x,   2.0f * TESR_ReciprocalResolution.y),
+	float2(  3.0f * TESR_ReciprocalResolution.x,   3.0f * TESR_ReciprocalResolution.y),
+	float2(  4.0f * TESR_ReciprocalResolution.x,   4.0f * TESR_ReciprocalResolution.y),
+	float2(  5.0f * TESR_ReciprocalResolution.x,   5.0f * TESR_ReciprocalResolution.y),
+	float2(  6.0f * TESR_ReciprocalResolution.x,   6.0f * TESR_ReciprocalResolution.y),
+	float2(  7.0f * TESR_ReciprocalResolution.x,   7.0f * TESR_ReciprocalResolution.y),
+	float2(  8.0f * TESR_ReciprocalResolution.x,   8.0f * TESR_ReciprocalResolution.y),
+	float2(  9.0f * TESR_ReciprocalResolution.x,   9.0f * TESR_ReciprocalResolution.y),
+	float2( 10.0f * TESR_ReciprocalResolution.x,  10.0f * TESR_ReciprocalResolution.y),
+	float2( 11.0f * TESR_ReciprocalResolution.x,  11.0f * TESR_ReciprocalResolution.y),
+	float2( 12.0f * TESR_ReciprocalResolution.x,  12.0f * TESR_ReciprocalResolution.y)
+};
+
 
 struct VSOUT
 {
@@ -23,6 +87,9 @@ VSOUT FrameVS(VSIN IN)
 
 #include "Includes/Depth.hlsl"
 #include "Includes/Helpers.hlsl"
+
+
+
 
 float4 ComputeNormals(VSOUT IN) :COLOR0
 {
@@ -79,11 +146,42 @@ float4 ComputeNormals(VSOUT IN) :COLOR0
 	return float4 (compress(viewNormal), 1.0);
 }
  
+
+float4 BlurNormals(VSOUT IN, uniform float2 OffsetMask) : COLOR0
+{
+	float WeightSum = 0.12f * saturate(1 - TESR_SnowAccumulationParams.x);
+	float3 normal = tex2D(TESR_NormalsBuffer, IN.UVCoord).rgb;
+	float3 finalNormal = normal * WeightSum;
+	float depth = readDepth(IN.UVCoord)/farZ;
+	
+	for (int i = 0; i < KernelSize; i++) {
+		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * TESR_SnowAccumulationParams.y * abs(log(depth));
+		float3 newNormal = tex2D(TESR_NormalsBuffer, IN.UVCoord + uvOff).rgb;
+		float weight = BlurNormalsWeights[i] * saturate(dot(expand(newNormal), expand(normal)) - TESR_SnowAccumulationParams.x * 0.75f);
+		finalNormal += weight * newNormal;
+		WeightSum += weight;
+	}
+	
+	finalNormal /= WeightSum;
+    return float4(finalNormal, 1.0f);
+}
+
+
 technique
 {
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
 		PixelShader = compile ps_3_0 ComputeNormals();
+	}
+	pass
+	{ 
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 BlurNormals(OffsetMaskH);
+	}
+	pass
+	{ 
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 BlurNormals(OffsetMaskV);
 	}
 }
