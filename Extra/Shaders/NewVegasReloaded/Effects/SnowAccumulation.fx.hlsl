@@ -11,7 +11,6 @@ float4 TESR_ShadowFade;
 float4 TESR_ShadowData;
 float4 TESR_ShadowScreenSpaceData;
 float4 TESR_OrthoData;
-float4 TESR_DebugVar;
 
 float4 TESR_ShadowLightPosition0;
 float4 TESR_ShadowLightPosition1;
@@ -150,7 +149,7 @@ float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal)
 	float3 Halfway = normalize(LightDir + eyeDir);
 	float spec = pows(shade(Halfway, normal.xyz), 20);
 
-	return saturate(diffuse * atten + spec);
+	return saturate((diffuse + spec) * atten);
 }
 
 float4 Snow( VSOUT IN ) : COLOR0
@@ -163,10 +162,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 eyeDirection = -1 * normalize(world);
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
-	float ortho = tex2D(TESR_OrthoMapBuffer, IN.UVCoord).r; // ortho height
-
 	// sample an average ortho
-	// float ortho = GetOrtho(worldPos);
+	float ortho = GetOrtho(worldPos);
 	ortho += GetOrtho(worldPos + float4(-1, 0, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(1, 0, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0, -1, 0, 0) * orthoRadius);
@@ -239,9 +236,10 @@ float4 Snow( VSOUT IN ) : COLOR0
 	snowColor += GetPointLightContribution(worldPos, TESR_LightPosition11, normal) * pointLightsPower * shadow.g;
 
 	// create a noisy pattern of accumulation over time
-	float coverage = saturate(pow(noise(worldPos.xyz / (noiseSize * 0.5)) * noise(worldPos.xyz / (noiseSize * 3)) * noise(worldPos.xyz / noiseSize), 2 - 2 * TESR_SnowAccumulationParams.w));
+	float coverage = saturate(pows(noise(worldPos.xyz / (noiseSize * 0.5)) * noise(worldPos.xyz / (noiseSize * 3)) * noise(worldPos.xyz / noiseSize), 2 - 2 * TESR_SnowAccumulationParams.w));
 	coverage = saturate(smoothstep(0.2, 0.4, coverage));
 
+	ortho = smoothstep(0.1, 0.9, ortho); // reduce glitches by removing outlier values 
 	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
 	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
 
