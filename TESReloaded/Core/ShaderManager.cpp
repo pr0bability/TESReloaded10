@@ -1956,7 +1956,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->SetFVF(FrameFVF);
 
 	// render post process normals for use by shaders
-	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, true);
+	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
 
 	// render a shadow pass for point lights
 	if ((isExterior && Effects.ShadowsExteriors->Enabled) || (!isExterior && Effects.ShadowsInteriors->Enabled)) {
@@ -1977,8 +1977,11 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, true, true);
 	}
 
-	// Snow must be rendered first so other effects appear on top
-	if (ShaderConst.SnowAccumulation.Params.w > 0.0f && isExterior && !isUnderwater) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
+	if (!isUnderwater && isExterior) {
+		Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
+		if (ShaderConst.SnowAccumulation.Params.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, false, true);
+	}
+
 	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 	if (isUnderwater) {
@@ -1986,10 +1989,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, false, false);
 	}
 	else {
-		if (isExterior) {
-			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, false, true);
-			if (ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
-		}
+		if (isExterior) if (ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, false, true);
 
 		if (!pipboyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, false, false);
 
@@ -1999,7 +1999,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 			Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, false, true);
 		}
 	}
-
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
