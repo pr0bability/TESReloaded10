@@ -5,13 +5,13 @@ float4x4 TESR_ShadowCameraToLightTransformOrtho;
 float4 TESR_SunDirection;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
-float4 TESR_ReciprocalResolution;
 float4 TESR_SnowAccumulationParams; // x:BlurNormDropThreshhold, y:BlurRadiusMultiplier, z:SunPower, w:SnowAmount 
 float4 TESR_WaterSettings;
-float4 TESR_OrthoData;
 float4 TESR_ShadowFade;
 float4 TESR_ShadowData;
 float4 TESR_ShadowScreenSpaceData;
+float4 TESR_OrthoData;
+float4 TESR_DebugVar;
 
 float4 TESR_ShadowLightPosition0;
 float4 TESR_ShadowLightPosition1;
@@ -39,13 +39,12 @@ float4 TESR_LightPosition10;
 float4 TESR_LightPosition11;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_OrthoMapBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_NormalsBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_PointShadowBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SnowNormSampler : register(s6) < string ResourceName = "Precipitations\snow_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_BlueNoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_OrthoMapBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_PointShadowBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SnowNormSampler : register(s5) < string ResourceName = "Precipitations\snow_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_BlueNoiseSampler : register(s6) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const int KernelSize = 24;
 static const float diffusePower = 0.17f;
@@ -56,61 +55,6 @@ static const float orthoRadius = 150; // radius of the area to sample ortho from
 static const float noiseSize = 200; // scale for the noise used for snow coverage
 static const float useShadows = TESR_ShadowScreenSpaceData.x || TESR_ShadowFade.y;
 
-static const float BlurNormalsWeights[KernelSize] = 
-{
-	0.019956226f,
-	0.021463016f,
-	0.032969806f,
-	0.044476596f,
-	0.055983386f,
-	0.067490176f,
-	0.078996966f,
-	0.080503756f,
-	0.092010546f,
-	0.105024126f,
-	0.116530916f,
-	0.128037706f,
-	0.128037706f,
-	0.116530916f,
-	0.105024126f,
-	0.092010546f,
-	0.080503756f,
-	0.078996966f,
-	0.067490176f,
-	0.055983386f,
-	0.044476596f,
-	0.032969806f,
-	0.021463016f,
-	0.019956226f
-};
-
-static const float2 BlurNormalsOffsets[KernelSize] = 
-{
-	float2(-12.0f * TESR_ReciprocalResolution.x, -12.0f * TESR_ReciprocalResolution.y),
-	float2(-11.0f * TESR_ReciprocalResolution.x, -11.0f * TESR_ReciprocalResolution.y),
-	float2(-10.0f * TESR_ReciprocalResolution.x, -10.0f * TESR_ReciprocalResolution.y),
-	float2( -9.0f * TESR_ReciprocalResolution.x,  -9.0f * TESR_ReciprocalResolution.y),
-	float2( -8.0f * TESR_ReciprocalResolution.x,  -8.0f * TESR_ReciprocalResolution.y),
-	float2( -7.0f * TESR_ReciprocalResolution.x,  -7.0f * TESR_ReciprocalResolution.y),
-	float2( -6.0f * TESR_ReciprocalResolution.x,  -6.0f * TESR_ReciprocalResolution.y),
-	float2( -5.0f * TESR_ReciprocalResolution.x,  -5.0f * TESR_ReciprocalResolution.y),
-	float2( -4.0f * TESR_ReciprocalResolution.x,  -4.0f * TESR_ReciprocalResolution.y),
-	float2( -3.0f * TESR_ReciprocalResolution.x,  -3.0f * TESR_ReciprocalResolution.y),
-	float2( -2.0f * TESR_ReciprocalResolution.x,  -2.0f * TESR_ReciprocalResolution.y),
-	float2( -1.0f * TESR_ReciprocalResolution.x,  -1.0f * TESR_ReciprocalResolution.y),
-	float2(  1.0f * TESR_ReciprocalResolution.x,   1.0f * TESR_ReciprocalResolution.y),
-	float2(  2.0f * TESR_ReciprocalResolution.x,   2.0f * TESR_ReciprocalResolution.y),
-	float2(  3.0f * TESR_ReciprocalResolution.x,   3.0f * TESR_ReciprocalResolution.y),
-	float2(  4.0f * TESR_ReciprocalResolution.x,   4.0f * TESR_ReciprocalResolution.y),
-	float2(  5.0f * TESR_ReciprocalResolution.x,   5.0f * TESR_ReciprocalResolution.y),
-	float2(  6.0f * TESR_ReciprocalResolution.x,   6.0f * TESR_ReciprocalResolution.y),
-	float2(  7.0f * TESR_ReciprocalResolution.x,   7.0f * TESR_ReciprocalResolution.y),
-	float2(  8.0f * TESR_ReciprocalResolution.x,   8.0f * TESR_ReciprocalResolution.y),
-	float2(  9.0f * TESR_ReciprocalResolution.x,   9.0f * TESR_ReciprocalResolution.y),
-	float2( 10.0f * TESR_ReciprocalResolution.x,  10.0f * TESR_ReciprocalResolution.y),
-	float2( 11.0f * TESR_ReciprocalResolution.x,  11.0f * TESR_ReciprocalResolution.y),
-	float2( 12.0f * TESR_ReciprocalResolution.x,  12.0f * TESR_ReciprocalResolution.y)
-};
 
 struct VSOUT
 {
@@ -134,13 +78,7 @@ VSOUT FrameVS(VSIN IN)
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
-#include "Includes/BlurDepth.hlsl"
 #include "Includes/Normals.hlsl"
-
-float4 GetNormals(VSOUT IN) : COLOR0
-{
-	return float4(compress(GetWorldNormal(IN.UVCoord)), 1.0);
-}
 
 
 float GetOrtho(float4 worldPos){
@@ -155,7 +93,7 @@ float GetOrtho(float4 worldPos){
 	ortho_pos.x = ortho_pos.x * 0.5f + 0.5f;
 	ortho_pos.y = ortho_pos.y * -0.5f + 0.5f;
 
-	float outOfBounds = (saturate(ortho_pos.x) != ortho_pos) || (saturate(ortho_pos.y) != ortho_pos.y);
+	float outOfBounds = (saturate(ortho_pos.x) != ortho_pos.x) || (saturate(ortho_pos.y) != ortho_pos.y);
 
 	float ortho = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r; // ortho height
 
@@ -163,26 +101,6 @@ float GetOrtho(float4 worldPos){
 	float belowGround = ortho_pos.z > ortho - thickness;
 
 	return outOfBounds || (belowGround && aboveGround);
-}
-
-
-float4 BlurNormals(VSOUT IN, uniform float2 OffsetMask) : COLOR0
-{
-	float WeightSum = 0.12f * saturate(1 - TESR_SnowAccumulationParams.x);
-	float3 normal = tex2D(TESR_RenderedBuffer,IN.UVCoord).rgb;
-	float3 finalNormal = normal * WeightSum;
-	float depth = readDepth(IN.UVCoord)/farZ;
-	
-	for (int i = 0; i < KernelSize; i++) {
-		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * TESR_SnowAccumulationParams.y * abs(log(depth));
-		float3 newNormal = tex2D(TESR_RenderedBuffer, IN.UVCoord + uvOff).rgb;
-		float weight = BlurNormalsWeights[i] * saturate(dot(expand(newNormal), expand(normal)) - TESR_SnowAccumulationParams.x * 0.75f);
-		finalNormal += weight * newNormal;
-		WeightSum += weight;
-	}
-	
-	finalNormal /= WeightSum;
-    return float4(finalNormal, 1.0f);
 }
 
 
@@ -232,12 +150,12 @@ float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal)
 	float3 Halfway = normalize(LightDir + eyeDir);
 	float spec = pows(shade(Halfway, normal.xyz), 20);
 
-	return saturate((diffuse + spec) * (atten));
+	return saturate(diffuse * atten + spec);
 }
 
 float4 Snow( VSOUT IN ) : COLOR0
 {
-	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	float3 world = toWorld(IN.UVCoord);
 	
 	float depth = readDepth(IN.UVCoord);
@@ -262,12 +180,15 @@ float4 Snow( VSOUT IN ) : COLOR0
 	ortho += GetOrtho(worldPos + float4(0, -0.3, 0, 0) * orthoRadius);
 	ortho += GetOrtho(worldPos + float4(0, 0.3, 0, 0) * orthoRadius);
 	ortho /= 13;
-	
+
+	float3 norm = GetWorldNormal(IN.UVCoord);
+
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
-	if (worldPos.z <= (TESR_WaterSettings.x + 0.001) || !(ortho > 0)) return color;
+	float waterTreshold = (depth/farZ) * 200;
+	float isWaterSurface = (dot(norm, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
+	if (isWaterSurface || !(ortho > 0)) return color;
 	
 	float2 uv = worldPos.xy / 200.0f;
-	float3 norm = normalize(expand(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb));
 	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
 	float3 surfaceNormal = normalize(float3(localNorm.xy + norm.xy, localNorm.z * norm.z));
 	float4 normal =  float4(surfaceNormal, 1);
@@ -285,7 +206,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 diffuse = snow_tex * shade(TESR_SunDirection, normal) * TESR_SunColor.rgb * diffusePower * shadow.r;
 	float3 spec = snowSpec * TESR_SunColor.rgb * specularPower * shadow.r;
 	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
-	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.4 * shadow.r * fresnelCoeff;
+	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.2 * shadow.r;
 
 	float4 snowColor = float4(ambient + diffuse + spec + fresnel + sparkles, 1);
 	float pointLightsPower = 0.5;
@@ -321,30 +242,16 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float coverage = saturate(pow(noise(worldPos.xyz / (noiseSize * 0.5)) * noise(worldPos.xyz / (noiseSize * 3)) * noise(worldPos.xyz / noiseSize), 2 - 2 * TESR_SnowAccumulationParams.w));
 	coverage = saturate(smoothstep(0.2, 0.4, coverage));
 
-	ortho = lerp(ortho, 1, smoothstep(0.6 * 4000, 4000, length(camera_vector))); // fade out ortho with distance
+	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
 	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
 
 	color = lerp(color, snowColor, coverage * min(vertical, ortho));
 	return color;
 }
 
+
 technique
 {
-	pass
-	{
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 GetNormals();
-	}
-	pass
-	{ 
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurNormals(OffsetMaskH);
-	}
-	pass
-	{ 
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 BlurNormals(OffsetMaskV);
-	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
