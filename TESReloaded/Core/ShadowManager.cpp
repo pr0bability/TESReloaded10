@@ -881,6 +881,7 @@ void ShadowManager::RenderShadowMaps() {
 		ShadowData->z = 1; // identify ortho map in shader constant
 		D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
 		RenderShadowMap(MapOrtho, ShadowsExteriors, &At, &OrthoDir);
+		OrthoData->x = ShadowsExteriors->ShadowMapRadius[MapOrtho] * 2;
 	}
 
 	// Render shadow maps for point lights
