@@ -598,6 +598,8 @@ bool EffectRecord::SwitchEffect(){
 void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, bool ClearRenderTarget, bool useSourceBuffer) {
 
 	if (!Enabled || Effect == nullptr) return; // skip rendering of disabled effects
+
+	auto timer = TimeLogger();
 	if (useSourceBuffer) Device->StretchRect(RenderTarget, NULL, TheTextureManager->SourceSurface, NULL, D3DTEXF_NONE);
 
 	try {
@@ -616,6 +618,10 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 	catch (const std::exception& e) {
 		Logger::Log("Error during rendering of effect %s: %s", Path->c_str(), e.what());
 	}
+
+	char name[255] = "EffectRecord::Render ";
+	strcat(name, Path->c_str());
+	timer.LogTime(name);
 }
 
 /**
