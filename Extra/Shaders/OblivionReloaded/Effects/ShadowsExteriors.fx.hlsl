@@ -9,7 +9,6 @@ float4x4 TESR_ShadowCameraToLightTransformFar;
 float4 TESR_CameraPosition;
 float4 TESR_WaterSettings;
 float4 TESR_ShadowData;
-float4 TESR_SunAmount;
 float4 TESR_SunDirection;;
 float4 TESR_ReciprocalResolution;
 float4 TESR_ShadowBiasDeferred;

@@ -3,7 +3,6 @@
 float4 TESR_ReciprocalResolution;
 float4 TESR_GameTime;
 float4 TESR_SunColor;
-float4 TESR_SunAmount;
 float4 TESR_GodRaysRay; // x: intensity, y:length, z: density, w: visibility
 float4 TESR_GodRaysRayColor; // x:r, y:g, z:b, w:saturate
 float4 TESR_GodRaysData; // x: passes amount, y: luminance, z:multiplier, w: time enabled
