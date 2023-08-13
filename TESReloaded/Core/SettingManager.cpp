@@ -738,7 +738,7 @@ void SettingManager::LoadSettings() {
 	}
 
 	SettingsChanged = true;
-	timer.LogTime("SettingsManager::InitSettings for loop");
+	timer.LogTime("SettingsManager::LoadSettings");
 }
 
 /*

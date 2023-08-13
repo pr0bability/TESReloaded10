@@ -683,6 +683,7 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]) {
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
 	//Logger::Log(" ==== Getting lights ====");
+	auto timer = TimeLogger();
 
 	// create a map of all nearby valid lights and sort them per distance to player
 	std::map<int, NiPointLight*> SceneLights;
@@ -787,6 +788,8 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 		}
 	}
 
+	timer.LogTime("ShadowManager::GetNearbyLights");
+
 }
 
 //static 	NiDX9RenderState::NiRenderStateSetting* RenderStateSettings = nullptr;
@@ -796,6 +799,8 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 */
 void ShadowManager::RenderShadowMaps() {
 	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // cancel out if rendering effects is disabled
+
+	auto timer = TimeLogger();
 
 	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
 	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
@@ -940,6 +945,8 @@ void ShadowManager::RenderShadowMaps() {
 			InterfaceManager->ShowMessage("Textures taken!");
 		}
 	}
+
+	timer.LogTime("ShadowManager::RenderShadowMaps");
 }
 
 void ShadowManager::CalculateBlend(NiPointLight** Lights, int LightIndex) {
