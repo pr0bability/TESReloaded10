@@ -6,6 +6,7 @@ public:
 
 	void					Render();
 	void					GetMidSection(char* MidSection);
+	bool					IsKeyPressed(UInt16 KeyCode);
 
 	bool										Enabled;
 	bool										EditingMode;
@@ -23,4 +24,7 @@ public:
 	RECT										RectShadow;
 	std::chrono::system_clock::time_point		MainMenuStartTime;
 	bool										MainMenuOn;
+	std::chrono::system_clock::time_point		lastKeyPressed;
+	UInt16										keyDown;
+
 };

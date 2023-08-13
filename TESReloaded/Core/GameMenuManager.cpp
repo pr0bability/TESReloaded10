@@ -71,6 +71,11 @@ void GameMenuManager::Render() {
 	// check for menu key to toggle display of the menu
 	if (Global->OnKeyDown(MenuSettings->KeyEnable)) {
 		Enabled = !Enabled;
+
+		if (Enabled) {
+			lastKeyPressed = std::chrono::system_clock::now();
+			keyDown = 999;
+		}
 		EditingMode = false;
 	}
 	if (!InterfaceManager->IsActive(Menu::MenuType::kMenuType_None)) {
@@ -128,31 +133,31 @@ void GameMenuManager::Render() {
 
 	if (EditingMode) {
 
-		if (Global->OnKeyDown(key0))
+		if (IsKeyPressed(key0))
 			strcat(EditingValue, "0");
-		else if (Global->OnKeyDown(key1))
+		else if (IsKeyPressed(key1))
 			strcat(EditingValue, "1");
-		else if (Global->OnKeyDown(key2))
+		else if (IsKeyPressed(key2))
 			strcat(EditingValue, "2");
-		else if (Global->OnKeyDown(key3))
+		else if (IsKeyPressed(key3))
 			strcat(EditingValue, "3");
-		else if (Global->OnKeyDown(key4))
+		else if (IsKeyPressed(key4))
 			strcat(EditingValue, "4");
-		else if (Global->OnKeyDown(key5))
+		else if (IsKeyPressed(key5))
 			strcat(EditingValue, "5");
-		else if (Global->OnKeyDown(key6))
+		else if (IsKeyPressed(key6))
 			strcat(EditingValue, "6");
-		else if (Global->OnKeyDown(key7))
+		else if (IsKeyPressed(key7))
 			strcat(EditingValue, "7");
-		else if (Global->OnKeyDown(key8))
+		else if (IsKeyPressed(key8))
 			strcat(EditingValue, "8");
-		else if (Global->OnKeyDown(key9))
+		else if (IsKeyPressed(key9))
 			strcat(EditingValue, "9");
-		else if (Global->OnKeyDown(keyDot))
+		else if (IsKeyPressed(keyDot))
 			strcat(EditingValue, ".");
-		else if (Global->OnKeyDown(keyMinus))
+		else if (IsKeyPressed(keyMinus))
 			strcat(EditingValue, "-");
-		if (strlen(EditingValue) > 0 && Global->OnKeyDown(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
+		if (strlen(EditingValue) > 0 && IsKeyPressed(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
 	}
 	else {
 		// handle other types of user input
@@ -162,43 +167,43 @@ void GameMenuManager::Render() {
 		}
 		else if (SelectedColumn == 0) {
 			// header is a column tilted to the side (column 0). Left and Right change rows and Down moves to column 1 (or the actual menu)
-			if (Global->OnKeyDown(MenuSettings->KeyDown)) {
+			if (IsKeyPressed(MenuSettings->KeyDown)) {
 				SelectedColumn = 1;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyLeft) && SelectedRow[SelectedColumn] > 0) {
+			else if (IsKeyPressed(MenuSettings->KeyLeft) && SelectedRow[SelectedColumn] > 0) {
 				SelectedRow[SelectedColumn] -= 1;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyRight) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
+			else if (IsKeyPressed(MenuSettings->KeyRight) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
 				SelectedRow[SelectedColumn] += 1;
 			}
 			SelectedPage[1] = SelectedPage[2] = SelectedPage[3] = 0;
 		}
 		else {
 			// handle navigation
-			if (Global->OnKeyDown(MenuSettings->KeyUp)) {
+			if (IsKeyPressed(MenuSettings->KeyUp)) {
 				if (SelectedRow[SelectedColumn] > 0) SelectedRow[SelectedColumn] -= 1; else SelectedColumn = 0; // move up in the column or go to header
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyDown) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
+			else if (IsKeyPressed(MenuSettings->KeyDown) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
 				SelectedRow[SelectedColumn] += 1;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyLeft)) {
+			else if (IsKeyPressed(MenuSettings->KeyLeft)) {
 				SelectedRow[SelectedColumn] = 0;
 				SelectedColumn -= 1;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyRight) && SelectedColumn < 3) {
+			else if (IsKeyPressed(MenuSettings->KeyRight) && SelectedColumn < 3) {
 				SelectedColumn += 1;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyPageUp) && SelectedPage[SelectedColumn] > 0) {
+			else if (IsKeyPressed(MenuSettings->KeyPageUp) && SelectedPage[SelectedColumn] > 0) {
 				SelectedPage[SelectedColumn] -= 1;
 				SelectedRow[SelectedColumn] = 0;
 			}
-			else if (Global->OnKeyDown(MenuSettings->KeyPageDown) && SelectedPage[SelectedColumn] < Pages[SelectedColumn]) {
+			else if (IsKeyPressed(MenuSettings->KeyPageDown) && SelectedPage[SelectedColumn] < Pages[SelectedColumn]) {
 				SelectedPage[SelectedColumn] += 1;
 				SelectedRow[SelectedColumn] = 0;
 			}
 			else {
 				// handle value add/subtract keys
-				if (Global->OnKeyDown(MenuSettings->KeyAdd)) {
+				if (IsKeyPressed(MenuSettings->KeyAdd)) {
 					//Logger::Log("Add for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i",SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
 
 					// react to user key input to reduce the value of the setting
@@ -218,7 +223,7 @@ void GameMenuManager::Render() {
 					}
 					TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 				}
-				else if (Global->OnKeyDown(MenuSettings->KeySubtract)) {
+				else if (IsKeyPressed(MenuSettings->KeySubtract)) {
 					//Logger::Log("Subtract for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i", SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
 
 					// react to user key input to reduce the value of the setting
@@ -456,4 +461,28 @@ void GameMenuManager::GetMidSection(char* MidSection) {
 	strncpy(MidSection, PositionStart, Size);
 	MidSection[Size] = NULL;
 
+}
+
+// Returns a key pressed value at regular intervals if key is held down
+bool GameMenuManager::IsKeyPressed(UInt16 KeyCode){
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = now - lastKeyPressed;
+
+	bool key = Global->OnKeyPressed(KeyCode); 
+	bool down = Global->OnKeyDown(KeyCode);
+
+	if (key || down){
+		if (down || (KeyCode != keyDown || elapsed_seconds.count() > 0.2)) {
+			// reset counter
+			lastKeyPressed = now;
+			keyDown = KeyCode;
+			return true;
+		}
+	}
+	else if (KeyCode == keyDown) {
+		// Key is up after being down
+		keyDown = 999;
+	}
+
+	return false;
 }
