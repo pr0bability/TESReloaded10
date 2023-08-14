@@ -4,7 +4,7 @@
 float4x4 TESR_WorldViewProjectionTransform;
 float4x4 TESR_ShadowCameraToLightTransformOrtho;
 float4 TESR_GameTime;
-float4 TESR_SnowData;
+float4 TESR_SnowData; // x: amount of snow; z: snow falling speed
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
 
