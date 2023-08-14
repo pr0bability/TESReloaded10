@@ -347,15 +347,15 @@ LightColorG = 1.0                     # Green channel multiplier for lighter ton
 LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Interiors]
-Brightness = 1.215                    # Overall image brightness.
+Brightness = 1.12                     # Overall image brightness.
 Saturation = 1.2                      # Overall image saturation.
-Contrast = 1.45                       # Overall image contrast.
-Strength = 1.0                        # Strength of the effect.
-DarkColorR = 0.9                      # Red channel multiplier for darker tones.
-DarkColorG = 0.7                      # Green channel multiplier for darker tones.
-DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
-LightColorR = 0.8                     # Red channel multiplier for lighter tones.
-LightColorG = 0.8                     # Green channel multiplier for lighter tones.
+Contrast = 1.3                        # Overall image contrast.
+Strength = 0.8                        # Strength of the effect.
+DarkColorR = 0.8                      # Red channel multiplier for darker tones.
+DarkColorG = 0.8                      # Green channel multiplier for darker tones.
+DarkColorB = 1.3                      # Blue channel multiplier for darker tones.
+LightColorR = 1.3                     # Red channel multiplier for lighter tones.
+LightColorG = 1.4                     # Green channel multiplier for lighter tones.
 LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Status]
@@ -515,7 +515,7 @@ Trees = false                        # Wether to include Trees when rendering or
 [_Shaders.ShadowsExteriors.ScreenSpace]
 BlurRadius = 1.0                     # Blur strength for denoising screenspace shadows
 Enabled = true                       # Wether to render screen space contact/detail shadows
-RenderDistance = 8000                # Max distance at which to compute screen space shadows
+RenderDistance = 80000               # Max distance at which to compute screen space shadows
 
 [_Shaders.ShadowsExteriors.Status]
 Enabled = true                       # Post process sun and pointlights shadows in exteriors.
@@ -566,19 +566,17 @@ SpecularPower = 0.78
 Enabled = false                     # Not currently used. Replaces the skin shader.
 
 [_Shaders.Snow.Main]
-DepthStep = 2.5
 Flakes = 0.5
-Speed = 1.4
+Speed = 1.4                         # Speed multiplier for snow falling
 
 [_Shaders.Snow.Status]
 Enabled = true                      # Snow precipitation shader.
 
 [_Shaders.SnowAccumulation.Main]
-Amount = 1.6
-BlurNormDropThreshhold = 0.82
-BlurRadiusMultiplier = 0.6
-Decrease = 12
-Increase = 0.8
+BlurNormDropThreshhold = 0.82       # Treshold for normals blurring above which normals will not be blended
+BlurRadiusMultiplier = 0.6          # Strength of normals blur
+Decrease = 12                       # Time in game Hours for the snow to disappear
+Increase = 0.3                      # Time in game Hours for the snow to accumulate
 SunPower = 0.3
 
 [_Shaders.SnowAccumulation.Status]
@@ -590,7 +588,7 @@ DistanceFade = 30000                # Max distance at which the effects will be 
 FresnelStrength = 0.7               # Strength for the grazing surface lighting boost called fresnel.
 Glossiness = 16                     # Higher value will make the specular effect affect more intensely a smaller region.
 SkyTintSaturation = 1.8             # Saturation of the sky lighting effect. Sky lighting is based on sky color. 
-SkyTintStrength = 0.3               # Strength for the sky lighting effect. This mostly affects horizontal, dark areas outside.
+SkyTintStrength = 0.6               # Strength for the sky lighting effect. This mostly affects horizontal, dark areas outside.
 SpecLumaTreshold = 0.5              # Treshold for the luma of areas affected by the specular boost.
 SpecularStrength = 0.7              # Strength of the effect for specular boost.
 
