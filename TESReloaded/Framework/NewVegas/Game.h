@@ -5408,3 +5408,224 @@ namespace Pointers {
 		static float* WindMatrixes			= (float*)0x01200688;
 	}
 }
+
+
+
+class BSShaderProperty : public NiShadeProperty {
+public:
+	enum BSShaderFlags {
+		kFlags_Specular = 0x00000001,
+		kFlags_Skinned = 0x00000002,
+		kFlags_LowDetail = 0x00000004,
+		kFlags_VertexAlpha = 0x00000008,
+		kFlags_Motion_Blur = 0x00000010,
+		kFlags_SinglePass = 0x00000020,
+		kFlags_Empty = 0x00000040,
+		kFlags_EnvMapping = 0x00000080,
+		kFlags_AlphaTexture = 0x00000100,
+		kFlags_Z_Prepass = 0x00000200,
+		kFlags_Facegen = 0x00000400,
+		kFlags_ParallaxShader = 0x00000800,
+		kFlags_Model_Space_Normals = 0x00001000,
+		kFlags_NoProjShadow = 0x00002000,
+		kFlags_LandscapeTexturing = 0x00004000,
+		kFlags_SimpleRefraction = 0x00008000,
+		kFlags_ComplexRefraction = 0x00010000,
+		kFlags_EyeEnvMapping = 0x00020000,
+		kFlags_Hair = 0x00040000,
+		kFlags_DynamicAlpha = 0x00080000,
+		kFlags_LocalMapHideSecret = 0x00100000,
+		kFlags_WindowsEnvMapping = 0x00200000,
+		kFlags_TreeBillboard = 0x00400000,
+		kFlags_ShadowFrustum = 0x00800000,
+		kFlags_MultipleTexture = 0x01000000,
+		kFlags_RemappableTexture = 0x02000000,
+		kFlags_DecalSinglePass = 0x04000000,
+		kFlags_DynDecalSinglePass = 0x08000000,
+		kFlags_ParallaxOcclusion = 0x10000000,
+		kFlags_ExternalEmittance = 0x20000000,
+		kFlags_ShadowMap = 0x40000000,
+		kFlags_ZBufferTest = 0x80000000,
+	};
+
+	enum BSShaderFlags2 {
+		kFlags2_ZBuffer_Write = 0x1,
+		kFlags2_LOD_Landscape = 0x2,
+		kFlags2_LOD_Building = 0x4,
+		kFlags2_No_Fade = 0x8,
+		kFlags2_Refraction_Tint = 0x10,
+		kFlags2_Vertex_Colors = 0x20,
+		kFlags2__1st_person = 0x40,
+		kFlags2__1st_Light_is_Point_Light = 0x80,
+		kFlags2__2nd_Light = 0x100,
+		kFlags2__3rd_Light = 0x200,
+		kFlags2_Vertex_Lighting = 0x400,
+		kFlags2_Uniform_Scale = 0x800,
+		kFlags2_Fit_Slope = 0x1000,
+		kFlags2_Billboard_and_Envmap_Light_Fade = 0x2000,
+		kFlags2_No_LOD_Land_Blend = 0x4000,
+		kFlags2_Envmap_Light_Fade = 0x8000,
+		kFlags2_Wireframe = 0x10000,
+		kFlags2_VATS_Selection = 0x20000,
+		kFlags2_Show_in_Local_Map = 0x40000,
+		kFlags2_Premult_Alpha = 0x80000,
+		kFlags2_Skip_Normal_Maps = 0x100000,
+		kFlags2_Alpha_Decal = 0x200000,
+		kFlags2_No_Transparency_Multisampling = 0x400000,
+		kFlags2_stinger_prop = 0x800000,
+		kFlags2_Unknown3 = 0x1000000,
+		kFlags2_Unknown4 = 0x2000000,
+		kFlags2_Unknown5 = 0x4000000,
+		kFlags2_Unknown6 = 0x8000000,
+		kFlags2_Unknown7 = 0x10000000,
+		kFlags2_Unknown8 = 0x20000000,
+		kFlags2_Unknown9 = 0x40000000,
+		kFlags2_Wall_RealTimeEnv = 0x80000000,
+	};
+
+	bool	IsLightingProperty();
+
+	UInt32	Unk020;		// 020
+	UInt32	Unk024;		// 024
+	float	Unk028;		// 028
+	float	Unk02C;		// 02C
+	float	Unk030;		// 030
+	float	Unk034;		// 034
+	UInt32	Unk038;		// 038
+	UInt32	Unk03C;		// 03C
+	UInt32	Unk040;		// 040
+	UInt32	Unk044;		// 044
+	UInt32	Unk048;		// 048
+	UInt32	Unk04C;		// 04C
+	UInt32	Unk050;		// 050
+	UInt32	Unk054;		// 054
+	UInt32	type;		// 058
+	float	Unk05C;		// 05C
+};
+assert(sizeof(BSShaderProperty) == 0x60);
+
+class WaterShaderProperty : BSShaderProperty
+{
+public:
+	struct VarAmounts
+	{
+		float unk;
+		float fWaterReflectivityAmt;
+		float fWaterOpacity;
+		float fWaterDistortionAmt;
+	};
+
+	UInt8 byte60;
+	UInt8 byte61;
+	UInt8 byte62;
+	bool bDepth;
+	UInt32 dword64;
+	UInt32 dword68;
+	float blendRadiusX;
+	float blendRadiusY;
+	float fogPower;
+	float fog78;
+	UInt8 byte7C;
+	UInt8 byte7D;
+	UInt8 byte7E;
+	bool isUseDefaultWater;
+	bool bReflect;
+	UInt8 bRefract;
+	UInt8 UV;
+	UInt8 byte83;
+	UInt32 dword84;
+	NiColorAlpha shallowColor;
+	NiColorAlpha deepColor;
+	NiColorAlpha reflectionColor;
+	WaterShaderProperty::VarAmounts Vars;
+	float floatC8;
+	float floatCC;
+	float blendRadiusZ;
+	float floatD4;
+	NiVector4 depthData;
+	float floatE8;
+	float floatEC;
+	float floatF0;
+	float floatF4;
+	float floatF8;
+	float floatFC;
+	float fresnelZ;
+	float fresnelW;
+	float float108;
+	float float10C;
+	float float110;
+	float float114;
+	UInt8 fWaterFresnelTerm[4];
+	float fWaterNoise;
+	float fFogAmount;
+	float texScale;
+	UInt32 dword128;
+	UInt32 dword12C;
+	UInt32 dword130;
+	NiSourceTexture* noiseTexture;
+	BSRenderedTexture* noDepth;
+	BSRenderedTexture* reflections;
+	BSRenderedTexture* refractions;
+	BSRenderedTexture* depth;
+	UInt32 dword148;
+	UInt32 dword14C;
+};
+assert(sizeof(WaterShaderProperty) == 0x150);
+
+
+class BSShaderLightingProperty : public BSShaderProperty {
+public:
+	DList<ShadowSceneLight>		LightList;
+	float						fUnk06C;
+	UInt32						uiRefID;
+	bool						bLightListChanged;
+	DNode<ShadowSceneLight>* pLightIterator;
+};
+assert(sizeof(BSShaderLightingProperty) == 0x7C);
+
+class BSShaderPPLightingProperty : public BSShaderLightingProperty {
+public:
+	struct Unk0C4 {
+		char cUnk0[10];
+	};
+
+	UInt32					unk07C;
+	UInt32					unk080;
+	NiColorAlpha			kHairTint;
+	NiColorAlpha			kLandBlendParams;
+	BSShaderTextureSet* spTextureSet;
+	UInt16					usLandscapeTextures;
+	NiSourceTexture** ppTextures[6];
+	Unk0C4* ptr0C4;
+	UInt16					usLandPassCount;
+	Unk0C4* pbTextureIsSpecular;
+	void* spTangentSpaceData;
+	UInt32					unk0D4;
+	UInt32					eClampMode;
+	EffectShaderProperty* spTexEffectData;
+	float					fRefractionStrength;
+	UInt32					iRefractionFirePeriod;
+	float					fParallaxMaxPasses;
+	float					fParallaxScale;
+	NiVector4				kLODTextureParams;
+	BSRenderPass* pDepthPass;
+};
+assert(sizeof(BSShaderPPLightingProperty) == 0x104);
+
+class SpeedTreeShaderLightingProperty : public BSShaderLightingProperty {
+public:
+	UInt32	Unk07C[3];	// 07C
+};
+assert(sizeof(SpeedTreeShaderLightingProperty) == 0x88);
+
+class SpeedTreeLeafShaderProperty : public SpeedTreeShaderLightingProperty {
+public:
+	struct LeafData {
+		UInt32		unk00;
+		UInt32		unk04;
+		float* leafBase; // pointer to float4[48]
+	};
+
+	LeafData* leafData;	// 088
+};
+assert(sizeof(SpeedTreeLeafShaderProperty) == 0x8C);
