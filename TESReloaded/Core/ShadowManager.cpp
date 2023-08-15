@@ -1,3 +1,5 @@
+#include <stack>
+
 /*
 * Initializes the Shadow Manager by grabbing the relevant settings and shaders, and setting up map sizes.
 */
@@ -176,221 +178,210 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, SettingsShadowStruct::F
 
 }
 
-void ShadowManager::RenderExterior(NiAVObject* Object, float MinRadius) {
-	// culling
-	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled || Object->GetWorldBoundRadius() < MinRadius) return; 
-
-	// if geo, render
-	if (Object->IsGeometry())
-		RenderGeometry(static_cast<NiGeometry*>(Object));
-
-	// if container, render children
-	else if (Object->IsNiNode()) {
-		if (Object->IsFadeNode() && static_cast<BSFadeNode*>(Object)->FadeAlpha < 0.75f)
-			return;
-
-		NiNode* Node = static_cast<NiNode*>(Object);
-		for (int i = 0; i < Node->m_children.numObjs; i++) {
-			RenderExterior(Node->m_children.data[i], MinRadius);
-		}
-	}
-}
-
-void ShadowManager::RenderInterior(NiAVObject* Object, float MinRadius) {
-	// culling
-	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled || Object->GetWorldBoundRadius() < MinRadius) 
+void ShadowManager::RenderObject(NiAVObject* NiObject, float MinRadius) {
+	// skip evaluation of children if object is geometry
+	if (NiObject->IsGeometry()) {
+		RenderGeometry(static_cast<NiGeometry*>(NiObject));
 		return;
+	}
 
-	// if geo, render
-	if (Object->IsGeometry()) 
-		RenderGeometry(static_cast<NiGeometry*>(Object));
+	std::stack<NiGeometry*> geometryAccum;
+	std::stack<NiGeometry*> skinnedGeoAccum;
+	std::stack<NiGeometry*> speedTreeAccum;
+	std::stack<NiAVObject*> containers;
+	NiAVObject* child;
+	NiGeometry* geo;
+	NiNode* Node;
+	containers.push(NiObject);
 
-	// if container, render children
-	else if (Object->IsNiNode()) {
-		NiNode* Node = static_cast<NiNode*>(Object);
+	// Gather geometry
+	while (!containers.empty()) {
+		Node = static_cast<NiNode*>(containers.top());
+		containers.pop();
+
+		if (!Node || Node->m_flags & NiAVObject::kFlag_AppCulled || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
+
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
-			RenderInterior(Node->m_children.data[i], MinRadius);
-		}
-	}
-}
+			child = Node->m_children.data[i];
+			if (!child || child->m_flags & NiAVObject::kFlag_AppCulled || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
+			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+			//if (!InFrustum(ShadowMapType, static_cast<NiNode*>(child))) continue; // frustum based culling 
 
-void ShadowManager::RenderTerrain(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType) {
-	// culling
-	if (!Object || Object->m_flags & NiAVObject::kFlag_AppCulled) 
-		return;
+			if (child->IsGeometry()) {
+				geo = static_cast<NiGeometry*>(child);
+				if (!geo->shader) continue; // skip Geometry without a shader
+				if (geo->m_pcName && !memcmp(geo->m_pcName, "Torch", 5)) continue; // No torch geo, it is too near the light and a bad square is rendered.
 
-	// if geo, render
-	if (Object->IsGeometry()) 
-		RenderGeometry(static_cast<NiGeometry*>(Object));
-
-	// if container, render children
-	else if (Object->IsNiNode()) {
-		NiNode* Node = static_cast<NiNode*>(Object);
-		if (InFrustum(ShadowMapType, Node)) {
-			for (int i = 0; i < Node->m_children.numObjs; i++) {
-				RenderTerrain(Node->m_children.data[i], ShadowMapType);
-			}
-		}
-	}
-}
-
-void ShadowManager::RenderLod(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType){
-    NiPoint2 BoundSize;
-	if (Object && !(Object->m_flags & NiAVObject::kFlag_AppCulled)) {
-		void* VFT = *(void**)Object;
-		if (VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode ||  VFT == Pointers::VirtualTables::BSMultiBoundNode ) {
-			NiNode* Node = (NiNode*)Object;
-			NiBound* Bound = Node->GetWorldBound();
-            if (TheRenderManager->GetObjectDistance(Bound) > 16000.0f)
-			TheRenderManager->GetScreenSpaceBoundSize(&BoundSize, Bound);
-			float BoundBox = (BoundSize.x * 100.f) * (BoundSize.y * 100.0f);
-            
-			if (InFrustum(ShadowMapType, Node) && BoundBox >= 1000.0f) {
-				for (int i = 0; i < Node->m_children.numObjs; i++) {
-					RenderLod(Node->m_children.data[i], ShadowMapType);
+				// check data for rigged geometry
+				if (geo->skinInstance && geo->skinInstance->SkinPartition && geo->skinInstance->SkinPartition->Partitions) {
+					if (!geo->skinInstance->SkinPartition->Partitions[0].BuffData) continue; // discard objects without buffer data
+					skinnedGeoAccum.push(geo);
+				}
+				else if (geo->m_parent->m_pcName && !memcmp(geo->m_parent->m_pcName, "Leaves", 6)) {
+					speedTreeAccum.push(geo);
+				}
+				else {
+					if (!geo->geomData->BuffData) continue; // discard objects without buffer data
+					geometryAccum.push(geo);
 				}
 			}
+			else {
+				containers.push(child);
+			}
 		}
-		else if ((VFT == Pointers::VirtualTables::NiTriShape || VFT == Pointers::VirtualTables::NiTriStrips) && !(Object->m_flags & NiAVObject::kFlag_AppCulled)) {
-			RenderGeometry((NiGeometry*)Object);
-		}
-    }    
+	}
+
+	// Render normal geometry
+	while (!geometryAccum.empty()) {
+		RenderGeometry(geometryAccum.top());
+		geometryAccum.pop();
+	}
+
+	// Render skinned geometry
+	TheShaderManager->ShaderConst.Shadow.Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+	CurrentPixel->SetCT();
+	CurrentVertex->SetCT();
+	while (!skinnedGeoAccum.empty()) {
+		RenderSkinnedGeometry(skinnedGeoAccum.top());
+		skinnedGeoAccum.pop();
+	}
+
+	// Render speedtree
+	TheShaderManager->ShaderConst.Shadow.Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+	CurrentPixel->SetCT();
+	CurrentVertex->SetCT();
+	while (!speedTreeAccum.empty()) {
+		RenderSpeedTreeGeometry(speedTreeAccum.top());
+		speedTreeAccum.pop();
+	}
 }
 
-// Gets the BufferData of a given Geo before rendering
-void ShadowManager::RenderGeometry(NiGeometry* Geo) {
-	// skip Geometry without a shader
-	if (!Geo->shader) return;
+void ShadowManager::RenderGeometry(NiGeometry* Geo) {	
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	NiGeometryData* ModelData = Geo->geomData;
+	NiGeometryBufferData* GeoData = ModelData->BuffData;
+	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
-	NiGeometryBufferData* GeoData = NULL;
-	GeoData = Geo->geomData->BuffData;
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
+	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
+	if (AlphaEnabled) {
+		NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
+		//if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
+			if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->textures[0]) {
+				TheShaderManager->ShaderConst.Shadow.Data.y = 1.0f; // Alpha Control
+				// Set diffuse texture at register 0
+				RenderState->SetTexture(0, Texture->rendererData->dTexture);
+				RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
+				RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
+				RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
+				RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
+				RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+			}
+		//}
+	}
 
-	// get data for rigged geometry
-	if (Geo->skinInstance && Geo->skinInstance->SkinPartition && Geo->skinInstance->SkinPartition->Partitions)
-		GeoData = Geo->skinInstance->SkinPartition->Partitions[0].BuffData;
+	CurrentPixel->SetCT();
+	CurrentVertex->SetCT();
 
-	if (GeoData) Render(Geo);
+	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
+	DrawGeometryBuffer(GeoData, GeoData->VertCount);
+
 }
 
+// Render Speedtree
+void ShadowManager::RenderSpeedTreeGeometry(NiGeometry* Geo) {
 
-void ShadowManager::Render(NiGeometry* Geo) {
-	
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	NiGeometryData* ModelData = Geo->geomData;
+	NiGeometryBufferData* GeoData = ModelData->BuffData;
+	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
+
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
+	SpeedTreeLeafShaderProperty* STProp = (SpeedTreeLeafShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+	BSTreeNode* Node = (BSTreeNode*)Geo->m_parent->m_parent;
+	NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
+
+	// Bind constant values for leaf transformation
+	Device->SetVertexShaderConstantF(63, (float*)&BillboardRight, 1);
+	Device->SetVertexShaderConstantF(64, (float*)&BillboardUp, 1);
+	Device->SetVertexShaderConstantF(65, Pointers::ShaderParams::RockParams, 1);
+	Device->SetVertexShaderConstantF(66, Pointers::ShaderParams::RustleParams, 1);
+	Device->SetVertexShaderConstantF(67, Pointers::ShaderParams::WindMatrixes, 16);
+	Device->SetVertexShaderConstantF(83, STProp->leafData->leafBase, 48);
+
+	// Set diffuse texture at register 0
+	RenderState->SetTexture(0, Texture->dTexture);
+	RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
+	RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
+	RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
+	RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
+	RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+
+	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
+	DrawGeometryBuffer(GeoData, GeoData->VertCount);
+
+}
+
+// Prepares and renders geometry that is skinned (uses bones for deformation)
+void ShadowManager::RenderSkinnedGeometry(NiGeometry* Geo) {
+	NiGeometryData* ModelData = Geo->geomData;
+	NiGeometryBufferData* GeoData = ModelData->BuffData;
+	NiSkinInstance* SkinInstance = Geo->skinInstance;
+	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
+
+	NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
+	D3DPRIMITIVETYPE PrimitiveType = (SkinPartition->Partitions[0].Strips == 0) ? D3DPT_TRIANGLELIST : D3DPT_TRIANGLESTRIP;
+	TheRenderManager->CalculateBoneMatrixes(SkinInstance, &Geo->m_worldTransform);
+	if (SkinInstance->SkinToWorldWorldToSkin) memcpy(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, SkinInstance->SkinToWorldWorldToSkin, 0x40);
+	for (UInt32 p = 0; p < SkinPartition->PartitionsCount; p++) {
+		if (!SkinInstance->IsPartitionEnabled(p)) continue;
+
+		int StartRegister = 9;
+		NiSkinPartition::Partition* Partition = &SkinPartition->Partitions[p];
+		for (int i = 0; i < Partition->Bones; i++) {
+			UInt16 NewIndex = (Partition->pBones == NULL) ? i : Partition->pBones[i];
+			TheRenderManager->device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
+			StartRegister += 3;
+		}
+
+		GeoData = Partition->BuffData;
+		TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
+		DrawGeometryBuffer(GeoData, Partition->Vertices);
+	}
+}
+
+// draws the geo data from the Geometry buffer
+void ShadowManager::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount) {
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	int StartIndex = 0;
 	int PrimitiveCount = 0;
-	int StartRegister = 9;
-	NiGeometryData* ModelData = Geo->geomData;
-	NiGeometryBufferData* GeoData = ModelData->BuffData;
-	NiSkinInstance* SkinInstance = Geo->skinInstance;
-	NiD3DShaderDeclaration* ShaderDeclaration = (Geo->shader ? Geo->shader->ShaderDeclaration : NULL);
 
-	if (Geo->m_pcName && !memcmp(Geo->m_pcName, "Torch", 5)) return; // No torch geo, it is too near the light and a bad square is rendered.
-	
-	TheShaderManager->ShaderConst.Shadow.Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
-	if (GeoData) {
-		TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
-		if (Geo->m_parent->m_pcName && !memcmp(Geo->m_parent->m_pcName, "Leaves", 6)) {
-			SpeedTreeLeafShaderProperty* STProp = (SpeedTreeLeafShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-			BSTreeNode* Node = (BSTreeNode*)Geo->m_parent->m_parent;
-			NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
-
-			TheShaderManager->ShaderConst.Shadow.Data.x = 2.0f;
-			Device->SetVertexShaderConstantF(63, (float*)&BillboardRight, 1);
-			Device->SetVertexShaderConstantF(64, (float*)&BillboardUp, 1);
-			Device->SetVertexShaderConstantF(65, Pointers::ShaderParams::RockParams, 1);
-			Device->SetVertexShaderConstantF(66, Pointers::ShaderParams::RustleParams, 1);
-			Device->SetVertexShaderConstantF(67, Pointers::ShaderParams::WindMatrixes, 16);
-			Device->SetVertexShaderConstantF(83, STProp->leafData->leafBase, 48);
-			RenderState->SetTexture(0, Texture->dTexture);
-			RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
-			RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
-			RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
-			RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
-			RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
-		}
-		else {
-			BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-			if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
-			if (AlphaEnabled) {
-				NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
-				if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
-					if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->textures[0]) {
-						TheShaderManager->ShaderConst.Shadow.Data.y = 1.0f; // Alpha Control
-						// gives shader access to the shadow constants and samplers
-						RenderState->SetTexture(0, Texture->rendererData->dTexture);
-						RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
-						RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
-						RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
-						RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
-						RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
-					}
-				}
-			}
-		}
-		TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-		for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
-			Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
-		}
-		Device->SetIndices(GeoData->IB);
-		if (GeoData->FVF)
-			RenderState->SetFVF(GeoData->FVF, false);
-		else
-			RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-		try {
-			CurrentVertex->SetCT();
-			CurrentPixel->SetCT();
-		}
-		catch (const std::exception& e) {
-			Logger::Log("Error setting Constant Table during shadow map render: %s", e.what());
-		}
-		for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-			if (GeoData->ArrayLengths)
-				PrimitiveCount = GeoData->ArrayLengths[i] - 2;
-			else
-				PrimitiveCount = GeoData->TriCount;
-			Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
-			StartIndex += PrimitiveCount + 2;
-		}
+	for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
+		Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
 	}
-	else {
-		TheShaderManager->ShaderConst.Shadow.Data.x = 1.0f;
-		NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
-		D3DPRIMITIVETYPE PrimitiveType = (SkinPartition->Partitions[0].Strips == 0) ? D3DPT_TRIANGLELIST : D3DPT_TRIANGLESTRIP;
-		TheRenderManager->CalculateBoneMatrixes(SkinInstance, &Geo->m_worldTransform);
-		if (SkinInstance->SkinToWorldWorldToSkin) memcpy(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, SkinInstance->SkinToWorldWorldToSkin, 0x40);
-		for (UInt32 p = 0; p < SkinPartition->PartitionsCount; p++) {
-            if (!SkinInstance->IsPartitionEnabled(p)) continue;
-			StartIndex = 0;
-			StartRegister = 9;
-			NiSkinPartition::Partition* Partition = &SkinPartition->Partitions[p];
-			for (int i = 0; i < Partition->Bones; i++) {
-				UInt16 NewIndex = (Partition->pBones == NULL) ? i : Partition->pBones[i];
-				Device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
-				StartRegister += 3;
-			}
-			GeoData = Partition->BuffData;
-			TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
-			for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
-				Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
-			}
-			Device->SetIndices(GeoData->IB);
-			if (GeoData->FVF)
-				RenderState->SetFVF(GeoData->FVF, false);
-			else
-				RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-			CurrentVertex->SetCT();
-			CurrentPixel->SetCT();
-			for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-				PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2: GeoData->TriCount;
-				Device->DrawIndexedPrimitive(PrimitiveType, GeoData->BaseVertexIndex, 0, Partition->Vertices, StartIndex, PrimitiveCount);
-				StartIndex += PrimitiveCount + 2;
-			}
-		}
+	Device->SetIndices(GeoData->IB);
+	if (GeoData->FVF)
+		RenderState->SetFVF(GeoData->FVF, false);
+	else
+		RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
+
+	for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
+		if (GeoData->ArrayLengths)
+			PrimitiveCount = GeoData->ArrayLengths[i] - 2;
+		else
+			PrimitiveCount = GeoData->TriCount;
+		Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, verticesCount, StartIndex, PrimitiveCount);
+		StartIndex += PrimitiveCount + 2;
 	}
 }
 
+
+// calculates the minimum area viewproj matrix for a given cascade using cascade depth and frustum corners
 D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View) {
 	D3DXMATRIX Proj;
 	float FarPlane = ShadowsExteriors->ShadowMapFarPlane;
@@ -555,38 +546,20 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 
 
 void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType) {
-	if (Cell->IsInterior())
+	if (!Cell || Cell->IsInterior())
 		return;
-
-	// Log paranoia incoming - can remove later if everything gets confirmed to be safe
+	
 	if (ShadowsExteriors->Forms[ShadowMapType].Terrain) {
-		if (Cell) {
-			NiNode* LandNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Land);
-			// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
-			if (LandNode) {
-				for (int i = 0; i < LandNode->m_children.numObjs; i++) {
-					NiAVObject* TerrainChunk = LandNode->m_children.data[i];
-					if (TerrainChunk) {
-						RenderTerrain(TerrainChunk, ShadowMapType);
-					}
-					else {
-						Logger::Log("[ ShadowManager::RenderExteriorCell ] TerrainChunk of %s is null", Cell->fullName.name.m_data);
-					}
-				}
-			}
-			else {
-				Logger::Log("[ ShadowManager::RenderExteriorCell ] Landscape of %s is null", Cell->fullName.name.m_data);
-			}
-		}
-		else {
-			Logger::Log("[ ShadowManager::RenderExteriorCell ] Cell is null - how?");
-		}
+		NiNode* LandNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Land);
+		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+		if (LandNode) RenderObject((NiAVObject*)LandNode, 0);
 	}
+
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
 		if (TESObjectREFR* Ref = GetRef(Entry->item, &ShadowsExteriors->Forms[ShadowMapType], &ShadowsExteriors->ExcludedForms)) {
 			NiNode* RefNode = Ref->GetNode();
-			if (InFrustum(ShadowMapType, RefNode)) RenderExterior(RefNode, ShadowsExteriors->Forms[ShadowMapType].MinRadius);
+			if (InFrustum(ShadowMapType, RefNode)) RenderObject(RefNode, ShadowsExteriors->Forms[ShadowMapType].MinRadius);
 		}
 		Entry = Entry->next;
 	}
@@ -669,7 +642,7 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 			Ref = GetRef(Entry->item, &ShadowsInteriors->Forms, &ShadowsInteriors->ExcludedForms);
 			if (Ref) {
 				NiNode* RefNode = Ref->GetNode();
-				if (RefNode->GetDistance(LightPos) <= Radius * 1.2f) RenderInterior(RefNode, MinRadius);
+				if (RefNode->GetDistance(LightPos) <= Radius * 1.2f) RenderObject(RefNode, MinRadius);
 			}
 			Entry = Entry->next;
 		}
@@ -906,7 +879,7 @@ void ShadowManager::RenderShadowMaps() {
 		for (int i = 0; i < lightsNum; i++) {
 			RenderShadowCubeMap(ShadowLights, i, ShadowsInteriors);
 		}
-		CalculateBlend(ShadowLights, ShadowsInteriors->LightPoints);
+		//CalculateBlend(ShadowLights, ShadowsInteriors->LightPoints);
 	}
 
 	if (isExterior) {

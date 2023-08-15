@@ -24,12 +24,11 @@ public:
 	void					SetFrustum(ShadowMapTypeEnum ShadowMapType, D3DMATRIX* Matrix);
 	bool					InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node);
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, SettingsShadowStruct::FormsStruct* Forms, SettingsShadowStruct::ExcludedFormsList* ExcludedForms);
-	void					RenderExterior(NiAVObject* Object, float MinRadius);
-	void					RenderInterior(NiAVObject* Object, float MinRadius);
-	void					RenderTerrain(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType);
-	void					RenderLod(NiAVObject* Object, ShadowMapTypeEnum ShadowMapType);
+	void					RenderObject(NiAVObject* NiObject, float MinRadius);
 	void					RenderGeometry(NiGeometry* Geo);
-	void					Render(NiGeometry* Geo);
+	void					RenderSkinnedGeometry(NiGeometry* Geo);
+	void					RenderSpeedTreeGeometry(NiGeometry* Geo);
+	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
 	void					RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir);
 	void					RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType);
 	void					RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors);
