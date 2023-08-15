@@ -212,8 +212,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 	NiGeometry* geo;
 	NiNode* Node;
 
-	// skip evaluation of children if object is geometry
-	AccumObject(&containers, NiObject);
+	AccumObject(&containers, NiObject); //list all objects contained, or sort the object if not a container
 
 	// Gather geometry
 	while (!containers.empty()) {
@@ -295,6 +294,7 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 		}
 	}
 
+	// update alpha control constant
 	CurrentVertex->SetCT();
 	CurrentPixel->SetCT();
 
@@ -556,7 +556,6 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 }
 
 
-
 void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType) {
 	if (!Cell || Cell->IsInterior())
 		return;
@@ -579,6 +578,7 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 	RenderAccums();
 }
 
+
 void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
 	
 	if (Lights[LightIndex] == NULL) return; // No light at current index
@@ -592,7 +592,7 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 	float MinRadius = ShadowsInteriors->Forms.MinRadius;
 	NiPoint3* LightPos = NULL;
 	D3DXMATRIX View, Proj;
-	D3DXVECTOR3 Eye, At, Up;
+	D3DXVECTOR3 Eye, At, Up, CameraDirection;;
 
 	Device->SetDepthStencilSurface(TheTextureManager->ShadowCubeMapDepthSurface);
 
@@ -614,30 +614,31 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 		At.z = Eye.z;
 		switch (Face) {
 		case D3DCUBEMAP_FACE_POSITIVE_X:
-			At += D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+			CameraDirection = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
 			Up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 			break;
 		case D3DCUBEMAP_FACE_NEGATIVE_X:
-			At += D3DXVECTOR3(-1.0f, 0.0f, 0.0f);
+			CameraDirection = D3DXVECTOR3(-1.0f, 0.0f, 0.0f);
 			Up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 			break;
 		case D3DCUBEMAP_FACE_POSITIVE_Y:
-			At += D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+			CameraDirection = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 			Up = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
 			break;
 		case D3DCUBEMAP_FACE_NEGATIVE_Y:
-			At += D3DXVECTOR3(0.0f, -1.0f, 0.0f);
+			CameraDirection = D3DXVECTOR3(0.0f, -1.0f, 0.0f);
 			Up = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 			break;
 		case D3DCUBEMAP_FACE_POSITIVE_Z:
-			At += D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+			CameraDirection = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
 			Up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 			break;
 		case D3DCUBEMAP_FACE_NEGATIVE_Z:
-			At += D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+			CameraDirection = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
 			Up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 			break;
 		}
+		At += CameraDirection;
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		ShadowMap->ShadowViewProj = View * Proj;
 		Device->SetRenderTarget(0, TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]);
@@ -656,13 +657,21 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 			Ref = GetRef(Entry->item, &ShadowsInteriors->Forms, &ShadowsInteriors->ExcludedForms);
 			if (Ref) {
 				NiNode* RefNode = Ref->GetNode();
-				if (RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, MinRadius);
+				D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
+				D3DXVECTOR3 ObjectToLight = ObjectPos - Eye;
+
+				D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
+				float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
+
+				if (inFront && RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, MinRadius);
 			}
 			Entry = Entry->next;
 		}
 
+		RenderAccums();
 		Device->EndScene();
 	}
+
 
 	timer.LogTime("RenderShadowCubeMap");	
 }

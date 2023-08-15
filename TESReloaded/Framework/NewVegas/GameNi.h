@@ -98,7 +98,9 @@ public:
 	float x;
 	float y;
 	float z;
-
+	D3DXVECTOR3		toD3DXVEC3() {
+		return D3DXVECTOR3(x, y, z);
+	}
 	D3DXVECTOR4		toD3DXVEC4() {
 		return D3DXVECTOR4(x, y, z, 1.0);
 	}
