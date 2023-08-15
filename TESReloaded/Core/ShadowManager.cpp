@@ -1,5 +1,3 @@
-#include <stack>
-
 /*
 * Initializes the Shadow Manager by grabbing the relevant settings and shaders, and setting up map sizes.
 */
@@ -178,21 +176,44 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, SettingsShadowStruct::F
 
 }
 
-void ShadowManager::RenderObject(NiAVObject* NiObject, float MinRadius) {
-	// skip evaluation of children if object is geometry
+void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject) {
+	NiGeometry* geo;
 	if (NiObject->IsGeometry()) {
-		RenderGeometry(static_cast<NiGeometry*>(NiObject));
-		return;
-	}
+		geo = static_cast<NiGeometry*>(NiObject);
+		if (!geo->shader) return; // skip Geometry without a shader
 
-	std::stack<NiGeometry*> geometryAccum;
-	std::stack<NiGeometry*> skinnedGeoAccum;
-	std::stack<NiGeometry*> speedTreeAccum;
+		NiShadeProperty* pShaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+
+#if defined(OBLIVION)
+		if (geo->m_pcName && !memcmp(geo->m_pcName, "Torch", 5)) return; // No torch geo, it is too near the light and a bad square is rendered.
+#endif
+		// check data for rigged geometry
+		if (geo->skinInstance && geo->skinInstance->SkinPartition && geo->skinInstance->SkinPartition->Partitions) {
+			if (!geo->skinInstance->SkinPartition->Partitions[0].BuffData) return; // discard objects without buffer data
+			skinnedGeoAccum.push(geo);
+		}
+		else if (pShaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
+			speedTreeAccum.push(geo);
+		}
+		else {
+			if (!geo->geomData->BuffData) return; // discard objects without buffer data
+			geometryAccum.push(geo);
+		}
+	}
+	else {
+		containersAccum->push(NiObject);
+	}
+}
+
+
+void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 	std::stack<NiAVObject*> containers;
 	NiAVObject* child;
 	NiGeometry* geo;
 	NiNode* Node;
-	containers.push(NiObject);
+
+	// skip evaluation of children if object is geometry
+	AccumObject(&containers, NiObject);
 
 	// Gather geometry
 	while (!containers.empty()) {
@@ -207,33 +228,18 @@ void ShadowManager::RenderObject(NiAVObject* NiObject, float MinRadius) {
 			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
 			//if (!InFrustum(ShadowMapType, static_cast<NiNode*>(child))) continue; // frustum based culling 
 
-			if (child->IsGeometry()) {
-				geo = static_cast<NiGeometry*>(child);
-				NiShadeProperty* pShaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
-				if (!geo->shader) continue; // skip Geometry without a shader
-#if defined(OBLIVION)
-				if (geo->m_pcName && !memcmp(geo->m_pcName, "Torch", 5)) continue; // No torch geo, it is too near the light and a bad square is rendered.
-#endif
-				// check data for rigged geometry
-				if (geo->skinInstance && geo->skinInstance->SkinPartition && geo->skinInstance->SkinPartition->Partitions) {
-					if (!geo->skinInstance->SkinPartition->Partitions[0].BuffData) continue; // discard objects without buffer data
-					skinnedGeoAccum.push(geo);
-				}
-				else if (pShaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
-					speedTreeAccum.push(geo);
-				}
-				else {
-					if (!geo->geomData->BuffData) continue; // discard objects without buffer data
-					geometryAccum.push(geo);
-				}
-			}
-			else {
-				containers.push(child);
-			}
+			AccumObject(&containers, child);
 		}
 	}
+}
 
+// Go through accumulations and render found objects
+void ShadowManager::RenderAccums() {
 	// Render normal geometry
+	TheShaderManager->ShaderConst.Shadow.Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+	CurrentPixel->SetCT();
+	CurrentVertex->SetCT();
 	while (!geometryAccum.empty()) {
 		RenderGeometry(geometryAccum.top());
 		geometryAccum.pop();
@@ -269,11 +275,15 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
+
+	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha Control
 	if (AlphaEnabled) {
 		NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
-		//if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
+		if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
 			if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0]) {
+				
 				TheShaderManager->ShaderConst.Shadow.Data.y = 1.0f; // Alpha Control
+
 				// Set diffuse texture at register 0
 				RenderState->SetTexture(0, Texture->rendererData->dTexture);
 				RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
@@ -282,15 +292,14 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 				RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
 				RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
 			}
-		//}
+		}
 	}
 
-	CurrentPixel->SetCT();
 	CurrentVertex->SetCT();
+	CurrentPixel->SetCT();
 
 	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
 	DrawGeometryBuffer(GeoData, GeoData->VertCount);
-
 }
 
 // Render Speedtree
@@ -539,6 +548,7 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 		else {
 			RenderExteriorCell(Player->parentCell, ShadowsExteriors, ShadowMapType);
 		}
+
 		Device->EndScene();
 	}
 
@@ -554,17 +564,19 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 	if (ShadowsExteriors->Forms[ShadowMapType].Terrain) {
 		NiNode* LandNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Land);
 		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
-		if (LandNode) RenderObject((NiAVObject*)LandNode, 0);
+		if (LandNode) AccumChildren((NiAVObject*)LandNode, 0);
 	}
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
 		if (TESObjectREFR* Ref = GetRef(Entry->item, &ShadowsExteriors->Forms[ShadowMapType], &ShadowsExteriors->ExcludedForms)) {
 			NiNode* RefNode = Ref->GetNode();
-			if (InFrustum(ShadowMapType, RefNode)) RenderObject(RefNode, ShadowsExteriors->Forms[ShadowMapType].MinRadius);
+			if (InFrustum(ShadowMapType, RefNode)) AccumChildren(RefNode, ShadowsExteriors->Forms[ShadowMapType].MinRadius);
 		}
 		Entry = Entry->next;
 	}
+
+	RenderAccums();
 }
 
 void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
@@ -644,10 +656,11 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 			Ref = GetRef(Entry->item, &ShadowsInteriors->Forms, &ShadowsInteriors->ExcludedForms);
 			if (Ref) {
 				NiNode* RefNode = Ref->GetNode();
-				if (RefNode->GetDistance(LightPos) <= Radius * 1.2f) RenderObject(RefNode, MinRadius);
+				if (RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, MinRadius);
 			}
 			Entry = Entry->next;
 		}
+
 		Device->EndScene();
 	}
 
