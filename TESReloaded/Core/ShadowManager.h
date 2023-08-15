@@ -1,4 +1,5 @@
 #pragma once
+#include <stack>
 
 class ShadowManager { // Never disposed
 public:
@@ -24,7 +25,9 @@ public:
 	void					SetFrustum(ShadowMapTypeEnum ShadowMapType, D3DMATRIX* Matrix);
 	bool					InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node);
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, SettingsShadowStruct::FormsStruct* Forms, SettingsShadowStruct::ExcludedFormsList* ExcludedForms);
-	void					RenderObject(NiAVObject* NiObject, float MinRadius);
+	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
+	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject);
+	void					RenderAccums();
 	void					RenderGeometry(NiGeometry* Geo);
 	void					RenderSkinnedGeometry(NiGeometry* Geo);
 	void					RenderSpeedTreeGeometry(NiGeometry* Geo);
@@ -39,6 +42,10 @@ public:
 	D3DXMATRIX				GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View);
 	static void				GetCascadeDepths();
 	static float			lerp(float a, float b, float t);
+
+	std::stack<NiGeometry*> geometryAccum;
+	std::stack<NiGeometry*> skinnedGeoAccum;
+	std::stack<NiGeometry*> speedTreeAccum;
 
     ShaderRecordVertex*		ShadowMapVertex;
 	ShaderRecordPixel*		ShadowMapPixel;
