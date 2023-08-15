@@ -209,15 +209,17 @@ void ShadowManager::RenderObject(NiAVObject* NiObject, float MinRadius) {
 
 			if (child->IsGeometry()) {
 				geo = static_cast<NiGeometry*>(child);
+				NiShadeProperty* pShaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
 				if (!geo->shader) continue; // skip Geometry without a shader
+#if defined(OBLIVION)
 				if (geo->m_pcName && !memcmp(geo->m_pcName, "Torch", 5)) continue; // No torch geo, it is too near the light and a bad square is rendered.
-
+#endif
 				// check data for rigged geometry
 				if (geo->skinInstance && geo->skinInstance->SkinPartition && geo->skinInstance->SkinPartition->Partitions) {
 					if (!geo->skinInstance->SkinPartition->Partitions[0].BuffData) continue; // discard objects without buffer data
 					skinnedGeoAccum.push(geo);
 				}
-				else if (geo->m_parent->m_pcName && !memcmp(geo->m_parent->m_pcName, "Leaves", 6)) {
+				else if (pShaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
 					speedTreeAccum.push(geo);
 				}
 				else {
@@ -270,7 +272,7 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 	if (AlphaEnabled) {
 		NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
 		//if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
-			if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->textures[0]) {
+			if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0]) {
 				TheShaderManager->ShaderConst.Shadow.Data.y = 1.0f; // Alpha Control
 				// Set diffuse texture at register 0
 				RenderState->SetTexture(0, Texture->rendererData->dTexture);

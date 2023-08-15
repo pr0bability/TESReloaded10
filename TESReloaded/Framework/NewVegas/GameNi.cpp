@@ -135,8 +135,5 @@ void	NiDX9Renderer::CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransf
 }
 
 bool BSShaderProperty::IsLightingProperty() {
-    bool r = false;
-
-    if (type == BSShaderType::kType_Default || type == BSShaderType::kType_Lighting3) r = true;
-    return r;
+    return (type == kProp_Lighting || type == kProp_Lighting30);
 }	

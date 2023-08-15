@@ -57,6 +57,9 @@ class BSFadeNode;
 class BSMultiBoundNode;
 class BSSegmentedTriShape;
 class BSResizableTriShape;
+class BSShaderTextureSet;
+class EffectShaderProperty;
+class BSRenderPass;
 
 class ShadowSceneLight;
 class AnimSequenceBase;
@@ -68,6 +71,10 @@ class bhkRigidBody;
 class bhkCollisionObject;
 class bhkBlendCollisionObject;
 class bhkLimitedHingeConstraint;
+
+class ImageSpaceManager;
+class ImageSpaceEffectParam;
+class ImageSpaceShaderParam;
 
 struct NiRTTI {
 	const char* name;
@@ -892,6 +899,11 @@ public:
 	NiDX9TextureData*	rendererData;	// 024
 	NiTexture*			nextTex;		// 028 - linked list updated in ctor/dtor
 	NiTexture*			prevTex;		// 02C
+
+
+	NiDX9TextureData* GetDX9RendererData() {
+		return reinterpret_cast<NiDX9TextureData*>(rendererData);
+	};
 };
 assert(sizeof(NiTexture) == 0x30);
 
@@ -1058,7 +1070,6 @@ public:
 	NiDX9Renderer*		D3DRenderer;	// 018
 	NiDX9RenderState*	D3DRenderState;	// 01C
 	UInt8				Unk020;			// 020
-	UInt8				pad01C[3];
 };
 assert(sizeof(NiD3DShaderInterface) == 0x24);
 
@@ -1071,53 +1082,120 @@ public:
 	NiD3DRenderStateGroup*  RenderStateGroup;	// 02C
 	NiD3DShaderConstantMap* PixelConstantMap;	// 030
 	NiD3DShaderConstantMap* VertexConstantMap;	// 034
-	UInt32					Unk038[14];			// 038
+	UInt32					Unk038;				// 038
 };
-assert(sizeof(NiD3DShader) == 0x70);
+assert(sizeof(NiD3DShader) == 0x3C);
 
-class BSShader : public NiD3DShader {
+class NiD3DDefaultShader : public NiD3DShader {
 public:
-	UInt32		Unk070;			// 070
-	UInt32		Unk074;			// 074
-	UInt32		Unk078;			// 078
+	UInt32					Unk03C[8];			// 03C	
 };
-assert(sizeof(BSShader) == 0x7C);
+assert(sizeof(NiD3DDefaultShader) == 0x5C);
+
+class BSShader : public NiD3DDefaultShader {
+public:
+	enum ShaderType {
+		TYPE_ShadowLightShader = 0x1,
+		TYPE_HairShader = 0x2,
+		TYPE_ParallaxShader = 0x3,
+		TYPE_SkinShader = 0x4,
+		TYPE_SpeedTreeBranchShader = 0x5,
+		TYPE_TallGrassShader = 0x6,
+		TYPE_DistantLODShader = 0x7,
+		TYPE_SpeedTreeFrondShader = 0x8,
+		TYPE_SpeedTreeLeafShader = 0x9,
+		TYPE_NiD3DDefaultShader = 0xA,
+		TYPE_SkyShader = 0xB,
+		TYPE_GeometryDecalShader = 0xC,
+		TYPE_WaterShader = 0xD,
+		TYPE_ParticleShader = 0xE,
+		TYPE_BoltShader = 0xF,
+		TYPE_BeamShader = 0x10,
+		TYPE_Lighting30Shader = 0x11,
+		TYPE_PrecipitationShader = 0x12,
+		TYPE_VolumetricFogShader = 0x13,
+		TYPE_TileShader = 0x14,
+		TYPE_BSShaderNoLighting = 0x16,
+		TYPE_BSShaderBloodSplatter = 0x17,
+		TYPE_BSImagespaceShader = 0x18,
+		TYPE_BSDistantTreeShader = 0x19,
+	};
+
+	NiD3DPass* pass;
+	void* Unk60;
+	bool Unk64;
+	UInt32 iShaderType;
+};
+assert(sizeof(BSShader) == 0x6C);
 
 class WaterShader : public BSShader {
 public:
-	UInt32				Unk07C[70];		// 07C
-	NiD3DVertexShader*	Vertex[3];		// 194
-	NiD3DPixelShader*	Pixel[38];		// 1A0
-	UInt32				Unk238[6];		// 238
+	NiD3DPass*				pPasses[74];
+	NiD3DVertexShader*		pVertexShaders[3];
+	NiD3DPixelShader*		pPixelShaders[38];
+	NiRefObject*			spObject238;
+	NiRefObject*			spObject23C;
+	int						dword240;
+	NiRefObject*			spObject244;
+	NiRefObject*			spObject248;
+	int						dword24C;
 };
 assert(sizeof(WaterShader) == 0x250);
 
 
 class ShadowLightShader : public BSShader{
 public:
-	UInt32 unk07C[4];
+	NiDX9ShaderDeclaration* pShaderDeclarationGlowParallaxSkin;
+	NiDX9ShaderDeclaration* pShaderDeclaration70;
+	NiDX9ShaderDeclaration* pShaderDeclarationModelSpaceNormals;
+	NiDX9ShaderDeclaration* pShaderDeclarationLandscape;
+	NiD3DShaderConstantMap* spPixelConstantMap;
+	NiD3DShaderConstantMap* spVertexConstantMap;
+	NiD3DShaderConstantMap* spPixelConstantMap2;
+	NiD3DShaderConstantMap* spVertexConstantMap2;
 };
 assert(sizeof(ShadowLightShader) == 0x8C);
 
 
 class ParallaxShader : public ShadowLightShader{
 public:
-	NiD3DVertexShader*  Vertex[20];
- 	NiD3DPixelShader*   Pixel[33];
+	NiD3DVertexShader*	pVertexShaders[20];
+	NiD3DPixelShader*	pPixelShaders[33];
 };
 assert(sizeof(ParallaxShader) == 0x160);
 
+class ImageSpaceEffect {
+public:
+	virtual void Destroy(bool doFree);
+	virtual void RenderShader(NiGeometry* apScreenShape, NiDX9Renderer* pkRenderer, ImageSpaceEffectParam* apParam, bool abEndFrame);
+	virtual void Setup(ImageSpaceManager* pISManager, ImageSpaceEffectParam* apParam);
+	virtual void Shutdown(void);
+	virtual void BorrowTextures(ImageSpaceEffectParam* apParam);
+	virtual void ReturnTextures(void);
+	virtual bool IsActive(void);
+	virtual bool UpdateParams(ImageSpaceEffectParam* apParam);
+
+	bool							bIsActive;
+	bool							bParamsChanged;
+	NiTArray<ImageSpaceEffect>		EffectList;
+	NiTArray<int>					EffectParamList;
+	NiTArray<int>					Textures;
+	NiTArray<int>					EffectInputs;
+	NiTArray<int>					EffectOutput;
+};
+assert(sizeof(ImageSpaceEffect) == 0x58);
+
 class BSImageSpaceShader : public BSShader {
 public:
-	UInt32				Unk07C[18];	// 07C
-	NiD3DVertexShader*	Vertex;		// 0C4
-	NiD3DPixelShader*	Pixel;		// 0C8
+	ImageSpaceEffect		Effect;
+	NiD3DVertexShader*		pVertexShader;
+	NiD3DPixelShader*		pPixelShader;
+	ImageSpaceShaderParam*	pParam;
 };
-assert(sizeof(BSImageSpaceShader) == 0xCC);
+assert(sizeof(BSImageSpaceShader) == 0xD0);
 
 class WaterShaderHeightMap : public BSImageSpaceShader {
 public:
-	UInt32				Unk0CC;		// 0CC
 };
 assert(sizeof(WaterShaderHeightMap) == 0xD0);
 
@@ -1603,215 +1681,36 @@ assert(sizeof(NiAlphaProperty) == 0x01C);
 
 class NiShadeProperty : public NiProperty {
 public:
-	UInt16	flags;		// 018
-	UInt8	pad01A[2];	// 01A
-	UInt32	Unk01C;		// 01C
+	enum ShaderPropType : UInt32
+	{
+		kProp_Lighting = 0x1,
+		kProp_DistantLOD = 0x2,
+		kProp_GeometryDecal = 0x3,
+		kProp_TallGrass = 0x4,
+		kProp_SpeedTreeLeaf = 0x6,
+		kProp_PPLighting = 0x8,
+		kProp_Hair = 0x9,
+		kProp_SpeedTreeBranch = 0xA,
+		kProp_SpeedTreeBillboard = 0xB,
+		kProp_Lighting30 = 0xC,
+		kProp_Sky = 0xD,
+		kProp_Water = 0xE,
+		kProp_Bolt = 0xF,
+		kProp_Particle = 0x11,
+		kProp_Precipitation = 0x12,
+		kProp_Tile = 0x13,
+		kProp_NoLighting = 0x15,
+		kProp_VolumetricFog = 0x16,
+		kProp_BloodSplatter = 0x17,
+		kProp_DistantTree = 0x18,
+	};
+
+	UInt16			flags;		// 018
+	UInt8			pad01A[2];	// 01A
+	ShaderPropType	type;		// 01C
 };
 assert(sizeof(NiShadeProperty) == 0x20);
 
-class BSShaderProperty : public NiShadeProperty {
-public:
-	enum BSShaderType {
-		kType_TallGrass		= 0,
-		kType_Default		= 1,
-		kType_Sky			= 10,
-		kType_Skin			= 14,
-		kType_Water			= 17,
-		kType_Lighting3		= 29,
-		kType_Tile			= 32,
-		kType_NoLighting	= 33,
-	};
-	enum BSShaderFlags {
-		kFlags_Specular				= 0x00000001,
-		kFlags_Skinned				= 0x00000002,
-		kFlags_LowDetail			= 0x00000004,
-		kFlags_VertexAlpha			= 0x00000008,
-		kFlags_Unk1					= 0x00000010, // MultiSpecular?
-		kFlags_SinglePass			= 0x00000020,
-		kFlags_Empty				= 0x00000040,
-		kFlags_EnvMapping			= 0x00000080,
-		kFlags_AlphaTexture			= 0x00000100,
-		kFlags_Unk2					= 0x00000200,
-		kFlags_Facegen				= 0x00000400,
-		kFlags_ParallaxShader		= 0x00000800,
-		kFlags_Unk3					= 0x00001000,
-		kFlags_NoProjShadow			= 0x00002000,
-		kFlags_LandscapeTexturing	= 0x00004000,
-		kFlags_SimpleRefraction		= 0x00008000,
-		kFlags_ComplexRefraction	= 0x00010000,
-		kFlags_EyeEnvMapping		= 0x00020000,
-		kFlags_Hair					= 0x00040000,
-		kFlags_DynamicAlpha			= 0x00080000,
-		kFlags_LocalMapHideSecret	= 0x00100000,
-		kFlags_WindowsEnvMapping	= 0x00200000,
-		kFlags_TreeBillboard		= 0x00400000,
-		kFlags_ShadowFrustum		= 0x00800000,
-		kFlags_MultipleTexture		= 0x01000000,
-		kFlags_RemappableTexture	= 0x02000000,
-		kFlags_DecalSinglePass		= 0x04000000,
-		kFlags_DynDecalSinglePass	= 0x08000000,
-		kFlags_ParallaxOcclusion	= 0x10000000,
-		kFlags_ExternalEmittance	= 0x20000000,
-		kFlags_ShadowMap			= 0x40000000,
-		kFlags_ZBufferTest			= 0x80000000,
-	};
-	
-	bool	IsLightingProperty();
-	
-	UInt32	Unk020;		// 020
-	UInt32	Unk024;		// 024
-	float	Unk028;		// 028
-	float	Unk02C;		// 02C
-	float	Unk030;		// 030
-	float	Unk034;		// 034
-	UInt32	Unk038;		// 038
-	UInt32	Unk03C;		// 03C
-	UInt32	Unk040;		// 040
-	UInt32	Unk044;		// 044
-	UInt32	Unk048;		// 048
-	UInt32	Unk04C;		// 04C
-	UInt32	Unk050;		// 050
-	UInt32	Unk054;		// 054
-	UInt32	type;		// 058
-	float	Unk05C;		// 05C
-};
-assert(sizeof(BSShaderProperty) == 0x60);
-
-class WaterShaderProperty : BSShaderProperty
-{
-public:
-    struct VarAmounts
-    {
-      float unk;
-      float fWaterReflectivityAmt;
-      float fWaterOpacity;
-      float fWaterDistortionAmt;
-    };
-
-  UInt8 byte60;
-  UInt8 byte61;
-  UInt8 byte62;
-  bool bDepth;
-  UInt32 dword64;
-  UInt32 dword68;
-  float blendRadiusX;
-  float blendRadiusY;
-  float fogPower;
-  float fog78;
-  UInt8 byte7C;
-  UInt8 byte7D;
-  UInt8 byte7E;
-  bool isUseDefaultWater;
-  bool bReflect;
-  UInt8 bRefract;
-  UInt8 UV;
-  UInt8 byte83;
-  UInt32 dword84;
-  NiColorAlpha shallowColor;
-  NiColorAlpha deepColor;
-  NiColorAlpha reflectionColor;
-  WaterShaderProperty::VarAmounts Vars;
-  float floatC8;
-  float floatCC;
-  float blendRadiusZ;
-  float floatD4;
-  NiVector4 depthData;
-  float floatE8;
-  float floatEC;
-  float floatF0;
-  float floatF4;
-  float floatF8;
-  float floatFC;
-  float fresnelZ;
-  float fresnelW;
-  float float108;
-  float float10C;
-  float float110;
-  float float114;
-  UInt8 fWaterFresnelTerm[4];
-  float fWaterNoise;
-  float fFogAmount;
-  float texScale;
-  UInt32 dword128;
-  UInt32 dword12C;
-  UInt32 dword130;
-  NiSourceTexture *noiseTexture;
-  BSRenderedTexture *noDepth;
-  BSRenderedTexture *reflections;
-  BSRenderedTexture *refractions;
-  BSRenderedTexture *depth;
-  UInt32 dword148;
-  UInt32 dword14C;
-};
-assert(sizeof(WaterShaderProperty) == 0x150);
-
-
-class BSShaderLightingProperty : public BSShaderProperty {
-public:
-	UInt32	Unk060;	// 060
-	UInt32	Unk064;	// 064
-	UInt32	Unk068;	// 068
-	float	Unk06C;	// 06C
-	UInt32	Unk070;	// 070
-	UInt32	Unk074;	// 074
-	UInt32	Unk078;	// 078
-};
-assert(sizeof(BSShaderLightingProperty) == 0x7C);
-
-class BSShaderPPLightingProperty : public BSShaderLightingProperty {
-public:
-	UInt32		Unk07C;	// 07C
-	UInt32		Unk080;	// 080
-	float		Unk084;	// 084
-	float		Unk088;	// 088
-	float		Unk08C;	// 08C
-	float		Unk090;	// 090
-	float		Unk094;	// 094
-	float		Unk098;	// 098
-	float		Unk09C;	// 09C
-	float		Unk0A0;	// 0A0
-	UInt32		Unk0A4;	// 0A4
-	UInt16		numLandscapeTextures;	// 0A8
-	UInt8		pad0A8[2];
-	NiTexture** textures[4];			// 0BC - array for texturing: 0 diffuse, 1 normal, 2 glow, 3 unk
-	UInt32		Unk0BC;	// 0BC
-	UInt32		Unk0C0;	// 0C0
-	UInt32		Unk0C4;	// 0C4
-	UInt32		Unk0C8;	// 0C8
-	UInt32		Unk0CC;	// 0CC
-	UInt32		Unk0D0;	// 0D0
-	UInt32		Unk0D4;	// 0D4
-	UInt32		Unk0D8;	// 0D8
-	UInt32		Unk0DC;	// 0DC
-	UInt32		Unk0E0;	// 0E0
-	UInt32		Unk0E4;	// 0E4
-	UInt32		Unk0E8;	// 0E8
-	UInt32		Unk0EC;	// 0EC
-	UInt32		Unk0F0;	// 0F0
-	UInt32		Unk0F4;	// 0F4
-	UInt32		Unk0F8;	// 0F8
-	UInt32		Unk0FC;	// 0FC
-	UInt32		Unk100;	// 100
-};
-assert(sizeof(BSShaderPPLightingProperty) == 0x104);
-
-class SpeedTreeShaderLightingProperty : public BSShaderLightingProperty {
-public:
-	UInt32	Unk07C[3];	// 07C
-};
-assert(sizeof(SpeedTreeShaderLightingProperty) == 0x88);
-
-class SpeedTreeLeafShaderProperty : public SpeedTreeShaderLightingProperty {
-public:
-	struct LeafData {
-		UInt32		unk00;
-		UInt32		unk04;
-		float*		leafBase; // pointer to float4[48]
-	};
-
-	LeafData*	leafData;	// 088
-};
-assert(sizeof(SpeedTreeLeafShaderProperty) == 0x8C);
 
 class BSFadeNode : public NiNode {
 public:

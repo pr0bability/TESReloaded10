@@ -151,8 +151,8 @@ public:
 
 		if (!strcmp(Name, "Water")) {
 			WaterShader* S = (WaterShader*)Shaders[kShaderDefinition_WaterShader];
-			*Shader = S->Vertex;
-			Size = sizeof(S->Vertex) / 4;
+			*Shader = S->pVertexShaders;
+			Size = sizeof(S->pVertexShaders) / 4;
 		}
 		else if (!strcmp(Name, "WaterHeightMap")) {
 			*Shader = AdditionalShader;
@@ -164,8 +164,8 @@ public:
 		}
 		else if (!strcmp(Name, "POM")) {
 			ParallaxShader* S = (ParallaxShader*)Shaders[kShaderDefinition_ParallaxShader];
-			*Shader = S->Vertex;
-			Size = sizeof(S->Vertex) / 4;
+			*Shader = S->pVertexShaders;
+			Size = sizeof(S->pVertexShaders) / 4;
 		}
 		return Size;
 
@@ -179,8 +179,8 @@ public:
 
 		if (!strcmp(Name, "Water")) {
 			WaterShader* S = (WaterShader*)Shaders[kShaderDefinition_WaterShader];
-			*Shader = S->Pixel;
-			Size = sizeof(S->Pixel) / 4;
+			*Shader = S->pPixelShaders;
+			Size = sizeof(S->pPixelShaders) / 4;
 		}
 		else if (!strcmp(Name, "WaterHeightMap")) {
 			*Shader = AdditionalShader;
@@ -192,8 +192,8 @@ public:
 		}
 		else if (!strcmp(Name, "POM")) {
 			ParallaxShader* S = (ParallaxShader*)Shaders[kShaderDefinition_ParallaxShader];
-			*Shader = S->Pixel;
-			Size = sizeof(S->Pixel) / 4;
+			*Shader = S->pPixelShaders;
+			Size = sizeof(S->pPixelShaders) / 4;
 		}
 		return Size;
 
