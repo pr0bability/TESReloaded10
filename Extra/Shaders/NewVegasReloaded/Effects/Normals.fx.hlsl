@@ -89,8 +89,6 @@ VSOUT FrameVS(VSIN IN)
 #include "Includes/Helpers.hlsl"
 
 
-
-
 float4 ComputeNormals(VSOUT IN) :COLOR0
 {
 	float2 uv = IN.UVCoord;
@@ -150,20 +148,26 @@ float4 ComputeNormals(VSOUT IN) :COLOR0
 float4 BlurNormals(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 {
 	float WeightSum = 0.12f * saturate(1 - TESR_SnowAccumulationParams.x);
-	float3 normal = tex2D(TESR_NormalsBuffer, IN.UVCoord).rgb;
+	float3 normal = expand(tex2D(TESR_NormalsBuffer, IN.UVCoord).rgb);
 	float3 finalNormal = normal * WeightSum;
-	float depth = readDepth(IN.UVCoord)/farZ;
-	
+	float depth = readDepth(IN.UVCoord);
+	float depthCoeff = abs(log(depth/farZ)) * TESR_SnowAccumulationParams.y;
+	float depthDrop = (depth/farZ) * 7000; // difference of depth beyond which the sample will not count towards the blur
+
 	for (int i = 0; i < KernelSize; i++) {
-		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * TESR_SnowAccumulationParams.y * abs(log(depth));
-		float3 newNormal = tex2D(TESR_NormalsBuffer, IN.UVCoord + uvOff).rgb;
-		float weight = BlurNormalsWeights[i] * saturate(dot(expand(newNormal), expand(normal)) - TESR_SnowAccumulationParams.x * 0.75f);
+		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * depthCoeff;
+		float3 newNormal = expand(tex2D(TESR_NormalsBuffer, IN.UVCoord + uvOff).rgb);
+		float depth2 = readDepth(IN.UVCoord + uvOff);
+		float useForBlur = abs(float(depth - depth2)) <= depthDrop;
+
+		float weight = BlurNormalsWeights[i] * saturate(dot(newNormal, normal) - TESR_SnowAccumulationParams.x * 0.75f) * useForBlur;
+
 		finalNormal += weight * newNormal;
 		WeightSum += weight;
 	}
 	
 	finalNormal /= WeightSum;
-    return float4(finalNormal, 1.0f);
+    return float4(compress(finalNormal), 1.0f);
 }
 
 
