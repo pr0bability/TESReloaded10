@@ -176,6 +176,7 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, SettingsShadowStruct::F
 
 }
 
+// Detect which pass the object must be added to
 void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject) {
 	NiGeometry* geo;
 	if (NiObject->IsGeometry()) {
@@ -205,7 +206,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 	}
 }
 
-
+// go through the Object children and sort the ones that will be rendered based on their properties
 void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 	std::stack<NiAVObject*> containers;
 	NiAVObject* child;
@@ -265,6 +266,7 @@ void ShadowManager::RenderAccums() {
 	}
 }
 
+// Renders basic geometry
 void ShadowManager::RenderGeometry(NiGeometry* Geo) {	
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	NiGeometryData* ModelData = Geo->geomData;
@@ -428,7 +430,6 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 		Center.y *= Radius;
 		D3DXVec4Transform(&Center, &Center, &View);
 		D3DXMatrixOrthoOffCenterRH(&Proj, Center.x - Radius, Center.x + Radius, Center.y -Radius, Center.y + Radius, FarPlane * 0.8f, 1.2f * FarPlane);
-		//D3DXMatrixOrthoOffCenterRH(&Proj, -Radius * 2, Radius * 2, -Radius * 2, Radius * 2, FarPlane * 0.8f, 1.2f * FarPlane);
 		return View * Proj;
 	}
 
@@ -608,6 +609,14 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 	ShadowMap->ShadowCubeMapLightPosition.w = Radius;
 	TheShaderManager->ShaderConst.Shadow.Data.z = Radius;
 	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(90.0f), 1.0f, 1.0f, Radius);
+
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
+	RenderState->SetVertexShader(ShadowCubeMapVertex->ShaderHandle, false);
+	RenderState->SetPixelShader(ShadowCubeMapPixel->ShaderHandle, false);
+
 	for (int Face = 0; Face < 6; Face++) {
 		At.x = Eye.x;
 		At.y = Eye.y;
@@ -639,23 +648,14 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 			break;
 		}
 		At += CameraDirection;
-		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
-		ShadowMap->ShadowViewProj = View * Proj;
-		Device->SetRenderTarget(0, TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]);
-		Device->SetViewport(&ShadowCubeMapViewPort);
-		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
-		Device->BeginScene();
-		RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
-		RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
-		RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
-		RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
-		RenderState->SetVertexShader(ShadowCubeMapVertex->ShaderHandle, false);
-		RenderState->SetPixelShader(ShadowCubeMapPixel->ShaderHandle, false);
+		
 		TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 		TESObjectREFR* Ref = NULL;
 		while (Entry) {
 			Ref = GetRef(Entry->item, &ShadowsInteriors->Forms, &ShadowsInteriors->ExcludedForms);
 			if (Ref) {
+				// Detect if the object is in front of the light in the direction of the current face
+				// TODO: improve to base on frustum
 				NiNode* RefNode = Ref->GetNode();
 				D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
 				D3DXVECTOR3 ObjectToLight = ObjectPos - Eye;
@@ -667,11 +667,18 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 			}
 			Entry = Entry->next;
 		}
+		
+		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
+		ShadowMap->ShadowViewProj = View * Proj;
+		Device->SetRenderTarget(0, TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]);
+		Device->SetViewport(&ShadowCubeMapViewPort);
+		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
+		Device->BeginScene();
 
 		RenderAccums();
+
 		Device->EndScene();
 	}
-
 
 	timer.LogTime("RenderShadowCubeMap");	
 }
