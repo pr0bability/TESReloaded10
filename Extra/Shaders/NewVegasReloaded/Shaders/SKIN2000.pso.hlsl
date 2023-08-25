@@ -31,10 +31,10 @@ float4 Toggles : register(c27);
 
 struct VS_INPUT {
     float2 BaseUV : TEXCOORD0;			            // UV
-    float3 texcoord_6 : TEXCOORD6_centroid;			// surface normal in view space
-    float3 color_0 : COLOR0;
-    float4 color_1 : COLOR1;
-    float3 texcoord_1 : TEXCOORD1_centroid;			// sun direction relative to
+    float3 texcoord_1 : TEXCOORD1;			// light data in tangent space
+    float3 texcoord_6 : TEXCOORD6;			// eye data in tangent space
+    float3 color_0 : COLOR0;                // vertex color?
+    float4 color_1 : COLOR1;                // fog contribution?
 };
 
 struct VS_OUTPUT {
@@ -45,31 +45,32 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 viewSpaceNormal = IN.texcoord_1;
-    float3 sunDirection = IN.texcoord_6;
+    // base geometry information
+    float3 lightDirection = normalize(IN.texcoord_1);
+    float3 eyeDirection = normalize(IN.texcoord_6);
+    float3 normal = normalize(expand(tex2D(NormalMap, IN.BaseUV.xy).xyz));
 
-    //clip(r1.xyzw);
-    float3 faceGenMap0 = tex2D(FaceGenMap0, IN.BaseUV.xy).xyz;
-    float3 faceGenMap1 = tex2D(FaceGenMap1, IN.BaseUV.xy).xyz;
+    // calculate lighting components
+    float fresnelCoeff = 1 - shades(normal, eyeDirection);
+    float3 fresnel = (shades(lightDirection, -eyeDirection) * sqr(fresnelCoeff) * PSLightColor[0].rgb) * 0.5;
+    float3 lighting = ((shades(normal, lightDirection) * PSLightColor[0].rgb) + fresnel) + AmbientColor.rgb;
+
+    // sample color textures
+    float3 faceGenMap0 = tex2D(FaceGenMap0, IN.BaseUV.xy).rgb;
+    float3 faceGenMap1 = tex2D(FaceGenMap1, IN.BaseUV.xy).rgb;
     float4 baseTexture = tex2D(BaseMap, IN.BaseUV.xy);
-    float3 normalTexture = normalize(expand(tex2D(NormalMap, IN.BaseUV.xy).xyz));
     float3 baseColor = 2 * ((expand(faceGenMap0) + baseTexture.rgb) * (2 * faceGenMap1));
-    float fresnelCoeff = 1 - shades(normalTexture.xyz, normalize(sunDirection));
-    float3 subSurfaceScattering = (shades(normalize(viewSpaceNormal), -sunDirection) * sqr(fresnelCoeff) * PSLightColor[0].rgb) * 0.5;
 
-    baseColor = (Toggles.x <= 0.0 ? baseColor : (baseColor * IN.color_0.rgb));
+    baseColor = (Toggles.x <= 0.0 ? baseColor : (baseColor * IN.color_0.rgb)); // apply vertex color
     float4 color = (AmbientColor.a >= 1 ? 0 : (baseTexture.a - Toggles.w));
 
-    float3 lighting = ((shades(normalTexture.xyz, sunDirection) * PSLightColor[0].rgb) + subSurfaceScattering) + AmbientColor.rgb;
     float3 finalColor = max(lighting, 0) * baseColor;
-    color.rgb = Toggles.y <= 0.0 ? finalColor : ((IN.color_1.a * (IN.color_1.rgb - finalColor)) + finalColor);
+
+    color.rgb = Toggles.y <= 0.0 ? finalColor : ((IN.color_1.a * (IN.color_1.rgb - finalColor)) + finalColor); // apply fog color contribution
     color.a = baseTexture.a * AmbientColor.a;
 
-    OUT.color_0 = color;
-
-    // OUT.color_0.rgba = baseTexture;
-    //OUT.color_0 = float4(baseColor, 1);
-    // OUT.color_0 = IN.color_0;
+    // OUT.color_0 = color;
+    OUT.color_0 = float4(IN.BaseUV, 0, 1);
 
     return OUT;
 };
