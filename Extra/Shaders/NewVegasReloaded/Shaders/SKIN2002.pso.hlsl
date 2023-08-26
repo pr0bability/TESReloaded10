@@ -37,13 +37,13 @@ float4 TESR_DebugVar;
 
 // Structures:
 struct VS_INPUT {
-    float2 BaseUV : TEXCOORD0;                     // uv
+    float2 BaseUV : TEXCOORD0;                      // uv
     float3 color_0 : COLOR0;                        // vertex color?
-    float4 color_1 : COLOR1;                        // fog contribution?
-    float3 texcoord_1 : TEXCOORD1_centroid;         // light data in tangent space
-    float3 texcoord_2 : TEXCOORD2_centroid;
+    float4 color_1 : COLOR1;                        // fog color
+    float3 texcoord_1 : TEXCOORD1_centroid;         // light direction from the sun
+    float3 texcoord_2 : TEXCOORD2_centroid;         // light direction from pointlight
     float4 texcoord_4 : TEXCOORD4;        
-    float3 texcoord_6 : TEXCOORD6_centroid;         // eye data in tangent space
+    float3 texcoord_6 : TEXCOORD6_centroid;         // eye direction
 };
 
 struct VS_OUTPUT {
@@ -57,40 +57,30 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 sunLightDirection = normalize(IN.texcoord_1);
+    // base geometry information
+    float3 lightDirection = normalize(IN.texcoord_1);
     float3 eyeDirection = normalize(IN.texcoord_6);
-    float3 normal = normalize(expand(tex2D(NormalMap, IN.BaseUV)));	
+    float3 normal = getNormal(IN.BaseUV);
     float3 glowTexture = tex2D(GlowMap, IN.BaseUV).rgb;
     float4 baseColor = getBaseColor(IN.BaseUV, FaceGenMap0, FaceGenMap1, BaseMap);
-    float fresnel = sqr(1 - shades(normal, eyeDirection));
-    baseColor.rgb = (Toggles.x <= 0.0 ? baseColor.rgb : (baseColor.rgb * IN.color_0.rgb)); // vertex color
+    baseColor.rgb = ApplyVertexColor(baseColor.rgb, IN.color_0.rgb, Toggles);
+    baseColor.a = AmbientColor.a >= 1 ? 0 : (baseColor.a - Toggles.w);
 
-    float4 SSScolor;
-    SSScolor.rgb = lerp(PSLightColor[2].rgb, glowTexture, 0.5);
-    SSScolor.a = (AmbientColor.a >= 1 ? 0 : (baseColor.a - Toggles.w)); // alpha flag?
-
+    // point light influence
     float3 pointLightDirection = normalize(IN.texcoord_2);
-    float pointLightDiffuse = dot(normal, pointLightDirection);
-    float pointLightDiffuse2 = saturate((pointLightDiffuse + 0.3) * 0.769230783);
-    pointLightDiffuse = saturate(pointLightDiffuse);
-
-    float pointLightContribution = saturate(((3 - pointLightDiffuse2 * 2) * sqr(pointLightDiffuse2)) - ((3 - (pointLightDiffuse * 2)) * sqr(pointLightDiffuse))) * glowTexture;
-    pointLightContribution += pointLightDiffuse * PSLightColor[2].rgb;
-    pointLightContribution += fresnel * shades(eyeDirection, -pointLightDirection) * SSScolor.rgb;
-    // clip(normal);
-
     float atten1 = tex2D(AttenuationMap, IN.texcoord_4.xy);
     float atten2 = tex2D(AttenuationMap, IN.texcoord_4.zw);
-    float3 pointLightLighting = saturate((1 - atten1) - atten2) * pointLightContribution;
+    float3 pointLightLighting = getPointLight(pointLightDirection, eyeDirection, PSLightColor[2].rgb, glowTexture, normal, atten1, atten2);
 
-    float3 sunLighting = shades(normal, sunLightDirection) * PSLightColor[1].rgb;
-    float3 rimColor = ((fresnel * shades(eyeDirection, -sunLightDirection)) * PSLightColor[1].rgb) * 0.5;
-    float3 lighting = AmbientColor.rgb + sunLighting + rimColor + pointLightLighting;
-    lighting = max(lighting, 0);
+    // calculate lighting components
+    float3 lighting = GetLighting(lightDirection, eyeDirection, normal, PSLightColor[1].rgb);
+    float spec = GetSpecular(lightDirection, eyeDirection, normal, PSLightColor[1].rgb);
+    float3 sss = GetSSS(lightDirection, normal);
 
-    float4 finalColor = float4(lighting.rgb * baseColor.rgb, baseColor.a * AmbientColor.a);
+    lighting += sss + spec + pointLightLighting + AmbientColor.rgb;
+    float4 finalColor = float4(lighting * baseColor.rgb, baseColor.a * AmbientColor.a);
+    finalColor.rgb = ApplyFog(finalColor.rgb, IN.color_1, Toggles);
 
-    finalColor.rgb = (Toggles.y <= 0.0 ? finalColor.rgb : (IN.color_1.a * (IN.color_1.rgb - finalColor.rgb)) + finalColor.rgb);	// fog
     OUT.color_0.rgba = finalColor;
 
     return OUT;
