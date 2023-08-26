@@ -1,4 +1,4 @@
-//
+// Skin with vanilla sun shadow
 //
 // Parameters:
 
@@ -11,6 +11,11 @@ float4 PSLightColor[10] : register(c3);
 sampler2D ShadowMap : register(s6);
 sampler2D ShadowMaskMap : register(s7);
 float4 Toggles : register(c27);
+
+float4 TESR_ReciprocalResolution;
+float4 TESR_SkinData;
+float4 TESR_SkinColor;
+float4 TESR_DebugVar;
 
 
 // Registers:
@@ -28,16 +33,17 @@ float4 Toggles : register(c27);
 //   ShadowMaskMap texture_7       1
 //
 
+#include "Includes/helpers.hlsl"
 
 // Structures:
 
 struct VS_INPUT {
-    float2 BaseUV : TEXCOORD0;			// partial precision
-    float3 texcoord_6 : TEXCOORD6_centroid;			// partial precision
-    float4 texcoord_7 : TEXCOORD7;			// partial precision
+    float2 BaseUV : TEXCOORD0;			
+    float3 texcoord_6 : TEXCOORD6_centroid;			
+    float4 texcoord_7 : TEXCOORD7;			
     float3 color_0 : COLOR0;
     float4 color_1 : COLOR1;
-    float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
+    float3 texcoord_1 : TEXCOORD1_centroid;			
 };
 
 struct VS_OUTPUT {
@@ -45,51 +51,37 @@ struct VS_OUTPUT {
 };
 
 // Code:
+#include "Includes/Skin.hlsl"
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-#define	expand(v)		(((v) - 0.5) / 0.5)
-#define	compress(v)		(((v) * 0.5) + 0.5)
-#define	shade(n, l)		max(dot(n, l), 0)
-#define	shades(n, l)		saturate(dot(n, l))
-#define	weight(v)		dot(v, 1)
-#define	sqr(v)			((v) * (v))
+   // unused in NVR
+    // float shadow = tex2D(ShadowMaskMap, IN.texcoord_7.zw);			
+    // float4 r3 = tex2D(ShadowMap, IN.texcoord_7.xy);			
+    //clip(r1.xyzw);
 
-    float3 noxel0;
-    float1 q3;
-    float3 q48;
-    float3 q5;
-    float3 q7;
-    float3 q8;
-    float3 q9;
-    float4 r0;
-    float4 r1;
-    float4 r2;
-    float4 r3;
-    float4 r4;
-    float4 r5;
-    float1 t15;
+    // base geometry information
+    float3 lightDirection = normalize(IN.texcoord_1);
+    float3 eyeDirection = normalize(IN.texcoord_6);
+    float3 normal = getNormal(IN.BaseUV);
 
-    t15.x = tex2D(ShadowMaskMap, IN.texcoord_7.zw);			// partial precision
-    r3.xyz = tex2D(ShadowMap, IN.texcoord_7.xy);			// partial precision
-    clip(r1.xyzw);
-    noxel0.xyz = tex2D(NormalMap, IN.BaseUV.xy);			// partial precision
-    r5.xyzw = tex2D(FaceGenMap1, IN.BaseUV.xy);			// partial precision
-    r4.xyzw = tex2D(FaceGenMap0, IN.BaseUV.xy);			// partial precision
-    r0.xyzw = tex2D(BaseMap, IN.BaseUV.xy);			// partial precision
-    r3.w = shades(normalize(expand(noxel0.xyz)), IN.texcoord_1.xyz);			// partial precision
-    r2.yzw = r3.wzyx - 1;			// partial precision
-    q7.xyz = 2 * ((expand(r4.xyz) + r0.xyz) * (2 * r5.xyz));			// partial precision
-    q3.x = 1 - shades(normalize(expand(noxel0.xyz)), normalize(IN.texcoord_6.xyz));			// partial precision
-    q48.xyz = (shades(normalize(IN.texcoord_6.xyz), -IN.texcoord_1) * sqr(q3.x) * PSLightColor[0].rgb) * 0.5;			// partial precision
-    q8.xyz = (Toggles.x <= 0.0 ? q7.xyz : (q7.xyz * IN.color_0.rgb));			// partial precision
-    r1.xyzw = (AmbientColor.a >= 1 ? 0 : (r0.w - Toggles.w));
-    r1.w = r0.w * AmbientColor.a;			// partial precision
-    q5.xyz = (((t15.x * r2.wzy) + 1) * ((r3.w * PSLightColor[0].rgb) + q48.xyz)) + AmbientColor.rgb;			// partial precision
-    q9.xyz = max(q5.xyz, 0) * q8.xyz;			// partial precision
-    r1.xyz = (Toggles.y <= 0.0 ? q9.xyz : ((IN.color_1.a * (IN.color_1.rgb - (q8.xyz * max(q5.xyz, 0)))) + q9.xyz));			// partial precision
-    OUT.color_0.rgba = r1.xyzw;			// partial precision
+    // calculate lighting components
+    float3 lighting = GetLighting(lightDirection, eyeDirection, normal, PSLightColor[0].rgb);
+    float3 sss = GetSSS(lightDirection, normal) * AmbientColor.rgb;
+    float spec = GetSpecular(lightDirection, eyeDirection, normal, PSLightColor[0].rgb);
+
+    float4 baseColor = getBaseColor(IN.BaseUV, FaceGenMap0, FaceGenMap1, BaseMap);
+    baseColor.rgb = ApplyVertexColor(baseColor.rgb, IN.color_0.rgb, Toggles);
+
+    float4 color = AmbientColor.a >= 1 ? 0 : (baseColor.a - Toggles.w);
+    float3 finalColor = lighting * baseColor.rgb + sss + spec;
+
+    color.rgb = ApplyFog(finalColor, IN.color_1, Toggles);
+    color.a = baseColor.a * AmbientColor.a;
+
+    OUT.color_0 = color;
+    return OUT;
 
     return OUT;
 };
