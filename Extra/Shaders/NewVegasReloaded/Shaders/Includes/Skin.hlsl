@@ -40,10 +40,12 @@ float3 Skin(float3 SkinColor, float3 LightColor, float3 CameraDir, float3 LightD
 
 
 float3 GetLighting(float3 lightDirection, float3 eyeDirection, float3 normal, float3 lightColor){
-    float fresnel = sqr(1 - shades(normal, eyeDirection)) * shades(lightDirection, -eyeDirection) * lightColor * 0.5; // vanilla fresnel that shows when light is behind
+    float fresnel = sqr(1 - shades(normal, eyeDirection)) * shades(lightDirection, -eyeDirection) * 0.5; // vanilla fresnel that shows when light is behind
 
-    float diffuse = shades(normal, lightDirection) * lightColor;
-    float3 lighting = diffuse + fresnel;
+    // float fresnelCoeff = pows(1 - shades(normal, eyeDir), 5);
+    float diffuse = shades(normal, lightDirection);
+    // float3 fresnel = fresnelCoeff * lightColor * 0.5 * pow(diffuse, TESR_DebugVar.w);
+    float3 lighting = diffuse * lightColor + fresnel * lightColor;
     return max(lighting, 0);
 }
 
@@ -52,7 +54,7 @@ float GetSpecular(float3 lightDirection, float3 eyeDirection, float3 normal, flo
 }
 
 float GetSSS(float3 lightDirection, float3 normal){
-    return (1 - shades(normal, lightDirection)) * float3(0.5, 0.2, 0.3) * 0.5;//TESR_DebugVar.x;
+    return (1 - shades(normal, lightDirection)) * 0.5;//TESR_DebugVar.x;
 }
 
 float3 getNormal(float2 uv){
@@ -69,7 +71,7 @@ float3 ApplyVertexColor(float3 baseColor, float3 vertexColor, float4 toggles){
 }
 
 float3 ApplyFog(float3 baseColor, float4 fogColor, float4 toggles){
-    return Toggles.y <= 0.0 ? baseColor : ((fogColor.a * (fogColor.rgb - baseColor)) + baseColor);
+    return toggles.y <= 0.0 ? baseColor : ((fogColor.a * (fogColor.rgb - baseColor)) + baseColor);
 }
 
 float4 getBaseColor(float2 uv, sampler2D FaceGenMap0Buffer, sampler2D FaceGenMap1Buffer, sampler2D BaseColorBuffer){
@@ -77,8 +79,9 @@ float4 getBaseColor(float2 uv, sampler2D FaceGenMap0Buffer, sampler2D FaceGenMap
     float3 faceGenMap0 = tex2D(FaceGenMap0Buffer, uv).rgb;
     float3 faceGenMap1 = tex2D(FaceGenMap1Buffer, uv).rgb;
     float4 baseTexture = tex2D(BaseColorBuffer, uv);
-    float4 baseColor = float4(2 * ((expand(faceGenMap0) + baseTexture.rgb) * (2 * faceGenMap1)), 1, baseTexture.a);
+    float4 baseColor = float4(2 * ((expand(faceGenMap0) + baseTexture.rgb) * (2 * faceGenMap1)), baseTexture.a);
 
+	baseColor = lerp(baseTexture, baseColor, saturate(TESR_DebugVar.w));
     return baseColor;
 }
 
@@ -88,6 +91,7 @@ float3 getPointLight(float3 LightDirection, float3 eyeDirection, float3 LightCol
     SSScolor.rgb = lerp(LightColor, glowTexture, 0.5);
 
     float fresnel = sqr(1 - shades(normal, eyeDirection));
+    //SSScolor.a = (AmbientColor.a >= 1 ? 0 : (baseColor.a - Toggles.w)); // alpha flag?
 
     float diffuse = dot(normal, LightDirection);
     float diffuse2 = saturate((diffuse + 0.3) * 0.769230783); // ?

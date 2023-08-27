@@ -60,7 +60,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     // calculate lighting components
     float3 lighting = GetLighting(lightDirection, eyeDirection, normal, PSLightColor[0].rgb);
-    float3 sss = GetSSS(lightDirection, normal) * AmbientColor.rgb;
+    float3 sss = GetSSS(lightDirection, normal) * float3(0.5, 0.2, 0.3) * AmbientColor.rgb;
     float spec = GetSpecular(lightDirection, eyeDirection, normal, PSLightColor[0].rgb);
 
     float4 baseColor = getBaseColor(IN.BaseUV, FaceGenMap0, FaceGenMap1, BaseMap);
