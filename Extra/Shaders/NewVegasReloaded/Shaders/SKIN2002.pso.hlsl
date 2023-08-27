@@ -42,7 +42,7 @@ struct VS_INPUT {
     float4 color_1 : COLOR1;                        // fog color
     float3 texcoord_1 : TEXCOORD1_centroid;         // light direction from the sun
     float3 texcoord_2 : TEXCOORD2_centroid;         // light direction from pointlight
-    float4 texcoord_4 : TEXCOORD4;        
+    float4 texcoord_4 : TEXCOORD4;                  // attenuation map UV
     float3 texcoord_6 : TEXCOORD6_centroid;         // eye direction
 };
 
@@ -68,14 +68,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     // point light influence
     float3 pointLightDirection = normalize(IN.texcoord_2);
-    float atten1 = tex2D(AttenuationMap, IN.texcoord_4.xy);
-    float atten2 = tex2D(AttenuationMap, IN.texcoord_4.zw);
+    float atten1 = tex2D(AttenuationMap, IN.texcoord_4.xy).x;
+    float atten2 = tex2D(AttenuationMap, IN.texcoord_4.zw).x;
     float3 pointLightLighting = getPointLight(pointLightDirection, eyeDirection, PSLightColor[2].rgb, glowTexture, normal, atten1, atten2);
 
     // calculate lighting components
     float3 lighting = GetLighting(lightDirection, eyeDirection, normal, PSLightColor[1].rgb);
     float spec = GetSpecular(lightDirection, eyeDirection, normal, PSLightColor[1].rgb);
-    float3 sss = GetSSS(lightDirection, normal);
+    float3 sss = GetSSS(lightDirection, normal) * float3(0.5, 0.2, 0.3) * AmbientColor.rgb;
 
     lighting += sss + spec + pointLightLighting + AmbientColor.rgb;
     float4 finalColor = float4(lighting * baseColor.rgb, baseColor.a * AmbientColor.a);
