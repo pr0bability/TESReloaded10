@@ -5,7 +5,6 @@ public:
 	static void Initialize();
 
 	void					Render();
-	void					GetMidSection(char* MidSection);
 	bool					IsKeyPressed(UInt16 KeyCode);
 
 	bool										Enabled;
