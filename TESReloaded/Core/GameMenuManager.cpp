@@ -44,7 +44,6 @@ void GameMenuManager::Render() {
 	const char* Text = NULL;
 	char TextShaderStatus[20];
 	char SettingText[80];
-	char MidSection[40];
 	size_t ListSize = 0;
 
 	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
@@ -110,22 +109,7 @@ void GameMenuManager::Render() {
 		}
 		else {
 			// finished editing, sets the value. 
-			// convert the value from the string to the given type and back to the string to ensure the right type format
-			switch (SelectedNode.Type){
-			case SettingManager::Configuration::NodeType::Boolean:
-				strcpy(SelectedNode.Value, TheSettingManager->ToString<bool>(atof(EditingValue)).c_str());
-				break;
-			case SettingManager::Configuration::NodeType::Integer:
-				strcpy(SelectedNode.Value, TheSettingManager->ToString<int>(atof(EditingValue)).c_str());
-				break;
-			case SettingManager::Configuration::NodeType::Float:
-				strcpy(SelectedNode.Value, TheSettingManager->ToString<float>(atof(EditingValue)).c_str());
-				break;
-			default:
-				break;
-			}
-			TheSettingManager->SetSetting(&SelectedNode);
-			TheSettingManager->LoadSettings(); // refresh settings struct
+			TheSettingManager->SetSettingF(SelectedNode.Section, SelectedNode.Key, atof(EditingValue));
 		}
 
 		EditingMode = !EditingMode;
@@ -209,13 +193,11 @@ void GameMenuManager::Render() {
 					// react to user key input to reduce the value of the setting
 					if (isShaderSection && (SelectedColumn == 1 || (SelectedColumn == 3 && isStatusSection))) {
 						// enable shaders and effects
-						GetMidSection(MidSection);
-						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
-						if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(MidSection);
+						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
+						if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
 					}
 					else if (SelectedColumn == 1 && isWeatherSection) {
-						GetMidSection(MidSection);
-						TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(MidSection, TESForm::FormType::kFormType_Weather);
+						TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(SelectedNode.MidSection, TESForm::FormType::kFormType_Weather);
 						Tes->sky->ForceWeather(Weather);
 					}
 					else if (SelectedColumn == 3) {
@@ -229,9 +211,8 @@ void GameMenuManager::Render() {
 					// react to user key input to reduce the value of the setting
 					if (isShaderSection && (SelectedColumn == 1 || (SelectedColumn == 3 && isStatusSection))) {
 						// disable shaders and effects
-						GetMidSection(MidSection);
-						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(MidSection);
-						if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(MidSection);
+						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
+						if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
 					}
 					else if (SelectedColumn == 3) {
 						TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);
@@ -427,8 +408,7 @@ void GameMenuManager::Render() {
 		SettingManager::Configuration::ConfigNode StatusNode;
 		char statusSection[256];
 		strcpy(statusSection, "Shaders.");
-		GetMidSection(MidSection);
-		strcat(statusSection, MidSection);
+		strcat(statusSection, SelectedNode.MidSection);
 		strcat(statusSection, ".Status");
 		bool success = TheSettingManager->Config.FillNode(&StatusNode, statusSection, "Enabled");
 
@@ -447,21 +427,7 @@ void GameMenuManager::Render() {
 
 }
 
-// For a given Node, get the Shader/Effect name (Part of the section between the _Shader header and the subcategory)
-void GameMenuManager::GetMidSection(char* MidSection) {
-	
-	char* PositionStart = NULL;
-	char* PositionEnd = NULL;
-	size_t Size = 0;
 
-	PositionStart = strstr(SelectedNode.Section, ".");
-	PositionStart++;
-	PositionEnd = strstr(PositionStart, ".");
-	Size = PositionEnd - PositionStart;
-	strncpy(MidSection, PositionStart, Size);
-	MidSection[Size] = NULL;
-
-}
 
 // Returns a key pressed value at regular intervals if key is held down
 bool GameMenuManager::IsKeyPressed(UInt16 KeyCode){

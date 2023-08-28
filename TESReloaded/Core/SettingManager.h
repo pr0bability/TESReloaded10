@@ -398,6 +398,7 @@ public:
 		public:
 			char		Section[40];
 			char		Key[40];
+			char		MidSection[40];
 			char		Value[80];
 			std::string Description;
 			bool		Reboot;
@@ -434,6 +435,7 @@ public:
 	void					SetSetting(const char* Section, const char* Key, int Value);
 	void					SetSetting(const char* Section, const char* Key, bool Value);
 	void					SetSettingS(const char* Section, const char* Key, char* Value);
+	void					SetSettingF(const char* Section, const char* Key, float Value);
 	void					SetSetting(Configuration::ConfigNode* Node);
 	void					Increment(const char* Section, const char* Key);
 	void					Decrement(const char* Section, const char* Key);
@@ -456,6 +458,7 @@ public:
 	template <typename T> static T				FromString(const char* Value);
 	static void									SplitString(const char* String, const char* Delimiter, StringList* Values);
 	template <typename T> static void			FillFromString(const char* String, const char* Delimiter, T* Values);
+
 
 				
 	Configuration					Config;

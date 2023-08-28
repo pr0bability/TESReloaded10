@@ -149,6 +149,17 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 	strcpy(Node->Value, value.c_str());
 	Node->Reboot = 0;
 
+	// Find midsection (usually the shader name)
+	const char* PositionStart = NULL;
+	const char* PositionEnd = NULL;
+	int Size = 0;
+
+	PositionStart = strstr(Section, ".");
+	PositionStart++;
+	PositionEnd = strstr(PositionStart, ".");
+	Size = PositionEnd - PositionStart;
+	strncpy(Node->MidSection, PositionStart, Size);
+
 	//Logger::Log("FillNode %s.%s value: %s (from defaults? %i)", path, Key, value.c_str(), fromDefault);
 
 	// write the value in case it was obtained from defaults
@@ -819,6 +830,41 @@ void SettingManager::SetSettingS(const char* Section, const char* Key, char* Val
 	SetSetting(&Node);
 
 }
+
+/*
+* Set a setting from a float value
+*/
+void SettingManager::SetSettingF(const char* Section, const char* Key, float Value) {
+
+	Configuration::ConfigNode Node;
+	Config.FillNode(&Node, Section, Key); // guess the type based on defaults/current setting
+
+	// convert the value from the string to the given type and back to the string to ensure the right type format
+	switch (Node.Type) {
+	case SettingManager::Configuration::NodeType::Boolean:
+		strcpy(Node.Value, ToString<bool>(Value).c_str());
+		
+		// Handle switching shaders if the setting is Shader.<ShaderName>.Status.Enabled
+		if (!memcmp(Section, "Shaders", 7) && !memcmp(Section + strlen(Section) - 6, "Status", 6) && !memcmp(Key, "Enabled", 7)) {
+			if (GetMenuShaderEnabled(Node.MidSection) != (bool)Value) TheShaderManager->SwitchShaderStatus(Node.MidSection);
+		}
+
+		break;
+	case SettingManager::Configuration::NodeType::Integer:
+		strcpy(Node.Value, ToString<int>(Value).c_str());
+		break;
+	case SettingManager::Configuration::NodeType::Float:
+		strcpy(Node.Value, ToString<float>(Value).c_str());
+		break;
+	default:
+		break;
+	}
+
+	SetSetting(&Node);
+	LoadSettings(); // refresh settings struct
+}
+
+
 
 /*
 * Applies the changes made to the node value into the actual setting saving system

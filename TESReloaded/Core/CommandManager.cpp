@@ -305,7 +305,7 @@ void CommandManager::PluginCommands::GetSetting(double* result, const char* Sect
 
 void CommandManager::PluginCommands::SetSetting(double* result, const char* Section, const char* Key, float Value) {
 	
-	TheSettingManager->SetSetting(Section, Key, Value);
+	TheSettingManager->SetSettingF(Section, Key, Value);
 	*result = 1; 
 
 }
