@@ -398,7 +398,7 @@ public:
 		public:
 			char		Section[40];
 			char		Key[40];
-			char		MidSection[40];
+			char		MidSection[80];
 			char		Value[80];
 			std::string Description;
 			bool		Reboot;

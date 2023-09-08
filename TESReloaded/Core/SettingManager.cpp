@@ -159,6 +159,7 @@ bool SettingManager::Configuration::FillNode(ConfigNode* Node, const char* Secti
 	PositionEnd = strstr(PositionStart, ".");
 	Size = PositionEnd - PositionStart;
 	strncpy(Node->MidSection, PositionStart, Size);
+	Node->MidSection[Size] = NULL;
 
 	//Logger::Log("FillNode %s.%s value: %s (from defaults? %i)", path, Key, value.c_str(), fromDefault);
 
@@ -842,12 +843,12 @@ void SettingManager::SetSettingF(const char* Section, const char* Key, float Val
 	// convert the value from the string to the given type and back to the string to ensure the right type format
 	switch (Node.Type) {
 	case SettingManager::Configuration::NodeType::Boolean:
-		strcpy(Node.Value, ToString<bool>(Value).c_str());
 		
 		// Handle switching shaders if the setting is Shader.<ShaderName>.Status.Enabled
 		if (!memcmp(Section, "Shaders", 7) && !memcmp(Section + strlen(Section) - 6, "Status", 6) && !memcmp(Key, "Enabled", 7)) {
-			if (GetMenuShaderEnabled(Node.MidSection) != (bool)Value) TheShaderManager->SwitchShaderStatus(Node.MidSection);
+			if ((bool)atof(Node.Value) != (bool)Value) TheShaderManager->SwitchShaderStatus(Node.MidSection);
 		}
+		strcpy(Node.Value, ToString<bool>(Value).c_str());
 
 		break;
 	case SettingManager::Configuration::NodeType::Integer:
