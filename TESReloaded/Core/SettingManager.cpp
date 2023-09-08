@@ -379,6 +379,8 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Main.ForceMSAA = GetSettingI("Main.Main.Misc", "ForceMSAA");
 	SettingsMain.Main.SkipFog = GetSettingI("Main.Main.Misc", "SkipFog");
 
+	SettingsMain.Shaders.Extra = GetSettingI("Shaders.ExtraShaders.Status", "Enabled");
+
 	SettingsMain.FrameRate.SmartControl = GetSettingI("Main.FrameRate.SmartControl", "SmartControl");
 	SettingsMain.FrameRate.SmartControlFPS = GetSettingI("Main.FrameRate.SmartControl", "SmartControlFPS");
 	SettingsMain.FrameRate.FlowControl = GetSettingF("Main.FrameRate.SmartControl", "FlowControl");
