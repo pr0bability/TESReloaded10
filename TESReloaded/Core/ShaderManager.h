@@ -236,6 +236,7 @@ struct ShaderConstants {
 struct ShaderValue {
 	UInt32				RegisterIndex;
 	UInt32				RegisterCount;
+	const char*			Name;
 	union {
 	D3DXVECTOR4*		Value;
 	TextureRecord*		Texture;
@@ -272,11 +273,12 @@ public:
 
 	bool					HasRenderedBuffer; 
 	bool					HasDepthBuffer;
+	const char*				Name;
 };
 
 class ShaderRecordVertex : public ShaderRecord {
 public:
-	ShaderRecordVertex();
+	ShaderRecordVertex(const char* shaderName);
 	virtual ~ShaderRecordVertex();
 	
 	virtual void			SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount);
@@ -286,7 +288,7 @@ public:
 
 class ShaderRecordPixel : public ShaderRecord {
 public:
-	ShaderRecordPixel();
+	ShaderRecordPixel(const char* shaderName);
 	virtual ~ShaderRecordPixel();
 	
 	virtual void			SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount);
@@ -320,7 +322,7 @@ public:
 
 class EffectRecord : public ShaderProgram {
 public:
-	EffectRecord();
+	EffectRecord(const char* effectName);
 	virtual ~EffectRecord();
 	
 	virtual void			SetCT();
@@ -337,6 +339,7 @@ public:
 	ID3DXEffect*			Effect;
 	std::string*			Path;
 	std::string*			SourcePath;
+	const char*				Name;
 };
 
 typedef std::map<std::string, EffectRecord**> EffectsList;
