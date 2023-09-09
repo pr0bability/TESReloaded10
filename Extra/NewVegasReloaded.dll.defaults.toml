@@ -565,6 +565,16 @@ SpecularPower = 0.78
 [_Shaders.Skin.Status]
 Enabled = false                     # Not currently used. Replaces the skin shader.
 
+
+[_Shaders.Sky.Main]
+AthmosphereThickness = 4.0
+SunInfluence = 1.0
+SunStrength = 0.5
+StarStrength = 4.0
+
+[_Shaders.Sky.Status]
+Enabled = true
+
 [_Shaders.Snow.Main]
 Flakes = 0.5
 Speed = 1.4                         # Speed multiplier for snow falling
