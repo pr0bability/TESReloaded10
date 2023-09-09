@@ -567,9 +567,14 @@ void EffectRecord::SetCT() {
 	if (!Enabled || Effect == nullptr) return;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Value = &TextureShaderValues[c];
-		if (Value->Texture->Texture) TheRenderManager->device->SetTexture(Value->RegisterIndex, Value->Texture->Texture);
-		for (int i = 1; i < SamplerStatesMax; i++) {
-			TheRenderManager->SetSamplerState(Value->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Value->Texture->SamplerStates[i]);
+		try {
+			if (Value->Texture->Texture) TheRenderManager->device->SetTexture(Value->RegisterIndex, Value->Texture->Texture);
+			for (int i = 1; i < SamplerStatesMax; i++) {
+				TheRenderManager->SetSamplerState(Value->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Value->Texture->SamplerStates[i]);
+			}
+		}
+		catch (const std::exception& e) {
+			Logger::Log("[ERRROR] Couldnt' bind texture %i to effect %s : %s", c, Path, e.what());
 		}
 	}
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {

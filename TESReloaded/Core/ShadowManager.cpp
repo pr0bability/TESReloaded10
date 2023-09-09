@@ -223,12 +223,16 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 		if (!Node || Node->m_flags & NiAVObject::kFlag_AppCulled || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
 
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
-			child = Node->m_children.data[i];
-			if (!child || child->m_flags & NiAVObject::kFlag_AppCulled || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
-			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
-			//if (!InFrustum(ShadowMapType, static_cast<NiNode*>(child))) continue; // frustum based culling 
-
-			AccumObject(&containers, child);
+			try {
+				child = Node->m_children.data[i];
+				if (!child || child->m_flags & NiAVObject::kFlag_AppCulled || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
+				if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+				AccumObject(&containers, child);
+			}
+			catch (const std::exception& e) {
+				Logger::Log("%s", e.what());
+				InterfaceManager->ShowMessage(e.what());
+			}
 		}
 	}
 }
