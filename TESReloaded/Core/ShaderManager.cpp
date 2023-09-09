@@ -243,11 +243,11 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 
 		if (Shader) {
 			if (ShaderProfile[0] == 'v') {
-				ShaderProg = new ShaderRecordVertex();
+				ShaderProg = new ShaderRecordVertex(Name);
 				TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
 			}
 			else {
-				ShaderProg = new ShaderRecordPixel();
+				ShaderProg = new ShaderRecordPixel(Name);
 				TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
 			}
 			ShaderProg->CreateCT(ShaderSource, ConstantTable);
@@ -307,13 +307,18 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 					SetConstantTableValue(ConstantDesc.Name, FloatIndex);
 					FloatShaderValues[FloatIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 					FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.RegisterCount;
+					FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
 					FloatIndex++;
  					break;
 				case D3DXRS_SAMPLER:
 					TextureShaderValues[TextureIndex].Texture = TheTextureManager->LoadTexture(ShaderSource, ConstantDesc.Type, ConstantDesc.Name, ConstantDesc.RegisterIndex, &HasRenderedBuffer, &HasDepthBuffer);
 					TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 					TextureShaderValues[TextureIndex].RegisterCount = 1;
+					TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
 					TextureIndex++;
+					break;
+				default:
+					Logger::Log("Found unsupported constant type in shader constant table: %s : %s", ConstantDesc.Name, ConstantDesc.RegisterSet);
 					break;
 			}
 		}
@@ -341,13 +346,14 @@ void ShaderRecord::SetCT() {
 	// update constants
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
 		Value = &FloatShaderValues[c];
-		SetShaderConstantF(Value->RegisterIndex, Value->Value, Value->RegisterCount);
+		SetShaderConstantF(Value->RegisterIndex, Value->Value, Value->RegisterCount); // TODO: for matrices, rows and columns are inverted because of the way this works.
 	}
 }
 
 
-ShaderRecordVertex::ShaderRecordVertex() {
+ShaderRecordVertex::ShaderRecordVertex(const char* shaderName) {
 	
+	Name = shaderName;
 	ShaderHandle = NULL;
 
 }
@@ -358,8 +364,8 @@ ShaderRecordVertex::~ShaderRecordVertex() {
 
 }
 
-ShaderRecordPixel::ShaderRecordPixel() {
-	
+ShaderRecordPixel::ShaderRecordPixel(const char* shaderName) {
+	Name = shaderName;
 	ShaderHandle = NULL;
 
 }
@@ -386,7 +392,15 @@ void ShaderRecordPixel::SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Va
 /*
 * Class that wraps an effect shader, in order to load it/render it/set constants.
 */
-EffectRecord::EffectRecord() {
+EffectRecord::EffectRecord(const char* effectName) {
+
+	Name = effectName;
+	Path = new std::string(effectName);
+
+	char FileName[MAX_PATH];
+	strcpy(FileName, effectName);
+	strcat(FileName, ".hlsl");
+	SourcePath = new std::string(FileName);
 
 	Enabled = false;
 	Effect = NULL;
@@ -456,7 +470,7 @@ bool EffectRecord::LoadEffect(bool alwaysCompile){
 	if (Errors) Logger::Log((char*)Errors->GetBufferPointer()); // LAst can be cleaned in the cleanup section
 	if (Effect) {
 		this->Effect = Effect;
-		CreateCT(ShaderSource, NULL); //Recreate CT;
+		CreateCT(ShaderSource, NULL); //Create the object which will associate a register index to a float pointer for constants updates;
 		Logger::Log("Effect loaded: %s", Path->data());
 	}
 
@@ -481,15 +495,8 @@ cleanup:
 * @param Name the name for the effect
 * @returns an EffectRecord describing the effect shader.
 */
-EffectRecord* EffectRecord::LoadEffect(const char* Name) {
-	
-	char FileName[MAX_PATH];
-
-	strcpy(FileName, Name);
-	strcat(FileName, ".hlsl");
-	EffectRecord* EffectProg = new EffectRecord();
-	EffectProg->Path = new std::string(Name); //TODO pass them to constructor for clean code 
-	EffectProg->SourcePath = new std::string(FileName);
+EffectRecord* EffectRecord::LoadEffect(const char* Name) {	
+	EffectRecord* EffectProg = new EffectRecord(Name);
 	EffectProg->LoadEffect();
 	return EffectProg;
 }
@@ -533,6 +540,7 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 					SetConstantTableValue(ConstantDesc.Name, FloatIndex);
 					FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
 					FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
+					FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
 					FloatIndex++;
 					break;
 				case D3DXPC_OBJECT:
@@ -540,6 +548,7 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 						TextureShaderValues[TextureIndex].Texture = TheTextureManager->LoadTexture(ShaderSource, ConstantDesc.Type, ConstantDesc.Name, TextureIndex, NULL, NULL);
 						TextureShaderValues[TextureIndex].RegisterIndex = TextureIndex;
 						TextureShaderValues[TextureIndex].RegisterCount = 1;
+						TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
 						TextureIndex++;
 					}
 					break;
