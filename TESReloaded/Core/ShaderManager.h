@@ -164,6 +164,10 @@ struct ShaderConstants {
 		D3DXVECTOR4		Data;
 	};
 
+	struct SkyStruct {
+		D3DXVECTOR4		Data;
+	};
+
 	struct AnimatorsStruct {
 		Animator			RainAnimator;
 		Animator			PuddlesAnimator;
@@ -186,6 +190,7 @@ struct ShaderConstants {
 	float					windSpeed;
 	D3DXVECTOR4				fogColor;
 	D3DXVECTOR4				horizonColor;
+	D3DXVECTOR4				skyLowColor;
 	D3DXVECTOR4				sunColor;
 	D3DXVECTOR4				sunAmbient;
 	D3DXVECTOR4				skyColor;
@@ -223,6 +228,7 @@ struct ShaderConstants {
 	WetWorldStruct			WetWorld;
 	SharpeningStruct		Sharpening;
 	SpecularStruct			Specular;
+	SkyStruct				Sky;
 	VolumetricFogStruct		VolumetricFog;
 	D3DXVECTOR4				DebugVar;
 };

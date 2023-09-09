@@ -176,6 +176,9 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	else if (!memcmp(Name, "SKIN", 4)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("Skin")) return NULL;
 	}
+	else if (!memcmp(Name, "SKY", 3)) {
+		if (!TheSettingManager->GetMenuShaderEnabled("Sky")) return NULL;
+	}
 	else if (strstr(TerrainShaders, Name)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("Terrain")) return NULL;
 	}
@@ -758,6 +761,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
 	TheShaderManager->ConstantsTable["TESR_SunColor"] = &TheShaderManager->ShaderConst.sunColor;
 	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
+	TheShaderManager->ConstantsTable["TESR_SkyData"] = &TheShaderManager->ShaderConst.Sky.Data;
+	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
 	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
 	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
 	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
@@ -1116,6 +1121,11 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.sunAmbient.z = WorldSky->sunAmbient.b;
 	ShaderConst.sunAmbient.w = 1.0f;
 
+	ShaderConst.skyLowColor.x = WorldSky->SkyLower.r;
+	ShaderConst.skyLowColor.y = WorldSky->SkyLower.g;
+	ShaderConst.skyLowColor.z = WorldSky->SkyLower.b;
+	ShaderConst.skyLowColor.w = 1.0f;
+
 	ShaderConst.skyColor.x = WorldSky->skyUpper.r;
 	ShaderConst.skyColor.y = WorldSky->skyUpper.g;
 	ShaderConst.skyColor.z = WorldSky->skyUpper.b;
@@ -1351,6 +1361,13 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Skin.SkinColor.x = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffRed");
 			ShaderConst.Skin.SkinColor.y = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffGreen");
 			ShaderConst.Skin.SkinColor.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffBlue");
+		}
+
+		if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
+			ShaderConst.Sky.Data.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
+			ShaderConst.Sky.Data.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
+			ShaderConst.Sky.Data.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
+			ShaderConst.Sky.Data.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarStrength");
 		}
 
 		if (Effects.GodRays->Enabled) {
