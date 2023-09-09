@@ -36,3 +36,17 @@ float4 selectColor(float selector, float4 color0, float4 color1, float4 color2, 
     if (selector == 0.9) return color9;
     return black;
 }
+
+float3 selectColor(float selector, float3 color0, float3 color1, float3 color2, float3 color3, float3 color4, float3 color5, float3 color6, float3 color7, float3 color8, float3 color9){
+    if (selector == 0.0) return color0;
+    if (selector == 0.1) return color1;
+    if (selector == 0.2) return color2;
+    if (selector == 0.3) return color3;
+    if (selector == 0.4) return color4;
+    if (selector == 0.5) return color5;
+    if (selector == 0.6) return color6;
+    if (selector == 0.7) return color7;
+    if (selector == 0.8) return color8;
+    if (selector == 0.9) return color9;
+    return black.rgb;
+}
