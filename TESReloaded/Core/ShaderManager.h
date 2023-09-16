@@ -237,7 +237,6 @@ struct ShaderConstants {
 struct ShaderValue {
 	UInt32				RegisterIndex;
 	UInt32				RegisterCount;
-	const char*			Name;
 	union {
 	D3DXVECTOR4*		Value;
 	TextureRecord*		Texture;
