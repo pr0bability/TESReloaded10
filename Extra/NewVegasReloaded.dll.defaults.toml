@@ -291,9 +291,9 @@ MaxDistance = 0
 Enabled = false                       # Not currently used. Replaces grass shaders and game options.  
 
 [_Shaders.GodRays.Main]
-DayMultiplier = 0.5                   # Strength of godrays during the day.
+DayMultiplier = 0.3                   # Strength of godrays during the day.
 LightShaftPasses = 8                  # Not used.
-Luminance = 0.8                       # Treshold for minimum luminosity of areas casting rays. Lower means more of the sky will cast rays.
+Luminance = 0.9                       # Treshold for minimum luminosity of areas casting rays. Lower means more of the sky will cast rays.
 NightMultiplier = 1.0                 # Strength of godrays during the night.
 RayDensity = 0.0                      # Curve for reduction of the intensity of godrays near the sunglare.
 RayIntensity = 1.0                    # Multiplier for the intensity of the bright areas being blurred to create the rays.

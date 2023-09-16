@@ -131,10 +131,11 @@ VS_OUTPUT main(VS_INPUT IN) {
         cloudTint = lerp(float3(0.3, 0.3, 0.4), cloudTint, dayLight); // nightime cloud tint
 
         finalColor.rgb *= cloudTint * TESR_CloudData.w;
-        finalColor.rgb += scattering;
+        // finalColor.rgb += scattering;
 
         // color = float4((finalColor.xyz) * Params.y, finalColor.w * IN.color_0.a);
-        color = float4(lerp(finalColor.rgb, finalColor.rgb * IN.color_0.rgb, 0.5 + 0.5 * sunDisk) * Params.y, finalColor.w * IN.color_0.a);
+        // color = float4(lerp(finalColor.rgb, finalColor.rgb * IN.color_0.rgb, 0.5 + 0.5 * sunDisk) * Params.y, finalColor.w * IN.color_0.a);
+        color = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a);
         color.a = lerp(color.a, color.a * 0.7, dayLight); // add setting for cloud alpha for daytime
     }
     
