@@ -11,11 +11,14 @@ float4 TESR_SunDirection;
 float4 TESR_ReciprocalResolution;
 
 float4 TESR_SkyData; // x: athmosphere thickness, y: sun influence, z: sun strength
+// float4 TESR_DebugVar;
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
 									{0.7647, 0.2941, 0.8824, 0.4118},
 									{0.2353, 0.7059, 0.1176, 0.5882},
 									{0.9412, 0.4706, 0.8235, 0.3259}};
+
+static const float SUNINFLUENCE = 1/TESR_SkyData.y;
 
 // Registers:
 //
@@ -50,14 +53,18 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunHeight = shade(TESR_SunDirection.xyz, up);
 
     float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
-    float sunInfluence = pows(compress(dot(eyeDir, TESR_SunDirection.xyz)), TESR_SkyData.y);
+    float sunInfluence = pows(compress(dot(eyeDir, TESR_SunDirection.xyz)), SUNINFLUENCE);
 
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
     skyColor = lerp(skyColor, TESR_HorizonColor.rgb, athmosphere * (0.5 + sunInfluence));
     skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * TESR_SunColor * TESR_SkyData.z;
 
+    // OUT.color_0.rgb = sunInfluence * (1 - sunHeight) * TESR_SunColor;
     OUT.color_0.rgb = skyColor;
+    // OUT.color_0.rgb = eyeDir;
     OUT.color_0.a = 1;
+
+    // OUT.color_0.rgb = selectColor(TESR_DebugVar.x, OUT.color_0.rgb, athmosphere.xxx, eyeDir, verticality.xxx, sunInfluence.xxx, black, black, black, black, black);
 
     // dithering
 	OUT.color_0.rgb += ditherMat[ (IN.position.x)%4 ][ (IN.position.y)%4 ] / 255;

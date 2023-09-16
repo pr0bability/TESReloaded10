@@ -567,13 +567,19 @@ Enabled = false                     # Not currently used. Replaces the skin shad
 
 
 [_Shaders.Sky.Main]
-AthmosphereThickness = 4.0
-SunInfluence = 1.0
-SunStrength = 0.5
-StarStrength = 4.0
+AthmosphereThickness = 4.0          # Determins the height of the athmosphere on the horizon
+SunInfluence = 1.0                  # How wide a side of the athmosphere will the sky lit up.
+SunStrength = 0.5                   # How strong is the sun brighness when reflected by athmosphere
+StarStrength = 4.0                  # Multiplier for stars brightness
+
+[_Shaders.Sky.Clouds]
+UseNormals = false                  # EXPERIMENTAL-Uses the R & G channels of the clouds texture to calculate normals for lighting. Requires special textures
+SphericalNormals = false            # EXPERIMENTAL-Uses this setting if the normals of the clouds point to the center of the panoramic texture
+Transparency = 0.5                  # Clouds base transparency
+Brightness = 0.2                    # Clouds base brightness
 
 [_Shaders.Sky.Status]
-Enabled = true
+Enabled = true                      # Replaces the sky and cloud shaders to add more subtle sky shading.
 
 [_Shaders.Snow.Main]
 Flakes = 0.5
