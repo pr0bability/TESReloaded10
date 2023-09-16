@@ -307,14 +307,12 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 					SetConstantTableValue(ConstantDesc.Name, FloatIndex);
 					FloatShaderValues[FloatIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 					FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.RegisterCount;
-					FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
 					FloatIndex++;
  					break;
 				case D3DXRS_SAMPLER:
 					TextureShaderValues[TextureIndex].Texture = TheTextureManager->LoadTexture(ShaderSource, ConstantDesc.Type, ConstantDesc.Name, ConstantDesc.RegisterIndex, &HasRenderedBuffer, &HasDepthBuffer);
 					TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 					TextureShaderValues[TextureIndex].RegisterCount = 1;
-					TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
 					TextureIndex++;
 					break;
 				default:
@@ -540,7 +538,6 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 					SetConstantTableValue(ConstantDesc.Name, FloatIndex);
 					FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
 					FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
-					FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
 					FloatIndex++;
 					break;
 				case D3DXPC_OBJECT:
@@ -548,7 +545,6 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 						TextureShaderValues[TextureIndex].Texture = TheTextureManager->LoadTexture(ShaderSource, ConstantDesc.Type, ConstantDesc.Name, TextureIndex, NULL, NULL);
 						TextureShaderValues[TextureIndex].RegisterIndex = TextureIndex;
 						TextureShaderValues[TextureIndex].RegisterCount = 1;
-						TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
 						TextureIndex++;
 					}
 					break;
