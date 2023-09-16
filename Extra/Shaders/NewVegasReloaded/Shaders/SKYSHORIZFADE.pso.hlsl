@@ -6,8 +6,8 @@ sampler2D TexMap : register(s0);
 
 float4 TESR_GameTime;
 float4 TESR_DebugVar;
-float4 TESR_ReciprocalResolution;
 float4 TESR_SkyData;
+float4 TESR_ReciprocalResolution;
 
 // Registers:
 //
@@ -66,9 +66,6 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 stars = tex2D(TexMap, IN.TexUV.xy);
     float4 sky = IN.color_0;
 
-    // float starFlicker = 0.3;//TESR_DebugVar.y; //0.3
-    // float noiseScale = 8;//TESR_DebugVar.z;//8;
-    // float flickerSpeed = 0.06;//TESR_DebugVar.w;//0.06;
     float starFlicker = 0.3;
     float noiseScale = 8;
     float flickerSpeed = 0.06;
@@ -81,11 +78,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     n = saturate(saturate(n) * (1 - starFlicker) + starFlicker);
 
     OUT.color_0.a = (stars.a * sky.a) * IN.texcoord_2.x * TESR_SkyData.w * (n + 1);
-    OUT.color_0.rgb = stars.rgb * sky.rgb;
-    // float4 color = OUT.color_0;
-
-    // OUT.color_0 = magenta;
+    OUT.color_0.rgb = stars.rgb * (n + 1) * sky.rgb;
+    
     // OUT.color_0.rgba = selectColor(TESR_DebugVar.x, color.rgba, n.xxxx, stars, sky, stars.aaa, sky.aaa, IN.texcoord_2.xxx, OUT.color_0.aaa, black, black);
+
 
     return OUT;
 };
