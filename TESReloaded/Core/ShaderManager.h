@@ -165,7 +165,8 @@ struct ShaderConstants {
 	};
 
 	struct SkyStruct {
-		D3DXVECTOR4		Data;
+		D3DXVECTOR4		SkyData;
+		D3DXVECTOR4		CloudData;
 	};
 
 	struct AnimatorsStruct {

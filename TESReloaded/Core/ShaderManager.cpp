@@ -775,7 +775,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
 	TheShaderManager->ConstantsTable["TESR_SunColor"] = &TheShaderManager->ShaderConst.sunColor;
 	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
-	TheShaderManager->ConstantsTable["TESR_SkyData"] = &TheShaderManager->ShaderConst.Sky.Data;
+	TheShaderManager->ConstantsTable["TESR_SkyData"] = &TheShaderManager->ShaderConst.Sky.SkyData;
+	TheShaderManager->ConstantsTable["TESR_CloudData"] = &TheShaderManager->ShaderConst.Sky.CloudData;
 	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
 	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
 	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
@@ -1378,10 +1379,15 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
-			ShaderConst.Sky.Data.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
-			ShaderConst.Sky.Data.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
-			ShaderConst.Sky.Data.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
-			ShaderConst.Sky.Data.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarStrength");
+			ShaderConst.Sky.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
+			ShaderConst.Sky.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
+			ShaderConst.Sky.SkyData.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
+			ShaderConst.Sky.SkyData.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarStrength");
+			
+			ShaderConst.Sky.CloudData.x = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "UseNormals");
+			ShaderConst.Sky.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "SphericalNormals");
+			ShaderConst.Sky.CloudData.z = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
+			ShaderConst.Sky.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
 		}
 
 		if (Effects.GodRays->Enabled) {
