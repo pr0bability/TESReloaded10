@@ -8,6 +8,9 @@ float4 TESR_SunDirection;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
 float4 TESR_HorizonColor;
+float4 TESR_SkyLowColor;
+float4 TESR_SkyColor;
+float4 TESR_SkyData;
 float4 TESR_DebugVar;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -81,14 +84,22 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	// float falloff = 0.00225 * TESR_DebugVar.y; // tie to darkness setting?
 	// float fogAmount = saturate((density/falloff) * exp(-TESR_CameraPosition.z*falloff) * (1.0 - exp( -fogDepth*eyeDirection.z*falloff ))/eyeDirection.z);
 
-	// calculate color
-	float3 fogColor = lerp(TESR_HorizonColor, TESR_FogColor, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
-	float sunAmount = pows(dot(eyeDirection, TESR_SunDirection.xyz), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
-	fogColor = fogColor + TESR_SunColor.rgb * sunAmount; // add sun color to the fog
+	// calculate sky color
+	float3 up = blue.xyz;
+    float verticality = pows(compress(shade(eyeDirection, up)), 3);
+    float sunHeight = shade(TESR_SunDirection.xyz, up);
+    float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
+    float sunInfluence = shade(eyeDirection, TESR_SunDirection.xyz);
+    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, athmosphere * 0.2); // tint the base more with horizon color when sun is high
+
+	// blend with fog color
+	float3 fogColor = lerp(skyColor, TESR_FogColor, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
+	float sunAmount = pows(sunInfluence, SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
+	fogColor += TESR_SunColor.rgb * sunAmount; // add sun color to the fog
 
 	float3 originalFogColor = fogColor;
 	float originalFogLuma = luma(originalFogColor);
-	fogColor = lerp(color.rgb, fogColor.rgb, fogAmount); // calculate final color of scene through the fog
+	fogColor = lerp(color, fogColor, fogAmount).rgb; // calculate final color of scene through the fog
 
     // Blend back in some of the original color based on luma (brightest lights will come through):
     float fogLuma = luma(fogColor);
@@ -107,7 +118,6 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	// 	if (IN.UVCoord.y > 0.5 && IN.UVCoord.y < 0.6) return TESR_SunColor;
 	// 	if (IN.UVCoord.y > 0.6 && IN.UVCoord.y < 0.7) return TESR_SunAmbient;
 	// }
-
 	return float4(color, 1.0f);
 }
 
