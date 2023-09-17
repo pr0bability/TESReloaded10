@@ -206,7 +206,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 eyeDirection = -1 * normalize(world);
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
-	float ortho = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	float ortho = tex2D(TESR_RenderedBuffer, IN.UVCoord).x;
 	float3 norm = GetWorldNormal(IN.UVCoord);
 
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)

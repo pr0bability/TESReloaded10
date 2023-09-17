@@ -57,7 +57,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
     skyColor = lerp(skyColor, TESR_HorizonColor.rgb, athmosphere * (0.5 + sunInfluence));
-    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * TESR_SunColor * TESR_SkyData.z;
+    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * TESR_SunColor.rgb * TESR_SkyData.z;
 
     // OUT.color_0.rgb = sunInfluence * (1 - sunHeight) * TESR_SunColor;
     OUT.color_0.rgb = skyColor;
