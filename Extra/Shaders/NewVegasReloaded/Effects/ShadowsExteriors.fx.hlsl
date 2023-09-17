@@ -63,7 +63,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float3 world_normal = GetWorldNormal(IN.UVCoord);
 
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
-	if (TESR_WaterSettings.z && world_pos.z < TESR_WaterSettings.x + 2 && world_pos.z > TESR_WaterSettings.x - 2 && dot(world_normal, float3(0, 0, -1)) > 0.999) return float4 (1.0f, 1.0, 1.0, 1.0);
+	if (TESR_WaterSettings.z == 1 && world_pos.z < (TESR_WaterSettings.x + 2) && world_pos.z > (TESR_WaterSettings.x - 2) && dot(world_normal, float3(0, 0, -1)) > 0.999) return color;
 
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 
