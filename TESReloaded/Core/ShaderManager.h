@@ -121,6 +121,7 @@ struct ShaderConstants {
 	};
 	struct SnowAccumulationStruct {
 		D3DXVECTOR4		Params;
+		D3DXVECTOR4		Color;
 	};
 	struct BloodLensStruct {
 		D3DXVECTOR4		Params;
