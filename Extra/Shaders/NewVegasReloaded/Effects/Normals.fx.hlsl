@@ -1,9 +1,10 @@
 float4 TESR_ReciprocalResolution;
-float4 TESR_SnowAccumulationParams; 
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_NormalsBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 
+static const float dropTreshold = 0.82;
+static const float blurRadius = 0.6;
 static const int KernelSize = 24;
 static const float2 OffsetMaskH = float2(1.0f, 0.0f);
 static const float2 OffsetMaskV = float2(0.0f, 1.0f);
@@ -147,20 +148,20 @@ float4 ComputeNormals(VSOUT IN) :COLOR0
 
 float4 BlurNormals(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 {
-	float WeightSum = 0.12f * saturate(1 - TESR_SnowAccumulationParams.x);
+	float WeightSum = 0.12f * saturate(1 - dropTreshold);
 	float3 normal = expand(tex2D(TESR_NormalsBuffer, IN.UVCoord).rgb);
 	float3 finalNormal = normal * WeightSum;
 	float depth = readDepth(IN.UVCoord);
-	float depthCoeff = abs(log(depth/farZ)) * TESR_SnowAccumulationParams.y;
+	float depthBasedRadius = abs(log(depth/farZ)) * blurRadius;
 	float depthDrop = (depth/farZ) * 7000; // difference of depth beyond which the sample will not count towards the blur
 
 	for (int i = 0; i < KernelSize; i++) {
-		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * depthCoeff;
+		float2 uvOff = (BlurNormalsOffsets[i] * OffsetMask) * depthBasedRadius;
 		float3 newNormal = expand(tex2D(TESR_NormalsBuffer, IN.UVCoord + uvOff).rgb);
 		float depth2 = readDepth(IN.UVCoord + uvOff);
 		float useForBlur = abs(float(depth - depth2)) <= depthDrop;
 
-		float weight = BlurNormalsWeights[i] * saturate(dot(newNormal, normal) - TESR_SnowAccumulationParams.x * 0.75f) * useForBlur;
+		float weight = BlurNormalsWeights[i] * saturate(dot(newNormal, normal) - dropTreshold * 0.75f) * useForBlur;
 
 		finalNormal += weight * newNormal;
 		WeightSum += weight;

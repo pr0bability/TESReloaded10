@@ -2,10 +2,12 @@
 
 float4x4 TESR_WorldViewProjectionTransform;
 float4x4 TESR_ShadowCameraToLightTransformOrtho;
+float4 TESR_ReciprocalResolution;
 float4 TESR_SunDirection;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
 float4 TESR_SnowAccumulationParams; // x:BlurNormDropThreshhold, y:BlurRadiusMultiplier, z:SunPower, w:SnowAmount 
+float4 TESR_SnowAccumulationColor;
 float4 TESR_WaterSettings;
 float4 TESR_ShadowFade;
 float4 TESR_ShadowData;
@@ -38,19 +40,20 @@ float4 TESR_LightPosition10;
 float4 TESR_LightPosition11;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_OrthoMapBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_PointShadowBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SnowNormSampler : register(s5) < string ResourceName = "Precipitations\snow_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_BlueNoiseSampler : register(s6) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_OrthoMapBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_NormalsBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_PointShadowBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SnowNormSampler : register(s6) < string ResourceName = "Precipitations\snow_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_BlueNoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const int KernelSize = 24;
-static const float diffusePower = 0.17f;
-static const float specularPower = 0.3f;
-static const float fresnelPower = 0.2f;
+static const float diffusePower = 0.17f * TESR_SnowAccumulationParams.z;
+static const float specularPower = 0.3f * TESR_SnowAccumulationParams.z;
+static const float fresnelPower = 0.2f * TESR_SnowAccumulationParams.z;
 static const float DARKNESS = 1-TESR_ShadowData.y;
-static const float orthoRadius = 150; // radius of the area to sample ortho from
+static const float orthoRadius = TESR_SnowAccumulationParams.x; // radius of the area to sample ortho from
 static const float noiseSize = 200; // scale for the noise used for snow coverage
 static const float useShadows = TESR_ShadowScreenSpaceData.x || TESR_ShadowFade.y;
 
@@ -78,6 +81,7 @@ VSOUT FrameVS(VSIN IN)
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
 #include "Includes/Normals.hlsl"
+#include "Includes/BlurDepth.hlsl"
 
 
 float GetOrtho(float4 worldPos){
@@ -152,14 +156,20 @@ float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal)
 	return saturate((diffuse + spec) * atten);
 }
 
-float4 Snow( VSOUT IN ) : COLOR0
+
+// Compute the areas of the screen that must be covered with snow
+float4 SnowCoverage( VSOUT IN ) : COLOR0
 {
-	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	float3 world = toWorld(IN.UVCoord);
-	
-	float depth = readDepth(IN.UVCoord);
+	// compute at quarter scale
+	float2 uv = IN.UVCoord * 4;
+	if (uv.x > 1 || uv.y > 1) return white;
+
+	float3 world = toWorld(uv);
+	float depth = readDepth(uv);
+
+	if (depth > TESR_OrthoData.x) return white; // early out for the sky pixels
+
 	float3 camera_vector = world * depth;
-	float3 eyeDirection = -1 * normalize(world);
 	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
 	// sample an average ortho
@@ -178,6 +188,25 @@ float4 Snow( VSOUT IN ) : COLOR0
 	ortho += GetOrtho(worldPos + float4(0, 0.3, 0, 0) * orthoRadius);
 	ortho /= 13;
 
+	ortho = smoothstep(0.1, 0.9, ortho); // reduce glitches by removing outlier values 
+	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
+
+
+	return ortho.xxxx;
+}
+
+
+float4 Snow( VSOUT IN ) : COLOR0
+{
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	float3 world = toWorld(IN.UVCoord);
+	
+	float depth = readDepth(IN.UVCoord);
+	float3 camera_vector = world * depth;
+	float3 eyeDirection = -1 * normalize(world);
+	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+
+	float ortho = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	float3 norm = GetWorldNormal(IN.UVCoord);
 
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
@@ -190,7 +219,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 surfaceNormal = normalize(float3(localNorm.xy + norm.xy, localNorm.z * norm.z));
 	float4 normal =  float4(surfaceNormal, 1);
 
-	float3 snow_tex = float3(1, 1, 1); //base color of the snow is just a uniform white
+	float3 snow_tex = TESR_SnowAccumulationColor.rgb;
 
 	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
 	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
@@ -205,6 +234,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
 	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.2 * shadow.r;
 
+	// float4 snowColor = float4(ambient + diffuse + spec + fresnel, 1);
 	float4 snowColor = float4(ambient + diffuse + spec + fresnel + sparkles, 1);
 	float pointLightsPower = 0.5;
 
@@ -238,9 +268,6 @@ float4 Snow( VSOUT IN ) : COLOR0
 	// create a noisy pattern of accumulation over time
 	float coverage = saturate(pows(noise(worldPos.xyz / (noiseSize * 0.5)) * noise(worldPos.xyz / (noiseSize * 3)) * noise(worldPos.xyz / noiseSize), 2 - 2 * TESR_SnowAccumulationParams.w));
 	coverage = saturate(smoothstep(0.2, 0.4, coverage));
-
-	ortho = smoothstep(0.1, 0.9, ortho); // reduce glitches by removing outlier values 
-	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
 	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
 
 	color = lerp(color, snowColor, coverage * min(vertical, ortho));
@@ -250,6 +277,26 @@ float4 Snow( VSOUT IN ) : COLOR0
 
 technique
 {
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 SnowCoverage();
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Scale(TESR_RenderedBuffer, 4);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 DepthBlur(TESR_RenderedBuffer, OffsetMaskH, TESR_SnowAccumulationParams.y, 3500, TESR_OrthoData.x);
+	}
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 DepthBlur(TESR_RenderedBuffer, OffsetMaskV, TESR_SnowAccumulationParams.y, 3500, TESR_OrthoData.x);
+	}
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();

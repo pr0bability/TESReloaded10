@@ -589,11 +589,14 @@ Speed = 1.4                         # Speed multiplier for snow falling
 Enabled = true                      # Snow precipitation shader.
 
 [_Shaders.SnowAccumulation.Main]
-BlurNormDropThreshhold = 0.82       # Treshold for normals blurring above which normals will not be blended
-BlurRadiusMultiplier = 0.6          # Strength of normals blur
-Decrease = 12                       # Time in game Hours for the snow to disappear
+BlurNormDropThreshhold = 120        # Distance for ortho average sampling around ortho covered area
+BlurRadiusMultiplier = 2.0          # Screen space blur radius for ortho coverage smoothing
+Decrease = 12.0                     # Time in game Hours for the snow to disappear
 Increase = 0.3                      # Time in game Hours for the snow to accumulate
-SunPower = 0.3
+SunPower = 1.0                      # Multiplier for the lighting strength
+SnowColorR = 0.9                   # Red chanel for the color of snow coverage
+SnowColorG = 0.9                    # Green chanel for the color of snow coverage
+SnowColorB = 0.8                    # Blue chanel for the color of snow coverage
 
 [_Shaders.SnowAccumulation.Status]
 Enabled = true                      # Snow accumulation on the floor during snowstorms.

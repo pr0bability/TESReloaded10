@@ -806,6 +806,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->ShaderConst.Specular.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->ShaderConst.Specular.EffectStrength;
 	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->ShaderConst.SnowAccumulation.Params;
+	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &TheShaderManager->ShaderConst.SnowAccumulation.Color;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->ShaderConst.VolumetricFog.Data;
 	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->ShaderConst.WaterLens.Time;
 	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->ShaderConst.WetWorld.Coeffs;
@@ -1142,7 +1143,8 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.skyColor.z = WorldSky->skyUpper.b;
 	ShaderConst.skyColor.w = 1.0f;
 
-	ShaderConst.fogData.x = WorldSky->fogNearPlane;
+	// for near plane, ensure that far > near
+	ShaderConst.fogData.x = WorldSky->fogFarPlane > WorldSky->fogNearPlane ? WorldSky->fogNearPlane : WorldSky->fogFarPlane * 0.7;
 	ShaderConst.fogData.y = WorldSky->fogFarPlane;
 	ShaderConst.fogData.z = ShaderConst.sunGlare;
 	ShaderConst.fogData.w = WorldSky->fogPower;
@@ -1423,6 +1425,9 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.SnowAccumulation.Params.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
 		ShaderConst.SnowAccumulation.Params.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
 		ShaderConst.SnowAccumulation.Params.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
+		ShaderConst.SnowAccumulation.Color.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorR");
+		ShaderConst.SnowAccumulation.Color.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorG");
+		ShaderConst.SnowAccumulation.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
 
 		ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Effects.ShadowsExteriors->Enabled;
 		ShaderConst.Shadow.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
