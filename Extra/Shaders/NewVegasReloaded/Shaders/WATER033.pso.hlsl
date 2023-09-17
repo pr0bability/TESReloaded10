@@ -67,7 +67,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 color = ShallowColor * sunLuma;
     color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, TESR_HorizonColor, color);
     color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
-    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb* dot(TESR_SunDirection, float3(0, 0, 1)), color);
+    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb* dot(TESR_SunDirection.rgb, float3(0, 0, 1)), color);
     color.a = 1;
 
     OUT.color_0 = color;

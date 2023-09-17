@@ -43,7 +43,7 @@ static const float time1 = TESR_GameTime.z * 0.96f; // Ripple timing, make sure 
 static const float time2 = TESR_GameTime.z * 0.97f; // Ripple timing, original 1.0-1.4
 static const float time3 = TESR_GameTime.z * 0.98f; // Ripple timing
 static const float time4 = TESR_GameTime.z * 0.99f; // Ripple timing
-static const float DrawD = TESR_OrthoData * 0.9; // Max draw distance for puddles 0-1000000
+static const float DrawD = TESR_OrthoData.x * 0.9; // Max draw distance for puddles 0-1000000
 static const float rippleScale = 80.0f;
 static const float refractionScale = 25;
 //------------------------------------------------------

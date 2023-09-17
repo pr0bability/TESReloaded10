@@ -124,8 +124,8 @@ VS_OUTPUT main(VS_INPUT IN) {
         // color.rgb = lerp(color, finalColor, saturate(sunDisk)); // cancel out effect for sun texture area
     }else{
         // simply tint the clouds
-        float3 cloudTint = lerp(pow(TESR_SkyLowColor, 5.0), TESR_SunColor * 1.5, saturate((sunDisk + (1 - pow(compress(sunDir), 3.0))) * saturate(greyScale)));
-        cloudTint = lerp(cloudTint, white, sunHeight); // tint the clouds less when the sun is high in the sky
+        float3 cloudTint = lerp(pow(TESR_SkyLowColor, 5.0), TESR_SunColor * 1.5, saturate((sunDisk + (1 - pow(compress(sunDir), 3.0))) * saturate(greyScale))).rgb;
+        cloudTint = lerp(cloudTint, white.rgb, sunHeight); // tint the clouds less when the sun is high in the sky
 
         float dayLight = saturate(sunDisk + luma(TESR_SunColor));
         cloudTint = lerp(float3(0.3, 0.3, 0.4), cloudTint, dayLight); // nightime cloud tint
