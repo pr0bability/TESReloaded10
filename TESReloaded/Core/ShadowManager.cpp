@@ -220,12 +220,12 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 		Node = static_cast<NiNode*>(containers.top());
 		containers.pop();
 
-		if (!Node || Node->m_flags & NiAVObject::kFlag_AppCulled || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
+		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
 
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
 			try {
 				child = Node->m_children.data[i];
-				if (!child || child->m_flags & NiAVObject::kFlag_AppCulled || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
+				if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
 				if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
 				AccumObject(&containers, child);
 			}
@@ -701,7 +701,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 		NiPointLight* Light = Entry->data->sourceLight;
 		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
 
-		bool lightCulled = Light->m_flags & NiAVObject::kFlag_AppCulled;
+		bool lightCulled = Light->m_flags & NiAVObject::NiFlags::APP_CULLED;
 		bool lightOn = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer > 5.0/255.0; // Check for low values in case of human error
 		if (lightCulled || !lightOn) {
 			Entry = Entry->next;
