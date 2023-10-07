@@ -571,6 +571,7 @@ AthmosphereThickness = 4.0          # Determins the height of the athmosphere on
 SunInfluence = 1.0                  # How wide a side of the athmosphere will the sky lit up.
 SunStrength = 0.5                   # How strong is the sun brighness when reflected by athmosphere
 StarStrength = 4.0                  # Multiplier for stars brightness
+ReplaceSun = false                  # replaces vanilla sun by a procedural sun for whatever reason
 
 [_Shaders.Sky.Clouds]
 UseNormals = false                  # EXPERIMENTAL-Uses the R & G channels of the clouds texture to calculate normals for lighting. Requires special textures

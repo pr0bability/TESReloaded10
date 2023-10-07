@@ -1050,7 +1050,6 @@ void ShaderManager::UpdateConstants() {
 	float sunRise = smoothStep(SunriseStart - sunRiseTransitionTime, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSet = smoothStep(SunsetEnd + sunSetTransitionTime, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	isDayTime = sunRise * sunSet;
-	ShaderConst.SunAmount.x = isDayTime;
 
 	//if (isDayTime == 1) {
 	//	// Day time
@@ -1111,6 +1110,21 @@ void ShaderManager::UpdateConstants() {
 	else {
 		ShaderConst.sunGlare = 0.5f;
 	}
+
+	ShaderConst.SunAmount.x = isDayTime;
+	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
+
+	if (isExterior && TheSettingManager->SettingsChanged) {
+		if (TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun")) {
+			WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
+			ShaderConst.SunAmount.z = 1;
+		}
+		else {
+			WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
+			ShaderConst.SunAmount.z = 0;
+		}
+	}
+
 	ShaderConst.windSpeed = WorldSky->windSpeed;
 
 	ShaderConst.fogColor.x = WorldSky->fogColor.r;
