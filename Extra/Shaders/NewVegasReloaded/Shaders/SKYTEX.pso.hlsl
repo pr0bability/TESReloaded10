@@ -14,7 +14,7 @@ float4 TESR_HorizonColor : register(c9);
 float4 TESR_SunDirection : register(c10);
 float4 TESR_SkyData : register(c11);   // x:AthmosphereThickness y:SunInfluence z:SunStrength w:StarStrength
 float4 TESR_CloudData : register(c12); // x:UseNormals y:SphericalNormals z:Transparency
-float4 TESR_ReciprocalResolution : register(c13);
+float4 TESR_SunAmount : register(c13);
 
 
 // Registers:
@@ -29,7 +29,7 @@ float4 TESR_ReciprocalResolution : register(c13);
 
 static const float UseNormals = TESR_CloudData.x;
 static const float SphericalNormals = TESR_CloudData.y;
-static const float sunInfluence = 1/TESR_SkyData.y;
+static const float SUNINFLUENCE = 1/TESR_SkyData.y;
 
 // Structures:
 
@@ -81,15 +81,14 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
     float3 up = float3(0, 0, 1);
-    float2 uv = IN.position.xy * TESR_ReciprocalResolution.xy;
     float3 eyeDir = normalize(IN.location);
     float verticality = pows(compress(dot(eyeDir, up)), 3);
     float sunHeight = shade(TESR_SunDirection.xyz, up);
 
-    float sunDir = dot(eyeDir, TESR_SunDirection.xyz);
+    float sunDir = compress(dot(eyeDir, TESR_SunDirection.xyz)); // stores wether the camera is looking in the direction of the sun in range 0/1
+
     float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
-    float sunInfluence = pows(compress(sunDir), sunInfluence);
-    float sunDisk = pows(saturate(sunDir), 200);
+    float sunInfluence = pows(sunDir, SUNINFLUENCE);
 
     float cloudsPower = Params.x;
     float4 cloudsWeather1 = tex2D(TexMap, IN.TexUV.xy);
@@ -99,59 +98,54 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float4 finalColor = (weight(cloudsWeather1.xyz) == 0.0 ? cloudsWeather2 : (weight(cloudsWeather2.xyz) == 0.0 ? cloudsWeather1 : cloudsWeatherBlend)); // select either weather or blend
     finalColor.a = cloudsWeatherBlend.a;
+    // finalColor = cloudsWeather1;
 
     if (IN.color_1.r){ // early out if this texture is sun/moon
         OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a);
-        // OUT.color_0 = float4(IN.color_1.rgb, finalColor.w * IN.color_0.a);
         return OUT;
     }
 
-
     // shade clouds 
-    // float cloudMask = saturate(1 - (athmosphere * 0.8) + sunDisk);
-    // float alpha = lerp(0, finalColor.w * TESR_CloudData.z, cloudMask);
-
     float greyScale = lerp(luma(finalColor), 1, TESR_CloudData.w);
     float alpha = finalColor.w * TESR_CloudData.z;
-    float3 scattering = sunDir * (1 - alpha) * TESR_SunColor.rgb * 0.3;
-    float4 color;
+
+    float3 sunColor = TESR_SunColor; // increase suncolor strength with sun height
+    float sunSet = saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x);
+    sunColor = lerp(sunColor, sunColor + float3(1, 0, 0.03) * TESR_SunAmount.x, sunSet); // add extra red to the sun at sunsets
+
+    // calculate sky color to blend in the clouds
+    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
+    skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
+    skyColor += sunInfluence * (1 - sunHeight) * lerp(0.5, 1, athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
+
+    float3 scattering = sunInfluence * lerp(0.3, 1, 1 - alpha) * (skyColor + sunColor) * 0.3;
 
     if ( UseNormals){
         // Tests for normals lit cloud
         float2 normal2D = finalColor.xy; // normal x and y are in red and green, blue is reconstructed
-        normal2D = finalColor.xy * (1-sunDisk); // cancel out normals strenght around the sun location
-
         float3 normal = getNormal(normal2D, -eyeDir); // reconstruct world normal from red and green
 
         greyScale = lerp(TESR_CloudData.w, 1, finalColor.z); // greyscale is stored in blue channel
-        float3 diffuse = shade(normal, TESR_SunDirection.xyz) * TESR_SunColor.rgb;
-        float3 ambient = lerp(TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, greyScale) * 0.6;
-        float3 fresnel = pow(1 - shade(-eyeDir, normal), 5) * sunDir * TESR_SunColor.rgb * 0.1;
-        float3 bounce = shade(normal, -up) * TESR_HorizonColor.rgb * 0.2; // light from the ground bouncing up to the underside of clouds
+        float3 ambient = skyColor * greyScale * lerp(0.5, 0.7, sunDir); // fade ambient with sun direction
+        float3 diffuse = compress(dot(normal, TESR_SunDirection.xyz)) * sunColor * (1 - luma(ambient)) * lerp(0.8, 1, sunDir); // scale diffuse if ambient is high
+        float3 fresnel = pows(1 - shade(-eyeDir, normal), 4) * pows(saturate(expand(sunDir)), 2) * shade(normal, up) * (sunColor + skyColor) * 0.2;
+        float3 bounce = shade(normal, -up) * TESR_HorizonColor.rgb * 0.1 * sunHeight; // light from the ground bouncing up to the underside of clouds
 
-        color = float4(ambient + diffuse + fresnel + scattering + bounce, alpha);
-        // color.a = lerp(0, finalColor.a * TESR_CloudData.z, cloudMask);
-        color.a = finalColor.a * TESR_CloudData.z;
-        color.rgb = lerp(color, finalColor, saturate(sunDisk)).rgb * IN.color_0.rgb * Params.y;
-        // color.rgb = lerp(color, finalColor, saturate(sunDisk)); // cancel out effect for sun texture area
+        finalColor = float4(ambient + diffuse + fresnel + scattering + bounce, alpha);
+        // finalColor.rgb = selectColor(TESR_DebugVar.x, finalColor, ambient, diffuse, fresnel, bounce, scattering, sunColor, skyColor, normal, float3(IN.TexUV, 1));
     } else {
+
         // simply tint the clouds
-        float3 cloudTint = lerp(pow(TESR_SkyLowColor, 5.0), TESR_SunColor * 1.5, saturate(((1 - pow(compress(sunDir), 3.0))) * saturate(greyScale))).rgb;
+        float sunInfluence = 1 - pow(sunDir, 3.0);
+        float3 cloudTint = lerp(pow(TESR_SkyLowColor.rgb, 5.0), sunColor * 1.5, saturate(sunInfluence * saturate(greyScale))).rgb;
         cloudTint = lerp(cloudTint, white.rgb, sunHeight); // tint the clouds less when the sun is high in the sky
 
-        float dayLight = saturate(luma(TESR_SunColor));
+        float dayLight = saturate(luma(sunColor));
 
         finalColor.rgb *= cloudTint * TESR_CloudData.w;
         finalColor.rgb += scattering;
-
-        // color = float4((finalColor.xyz) * Params.y, finalColor.w * IN.color_0.a);
-        // color = float4(lerp(finalColor.rgb, finalColor.rgb * IN.color_0.rgb, 0.5 + 0.5 * sunDisk) * Params.y, finalColor.w * IN.color_0.a);
-        color = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a);
-        color.a = lerp(color.a, color.a * 0.7, dayLight); // add setting for cloud alpha for daytime
     }
     
-    OUT.color_0.rgb = color.rgb;
-    OUT.color_0.a = color.a;
-
+    OUT.color_0 = float4(finalColor.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z);
     return OUT;
 };
