@@ -986,7 +986,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.SunDir.z = SunRoot->m_localTransform.pos.z;
 			D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
 		}
-
+		ShaderConst.SunDir.w = 1.0f;
 	}
 
 	// expose the light vector in view space for screen space lighting
@@ -1044,13 +1044,13 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	// calculating sun amount for shaders (currently not used by any shaders)
-	ShaderConst.SunDir.w = 1.0f;
 	float sunRiseTransitionTime = SunriseEnd - SunriseStart; // sunriseEnd is only the middle point of the transition before nights get fully dark
 	float sunSetTransitionTime = SunsetEnd - SunsetStart; // sunsetStart is only the middle point of the transition
 
 	float sunRise = smoothStep(SunriseStart - sunRiseTransitionTime, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSet = smoothStep(SunsetEnd + sunSetTransitionTime, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	isDayTime = sunRise * sunSet;
+	ShaderConst.SunAmount.x = isDayTime;
 
 	//if (isDayTime == 1) {
 	//	// Day time
@@ -1962,7 +1962,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Sky* WorldSky = Tes->sky;
 	bool isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
 	bool isUnderwater = Tes->sky->GetIsUnderWater();
-	bool isDaytime = (ShaderConst.GameTime.y >= ShaderConst.SunTiming.x && ShaderConst.GameTime.y <= ShaderConst.SunTiming.w); // gametime is between sunrise start and sunset end
+	bool isDaytime = isDayTime > 0; // gametime is between sunrise start and sunset end
 	bool isCellTransition = currentCell != PreviousCell;
 
 	bool pipboyIsOn = InterfaceManager->getIsMenuOpen();
