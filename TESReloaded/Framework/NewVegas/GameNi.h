@@ -506,12 +506,39 @@ public:
 	virtual void			Unk_35(void* arg);
 	virtual void			Unk_36(void* arg);	// last is 036 verified
 
-	enum {
-		kFlag_AppCulled					= 1 << 0,
-		kFlag_SelUpdate					= 1 << 1,
-		kFlag_SelUpdateTransforms		= 1 << 2,
-		kFlag_SelUpdatePropControllers	= 1 << 3,
-		kFlag_SelUpdateRigid			= 1 << 4,
+	enum NiFlags : UInt32 {
+		APP_CULLED = 0x1,
+		SELECTIVE_UPDATE = 0x2,
+		SELECTIVE_UPDATE_TRANSFORMS = 0x4,
+		SELECTIVE_UPDATE_CONTROLLER = 0x8,
+		SELECTIVE_UPDATE_RIGID = 0x10,
+		DISPLAY_OBJECT = 0x20,
+		DISABLE_SORTING = 0x40,
+		SELECTIVE_UPDATE_TRANSFORMS_OVERRIDE = 0x80,
+		IS_NODE = 0x100,
+		SAVE_EXTERNAL_GEOM_DATA = 0x200,
+		NO_DECALS = 0x400,
+		ALWAYS_DRAW = 0x800,
+		MESH_LOD = 0x1000,
+		FIXED_BOUND = 0x2000,
+		TOP_FADE_NODE = 0x4000,
+		IGNORE_FADE = 0x8000,
+		NO_ANIM_SYNC_X = 0x10000,
+		NO_ANIM_SYNC_Y = 0x20000,
+		NO_ANIM_SYNC_Z = 0x40000,
+		NO_ANIM_SYNC_S = 0x80000,
+		NO_DISMEMBER = 0x100000,
+		NO_DISMEMBER_VALIDITY = 0x200000,
+		RENDER_USE = 0x400000,
+		MATERIALS_APPLIED = 0x800000,
+		HIGH_DETAIL = 0x1000000,
+		FORCE_UPDATE = 0x2000000,
+		PREPROCESSED_NODE = 0x4000000,
+		UNK_27 = 0x8000000,
+		UNK_28 = 0x10000000,
+		IS_POINTLIGHT = 0x20000000,
+		DONE_INIT_LIGHTS = 0x40000000,
+		IS_INSERTED = 0x80000000,
 	};
 
 	float GetDistance(NiPoint3* Point);
