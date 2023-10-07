@@ -514,18 +514,18 @@ public:
 	virtual void		OnVisible(NiCullingProcess* CullingProcess);
 	virtual void		Unk_20(void* arg);			// get NiMaterialProperty, pass to arg if found
 
-	enum {
-		kFlag_AppCulled					= 1 << 0, // originally named m_bAppCulled but they appear to have used bitfields
-		kFlag_SelUpdate					= 1 << 1, // Selective update flags
-		kFlag_SelUpdateTransforms		= 1 << 2,
-		kFlag_SelUpdatePropControllers	= 1 << 3,
-		kFlag_SelUpdateRigid			= 1 << 4,
-		kFlag_DisplayObject				= 1 << 5, // For use with occlusion culling system
-		kFlag_DisableSorting			= 1 << 6, // For use with sorting/accumulation system
-		kFlag_SelTransformsOverride		= 1 << 7, // Selective update over-ride flags
-		kFlag_IsNode					= 1 << 8, // Is the object a leaf or a node
-		kFlag_IsOccluded				= 1 << 9, // Used by OR to manage occluded geometries
-		kFlag_IsOCNode					= 1 << 10, // Used by OR to manage if the object is a node for occlusion culling geos
+	enum NiFlags : UInt32 {
+		APP_CULLED					= 1 << 0, // originally named m_bAppCulled but they appear to have used bitfields
+		SELECTIVE_UPDATE			= 1 << 1, // Selective update flags
+		SELECTIVE_UPDATE_TRANSFORMS = 1 << 2,
+		SELECTIVE_UPDATE_CONTROLLER = 1 << 3,
+		SELECTIVE_UPDATE_RIGID		= 1 << 4,
+		DISPLAY_OBJECT				= 1 << 5, // For use with occlusion culling system
+		DISABLE_SORTING				= 1 << 6, // For use with sorting/accumulation system
+		SELECTIVE_UPDATE_TRANSFORMS_OVERRIDE = 1 << 7, // Selective update over-ride flags
+		IS_NODE						= 1 << 8, // Is the object a leaf or a node
+		IS_OCCLUDED					= 1 << 9, // Used by OR to manage occluded geometries
+		IS_OCCLUSIONNODE			= 1 << 10, // Used by OR to manage if the object is a node for occlusion culling geos
 	};
 	
 	float GetDistance(NiPoint3* Point) {
