@@ -46,7 +46,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
-    OUT.position.z *= 0.99; // place in front of the sky to avoid Z fighting
+    OUT.position.z *= 0.99999; // place in front of the sky to avoid Z fighting
     
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1.xy = IN.texcoord_0.xy;

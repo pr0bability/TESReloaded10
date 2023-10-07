@@ -50,7 +50,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.rgb = (IN.color_0.r * BlendColor[0].rgb) + (IN.color_0.g * BlendColor[1].rgb) + (IN.color_0.b * BlendColor[2].rgb);
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
+    IN.position.z -= 5; // lower mesh to avoid visiible seam at the bottom
     OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
+    OUT.position.z *= 0.99998; // scale to appear in front of the moon mask
 
     float2 r0;
     r0.y = IN.texcoord_0.y + TexCoordYOff.x; // scroll clouds
