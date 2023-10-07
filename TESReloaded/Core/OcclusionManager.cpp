@@ -73,7 +73,7 @@ void OcclusionManager::RenderStatic(NiAVObject* Object, float MinBoundSize, floa
 
 	if (Object) {
 		NiBound* Bound = Object->GetWorldBound();
-		if (!(Object->m_flags & NiAVObject::kFlag_AppCulled) && Object->m_worldTransform.pos.z + Bound->Radius > TheShaderManager->ShaderConst.Water.waterSettings.x) {
+		if (!(Object->m_flags & NiAVObject::NiFlags::APP_CULLED) && Object->m_worldTransform.pos.z + Bound->Radius > TheShaderManager->ShaderConst.Water.waterSettings.x) {
 			TheRenderManager->GetScreenSpaceBoundSize(&BoundSize, Bound);
 			BoundBox = (BoundSize.x * 100.f) * (BoundSize.y * 100.0f);
 			if (BoundBox >= MinBoundSize && BoundBox <= MaxBoundSize) {
@@ -86,7 +86,7 @@ void OcclusionManager::RenderStatic(NiAVObject* Object, float MinBoundSize, floa
 						if (VFT == Pointers::VirtualTables::bhkCollisionObject) {
 							if (!CollisionObject->GeoNode) {
 								if (bhkRigidBody* RigidBody = CollisionObject->bRigidBody) {
-									NiNode* GeoNode = (NiNode*)Pointers::Functions::MemoryAlloc(sizeof(NiNode)); GeoNode->New(1); GeoNode->SetName("bhkColDisp"); GeoNode->m_flags |= NiAVObject::kFlag_IsOCNode;
+									NiNode* GeoNode = (NiNode*)Pointers::Functions::MemoryAlloc(sizeof(NiNode)); GeoNode->New(1); GeoNode->SetName("bhkColDisp"); GeoNode->m_flags |= NiAVObject::NiFlags::IS_OCCLUSIONNODE;
 									GeoNode->m_localTransform.scale = fabs(1.0f / Node->m_worldTransform.scale);
 									Node->AddObject(GeoNode, 1);
 									GeoNode->UpdateDownwardPass(0.0f, false);
@@ -132,9 +132,9 @@ void OcclusionManager::RenderImmediate(NiAVObject* Object, bool PerformOcclusion
 				OcclusionQuery->Issue(D3DISSUE_END);
 				while (OcclusionQuery->GetData((void*)&Pixels, sizeof(DWORD), D3DGETDATA_FLUSH) == S_FALSE);
 				if (Pixels <= 10)
-					Geo->m_flags |= NiAVObject::kFlag_IsOccluded;
+					Geo->m_flags |= NiAVObject::NiFlags::IS_OCCLUDED;
 				else
-					Geo->m_flags &= ~NiAVObject::kFlag_IsOccluded;
+					Geo->m_flags &= ~NiAVObject::NiFlags::IS_OCCLUDED;
 			}
 		}
 	}
@@ -143,7 +143,7 @@ void OcclusionManager::RenderImmediate(NiAVObject* Object, bool PerformOcclusion
 
 void OcclusionManager::RenderTerrain(NiAVObject* Object) {
 
-	if (Object && !(Object->m_flags & NiAVObject::kFlag_AppCulled)) {
+	if (Object && !(Object->m_flags & NiAVObject::NiFlags::APP_CULLED)) {
 		void* VFT = *(void**)Object;
 		if (VFT == Pointers::VirtualTables::NiNode) {
 			NiNode* Node = (NiNode*)Object;
@@ -165,7 +165,7 @@ void OcclusionManager::RenderWater(NiAVObject* Object) {
 	
 	DWORD Pixels = 0;
 
-	if (Object && !(Object->m_flags & NiAVObject::kFlag_AppCulled)) {
+	if (Object && !(Object->m_flags & NiAVObject::NiFlags::APP_CULLED)) {
 		void* VFT = *(void**)Object;
 		if (VFT == Pointers::VirtualTables::NiNode) {
 			NiNode* Node = (NiNode*)Object;
@@ -183,11 +183,11 @@ void OcclusionManager::RenderWater(NiAVObject* Object) {
 				OcclusionQuery->Issue(D3DISSUE_END);
 				while (OcclusionQuery->GetData((void*)&Pixels, sizeof(DWORD), D3DGETDATA_FLUSH) == S_FALSE);
 				if (Pixels <= 10) {
-					Geo->m_flags |= NiAVObject::kFlag_IsOccluded;
+					Geo->m_flags |= NiAVObject::NiFlags::IS_OCCLUDED;
 				}
 				else {
 					WaterOccluded = false;
-					Geo->m_flags &= ~NiAVObject::kFlag_IsOccluded;
+					Geo->m_flags &= ~NiAVObject::NiFlags::IS_OCCLUDED;
 				}
 			}
 		}
@@ -296,7 +296,7 @@ void OcclusionManager::ManageDistantStatic() {
 
 void OcclusionManager::RenderDistantStatic(NiAVObject* Object) {
 
-	if (Object && !(Object->m_flags & NiAVObject::kFlag_AppCulled) && !(Object->m_flags & NiAVObject::kFlag_IsOccluded)) {
+	if (Object && !(Object->m_flags & NiAVObject::NiFlags::APP_CULLED) && !(Object->m_flags & NiAVObject::NiFlags::IS_OCCLUDED)) {
 		void* VFT = *(void**)Object;
 		if (VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode) {
 			NiNode* Node = (NiNode*)Object;
