@@ -9,7 +9,8 @@ float4 TESR_HorizonColor: register(c7);
 float4 TESR_SunColor: register(c8);
 float4 TESR_SunDirection: register(c9);
 float4 TESR_SkyData: register(c10); // x: athmosphere thickness, y: sun influence, z: sun strength
-// float4 TESR_DebugVar: register(c11);
+float4 TESR_SunAmount : register(c11); // x: dayTime, y:sunGlareAmnt, z:replace sun
+float4 TESR_DebugVar: register(c12);
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
 									{0.7647, 0.2941, 0.8824, 0.4118},
@@ -59,13 +60,13 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
     skyColor = lerp(skyColor, TESR_HorizonColor.rgb, athmosphere * (0.5 + sunInfluence));
-    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * sunColor * TESR_SkyData.z;
+    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
 
     // draw the sun procedurally
-    // float sunDisk = smoothstep(0.9996, 0.9997, sunDir);
-    // float sunGlare = saturate(pow(saturate(sunDir), 10 * TESR_DebugVar.y) * TESR_DebugVar.z * sunHeight);
-    // // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
-    // skyColor += sunColor * saturate(sunDisk + sunGlare); // add sun disk and boost brightness during sunrise/sunset
+    float sunDisk = smoothstep(0.9996, 0.9997, sunDir);
+    float sunGlare = saturate(pow(saturate(sunDir), 400) * TESR_SunAmount.y * sunHeight);
+    // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
+    skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z; // add sun disk and boost brightness during sunrise/sunset
 
     OUT.color_0.rgb = skyColor;
     OUT.color_0.a = 1;
