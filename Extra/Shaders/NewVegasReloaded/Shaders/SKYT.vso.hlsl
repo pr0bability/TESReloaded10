@@ -47,7 +47,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
 
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
-    OUT.position.z *= 0.98; // place in front of the moon mask that hides the stars
+    OUT.position.z *= 0.99998; // place in front of the moon mask that hides the stars
 
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1.xy = IN.texcoord_0.xy;
