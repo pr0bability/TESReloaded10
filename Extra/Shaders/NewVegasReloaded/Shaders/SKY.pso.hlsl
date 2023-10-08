@@ -11,6 +11,8 @@ float4 TESR_SunDirection: register(c9);
 float4 TESR_SkyData: register(c10); // x: athmosphere thickness, y: sun influence, z: sun strength
 float4 TESR_SunAmount : register(c11); // x: dayTime, y:sunGlareAmnt, z:replace sun
 float4 TESR_DebugVar: register(c12);
+float4 TESR_SunPosition: register(c13);
+
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
 									{0.7647, 0.2941, 0.8824, 0.4118},
@@ -49,17 +51,17 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 up = float3(0, 0, 1);
     float3 eyeDir = normalize(IN.eye.xyz);
     float verticality = pows(compress(dot(eyeDir, up)), 3);
-    float sunHeight = shade(TESR_SunDirection.xyz, up);
+    float sunHeight = shade(TESR_SunPosition.xyz, up);
 
     float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
-    float sunDir = dot(eyeDir, TESR_SunDirection.xyz);
+    float sunDir = dot(eyeDir, TESR_SunPosition.xyz);
     float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
     float3 sunColor = (1 + sunHeight) * TESR_SunColor; // increase suncolor strength with sun height
     sunColor = lerp(sunColor, sunColor + float3(1, 0, 0.03), saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x)); // add extra red to the sun at sunsets
 
-    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
-    skyColor = lerp(skyColor, TESR_HorizonColor.rgb, athmosphere * (0.5 + sunInfluence));
+    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, saturate(verticality));
+    skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
     skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
 
     // draw the sun procedurally

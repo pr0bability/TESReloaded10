@@ -180,6 +180,7 @@ struct ShaderConstants {
 
 	D3DXVECTOR4				ReciprocalResolution;
 	D3DXVECTOR4				SunDir;
+	D3DXVECTOR4				SunPosition;
 	D3DXVECTOR4				SunTiming;
 	D3DXVECTOR4				SunAmount;
 	D3DXVECTOR4				ShadowFade;
