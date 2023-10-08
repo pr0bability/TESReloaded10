@@ -15,6 +15,7 @@ float4 TESR_SunDirection : register(c10);
 float4 TESR_SkyData : register(c11);   // x:AthmosphereThickness y:SunInfluence z:SunStrength w:StarStrength
 float4 TESR_CloudData : register(c12); // x:UseNormals y:SphericalNormals z:Transparency
 float4 TESR_SunAmount : register(c13);
+float4 TESR_SunPosition : register(c14);
 
 
 // Registers:
@@ -83,9 +84,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 up = float3(0, 0, 1);
     float3 eyeDir = normalize(IN.location);
     float verticality = pows(compress(dot(eyeDir, up)), 3);
-    float sunHeight = shade(TESR_SunDirection.xyz, up);
+    float sunHeight = shade(TESR_SunPosition.xyz, up);
 
-    float sunDir = compress(dot(eyeDir, TESR_SunDirection.xyz)); // stores wether the camera is looking in the direction of the sun in range 0/1
+    float sunDir = compress(dot(eyeDir, TESR_SunPosition.xyz)); // stores wether the camera is looking in the direction of the sun in range 0/1
 
     float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
     float sunInfluence = pows(sunDir, SUNINFLUENCE);
@@ -127,7 +128,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
         greyScale = lerp(TESR_CloudData.w, 1, finalColor.z); // greyscale is stored in blue channel
         float3 ambient = skyColor * greyScale * lerp(0.5, 0.7, sunDir); // fade ambient with sun direction
-        float3 diffuse = compress(dot(normal, TESR_SunDirection.xyz)) * sunColor * (1 - luma(ambient)) * lerp(0.8, 1, sunDir); // scale diffuse if ambient is high
+        float3 diffuse = compress(dot(normal, TESR_SunPosition.xyz)) * sunColor * (1 - luma(ambient)) * lerp(0.8, 1, sunDir); // scale diffuse if ambient is high
         float3 fresnel = pows(1 - shade(-eyeDir, normal), 4) * pows(saturate(expand(sunDir)), 2) * shade(normal, up) * (sunColor + skyColor) * 0.2;
         float3 bounce = shade(normal, -up) * TESR_HorizonColor.rgb * 0.1 * sunHeight; // light from the ground bouncing up to the underside of clouds
 

@@ -755,6 +755,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_DepthConstants"] = &TheRenderManager->DepthConstants;
 	TheShaderManager->ConstantsTable["TESR_CameraData"] = &TheRenderManager->CameraData;
 	TheShaderManager->ConstantsTable["TESR_CameraPosition"] = &TheRenderManager->CameraPosition;
+	TheShaderManager->ConstantsTable["TESR_SunPosition"] = &TheShaderManager->ShaderConst.SunPosition;
 	TheShaderManager->ConstantsTable["TESR_SunDirection"] = &TheShaderManager->ShaderConst.SunDir;
 	TheShaderManager->ConstantsTable["TESR_SunTiming"] = &TheShaderManager->ShaderConst.SunTiming;
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
@@ -974,19 +975,17 @@ void ShaderManager::UpdateConstants() {
 		// update Sun position
 		float deltaz = ShaderConst.SunDir.z;
 
-		if (GameHour > SunsetEnd || GameHour < SunriseStart) {
+		ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
+		D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
+
+		if (!isDayTime) {
 			// use lighting direction at night time
-			ShaderConst.SunDir.x = Tes->directionalLight->direction.x * -1;
-			ShaderConst.SunDir.y = Tes->directionalLight->direction.y * -1;
-			ShaderConst.SunDir.z = Tes->directionalLight->direction.z * -1;
+			ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
 		}
 		else {
-			ShaderConst.SunDir.x = SunRoot->m_localTransform.pos.x;
-			ShaderConst.SunDir.y = SunRoot->m_localTransform.pos.y;
-			ShaderConst.SunDir.z = SunRoot->m_localTransform.pos.z;
-			D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
+			ShaderConst.SunDir = ShaderConst.SunPosition;
+			//D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
 		}
-		ShaderConst.SunDir.w = 1.0f;
 	}
 
 	// expose the light vector in view space for screen space lighting
@@ -1104,25 +1103,15 @@ void ShaderManager::UpdateConstants() {
 	//	}
 	//}
 
-	if (currentWeather) {
-		ShaderConst.sunGlare = currentWeather->GetSunGlare() / 255.0f;
-	}
-	else {
-		ShaderConst.sunGlare = 0.5f;
-	}
+	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5;
 
 	ShaderConst.SunAmount.x = isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
+	if (TheSettingManager->SettingsChanged) ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
 
-	if (isExterior && TheSettingManager->SettingsChanged) {
-		if (TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun")) {
-			WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
-			ShaderConst.SunAmount.z = 1;
-		}
-		else {
-			WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
-			ShaderConst.SunAmount.z = 0;
-		}
+	if (isExterior) {
+		if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
+		else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
 	}
 
 	ShaderConst.windSpeed = WorldSky->windSpeed;
