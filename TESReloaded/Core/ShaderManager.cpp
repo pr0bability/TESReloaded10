@@ -1713,7 +1713,8 @@ void ShaderManager::UpdateConstants() {
 		avglumaRequired = true;
 
 		ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
-		ShaderConst.Lens.Data.y = isExterior? TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"): ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
+		if (isExterior)	ShaderConst.Lens.Data.y = lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), isDayTime);
+		else ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
 	}
 
 	if (Effects.Exposure->Enabled) {
