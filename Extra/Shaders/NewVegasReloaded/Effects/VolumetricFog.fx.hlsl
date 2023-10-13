@@ -5,13 +5,16 @@ float4 TESR_FogData;
 float4 TESR_VolumetricFogData;
 float4 TESR_ReciprocalResolution;
 float4 TESR_SunDirection;
+float4 TESR_SunPosition;
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
 float4 TESR_HorizonColor;
 float4 TESR_SkyLowColor;
-float4 TESR_SkyColor;
-float4 TESR_SkyData;
-float4 TESR_DebugVar;
+float4 TESR_SkyColor; // top sky color
+float4 TESR_SkyData; //
+float4 TESR_DebugVar; 
+float4 TESR_SunsetColor; // color boost for sun when near the horizon
+float4 TESR_SunAmount; // x: isDaytime
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -32,6 +35,8 @@ static const float SunExponent = max(TESR_VolumetricFogData.x, 1); // 8
 static const float SunGlareCoeff = TESR_VolumetricFogData.y; // 100
 static const float FogStrength = TESR_VolumetricFogData.z; // 1
 static const float MaxFogHeight = TESR_VolumetricFogData.w; // 80000
+
+static const float SUNINFLUENCE = 1/TESR_SkyData.y;
 
 #include "Includes/Depth.hlsl"
 #include "Includes/Helpers.hlsl"
@@ -62,6 +67,17 @@ float ExponentialFog(float posHeight, float distance) {
 	return fogAmount;
 }
 
+// ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+float3 ACESFilm(float3 x)
+{
+	float a = 2.51f;
+	float b = 0.03f;
+	float c = 2.43f;
+	float d = 0.59f;
+	float e = 0.14f;
+	return saturate((x*(a*x+b))/(x*(c*x+d)+e));
+}
+
 
 float4 VolumetricFog(VSOUT IN) : COLOR0 
 {
@@ -86,17 +102,21 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 	// calculate sky color
 	float3 up = blue.xyz;
-    float verticality = pows(compress(shade(eyeDirection, up)), 3);
-    float sunHeight = shade(TESR_SunDirection.xyz, up);
-    float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
-    float sunInfluence = shade(eyeDirection, TESR_SunDirection.xyz);
-    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, athmosphere * 0.2); // tint the base more with horizon color when sun is high
+    float sunHeight = shade(TESR_SunPosition.xyz, up);
+    float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
+	float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
+
+    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, 0.5 + 0.5 * sunHeight); // tint the base more with horizon color when sun is high
+
+	// add extra red to the sun at sunsets
+    float sunSet = saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x);
+    float3 sunColor = lerp(TESR_SunColor.rgb, TESR_SunColor.rgb + TESR_SunsetColor.rgb, sunSet * invlerp(0, 0.5, TESR_SunAmount.x)); 
+	float sunAmount = pows(saturate(sunDir), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
+    skyColor += sunInfluence * SunGlareCoeff * sunColor;
 
 	// blend with fog color
 	float3 fogColor = lerp(skyColor, TESR_FogColor.rgb, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
-	float sunAmount = pows(sunInfluence, SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
-	fogColor += TESR_SunColor.rgb * sunAmount; // add sun color to the fog
-
+    fogColor = pow(ACESFilm(fogColor), 2.2); // tonemap final color
 	float3 originalFogColor = fogColor;
 	float originalFogLuma = luma(originalFogColor);
 	fogColor = lerp(color, fogColor, fogAmount).rgb; // calculate final color of scene through the fog
