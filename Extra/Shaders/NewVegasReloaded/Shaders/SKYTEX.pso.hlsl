@@ -16,6 +16,7 @@ float4 TESR_SkyData : register(c11);   // x:AthmosphereThickness y:SunInfluence 
 float4 TESR_CloudData : register(c12); // x:UseNormals y:SphericalNormals z:Transparency
 float4 TESR_SunAmount : register(c13);
 float4 TESR_SunPosition : register(c14);
+float4 TESR_SunsetColor : register(c15);
 
 
 // Registers:
@@ -112,7 +113,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 sunColor = TESR_SunColor; // increase suncolor strength with sun height
     float sunSet = saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x);
-    sunColor = lerp(sunColor, sunColor + float3(1, 0, 0.03) * TESR_SunAmount.x, sunSet); // add extra red to the sun at sunsets
+    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb * TESR_SunAmount.x, sunSet); // add extra red to the sun at sunsets
 
     // calculate sky color to blend in the clouds
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
