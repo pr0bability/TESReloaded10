@@ -5,6 +5,7 @@ float4 TESR_ReciprocalResolution;
 float4 TESR_CinemaSettings; //x: dirtlens opacity, y:grainAmount, z:chromatic aberration strength 
 float4 TESR_SunColor;
 float4 TESR_SunAmbient;
+float4 TESR_SunAmount;
 float4 TESR_LensData; // x: lens strength, y: luma threshold
 float4 TESR_DebugVar; // used for the luma threshold used for bloom
 
@@ -67,7 +68,7 @@ float4 Bloom(VSOUT IN ):COLOR0{
 	color += tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy);
 	color /= 4;
 
-	float threshold = TESR_LensData.y * max(luma(TESR_SunAmbient), luma(TESR_SunColor)); // scaling the luma treshold with sun intensity // 2
+	float threshold = TESR_LensData.y; // scaling the luma between night and day // 2
 	float brightness = luma(color);
 	float bloomScale = 0.1; 
 
