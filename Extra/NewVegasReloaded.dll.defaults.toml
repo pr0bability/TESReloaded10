@@ -572,6 +572,10 @@ SunInfluence = 1.0                  # How wide a side of the athmosphere will th
 SunStrength = 0.5                   # How strong is the sun brighness when reflected by athmosphere
 StarStrength = 4.0                  # Multiplier for stars brightness
 ReplaceSun = false                  # replaces vanilla sun by a procedural sun for whatever reason
+SunsetR = 1.0                       # Color boost for sunset/sunrise sun color (Red)
+SunsetG = 0.0                       # Color boost for sunset/sunrise sun color (Green)
+SunsetB = 0.03                      # Color boost for sunset/sunrise sun color (Blue)
+
 
 [_Shaders.Sky.Clouds]
 UseNormals = false                  # EXPERIMENTAL-Uses the R & G channels of the clouds texture to calculate normals for lighting. Requires special textures

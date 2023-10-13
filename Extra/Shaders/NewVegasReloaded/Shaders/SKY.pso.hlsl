@@ -12,6 +12,7 @@ float4 TESR_SkyData: register(c10); // x: athmosphere thickness, y: sun influenc
 float4 TESR_SunAmount : register(c11); // x: dayTime, y:sunGlareAmnt, z:replace sun
 float4 TESR_DebugVar: register(c12);
 float4 TESR_SunPosition: register(c13);
+float4 TESR_SunsetColor: register(c14);
 
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
@@ -58,7 +59,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
     float3 sunColor = (1 + sunHeight) * TESR_SunColor; // increase suncolor strength with sun height
-    sunColor = lerp(sunColor, sunColor + float3(1, 0, 0.03), saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x)); // add extra red to the sun at sunsets
+    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb, saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x)); // add extra red to the sun at sunsets
 
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, saturate(verticality));
     skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
