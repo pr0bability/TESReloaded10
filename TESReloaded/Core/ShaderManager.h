@@ -373,6 +373,7 @@ public:
 	void					SetCustomConstant(const char* Name, D3DXVECTOR4 Value);
 	void					SetExtraEffectEnabled(const char* Name, bool Value);
 	static float			lerp(float a, float b, float t);
+	static D3DXVECTOR4		lerp(D3DXVECTOR4 a, D3DXVECTOR4 b, float t);
 	static float			invLerp(float a, float b, float t);
 	static float			smoothStep(float a, float b, float t);
 	static float			clamp(float a, float b, float t);

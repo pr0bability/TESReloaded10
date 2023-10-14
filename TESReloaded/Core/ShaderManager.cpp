@@ -1109,16 +1109,41 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunAmount.x = isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 	if (TheSettingManager->SettingsChanged) {
+		// sky settings are used in several shaders whether the shader is active or not
 		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
+
+		ShaderConst.Sky.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
+		ShaderConst.Sky.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
+		ShaderConst.Sky.SkyData.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
+		ShaderConst.Sky.SkyData.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarStrength");
+
+		ShaderConst.Sky.CloudData.x = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "UseNormals");
+		ShaderConst.Sky.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "SphericalNormals");
+		ShaderConst.Sky.CloudData.z = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
+		ShaderConst.Sky.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
+	}
+
+	// only add sunset color boost in exteriors
+	if (isExterior) {
 		ShaderConst.Sky.SunsetColor.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetR");
 		ShaderConst.Sky.SunsetColor.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetG");
 		ShaderConst.Sky.SunsetColor.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetB");
+
+		if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
+			if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
+			else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
+		}
+	}
+	else {
+		ShaderConst.Sky.SunsetColor.x = 0;
+		ShaderConst.Sky.SunsetColor.y = 0;
+		ShaderConst.Sky.SunsetColor.z = 0;
 	}
 
-	if (isExterior && TheSettingManager->GetMenuShaderEnabled("Sky")) {
-		if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
-		else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
-	}
+	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
+	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
+	ShaderConst.sunColor.z = WorldSky->sunDirectional.b;
+	ShaderConst.sunColor.w = ShaderConst.sunGlare;
 
 	ShaderConst.windSpeed = WorldSky->windSpeed;
 
@@ -1131,11 +1156,6 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.horizonColor.y = WorldSky->Horizon.g;
 	ShaderConst.horizonColor.z = WorldSky->Horizon.b;
 	ShaderConst.horizonColor.w = 1.0f;
-
-	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
-	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
-	ShaderConst.sunColor.z = WorldSky->sunDirectional.b;
-	ShaderConst.sunColor.w = ShaderConst.sunGlare;
 
 	ShaderConst.sunAmbient.x = WorldSky->sunAmbient.r;
 	ShaderConst.sunAmbient.y = WorldSky->sunAmbient.g;
@@ -1383,18 +1403,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Skin.SkinColor.x = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffRed");
 			ShaderConst.Skin.SkinColor.y = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffGreen");
 			ShaderConst.Skin.SkinColor.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffBlue");
-		}
-
-		if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
-			ShaderConst.Sky.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
-			ShaderConst.Sky.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
-			ShaderConst.Sky.SkyData.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
-			ShaderConst.Sky.SkyData.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarStrength");
-			
-			ShaderConst.Sky.CloudData.x = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "UseNormals");
-			ShaderConst.Sky.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "SphericalNormals");
-			ShaderConst.Sky.CloudData.z = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
-			ShaderConst.Sky.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
 		}
 
 		if (Effects.GodRays->Enabled) {
@@ -2095,7 +2103,7 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		Logger::Log("Toggling Shader %s", Name);
 		bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
 		DisposeShader(Name);
-		if (enable) enable = CreateShader(Name);
+		if (enable) CreateShader(Name);
 		TheSettingManager->SetMenuShaderEnabled(Name, enable);
 	}
 
@@ -2120,6 +2128,16 @@ void ShaderManager::SetExtraEffectEnabled(const char* Name, bool Value) {
 
 float ShaderManager::lerp(float a, float b, float t) {
 	return std::lerp(a, b, t);
+}
+
+D3DXVECTOR4 ShaderManager::lerp(D3DXVECTOR4 a, D3DXVECTOR4 b, float t) {
+	D3DXVECTOR4 result;
+	result.x = std::lerp(a.x, b.x, t);
+	result.y = std::lerp(a.y, b.y, t);
+	result.z = std::lerp(a.z, b.z, t);
+	result.w = std::lerp(a.w, b.w, t);
+
+	return result;
 }
 
 float ShaderManager::invLerp(float a, float b, float t) {
