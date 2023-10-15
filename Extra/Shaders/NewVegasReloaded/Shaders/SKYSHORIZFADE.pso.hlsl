@@ -23,6 +23,7 @@ struct VS_INPUT {
     float2 TexUV : TEXCOORD0;
     float2 position : VPOS;
     float texcoord_2 : TEXCOORD2;
+    float3 location : TEXCOORD1;
     float4 color_0 : COLOR0;
 };
 
@@ -66,22 +67,18 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 stars = tex2D(TexMap, IN.TexUV.xy);
     float4 sky = IN.color_0;
 
-    float starFlicker = 0.3;
-    float noiseScale = 8;
-    float flickerSpeed = 0.06;
+    float starFlicker = 0.05;
+    float noiseScale = 4;
+    float flickerSpeed = 0.02;
 
-    float3 eyeDir = normalize(toWorld(IN.position.xy * TESR_ReciprocalResolution.xy));
+    float3 eyeDir = normalize(IN.location);
   
     // create animated noise to modulate star brightness
     float n = noise(noiseScale * eyeDir);
     n *= noise((TESR_GameTime.x * flickerSpeed).xxx + noiseScale * eyeDir) * 2;
-    n = saturate(saturate(n) * (1 - starFlicker) + starFlicker);
 
     OUT.color_0.a = (stars.a * sky.a) * IN.texcoord_2.x * TESR_SkyData.w * (n + 1);
-    OUT.color_0.rgb = stars.rgb * (n + 1) * sky.rgb;
-    
-    // OUT.color_0.rgba = selectColor(TESR_DebugVar.x, color.rgba, n.xxxx, stars, sky, stars.aaa, sky.aaa, IN.texcoord_2.xxx, OUT.color_0.aaa, black, black);
-
+    OUT.color_0.rgb = stars.rgb * (n * 0.3 + 1) * sky.rgb;
 
     return OUT;
 };
