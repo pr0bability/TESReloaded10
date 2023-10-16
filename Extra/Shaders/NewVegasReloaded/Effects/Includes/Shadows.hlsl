@@ -1,4 +1,4 @@
-static const float BIAS = 0.005f;
+static const float BIAS = 0.018;
 static const float MIN_VARIANCE = 0.000005;
 static const float BLEED_CORRECTION = 0.6;
 
@@ -7,7 +7,7 @@ float GetPointLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir,
 	if (TESR_ShadowFade.z == 0) return 1;
 
 	float lightDepth = texCUBE(ShadowCubeMapBuffer, LightDir).r;
-	float Shadow = lightDepth + BIAS > Distance;
+	float Shadow = lightDepth + BIAS * Distance > Distance; // increase BIAS with distance
 
 	// ignore shadow sample if lightDepth is not within range of cube map or if pointLights are disabled (ShadowFade.z set to 0)
 	return lerp(1, Shadow, lightDepth > 0.0f && lightDepth < 1.0f);
@@ -17,8 +17,8 @@ float GetPointLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir,
 float GetPointLightAtten(float3 LightDir, float Distance, float4 normal) {
 
 	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
-	float s = Distance * Distance; 
-	float atten = saturate((1 - s) / (1 + s));
+	float s = saturate(Distance * Distance); 
+	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
 	LightDir = normalize(LightDir); // normalize
 	float diffuse = dot(LightDir, normal.xyz);
