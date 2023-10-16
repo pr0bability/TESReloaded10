@@ -84,7 +84,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float3 color = tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb;
     float height = reconstructWorldPosition(IN.UVCoord).z;
     float depth = readDepth(IN.UVCoord);
-	float3 eyeVector = (toWorld(IN.UVCoord));
+	float3 eyeVector = toWorld(IN.UVCoord);
 	float3 eyeDirection = normalize(eyeVector);
 	float fogDepth = length(eyeVector * depth);
 
@@ -94,10 +94,8 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	fogAmount = fogAmount * saturate(exp( - height/MaxFogHeight)); // fade with height
 
 	// vertical exponential depth fog
-	// float distantFogAmount = saturate(pow(distance, FogPower) * FogStrength);
-	// color = lerp(color, TESR_HorizonColor, distantFogAmount<0.99999?distantFogAmount:0);
-	// float density = 0.08 * TESR_DebugVar.x; //0.0002
-	// float falloff = 0.00225 * TESR_DebugVar.y; // tie to darkness setting?
+	float density = 0.08 * 0.000006 * TESR_DebugVar.x; //0.0002
+	float falloff = 0.00225 * 0.02 * TESR_DebugVar.y; // tie to darkness setting?
 	// float fogAmount = saturate((density/falloff) * exp(-TESR_CameraPosition.z*falloff) * (1.0 - exp( -fogDepth*eyeDirection.z*falloff ))/eyeDirection.z);
 
 	// calculate sky color
@@ -126,11 +124,12 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
     float lumaDiff = invlerps(saturate(fogLuma), 1.0f, luma(color));
     color = lerp(fogColor, color, lumaDiff); 
 
-    // Bring back any fog above 1 as additive (there usually isn't any, but it's good for HDR rendering):
+    // // Bring back any fog above 1 as additive (there usually isn't any, but it's good for HDR rendering):
     float fogAdditiveLumaRatio = saturate(1.0f / originalFogLuma); // From (background) color luma to fog luma
     float3 additiveFogColor = originalFogColor * (1.0f - fogAdditiveLumaRatio);
     color += additiveFogColor;
 
+	// return float4(selectColor(TESR_DebugVar.w, color, float(fogDepth / farZ).xxx, fogAmount.xxx, originalFogColor, sunInfluence.xxx, skyColor, TESR_FogColor, black, black, black), 1);
 
 	// if (IN.UVCoord.x > 0.8 && IN.UVCoord.x < 0.9){
 	// 	if (IN.UVCoord.y > 0.3 && IN.UVCoord.y < 0.4) return TESR_FogColor;
