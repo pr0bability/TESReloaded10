@@ -50,14 +50,18 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 	float uniformDepth = length(depth * eyeDir);
 
 	//multiply by 2 to only use the lower half of values to impact darkness
-	float4 Shadow = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).r * 2);
+	float Shadow = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
+
 	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, uniformDepth)); // fade shadows with distance
-    Shadow = saturate(lerp(1, Shadow, TESR_ShadowData.y * TESR_ShadowFade.y)); // shadow darkness (shadowFade.y is set to 0 when shadows are disabled)
+    float shadowPower = TESR_ShadowData.y * TESR_ShadowFade.y;
+	
+	Shadow = saturate(lerp(1, Shadow, shadowPower)); // shadow darkness (shadowFade.y is set to 0 when shadows are disabled)
 
-	Shadow *= color;
+	float4 finalColor = saturate(Shadow * pow(color, 1 - shadowPower * 0.4)); // boost the gamma of the base image
+	finalColor.rgb = lerp(luma(finalColor).xxx, finalColor.rgb, 1 + Shadow * shadowPower * 0.5); // boost saturation in darker areas
 
-	float lumaDiff = invlerps(luma(Shadow.rgb), 1.0f, luma(color.rgb));
-	return lerp(Shadow, color, lumaDiff); // bring back some of the original color based on luma (brightest lights will come through)
+	float lumaDiff = invlerps(luma(finalColor.rgb), 1.0f, luma(color.rgb));
+	return lerp(finalColor, color, lumaDiff); // bring back some of the original color based on luma (brightest lights will come through)
 }
 
 technique {
