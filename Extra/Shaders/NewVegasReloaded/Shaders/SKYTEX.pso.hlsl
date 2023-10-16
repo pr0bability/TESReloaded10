@@ -14,7 +14,7 @@ float4 TESR_HorizonColor : register(c9);
 float4 TESR_SunDirection : register(c10);
 float4 TESR_SkyData : register(c11);   // x:AthmosphereThickness y:SunInfluence z:SunStrength w:StarStrength
 float4 TESR_CloudData : register(c12); // x:UseNormals y:SphericalNormals z:Transparency
-float4 TESR_SunAmount : register(c13);
+float4 TESR_SunAmount : register(c13); // x:isDayTime
 float4 TESR_SunPosition : register(c14);
 float4 TESR_SunsetColor : register(c15);
 
@@ -136,11 +136,10 @@ VS_OUTPUT main(VS_INPUT IN) {
         finalColor = float4(ambient + diffuse + fresnel + scattering + bounce, alpha);
         // finalColor.rgb = selectColor(TESR_DebugVar.x, finalColor, ambient, diffuse, fresnel, bounce, scattering, sunColor, skyColor, normal, float3(IN.TexUV, 1));
     } else {
-
         // simply tint the clouds
         float sunInfluence = 1 - pow(sunDir, 3.0);
         float3 cloudTint = lerp(pow(TESR_SkyLowColor.rgb, 5.0), sunColor * 1.5, saturate(sunInfluence * saturate(greyScale))).rgb;
-        cloudTint = lerp(cloudTint, white.rgb, sunHeight); // tint the clouds less when the sun is high in the sky
+        cloudTint = lerp(cloudTint, white.rgb, sunHeight * TESR_SunAmount.x); // tint the clouds less when the sun is high in the sky
 
         float dayLight = saturate(luma(sunColor));
 
