@@ -534,7 +534,7 @@ Darkness = 0.7                       # Darkness of shadows.
 Doors = true                         # Wether to include objects with "Doors" flag when rendering shadowmaps.
 Furniture = true                     # Wether to include objects with "Furniture" flag when rendering shadowmaps.
 LightPoints = 12                     # Number of Lights being taken into account for shadows. 12 maximum.
-LightRadiusMult = 1.0                # A muliplier for the lights radius to render shadows for.
+LightRadiusMult = 1.5                # A muliplier for the lights radius to render shadows for.
 MinRadius = 10.0                     # Wether to include objects with a radius of less than x pixels on the screen in the shadowmaps.
 Misc = true                          # Wether to include objects with misc flags when rendering shadowmaps.
 Quality = 1                          # Not currently used.
@@ -573,7 +573,7 @@ SunInfluence = 1.0                  # How wide a side of the athmosphere will th
 SunStrength = 0.5                   # How strong is the sun brighness when reflected by athmosphere
 StarStrength = 4.0                  # Multiplier for stars brightness
 ReplaceSun = false                  # replaces vanilla sun by a procedural sun for whatever reason
-SunsetR = 1.0                       # Color boost for sunset/sunrise sun color (Red)
+SunsetR = 0.5                       # Color boost for sunset/sunrise sun color (Red)
 SunsetG = 0.0                       # Color boost for sunset/sunrise sun color (Green)
 SunsetB = 0.03                      # Color boost for sunset/sunrise sun color (Blue)
 
