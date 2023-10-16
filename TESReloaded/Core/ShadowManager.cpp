@@ -612,7 +612,7 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 	ShadowMap->ShadowCubeMapLightPosition.z = Eye.z;
 	ShadowMap->ShadowCubeMapLightPosition.w = Radius;
 	TheShaderManager->ShaderConst.Shadow.Data.z = Radius;
-	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(90.0f), 1.0f, 1.0f, Radius);
+	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(90.0f), 1.0f, 0.1f, Radius);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
@@ -622,9 +622,7 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 	RenderState->SetPixelShader(ShadowCubeMapPixel->ShaderHandle, false);
 
 	for (int Face = 0; Face < 6; Face++) {
-		At.x = Eye.x;
-		At.y = Eye.y;
-		At.z = Eye.z;
+		At = Eye;
 		switch (Face) {
 		case D3DCUBEMAP_FACE_POSITIVE_X:
 			CameraDirection = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
@@ -712,7 +710,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 		D3DXVec4Normalize(&LightVector, &LightVector);
 		float inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward);
 		float Distance = Light->GetDistance(&Player->pos);
-		float radius = Light->Spec.r;
+		float radius = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult;
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
@@ -751,7 +749,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = Light;
 				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = Light->m_worldTransform.pos.toD3DXVEC4();
-				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex].w = Light->Spec.r;
+				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex].w = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult;
 				//Logger::Log("shadow casting light found at index % i", ShadowIndex);
 
 				ShadowIndex++;
@@ -761,7 +759,7 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 				LightsList[LightIndex] = Light;
 
 				D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
-				LightPosition.w = Light->Spec.r; //Radius
+				LightPosition.w = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult; //Radius
 				TheShaderManager->LightPosition[LightIndex] = LightPosition;
 
 				D3DXVECTOR4 LightAttenuation;
