@@ -220,7 +220,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 		Node = static_cast<NiNode*>(containers.top());
 		containers.pop();
 
-		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
+		if (!Node || !Node->GetAsNiNode() ||  Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
 
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
 			try {
