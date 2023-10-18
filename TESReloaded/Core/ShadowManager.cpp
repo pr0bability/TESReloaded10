@@ -221,7 +221,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
     		object = containers.top();
     		containers.pop();
 
-    		Node = object ? object->GetAsNiNode() : nullptr;
+    		Node = object ? object->IsNiNode() : nullptr;
     		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
 
 		for (int i = 0; i < Node->m_children.numObjs; i++) {
@@ -738,6 +738,10 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
 		if (v != SceneLights.end())	{
 			NiPointLight* Light = v->second;
+			if (Light->EffectType != NiDynamicEffect::EffectTypes::POINT_LIGHT) {
+				v++;
+				continue;
+			}
 
 			// determin if light is a shadow caster
 			bool CastShadow = TheSettingManager->SettingsShadows.Interiors.UseCastShadowFlag ? Light->CastShadows : true;
