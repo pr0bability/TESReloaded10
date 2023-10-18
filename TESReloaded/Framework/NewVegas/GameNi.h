@@ -623,7 +623,6 @@ public:
 	UInt32			unkBC;			// BC
 	UInt32			unkC0;			// C0
 
-
 	enum EffectTypes {
 		AMBIENT_LIGHT = 0,
 		POINT_LIGHT = 2,

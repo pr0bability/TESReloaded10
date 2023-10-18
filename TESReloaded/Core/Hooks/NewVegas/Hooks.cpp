@@ -85,7 +85,9 @@ void AttachHooks() {
 		SafeWriteJump(0x0063AFC4, 0x0063AFD8);
 		SafeWriteJump(0x0063A5CB, 0x0063A5DE);
 	}
-	
+
+	SafeWriteCall(0xB7DBAC, (UInt32)ShadowLightShader__UpdateLights);
+
 	if (SettingsMain->FlyCam.Enabled) {
 		SafeWriteJump(Jumpers::FlyCam::UpdateForwardFlyCamHook, (UInt32)UpdateForwardFlyCamHook);
 		SafeWriteJump(Jumpers::FlyCam::UpdateBackwardFlyCamHook, (UInt32)UpdateBackwardFlyCamHook);

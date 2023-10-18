@@ -1321,6 +1321,8 @@ void ShaderManager::UpdateConstants() {
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
 
+		ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingF("Shaders.HDR.Main", "PointLightMultiplier");
+
 		if (TheSettingManager->GetMenuShaderEnabled("Grass")) {
 			ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
 			ShaderConst.Grass.Scale.y = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleY");
