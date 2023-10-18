@@ -317,6 +317,7 @@ Linearization = 2.2
 ToneMapping = 1.0
 ToneMappingBlur = 0.0
 ToneMappingColor = 1.2
+PointLightMultiplier = 1.0
 
 [_Shaders.HDR.Status]
 Enabled = false                       # Not currently used. Replaces HDR tonemapping shaders with custom ones.

@@ -290,3 +290,26 @@ BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 
 
 	return pTexture;
 }
+
+
+// Code to increase all lights strength
+__forceinline NiColorAlpha* const GetLightColor(int index) {
+	assert(index >= 0 && index < 10);
+	return reinterpret_cast<NiColorAlpha*>(GetConstant(index));
+}
+
+__forceinline NiVector4* GetConstant(int index) {
+	return &((NiVector4*)0x11FA0C0)[index];
+}
+
+void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apShaderProp, void* apRenderPass, D3DXMATRIX aMatrix, void* apTransform, UInt32 aeRenderPassType, void* apSkinInstance) {
+	ThisCall(0xB78A90, apThis, apShaderProp, apRenderPass, aMatrix, apTransform, aeRenderPassType, apSkinInstance);
+	Logger::Log("scaling light by %f", TheShaderManager->ShaderConst.HDR.PointLightMult);
+
+	for (UInt32 i = 1; i < 10; i++) {
+		NiColorAlpha* pColor = GetLightColor(i);
+		pColor->r *= TheShaderManager->ShaderConst.HDR.PointLightMult;
+		pColor->g *= TheShaderManager->ShaderConst.HDR.PointLightMult;
+		pColor->b *= TheShaderManager->ShaderConst.HDR.PointLightMult;
+	}
+}
