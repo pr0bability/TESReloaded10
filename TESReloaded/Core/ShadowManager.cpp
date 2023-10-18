@@ -211,6 +211,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 	std::stack<NiAVObject*> containers;
 	NiAVObject* child;
 	NiGeometry* geo;
+	NiAVObject* object;
 	NiNode* Node;
 
 	AccumObject(&containers, NiObject); //list all objects contained, or sort the object if not a container
