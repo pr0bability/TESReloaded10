@@ -293,23 +293,33 @@ BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 
 
 
 // Code to increase all lights strength
-__forceinline NiColorAlpha* const GetLightColor(int index) {
-	assert(index >= 0 && index < 10);
-	return reinterpret_cast<NiColorAlpha*>(GetConstant(index));
-}
-
 __forceinline NiVector4* GetConstant(int index) {
 	return &((NiVector4*)0x11FA0C0)[index];
 }
 
+__forceinline NiColorAlpha* GetLightConstant(int index) {
+	return reinterpret_cast<NiColorAlpha*>(GetConstant(index));
+}
+
+__forceinline void ScaleColor(NiColorAlpha* Color, float scale) {
+	Color->r *= scale;
+	Color->g *= scale;
+	Color->b *= scale;
+}
+
 void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apShaderProp, void* apRenderPass, D3DXMATRIX aMatrix, void* apTransform, UInt32 aeRenderPassType, void* apSkinInstance) {
 	ThisCall(0xB78A90, apThis, apShaderProp, apRenderPass, aMatrix, apTransform, aeRenderPassType, apSkinInstance);
-	Logger::Log("scaling light by %f", TheShaderManager->ShaderConst.HDR.PointLightMult);
+	//Logger::Log("scaling light by %f", TheShaderManager->ShaderConst.HDR.PointLightMult);
+	NiColorAlpha* pColor;
 
+	// ambient light is constant 0
+	ScaleColor(GetLightConstant(0), TheShaderManager->ShaderConst.HDR.PointLightMult);
+
+	// pointlight registers go from 0 to 10
 	for (UInt32 i = 1; i < 10; i++) {
-		NiColorAlpha* pColor = GetLightColor(i);
-		pColor->r *= TheShaderManager->ShaderConst.HDR.PointLightMult;
-		pColor->g *= TheShaderManager->ShaderConst.HDR.PointLightMult;
-		pColor->b *= TheShaderManager->ShaderConst.HDR.PointLightMult;
+		ScaleColor(GetLightConstant(i), TheShaderManager->ShaderConst.HDR.PointLightMult);
 	}
+
+	// emittance color is index 27
+	ScaleColor(GetLightConstant(27), TheShaderManager->ShaderConst.HDR.PointLightMult);
 }
