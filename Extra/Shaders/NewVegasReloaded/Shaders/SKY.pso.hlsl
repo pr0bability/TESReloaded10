@@ -8,7 +8,7 @@ float4 TESR_SkyLowColor: register(c6);
 float4 TESR_HorizonColor: register(c7);
 float4 TESR_SunColor: register(c8);
 float4 TESR_SunDirection: register(c9);
-float4 TESR_SkyData: register(c10); // x: athmosphere thickness, y: sun influence, z: sun strength
+float4 TESR_SkyData: register(c10); // x: athmosphere thickness, y: sun influence, z: sun strength w: sky strength
 float4 TESR_SunAmount : register(c11); // x: dayTime, y:sunGlareAmnt, z:replace sun
 float4 TESR_DebugVar: register(c12);
 float4 TESR_SunPosition: register(c13);
@@ -59,11 +59,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
     float3 sunColor = (1 + sunHeight) * TESR_SunColor; // increase suncolor strength with sun height
-    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb, saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x)); // add extra red to the sun at sunsets
+    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb, saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x * pows(TESR_SunAmount.x, 5))); // add extra red to the sun at sunsets
 
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, saturate(verticality));
     skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
-    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
+    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * sunColor * TESR_SkyData.z;
 
     // draw the sun procedurally
     float sunDisk = smoothstep(0.9996, 0.9997, sunDir);
