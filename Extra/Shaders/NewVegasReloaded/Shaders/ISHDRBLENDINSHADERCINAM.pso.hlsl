@@ -1,4 +1,4 @@
-//
+// Tonemap & apply bloom/cinematic filter from weather for scene with alpha mask
 //
 #define	ScreenSpace	Src0
 // Parameters:
@@ -11,7 +11,10 @@ float4 HDRParam : register(c1);
 sampler2D ScreenSpace : register(s0);
 float4 Tint : register(c20);
 float4 UseAlphaMask : register(c23);
-
+float4 TESR_DebugVar : register(c24);
+float4 TESR_HDRBloomData : register(c25);
+float4 TESR_SunAmount : register(c26);
+float4 TESR_HDRData : register(c27);
 
 // Registers:
 //
@@ -27,6 +30,7 @@ float4 UseAlphaMask : register(c23);
 //   DestBlend    texture_1       1
 //
 
+#include "Includes/Helpers.hlsl"
 
 // Structures:
 
@@ -40,35 +44,57 @@ struct VS_OUTPUT {
 };
 
 // Code:
+// ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+float3 ACESFilm(float3 x) {
+	float a = 2.51f;
+	float b = 0.03f;
+	float c = 2.43f;
+	float d = 0.59f;
+	float e = 0.14f;
+	return saturate((x*(a*x+b))/(x*(c*x+d)+e));
+}
+
+float3 Reinhard(float3 x, float whitepoint) {
+    return x * (1 + x / whitepoint.xxx)/(1 + x);
+}
+
+float3 Uncharted2Tonemap(float3 x) {
+    float A = 0.15;
+    float B = 0.50;
+    float C = 0.10;
+    float D = 0.20;
+    float E = 0.02;
+    float F = 0.30;
+    float W = 11.2;
+    return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
+}
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    const float4 const_0 = {0.299, 0.587000012, 0.114, 0};
+    float4 bloom = tex2D(ScreenSpace, IN.ScreenOffset.xy);
+    bloom.rgb = TESR_HDRBloomData.x * pow(max(bloom.rgb, 0), TESR_HDRBloomData.y);
+    float4 hdrImage = tex2D(DestBlend, IN.texcoord_1.xy) * TESR_HDRData.y; // exposure
 
-    float1 q0;
-    float3 q1;
-    float1 q2;
-    float3 q3;
-    float3 q4;
-    float3 q5;
-    float4 r0;
-    float4 r1;
-    float4 r2;
+    float4 final = hdrImage;
+    final.w = BlurScale.z;
 
-    r0.xyzw = tex2D(ScreenSpace, IN.ScreenOffset.xy);
-    r1.xyzw = tex2D(DestBlend, IN.texcoord_1.xy);
-    r2.xyzw = tex2D(DestBlend, IN.ScreenOffset.xy);
-    q0.x = 1.0 / max(r0.w, HDRParam.x);
-    q1.xyz = ((q0.x * HDRParam.x) * r1.xyz) + max(r0.xyz * (q0.x * 0.5), 0);
-    q2.x = dot(q1.xyz, const_0.xyz);
-    q3.xyz = lerp(q2.x, q1.xyz, Cinematic.x);
-    q4.xyz = (Cinematic.w * ((Tint.a * ((q2.x * Tint.rgb) - q3.xyz)) + q3.xyz)) - Cinematic.y;
-    q5.xyz = lerp(r2.xyz, lerp((Cinematic.z * q4.xyz) + Cinematic.y, Fade.xyz, Fade.w), UseAlphaMask.w);
-    OUT.color_0.a = BlurScale.z;
-    OUT.color_0.rgb = (r2.w == 0 ? r2.xyz : q5.xyz);
+    float HDR = HDRParam.x; // brights cutoff?
+
+    float q0 = 1.0 / max(bloom.w, HDR);
+    final.rgb = ((q0 * HDR) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0); // blend image and bloom
+
+    float screenluma = luma(final.rgb);
+    final.rgb = lerp(screenluma.xxx, final.rgb, Cinematic.x * TESR_HDRData.z); // saturation
+    float3 q2 = lerp(final.rgb, Tint.rgb * screenluma, Tint.a); // apply tint
+
+    float3 oldTonemap = Cinematic.z * (Cinematic.w * q2.rgb - Cinematic.y) + Cinematic.y; // apply cinematic brightness & contrast modifiers
+    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2, q2 ); // tonemap
+
+    final.rgb = lerp(final.rgb, Fade.rgb, Fade.a * (1 - luma(q2))); // apply night eye only to darker parts of the scene to avoid dulling bloom
+
+    OUT.color_0.a = 1;
+    OUT.color_0.rgb = pow(final.rgb, TESR_HDRData.w);
 
     return OUT;
 };
-
-// approximately 22 instruction slots used (3 texture, 19 arithmetic)
