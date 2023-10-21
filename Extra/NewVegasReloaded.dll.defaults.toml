@@ -318,6 +318,14 @@ ToneMapping = 1.0
 ToneMappingBlur = 0.0
 ToneMappingColor = 1.2
 PointLightMultiplier = 1.0
+SkyMultiplier = 1.0
+BloomStrength = 1.0
+BloomExponent = 1.0
+TonemappingMode = 1
+Exposure = 1.0
+Saturation = 1.0
+WhitePoint = 1.0
+Gamma = 1.0
 
 [_Shaders.HDR.Status]
 Enabled = false                       # Not currently used. Replaces HDR tonemapping shaders with custom ones.

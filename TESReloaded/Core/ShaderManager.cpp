@@ -785,6 +785,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->ShaderConst.BloodLens.BloodColor;
 	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->ShaderConst.Bloom.BloomData;
 	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->ShaderConst.Bloom.BloomValues;
+	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
+	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->ShaderConst.Cinema.Data;
 	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->ShaderConst.Cinema.Settings;
 	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->ShaderConst.Coloring.ColorCurve;
@@ -1321,8 +1323,6 @@ void ShaderManager::UpdateConstants() {
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
 
-		ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingF("Shaders.HDR.Main", "PointLightMultiplier");
-
 		if (TheSettingManager->GetMenuShaderEnabled("Grass")) {
 			ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
 			ShaderConst.Grass.Scale.y = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleY");
@@ -1378,10 +1378,19 @@ void ShaderManager::UpdateConstants() {
 
 
 		if (TheSettingManager->GetMenuShaderEnabled("HDR")) {
+			ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingF("Shaders.HDR.Main", "PointLightMultiplier");
 			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingF("Shaders.HDR.Main", "ToneMapping");
 			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingF("Shaders.HDR.Main", "ToneMappingBlur");
 			ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingF("Shaders.HDR.Main", "ToneMappingColor");
 			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingF("Shaders.HDR.Main", "Linearization");
+			ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingF("Shaders.HDR.Main", "BloomStrength");
+			ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingF("Shaders.HDR.Main", "BloomExponent");
+			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingF("Shaders.HDR.Main", "SkyMultiplier");
+			ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingF("Shaders.HDR.Main", "WhitePoint");
+			ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingF("Shaders.HDR.Main", "TonemappingMode");
+			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingF("Shaders.HDR.Main", "Exposure");
+			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingF("Shaders.HDR.Main", "Saturation");
+			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingF("Shaders.HDR.Main", "Gamma");
 		}
 
 		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
