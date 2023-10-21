@@ -13,6 +13,7 @@ float4 TESR_SunAmount : register(c11); // x: dayTime, y:sunGlareAmnt, z:replace 
 float4 TESR_DebugVar: register(c12);
 float4 TESR_SunPosition: register(c13);
 float4 TESR_SunsetColor: register(c14);
+float4 TESR_HDRBloomData: register(c15);
 
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
@@ -71,7 +72,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
     skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z; // add sun disk and boost brightness during sunrise/sunset
 
-    OUT.color_0.rgb = skyColor;
+    OUT.color_0.rgb = skyColor * TESR_HDRBloomData.z; // multiply sky strength for HDR
     OUT.color_0.a = 1;
 
     // dithering
