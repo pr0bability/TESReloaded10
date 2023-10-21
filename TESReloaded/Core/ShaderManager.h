@@ -53,6 +53,9 @@ struct ShaderConstants {
 	};
 	struct HDRStruct {
 		D3DXVECTOR4		ToneMapping;
+		D3DXVECTOR4		BloomData;
+		D3DXVECTOR4		SkyData;
+		D3DXVECTOR4		HDRData;
 		float			PointLightMult;
 	};
 	struct GrassStruct {
