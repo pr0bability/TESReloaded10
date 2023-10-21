@@ -2,19 +2,20 @@
 //
 #define	ScreenSpace	Src0
 // Parameters:
+sampler2D ScreenSpace : register(s0);
+sampler2D DestBlend : register(s1);
 
+float4 HDRParam : register(c1);
 float3 BlurScale : register(c2);
 float4 Cinematic : register(c19);
-sampler2D DestBlend : register(s1);
-float4 Fade : register(c22);
-float4 HDRParam : register(c1);
-sampler2D ScreenSpace : register(s0);
 float4 Tint : register(c20);
+float4 Fade : register(c22);
 float4 UseAlphaMask : register(c23);
 float4 TESR_DebugVar : register(c24);
 float4 TESR_HDRBloomData : register(c25);
 float4 TESR_SunAmount : register(c26);
 float4 TESR_HDRData : register(c27);
+
 
 // Registers:
 //
@@ -44,6 +45,33 @@ struct VS_OUTPUT {
 };
 
 // Code:
+
+// VS_OUTPUT main(VS_INPUT IN) {
+//     VS_OUTPUT OUT;
+
+//     const float4 const_0 = {0.299, 0.587000012, 0.114, 0}; // luma coeffs
+
+//     float4 r0 = tex2D(ScreenSpace, IN.ScreenOffset.xy);
+//     float4 r1 = tex2D(DestBlend, IN.texcoord_1.xy); // hdr image to tonemap
+//     float4 r2 = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
+    
+//     float q0 = 1.0 / max(r0.w, HDRParam.x);
+//     float3 q1 = ((q0 * HDRParam.x) * r1.rgb) + max(r0.rgb * (q0 * 0.5), 0);
+    
+//     float sceneluma = dot(q1.xyz, const_0.rgb);
+
+//     float3 q3 = lerp(sceneluma, q1, Cinematic.x); // saturation
+
+//     float3 q4 = (Cinematic.w * ((Tint.a * ((sceneluma * Tint.rgb) - q3)) + q3)) - Cinematic.y;
+//     float3 q5 = lerp(r2.rgb, lerp((Cinematic.z * q4) + Cinematic.y, Fade.xyz, Fade.w), UseAlphaMask.w);
+
+//     OUT.color_0.a = BlurScale.z;
+//     OUT.color_0.rgb = (r2.w == 0 ? r2.rgb : q5.rgb); //only tonemap the area within the mask
+
+//     return OUT;
+// };
+
+
 // ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
 float3 ACESFilm(float3 x) {
 	float a = 2.51f;
@@ -75,6 +103,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 bloom = tex2D(ScreenSpace, IN.ScreenOffset.xy);
     bloom.rgb = TESR_HDRBloomData.x * pow(max(bloom.rgb, 0), TESR_HDRBloomData.y);
     float4 hdrImage = tex2D(DestBlend, IN.texcoord_1.xy) * TESR_HDRData.y; // exposure
+    float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
 
     float4 final = hdrImage;
     final.w = BlurScale.z;
@@ -93,8 +122,11 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     final.rgb = lerp(final.rgb, Fade.rgb, Fade.a * (1 - luma(q2))); // apply night eye only to darker parts of the scene to avoid dulling bloom
 
-    OUT.color_0.a = 1;
-    OUT.color_0.rgb = pow(final.rgb, TESR_HDRData.w);
+    OUT.color_0.a = BlurScale.z;;
+
+    OUT.color_0.rgb = (background.w == 0 ? background.rgb : pow(final.rgb, TESR_HDRData.w)); //only tonemap the area within the mask
 
     return OUT;
 };
+
+// approximately 22 instruction slots used (3 texture, 19 arithmetic)
