@@ -103,7 +103,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // finalColor = cloudsWeather1;
 
     if (IN.color_1.r){ // early out if this texture is sun/moon
-        OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a);
+        OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a) * TESR_SkyData.z;
         return OUT;
     }
 
@@ -113,7 +113,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 sunColor = TESR_SunColor; // increase suncolor strength with sun height
     float sunSet = saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x);
-    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb * TESR_SunAmount.x, sunSet); // add extra red to the sun at sunsets
+    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb, sunSet * pow(TESR_SunAmount.x, 5)); // add extra red to the sun at sunsets
 
     // calculate sky color to blend in the clouds
     float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
