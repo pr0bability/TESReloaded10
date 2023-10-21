@@ -17,6 +17,7 @@ float4 TESR_CloudData : register(c12); // x:UseNormals y:SphericalNormals z:Tran
 float4 TESR_SunAmount : register(c13); // x:isDayTime
 float4 TESR_SunPosition : register(c14);
 float4 TESR_SunsetColor : register(c15);
+float4 TESR_HDRBloomData : register(c16);
 
 
 // Registers:
@@ -147,6 +148,6 @@ VS_OUTPUT main(VS_INPUT IN) {
         finalColor.rgb += scattering;
     }
     
-    OUT.color_0 = float4(finalColor.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z);
+    OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z) * TESR_HDRBloomData.z;
     return OUT;
 };
