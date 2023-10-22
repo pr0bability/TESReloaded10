@@ -250,7 +250,7 @@ Mode = 0                               # Chose when the DOF is activated: 0: alw
 NearBlurCutOff = 0                     # Close up range that doesn't get blurred to avoid blurry gun/player character.
 Radius = 1.5                           # Radius for the bokeh blur.
 
-[_Shaders.Exposure.Day]
+[_Shaders.Exposure.Main]
 DarkAdaptSpeed = 1.5                   # Speed for the exposure to adjust when the screen gets darker.
 LightAdaptSpeed = 0.5                  # Speed for the exposure to adjust when the screen gets brighter.
 MaxBrightness = 0.5                    # Brightness treshold above which the screen will be darkened.
@@ -312,30 +312,71 @@ Saturate = 0.0                        # Influence of the coloring setting. 0: us
 [_Shaders.GodRays.Status]
 Enabled = true                        # Screenspace godrays/volumetric rays.
 
+
 [_Shaders.HDR.Main]
+BloomExponent = 1.0                   # makes the bloom more spread out or more focused
+BloomStrength = 2.1                   # scales the game's bloom pass strength
+Exposure = 2.5                        # scales the lighting strength before tonemap
+Gamma = 0.4                           # gamma modifier to be applied after tonemapping
 Linearization = 2.2
+PointLightMultiplier = 1.0            # Experimental - modifies the strength of all point lights
+Saturation = 1.2                      # Saturation of the image before tonemapping
+SkyMultiplier = 1.4                   # Scales the brightness of the sky and sky textures. Requires Sky shader enabled
 ToneMapping = 1.0
 ToneMappingBlur = 0.0
 ToneMappingColor = 1.2
-PointLightMultiplier = 1.0
-SkyMultiplier = 1.0
-BloomStrength = 1.0
-BloomExponent = 1.0
-TonemappingMode = 1
-Exposure = 1.0
-Saturation = 1.0
-WhitePoint = 1.0
-Gamma = 1.0
+TonemappingMode = 3                   # changes the tonemapping algorithm. 0: game native, 1:ACES, 2:Reinhard, 3: Lotte, 4:Uncharted2
+WhitePoint = 1.0                      # White point setting for Reinhard tonemapper. Changes the value of the brightest pixels
+LotteContrast = 1.9                   # Contrast setting for Lotte Tonemapper
+LotteBrightness = 0.14                # Brightness setting for Lotte Tonemapper
+LotteMidpoint = 1.3                   # Midpoint setting for Lotte Tonemapper
+
+[_Shaders.HDR.Interiors]
+BloomExponent = 0.7                   # makes the bloom more spread out or more focused
+BloomStrength = 5.0                   # scales the game's bloom pass strength
+Exposure = 3.0                        # scales the lighting strength before tonemap
+Gamma = 0.8                           # gamma modifier to be applied after tonemapping
+Linearization = 2.2
+PointLightMultiplier = 1.0            # Experimental - modifies the strength of all point lights
+Saturation = 0.8                      # Saturation of the image before tonemapping
+SkyMultiplier = 1.0                   # Scales the brightness of the sky and sky textures. Requires Sky shader enabled
+ToneMapping = 1.0
+ToneMappingBlur = 0.0
+ToneMappingColor = 1.0
+TonemappingMode = 3                   # changes the tonemapping algorithm. 0: game native, 1:ACES, 2:Reinhard, 3:Uncharted
+WhitePoint = 1.0                      # White point setting for Reinhard tonemapper. Changes the value of the brightest pixels
+LotteContrast = 1.9                   # Contrast setting for Lotte Tonemapper
+LotteBrightness = 0.14                # Brightness setting for Lotte Tonemapper
+LotteMidpoint = 1.3                   # Midpoint setting for Lotte Tonemapper
+
+[_Shaders.HDR.Night]
+BloomExponent = 0.8                   # makes the bloom more spread out or more focused
+BloomStrength = 10.0                  # scales the game's bloom pass strength
+Exposure = 2.5                        # scales the lighting strength before tonemap
+Gamma = 0.5                           # gamma modifier to be applied after tonemapping
+Linearization = 2.2
+PointLightMultiplier = 1.0            # Experimental - modifies the strength of all point lights
+Saturation = 1.0                      # Saturation of the image before tonemapping
+SkyMultiplier = 1.0                   # Scales the brightness of the sky and sky textures. Requires Sky shader enabled
+ToneMapping = 1.0
+ToneMappingBlur = 0.0
+ToneMappingColor = 1.2
+TonemappingMode = 3                   # changes the tonemapping algorithm. 0: game native, 1:ACES, 2:Reinhard, 3:Uncharted
+WhitePoint = 1.0                      # White point setting for Reinhard tonemapper. Changes the value of the brightest pixels
+LotteContrast = 1.9                   # Contrast setting for Lotte Tonemapper
+LotteBrightness = 0.14                # Brightness setting for Lotte Tonemapper
+LotteMidpoint = 1.3                   # Midpoint setting for Lotte Tonemapper
+
 
 [_Shaders.HDR.Status]
-Enabled = false                       # Not currently used. Replaces HDR tonemapping shaders with custom ones.
+Enabled = false                       # Replaces HDR tonemapping shaders with custom ones.
 
 
 [_Shaders.ImageAdjust.Main]
-Brightness = 1.1                      # Overall image brightness.
+Brightness = 1.0                      # Overall image brightness.
 Saturation = 0.7                      # Overall image saturation.
-Contrast = 1.2                        # Overall image contrast.
-Strength = 1.0                        # Strength of the effect.
+Contrast = 1.0                        # Overall image contrast.
+Strength = 0.4                        # Strength of the effect.
 DarkColorR = 0.9                      # Red channel multiplier for darker tones.
 DarkColorG = 0.7                      # Green channel multiplier for darker tones.
 DarkColorB = 0.7                      # Blue channel multiplier for darker tones.
@@ -344,28 +385,28 @@ LightColorG = 1.0                     # Green channel multiplier for lighter ton
 LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Night]
-Brightness = 1.4                      # Overall image brightness.
+Brightness = 1.1                      # Overall image brightness.
 Saturation = 0.8                      # Overall image saturation.
 Contrast = 1.2                        # Overall image contrast.
 Strength = 0.8                        # Strength of the effect.
 DarkColorR = 0.8                      # Red channel multiplier for darker tones.
 DarkColorG = 0.8                      # Green channel multiplier for darker tones.
-DarkColorB = 1.2                      # Blue channel multiplier for darker tones.
+DarkColorB = 1.0                      # Blue channel multiplier for darker tones.
 LightColorR = 0.8                     # Red channel multiplier for lighter tones.
-LightColorG = 1.0                     # Green channel multiplier for lighter tones.
-LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
+LightColorG = 1.1                     # Green channel multiplier for lighter tones.
+LightColorB = 1.1                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Interiors]
 Brightness = 1.12                     # Overall image brightness.
-Saturation = 1.2                      # Overall image saturation.
-Contrast = 1.3                        # Overall image contrast.
-Strength = 0.8                        # Strength of the effect.
-DarkColorR = 0.8                      # Red channel multiplier for darker tones.
+Saturation = 0.9                      # Overall image saturation.
+Contrast = 1.2                        # Overall image contrast.
+Strength = 1.0                        # Strength of the effect.
+DarkColorR = 0.9                      # Red channel multiplier for darker tones.
 DarkColorG = 0.8                      # Green channel multiplier for darker tones.
-DarkColorB = 1.3                      # Blue channel multiplier for darker tones.
+DarkColorB = 1.1                      # Blue channel multiplier for darker tones.
 LightColorR = 1.3                     # Red channel multiplier for lighter tones.
 LightColorG = 1.4                     # Green channel multiplier for lighter tones.
-LightColorB = 1.0                     # Blue channel multiplier for lighter tones.
+LightColorB = 0.7                     # Blue channel multiplier for lighter tones.
 
 [_Shaders.ImageAdjust.Status]
 Enabled = true                        # Basic Image adjustment controls.
@@ -577,10 +618,10 @@ Enabled = false                     # Not currently used. Replaces the skin shad
 
 
 [_Shaders.Sky.Main]
-AthmosphereThickness = 4.0          # Determins the height of the athmosphere on the horizon
-SunInfluence = 1.0                  # How wide a side of the athmosphere will the sky lit up.
-SunStrength = 0.5                   # How strong is the sun brighness when reflected by athmosphere
-StarStrength = 4.0                  # Multiplier for stars brightness
+AthmosphereThickness = 5.0          # Determins the height of the athmosphere on the horizon
+SunInfluence = 0.5                  # How wide a side of the athmosphere will the sky lit up.
+SunStrength = 0.9                   # How strong is the sun brighness when reflected by athmosphere
+StarStrength = 1.0                  # Multiplier for stars brightness
 ReplaceSun = false                  # replaces vanilla sun by a procedural sun for whatever reason
 SunsetR = 0.5                       # Color boost for sunset/sunrise sun color (Red)
 SunsetG = 0.0                       # Color boost for sunset/sunrise sun color (Green)
@@ -589,9 +630,9 @@ SunsetB = 0.03                      # Color boost for sunset/sunrise sun color (
 
 [_Shaders.Sky.Clouds]
 UseNormals = false                  # EXPERIMENTAL-Uses the R & G channels of the clouds texture to calculate normals for lighting. Requires special textures
-SphericalNormals = false            # EXPERIMENTAL-Uses this setting if the normals of the clouds point to the center of the panoramic texture
-Transparency = 0.5                  # Clouds base transparency
-Brightness = 0.2                    # Clouds base brightness
+SphericalNormals = true             # EXPERIMENTAL-Uses this setting if the normals of the clouds point to the center of the panoramic texture
+Transparency = 0.8                  # Clouds base transparency
+Brightness = 1.0                    # Clouds base brightness
 
 [_Shaders.Sky.Status]
 Enabled = true                      # Replaces the sky and cloud shaders to add more subtle sky shading.
@@ -622,7 +663,7 @@ DistanceFade = 30000                # Max distance at which the effects will be 
 FresnelStrength = 0.7               # Strength for the grazing surface lighting boost called fresnel.
 Glossiness = 16                     # Higher value will make the specular effect affect more intensely a smaller region.
 SkyTintSaturation = 1.8             # Saturation of the sky lighting effect. Sky lighting is based on sky color. 
-SkyTintStrength = 0.6               # Strength for the sky lighting effect. This mostly affects horizontal, dark areas outside.
+SkyTintStrength = 1.0               # Strength for the sky lighting effect. This mostly affects horizontal, dark areas outside.
 SpecLumaTreshold = 0.5              # Treshold for the luma of areas affected by the specular boost.
 SpecularStrength = 0.7              # Strength of the effect for specular boost.
 

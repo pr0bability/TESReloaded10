@@ -15,6 +15,7 @@ float4 TESR_DebugVar : register(c24);
 float4 TESR_HDRBloomData : register(c25);
 float4 TESR_SunAmount : register(c26);
 float4 TESR_HDRData : register(c27);
+float4 TESR_LotteData : register(c28);
 
 // Registers:
 //
@@ -30,6 +31,7 @@ float4 TESR_HDRData : register(c27);
 //
 
 #include "Includes/Helpers.hlsl"
+#include "Includes/Tonemapping.hlsl"
 
 // Structures:
 
@@ -45,30 +47,7 @@ struct VS_OUTPUT {
 // Code:
 
 
-// ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
-float3 ACESFilm(float3 x) {
-	float a = 2.51f;
-	float b = 0.03f;
-	float c = 2.43f;
-	float d = 0.59f;
-	float e = 0.14f;
-	return saturate((x*(a*x+b))/(x*(c*x+d)+e));
-}
 
-float3 Reinhard(float3 x, float whitepoint) {
-    return x * (1 + x / whitepoint.xxx)/(1 + x);
-}
-
-float3 Uncharted2Tonemap(float3 x) {
-    float A = 0.15;
-    float B = 0.50;
-    float C = 0.10;
-    float D = 0.20;
-    float E = 0.02;
-    float F = 0.30;
-    float W = 11.2;
-    return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
-}
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -90,9 +69,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 q2 = lerp(final.rgb, Tint.rgb * screenluma, Tint.a); // apply tint
 
     float3 oldTonemap = Cinematic.z * (Cinematic.w * q2.rgb - Cinematic.y) + Cinematic.y; // apply cinematic brightness & contrast modifiers
-    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2, q2 ); // tonemap
+    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Lottes(q2, TESR_LotteData.x, TESR_LotteData.y,  TESR_LotteData.z, TESR_HDRBloomData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2 ); // tonemap
 
-    final.rgb = lerp(final.rgb, Fade.rgb, Fade.a * (1 - luma(q2))); // apply night eye only to darker parts of the scene to avoid dulling bloom
+    final.rgb *= lerp(1, Fade.rgb, lerp(Fade.a, 0, saturate(luma(final.rgb)))); // apply night eye only to darker parts of the scene to avoid dulling bloom
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = pow(final.rgb, TESR_HDRData.w);

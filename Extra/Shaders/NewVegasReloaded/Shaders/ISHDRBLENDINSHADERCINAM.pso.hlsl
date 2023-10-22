@@ -15,6 +15,7 @@ float4 TESR_DebugVar : register(c24);
 float4 TESR_HDRBloomData : register(c25);
 float4 TESR_SunAmount : register(c26);
 float4 TESR_HDRData : register(c27);
+float4 TESR_LotteData : register(c28);
 
 
 // Registers:
@@ -32,6 +33,7 @@ float4 TESR_HDRData : register(c27);
 //
 
 #include "Includes/Helpers.hlsl"
+#include "Includes/Tonemapping.hlsl"
 
 // Structures:
 
@@ -45,57 +47,6 @@ struct VS_OUTPUT {
 };
 
 // Code:
-
-// VS_OUTPUT main(VS_INPUT IN) {
-//     VS_OUTPUT OUT;
-
-//     const float4 const_0 = {0.299, 0.587000012, 0.114, 0}; // luma coeffs
-
-//     float4 r0 = tex2D(ScreenSpace, IN.ScreenOffset.xy);
-//     float4 r1 = tex2D(DestBlend, IN.texcoord_1.xy); // hdr image to tonemap
-//     float4 r2 = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
-    
-//     float q0 = 1.0 / max(r0.w, HDRParam.x);
-//     float3 q1 = ((q0 * HDRParam.x) * r1.rgb) + max(r0.rgb * (q0 * 0.5), 0);
-    
-//     float sceneluma = dot(q1.xyz, const_0.rgb);
-
-//     float3 q3 = lerp(sceneluma, q1, Cinematic.x); // saturation
-
-//     float3 q4 = (Cinematic.w * ((Tint.a * ((sceneluma * Tint.rgb) - q3)) + q3)) - Cinematic.y;
-//     float3 q5 = lerp(r2.rgb, lerp((Cinematic.z * q4) + Cinematic.y, Fade.xyz, Fade.w), UseAlphaMask.w);
-
-//     OUT.color_0.a = BlurScale.z;
-//     OUT.color_0.rgb = (r2.w == 0 ? r2.rgb : q5.rgb); //only tonemap the area within the mask
-
-//     return OUT;
-// };
-
-
-// ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
-float3 ACESFilm(float3 x) {
-	float a = 2.51f;
-	float b = 0.03f;
-	float c = 2.43f;
-	float d = 0.59f;
-	float e = 0.14f;
-	return saturate((x*(a*x+b))/(x*(c*x+d)+e));
-}
-
-float3 Reinhard(float3 x, float whitepoint) {
-    return x * (1 + x / whitepoint.xxx)/(1 + x);
-}
-
-float3 Uncharted2Tonemap(float3 x) {
-    float A = 0.15;
-    float B = 0.50;
-    float C = 0.10;
-    float D = 0.20;
-    float E = 0.02;
-    float F = 0.30;
-    float W = 11.2;
-    return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
-}
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -118,11 +69,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 q2 = lerp(final.rgb, Tint.rgb * screenluma, Tint.a); // apply tint
 
     float3 oldTonemap = Cinematic.z * (Cinematic.w * q2.rgb - Cinematic.y) + Cinematic.y; // apply cinematic brightness & contrast modifiers
-    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2, q2 ); // tonemap
+    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Lottes(q2, TESR_LotteData.x, TESR_LotteData.y,  TESR_LotteData.z, TESR_HDRBloomData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2 ); // tonemap
 
-    final.rgb = lerp(final.rgb, Fade.rgb, Fade.a * (1 - luma(q2))); // apply night eye only to darker parts of the scene to avoid dulling bloom
+    final.rgb *= lerp(1, Fade.rgb, lerp(Fade.a, 0, saturate(luma(final.rgb)))); // apply night eye only to darker parts of the scene to avoid dulling bloom
 
-    OUT.color_0.a = BlurScale.z;;
+    OUT.color_0.a = BlurScale.z;
 
     OUT.color_0.rgb = (background.w == 0 ? background.rgb : pow(final.rgb, TESR_HDRData.w)); //only tonemap the area within the mask
 
