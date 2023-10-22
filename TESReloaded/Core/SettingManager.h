@@ -431,6 +431,7 @@ public:
 	int						GetSettingI(const char* Section, const char* Key);
 	float					GetSettingF(const char* Section, const char* Key);
 	char*					GetSettingS(const char* Section, const char* Key, char* Value);
+	float					GetSettingTransition(const char* Section, const char* Key, bool isExterior, float isDaytime);
 	void					SetSetting(const char* Section, const char* Key, float Value);
 	void					SetSetting(const char* Section, const char* Key, int Value);
 	void					SetSetting(const char* Section, const char* Key, bool Value);

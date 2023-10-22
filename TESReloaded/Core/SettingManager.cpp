@@ -800,6 +800,26 @@ char* SettingManager::GetSettingS(const char* Section, const char* Key, char* Va
 	return Value;
 }
 
+
+float SettingManager::GetSettingTransition(const char* Section, const char* Key, bool isExterior, float isDayTime) {
+	char mainSection[50];
+	char nightSection[50];
+	strcpy(mainSection, Section);
+
+	if (isExterior) {
+		strcat(mainSection, ".Main");
+		strcpy(nightSection, Section);
+		strcat(nightSection, ".Night");
+		return std::lerp(GetSettingF(nightSection, Key), GetSettingF(mainSection, Key), isDayTime);
+	}
+	else {
+		strcat(mainSection, ".Interiors");
+
+		return GetSettingF(mainSection, Key);
+	}
+}
+
+
 void SettingManager::SetSetting(const char* Section, const char* Key, int Value) {
 
 	Configuration::ConfigNode Node;
