@@ -787,6 +787,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->ShaderConst.Bloom.BloomValues;
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
+	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
 	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->ShaderConst.Cinema.Data;
 	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->ShaderConst.Cinema.Settings;
 	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->ShaderConst.Coloring.ColorCurve;
@@ -1401,6 +1402,9 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "Exposure", isExterior, isDayTime);
 			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "Saturation", isExterior, isDayTime);
 			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Gamma", isExterior, isDayTime);
+			ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteContrast", isExterior, isDayTime);
+			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteBrightness", isExterior, isDayTime);
+			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteMidpoint", isExterior, isDayTime);
 		}
 
 		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
