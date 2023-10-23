@@ -16,6 +16,7 @@ float4 TESR_HDRBloomData : register(c25);
 float4 TESR_SunAmount : register(c26);
 float4 TESR_HDRData : register(c27);
 float4 TESR_LotteData : register(c28);
+float4 TESR_ToneMapping : register(c29);
 
 
 // Registers:
@@ -56,7 +57,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 hdrImage = tex2D(DestBlend, IN.texcoord_1.xy) * TESR_HDRData.y; // exposure
     float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
 
-    float4 final = hdrImage;
+    float4 final = pow(hdrImage, TESR_ToneMapping.w); // linearize
     final.w = BlurScale.z;
 
     float HDR = HDRParam.x; // brights cutoff?
@@ -69,7 +70,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 q2 = lerp(final.rgb, Tint.rgb * screenluma, Tint.a); // apply tint
 
     float3 oldTonemap = Cinematic.z * (Cinematic.w * q2.rgb - Cinematic.y) + Cinematic.y; // apply cinematic brightness & contrast modifiers
-    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Lottes(q2, TESR_LotteData.x, TESR_LotteData.y,  TESR_LotteData.z, TESR_HDRBloomData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2 ); // tonemap
+    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Lottes(q2, TESR_LotteData.x, TESR_LotteData.y,  TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2 ); // tonemap
 
     final.rgb *= lerp(1, Fade.rgb, lerp(Fade.a, 0, saturate(luma(final.rgb)))); // apply night eye only to darker parts of the scene to avoid dulling bloom
 

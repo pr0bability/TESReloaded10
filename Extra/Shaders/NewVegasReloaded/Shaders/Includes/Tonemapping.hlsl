@@ -25,22 +25,26 @@ float3 Uncharted2Tonemap(float3 x) {
 }
 
 // https://gpuopen.com/wp-content/uploads/2016/03/GdcVdrLottes.pdf
-float3 Lottes(float3 x, float contrast, float brightness, float midIn, float hdrMax){
-    // shape of the curve
-    float d = 1.0; // compression speed for shoulder
+float3 Lottes(float3 x, float contrast, float brightness, float midIn, float hdrMax, float shoulder){
 
+    // scale values for easier tuning
+    contrast = 1.0 + contrast * 0.1;
+    brightness = 1.0 + brightness * 0.1; // midOut
+    shoulder = 1.0 + shoulder * 0.1; // compression speed for shoulder
+
+    // shape of the curve
     float3 z = pow(x, contrast); // toe (lower part of curve)
 
     // curve anchor (mid point)
     float2 e = float2(midIn, hdrMax);
-    float2 f = pow(e, contrast);
-    float2 g = pow(f, d);
+    float2 exp = float2(contrast * shoulder, contrast);
+    float4 f = pow(e.xyxy, exp.xxyy);
 
     // clipping/white point
-    float b = (-e.x + e.y * brightness) / (((g.y - g.x) * brightness));
+    float b = -((-f.z + (brightness*(f.y*f.z - f.w * f.z * brightness)) / (f.y*brightness - f.x*brightness)) / (f.x*brightness));
     
     // compression speed for shoulder (linear)
-    float c = (g.y * e.x - e.y * g.x * brightness) / ((g.y - g.x) * brightness);
+    float c = (f.y*f.z - f.w*f.x*brightness)/(f.y*brightness - f.x*brightness);
 
-    return z / (pow(z, d) * b + c);
+    return z / (pow(z, shoulder) * b + c);
 }
