@@ -53,30 +53,28 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
     float4 bloom = tex2D(ScreenSpace, IN.ScreenOffset.xy);
-    bloom.rgb = TESR_HDRBloomData.x * pow(max(bloom.rgb, 0), TESR_HDRBloomData.y);
-    float4 hdrImage = tex2D(DestBlend, IN.texcoord_1.xy) * TESR_HDRData.y; // exposure
-    float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
+    bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0), TESR_HDRBloomData.y);
+    float4 hdrImage = tex2D(DestBlend, IN.texcoord_1.xy); 
 
-    float4 final = pow(hdrImage, TESR_ToneMapping.w); // linearize
-    final.w = BlurScale.z;
+    float3 final = pows(hdrImage.rgb, 1/TESR_ToneMapping.w) * TESR_HDRData.y; // linearize & exposure
 
     float HDR = HDRParam.x; // brights cutoff?
-
     float q0 = 1.0 / max(bloom.w, HDR);
-    final.rgb = ((q0 * HDR) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0); // blend image and bloom
+    final = ((q0 * HDR) * final) + max(bloom.rgb * (q0 * 0.5), 0); // blend image and bloom
 
-    float screenluma = luma(final.rgb);
-    final.rgb = lerp(screenluma.xxx, final.rgb, Cinematic.x * TESR_HDRData.z); // saturation
-    float3 q2 = lerp(final.rgb, Tint.rgb * screenluma, Tint.a); // apply tint
+    float screenluma = luma(final);
+    final = lerp(screenluma.xxx, final, Cinematic.x * TESR_HDRData.z); // saturation
 
-    float3 oldTonemap = Cinematic.z * (Cinematic.w * q2.rgb - Cinematic.y) + Cinematic.y; // apply cinematic brightness & contrast modifiers
-    final.rgb = selectColor(TESR_HDRData.x * 0.1, oldTonemap, ACESFilm(q2), Reinhard(q2, TESR_HDRBloomData.w), Lottes(q2, TESR_LotteData.x, TESR_LotteData.y,  TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w), Uncharted2Tonemap(q2), q2, q2, q2, q2, q2 ); // tonemap
+    final = tonemap(final);
+   float3 tint = tonemap(screenluma * Tint.rgb); // tonemap tint to simulate tinting before tonemap
+ 
+    screenluma = saturate(luma(final));
+    final = lerp(final, tint.rgb * screenluma, Tint.a * TESR_ToneMapping.z); // apply tint
+    final.rgb *= lerp(1, Fade.rgb, lerp(Fade.a, 0, screenluma)); // apply night eye only to darker parts of the scene to avoid dulling bloom
 
-    final.rgb *= lerp(1, Fade.rgb, lerp(Fade.a, 0, saturate(luma(final.rgb)))); // apply night eye only to darker parts of the scene to avoid dulling bloom
-
+    float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
+    OUT.color_0.rgb = (background.w == 0 ? background.rgb : pows(final.rgb, TESR_HDRData.w)); //only tonemap the area within the mask
     OUT.color_0.a = BlurScale.z;
-
-    OUT.color_0.rgb = (background.w == 0 ? background.rgb : pow(final.rgb, TESR_HDRData.w)); //only tonemap the area within the mask
 
     return OUT;
 };
