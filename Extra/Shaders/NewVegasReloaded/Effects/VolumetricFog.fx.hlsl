@@ -15,6 +15,9 @@ float4 TESR_SkyData; //
 float4 TESR_DebugVar; 
 float4 TESR_SunsetColor; // color boost for sun when near the horizon
 float4 TESR_SunAmount; // x: isDaytime
+float4 TESR_HDRBloomData; // x: isDaytime
+float4 TESR_HDRData; // x: isDaytime
+float4 TESR_LotteData; // x: isDaytime
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -38,8 +41,14 @@ static const float MaxFogHeight = TESR_VolumetricFogData.w; // 80000
 
 static const float SUNINFLUENCE = 1/TESR_SkyData.y;
 
+static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
+									{0.7647, 0.2941, 0.8824, 0.4118},
+									{0.2353, 0.7059, 0.1176, 0.5882},
+									{0.9412, 0.4706, 0.8235, 0.3259}};
+
 #include "Includes/Depth.hlsl"
 #include "Includes/Helpers.hlsl"
+#include "Includes/Tonemapping.hlsl"
 
 struct VSOUT
 {
@@ -65,17 +74,6 @@ VSOUT FrameVS(VSIN IN)
 float ExponentialFog(float posHeight, float distance) {
 	float fogAmount = exp(-posHeight) * (1.0 - exp(-distance)) * FogStrength;
 	return fogAmount;
-}
-
-// ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
-float3 ACESFilm(float3 x)
-{
-	float a = 2.51f;
-	float b = 0.03f;
-	float c = 2.43f;
-	float d = 0.59f;
-	float e = 0.14f;
-	return saturate((x*(a*x+b))/(x*(c*x+d)+e));
 }
 
 
@@ -114,7 +112,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 	// blend with fog color
 	float3 fogColor = lerp(skyColor, TESR_FogColor.rgb, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
-    fogColor = pow(ACESFilm(fogColor), 2.2); // tonemap final color
+    fogColor = pow(tonemap(fogColor), 2.2); // tonemap final color
 	float3 originalFogColor = fogColor;
 	float originalFogLuma = luma(originalFogColor);
 	fogColor = lerp(color, fogColor, fogAmount).rgb; // calculate final color of scene through the fog
@@ -128,6 +126,8 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
     float fogAdditiveLumaRatio = saturate(1.0f / originalFogLuma); // From (background) color luma to fog luma
     float3 additiveFogColor = originalFogColor * (1.0f - fogAdditiveLumaRatio);
     color += additiveFogColor;
+
+	color += lerp(0, ditherMat[ (IN.UVCoord.x)%4 ][ (IN.UVCoord.y)%4 ] / 255, sunAmount);
 
 	// return float4(selectColor(TESR_DebugVar.w, color, float(fogDepth / farZ).xxx, fogAmount.xxx, originalFogColor, sunInfluence.xxx, skyColor, TESR_FogColor, black, black, black), 1);
 
