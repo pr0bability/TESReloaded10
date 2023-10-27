@@ -11,7 +11,7 @@
 #define	sqr(v)              ((v) * (v))
 #define blendnormals(a, b)  float3(a.xy + b.xy, a.z)
 #define rand(s)             (frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453)) // pseudo random from https://gist.github.com/keijiro/ee7bc388272548396870
-#define pows(a, b)          (pow(abs(a), b)) // no more pow/abs warning!
+#define pows(a, b)          (pow(abs(a), b) * sign(a)) // no more pow/abs warning!
 
 static const float4 white = float4 (1, 1, 1, 1);
 static const float4 grey = float4 (0.5, 0.5, 0.5, 1);
