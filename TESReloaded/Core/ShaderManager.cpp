@@ -25,7 +25,7 @@ void Animator::Initialize(float value) {
 * Starts the animator by setting a target value and a duration to reach it.
 */
 void Animator::Start(float duration, float finalValue) {
-	float currenttime = time->GameHour->data;
+	float currenttime = time->GameDaysPassed->data * 24;
 
 	startTime = currenttime;
 	endTime = currenttime + duration;
@@ -40,7 +40,7 @@ void Animator::Start(float duration, float finalValue) {
 * Gets the value for the animated value at the current time.
 */
 float Animator::GetValue() {
-	float currenttime = time->GameHour->data;
+	float currenttime = time->GameDaysPassed->data * 24;
 	if (!running) return startValue;
 	
 	if (currenttime > endTime) {
