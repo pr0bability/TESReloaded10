@@ -96,9 +96,7 @@ float3 Lottes(float3 x, float contrast, float brightness, float midIn, float hdr
 }
 
 float3 tonemap(float3 color){
-    if (TESR_HDRData.x == 1){
-        return Cinematic.z * (Cinematic.w * color - Cinematic.y) + Cinematic.y;
-    }else if (TESR_HDRData.x == 2){
+    if (TESR_HDRData.x == 2){
         return ACESFilm(color);
     }else if (TESR_HDRData.x == 3){
         return Reinhard(color, TESR_HDRBloomData.w);
