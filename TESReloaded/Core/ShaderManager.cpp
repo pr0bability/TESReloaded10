@@ -1388,30 +1388,25 @@ void ShaderManager::UpdateConstants() {
 		}
 
 
-		if (TheSettingManager->GetMenuShaderEnabled("HDR")) {
-			float transitionCurve = smoothStep(0, 0.6, isDayTime);
-			ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.HDR", "PointLightMultiplier", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMapping", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMappingBlur", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMappingColor", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Linearization", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomStrength", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomExponent", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "SkyMultiplier", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "WhitePoint", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "TonemappingMode", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "Exposure", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "Saturation", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Gamma", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteContrast", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteBrightness", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteMidpoint", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteShoulder", isExterior, transitionCurve);
-		}
-		else {
-			ShaderConst.HDR.PointLightMult = 1.0;
-			ShaderConst.HDR.BloomData.z = 1.0;
-		}
+		// tonemapping constants are used by a few shaders/effects
+		float transitionCurve = smoothStep(0, 0.6, isDayTime);
+		ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.HDR", "PointLightMultiplier", isExterior, transitionCurve);
+		ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMapping", isExterior, transitionCurve);
+		ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMappingBlur", isExterior, transitionCurve);
+		ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMappingColor", isExterior, transitionCurve);
+		ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Linearization", isExterior, transitionCurve);
+		ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomStrength", isExterior, transitionCurve);
+		ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomExponent", isExterior, transitionCurve);
+		ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "SkyMultiplier", isExterior, transitionCurve);
+		ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "WhitePoint", isExterior, transitionCurve);
+		ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "TonemappingMode", isExterior, transitionCurve);
+		ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "Exposure", isExterior, transitionCurve);
+		ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "Saturation", isExterior, transitionCurve);
+		ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Gamma", isExterior, transitionCurve);
+		ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteContrast", isExterior, transitionCurve);
+		ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteBrightness", isExterior, transitionCurve);
+		ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteMidpoint", isExterior, transitionCurve);
+		ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteShoulder", isExterior, transitionCurve);
 
 		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
 			ShaderConst.POM.ParallaxData.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");
