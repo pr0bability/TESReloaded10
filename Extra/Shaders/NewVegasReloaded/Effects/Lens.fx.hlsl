@@ -47,7 +47,7 @@ float4 Lens(VSOUT IN) : COLOR0
 
     // Get the bloom mask to calculate areas where dirt lens will appear
 	float4 bloom = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-    color = saturate(color + dirtColor * TESR_LensData.x * bloom);
+    color = color + saturate(dirtColor * TESR_LensData.x * bloom);
 
     return color;
 }
