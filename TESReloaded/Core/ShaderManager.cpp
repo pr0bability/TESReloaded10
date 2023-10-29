@@ -608,12 +608,12 @@ bool EffectRecord::SwitchEffect(){
 /**
 * Renders the given effect shader.
 */
-void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, bool useSourceBuffer) {
+void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer) {
 
 	if (!Enabled || Effect == nullptr) return; // skip rendering of disabled effects
 
 	auto timer = TimeLogger();
-	if (useSourceBuffer) Device->StretchRect(RenderTarget, NULL, TheTextureManager->SourceSurface, NULL, D3DTEXF_NONE);
+	if (SourceBuffer) Device->StretchRect(RenderTarget, NULL, SourceBuffer, NULL, D3DTEXF_NONE);
 
 	try {
 		D3DXHANDLE technique = Effect->GetTechnique(techniqueIndex);
@@ -1981,7 +1981,7 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	Device->SetRenderTarget(0, RenderTarget);
 	Device->StretchRect(RenderTarget, NULL, RenderTarget, NULL, D3DTEXF_NONE);
-	Effect->Render(Device, RenderTarget, RenderTarget, 0, clearRenderTarget, true);
+	Effect->Render(Device, RenderTarget, RenderTarget, 0, clearRenderTarget, NULL);
 };
 
 /*
@@ -2019,8 +2019,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// Disable shadows during VATS
 	if (!VATSIsOn) {
-		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, true);
+		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 	}
 
 	if (!isUnderwater && isExterior) {
@@ -2048,32 +2048,32 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
-		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, false);
+		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, NULL);
 		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
 	}
 
 	// screenspace coloring/blurring effects get rendered last
-	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
-	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-	if (ShaderConst.DepthOfField.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-	if (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
+	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	if (ShaderConst.DepthOfField.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	if (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// lens effects
-	if (ShaderConst.BloodLens.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
-	if (ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
-	if (ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
-	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
+	if (ShaderConst.BloodLens.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	if (ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	if (ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
-	Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
+	Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// final adjustments
-	Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
+	Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// debug shader allows to display some of the buffers
-	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
+	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 
 	//if (EffectsSettings->Extra) {
 	//	for (EffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
