@@ -933,9 +933,6 @@ void ShaderManager::UpdateConstants() {
 
 	if (Effects.Debug->Enabled) avglumaRequired = true;
 
-	TheRenderManager->UpdateSceneCameraData();
-	TheRenderManager->SetupSceneCamera();
-
 	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
 
 	// context variables
@@ -988,6 +985,7 @@ void ShaderManager::UpdateConstants() {
 		isDayTime = newDayTime;
 		TheSettingManager->SettingsChanged = true; // force update constants during dayTime transitions;
 	}
+	float transitionCurve = smoothStep(0, 0.6, isDayTime); // a curve for day/night transitions that occurs mostly during second half of sunset
 
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
@@ -1986,11 +1984,12 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 
 
 void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget) {
-	TheShaderManager->UpdateConstants();
-
 	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
 	if (!Player->parentCell) return;
 	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+
+	TheRenderManager->UpdateSceneCameraData();
+	TheRenderManager->SetupSceneCamera();
 
 	auto timer = TimeLogger();
 
@@ -2014,6 +2013,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
+
+	// copy the source render target to both the rendered and source textures (rendered gets updated after every pass, source once per effect)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
@@ -2035,14 +2036,19 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 			if (ShaderConst.SnowAccumulation.Params.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		}
 
-		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-
-		if (isExterior) {
-			if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-			if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-		}
+		Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
+	// calculate average luma for use by shaders
+	if (avglumaRequired) {
+		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, NULL);
+		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
+	}
+
+	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
+	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
 
 
@@ -2050,13 +2056,14 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 * Renders the effect that have been set to enabled.
 */
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
-	TheShaderManager->UpdateConstants();
-
 	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
 	if (!Player->parentCell) return;
 	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	auto timer = TimeLogger();
+
+	TheRenderManager->UpdateSceneCameraData();
+	TheRenderManager->SetupSceneCamera();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
@@ -2067,14 +2074,15 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
+
+	// copy the source render target to both the rendered and source textures (rendered gets updated after every pass, source once per effect)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	if (!isUnderwater){
-
-		if (isExterior) {
-			Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-		}
+	if (!isUnderwater && isExterior) {
+		Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+		if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+		if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
 	// calculate average luma for use by shaders
@@ -2085,8 +2093,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// screenspace coloring/blurring effects get rendered last
 	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	if (ShaderConst.DepthOfField.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	if (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
