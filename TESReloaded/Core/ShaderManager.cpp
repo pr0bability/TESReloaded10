@@ -1984,13 +1984,13 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 	Effect->Render(Device, RenderTarget, RenderTarget, 0, clearRenderTarget, NULL);
 };
 
-/*
-* Renders the effect that have been set to enabled.
-*/
-void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
+
+void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget) {
 	TheShaderManager->UpdateConstants();
 
 	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
+	if (!Player->parentCell) return;
+	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	auto timer = TimeLogger();
 
@@ -2017,32 +2017,63 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
+	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
 	// Disable shadows during VATS
 	if (!VATSIsOn) {
 		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 	}
 
-	if (!isUnderwater && isExterior) {
-		Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-		if (ShaderConst.SnowAccumulation.Params.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-	}
-
-	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-
 	if (isUnderwater) {
 		// underwater only effects
-		Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
-	}
-	else {
-		if (isExterior) if (ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
+		Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	} else {
+		if (isExterior) {
+			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+			if (ShaderConst.WetWorld.Data.z > 0.0f && !VATSIsOn) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+			if (ShaderConst.SnowAccumulation.Params.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+		}
 
-		if (!pipboyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
+		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 
 		if (isExterior) {
-			if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
-			if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, false);
-			Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, false, true);
+			if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+			if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+		}
+	}
+
+}
+
+
+/*
+* Renders the effect that have been set to enabled.
+*/
+void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
+	TheShaderManager->UpdateConstants();
+
+	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
+	if (!Player->parentCell) return;
+	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+
+	auto timer = TimeLogger();
+
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
+	IDirect3DSurface9* RenderedSurface = TheTextureManager->RenderedSurface;
+
+	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
+	Device->SetFVF(FrameFVF);
+
+	// prepare device for effects
+	Device->SetRenderTarget(0, RenderTarget);
+	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
+	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
+
+	if (!isUnderwater){
+
+		if (isExterior) {
+			Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		}
 	}
 
