@@ -373,6 +373,7 @@ public:
 	EffectRecord*			CreateEffect(const char* Name, bool setEnabled);
 	void					DisposeEffect(EffectRecord** Effect);  // unused?
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
+	void					RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget);
 	void					RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectRecord* Effect, bool clearRenderTarget);
 	void					SwitchShaderStatus(const char* Name);
 	void					SetCustomConstant(const char* Name, D3DXVECTOR4 Value);
