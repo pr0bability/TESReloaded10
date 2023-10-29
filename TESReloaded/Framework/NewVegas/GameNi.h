@@ -1307,6 +1307,11 @@ public:
 	UInt32							numRenderTargets;			// 1C
 	NiDepthStencilBuffer*			DepthStencilBuffer;			// 20
 	void*							RenderData;					// 24
+
+	NiDX9TextureData* GetDX9RendererData() {
+		return reinterpret_cast<NiDX9TextureData*>(RenderData);
+	}
+
 };
 assert(sizeof(NiRenderTargetGroup) == 0x28);
 
@@ -1684,16 +1689,20 @@ assert(sizeof(NiControllerSequence) == 0x74);
 
 class BSRenderedTexture : public NiObject {
 public:
-	NiRenderTargetGroup*	RenderTargetGroup;	// 008
-	UInt32					unk00C[5];			// 00C
+	NiRenderTargetGroup*	RenderTargetGroups[6];	// 008
 	UInt32					unk020;				// 020
 	UInt32					unk024;				// 024
 	UInt32					unk028;				// 028
-	UInt32					unk02C;				// 02C
-	NiRenderedTexture*		RenderedTexture;	// 030
-	UInt32					unk034;				// 034
-	UInt32					unk038;				// 038
-	UInt32					unk03C;				// 03C
+	UInt32					eType;				// 02C // BSTextureManager::RenderTargetTypes
+	NiRenderedTexture*		RenderedTextures[4];// 030
+
+	IDirect3DTexture9* GetD3DTexture(const UINT32 auIndex) {
+		return (IDirect3DTexture9*)GetTexture(auIndex)->GetDX9RendererData()->dTexture;
+	}
+
+	NiRenderedTexture* GetTexture(const UInt32 uiIndex) {
+		return RenderedTextures[uiIndex];
+	}
 };
 assert(sizeof(BSRenderedTexture) == 0x40);
 
