@@ -939,10 +939,23 @@ void ShaderManager::UpdateConstants() {
 	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
 
 	// context variables
-	bool isUnderwater = WorldSky->GetIsUnderWater();
-	bool isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
-	bool isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
-	bool isCellChanged = currentCell != PreviousCell;
+	isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
+	isUnderwater = Tes->sky->GetIsUnderWater();
+	isCellChanged = currentCell != PreviousCell;
+	PreviousCell = currentCell;
+
+	PipBoyIsOn = InterfaceManager->getIsMenuOpen();
+	VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
+	OverlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
+		InterfaceManager->IsActive(Menu::kMenuType_LockPick) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Surgery) ||
+		InterfaceManager->IsActive(Menu::kMenuType_SlotMachine) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Blackjack) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Roulette) ||
+		InterfaceManager->IsActive(Menu::kMenuType_Caravan);
+	isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
+	isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
+
 	bool isDayTimeChanged = false;
 
 	if (isCellChanged) TheSettingManager->SettingsChanged = true; // force update constants during cell transition
@@ -985,7 +998,6 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.Water.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);
 	ShaderConst.Water.waterSettings.z = isUnderwater;
 
-	bool isExterior = !currentCell->IsInterior();
 
 	ShaderConst.SunTiming.x = WorldSky->GetSunriseColorBegin();
 	ShaderConst.SunTiming.y = SunriseEnd;
@@ -1985,27 +1997,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
 	IDirect3DSurface9* RenderedSurface = TheTextureManager->RenderedSurface;
-	TESWorldSpace* currentWorldSpace = Player->GetWorldSpace();
-	TESObjectCELL* currentCell = Player->parentCell;
-	if (!currentCell) return;
-
-	Sky* WorldSky = Tes->sky;
-	bool isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
-	bool isUnderwater = Tes->sky->GetIsUnderWater();
-	bool isDaytime = isDayTime > 0; // gametime is between sunrise start and sunset end
-	bool isCellChanged = currentCell != PreviousCell;
-
-	bool pipboyIsOn = InterfaceManager->getIsMenuOpen();
-	bool VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
-	bool overlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
-		InterfaceManager->IsActive(Menu::kMenuType_LockPick) ||
-		InterfaceManager->IsActive(Menu::kMenuType_Surgery) ||
-		InterfaceManager->IsActive(Menu::kMenuType_SlotMachine) ||
-		InterfaceManager->IsActive(Menu::kMenuType_Blackjack) ||
-		InterfaceManager->IsActive(Menu::kMenuType_Roulette) ||
-		InterfaceManager->IsActive(Menu::kMenuType_Caravan);
-
-	if (overlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
@@ -2092,7 +2083,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	//	}
 	//}
 
-	PreviousCell = currentCell;
+	//PreviousCell = currentCell;
 
 	timer.LogTime("ShaderManager::RenderEffects");
 }
