@@ -14,12 +14,12 @@ float4 TESR_WaterDeepColor; // Deep color used by the game for water
 float4 TESR_DebugVar;
 float4 TESR_HorizonColor;
 float4 TESR_SkyColor;
-float4 TESR_HDRBloomData;
-float4 TESR_HDRData;
-float4 TESR_LotteData;
+// float4 TESR_HDRBloomData;
+// float4 TESR_HDRData;
+// float4 TESR_LotteData;
 
 #include "Includes/Helpers.hlsl"
-#include "Includes/Tonemapping.hlsl"
+//#include "Includes/Tonemapping.hlsl"
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };

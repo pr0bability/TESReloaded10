@@ -78,7 +78,6 @@ void __fastcall RenderFirstPersonHook(Main* This, UInt32 edx, NiDX9Renderer* Ren
 	TheRenderManager->Clear(NULL, NiRenderer::kClear_ZBUFFER);
 	ThisCall(0x00874C10, Global);
 	(*RenderFirstPerson)(This, Renderer, Geo, SkySun, RenderedTexture);
-
 }
 
 void (__thiscall* RenderReflections)(WaterManager*, NiCamera*, ShadowSceneNode*) = (void (__thiscall*)(WaterManager*, NiCamera*, ShadowSceneNode*))Hooks::RenderReflections;
@@ -114,6 +113,7 @@ float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 
 void (__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void (__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
 void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* SourceTarget, BSRenderedTexture* DestinationTarget) {
+	TheShaderManager->UpdateConstants();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	IDirect3DSurface9* GameSurface = NULL;
@@ -122,9 +122,7 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 	SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
 	OutputSurface = TheRenderManager->defaultRTGroup->RenderTargets[0]->data->Surface;
 
-	Device->SetRenderTarget(0, GameSurface);
 	Device->StretchRect(GameSurface, NULL, OutputSurface, NULL, D3DTEXF_NONE); // copy the backbuffer to NVR surface
-
 	TheShaderManager->RenderEffectsPreTonemapping(OutputSurface);
 
 	Device->StretchRect(OutputSurface, NULL, GameSurface, NULL, D3DTEXF_NONE); // copy the texture output by NVR to the game's back buffer before imagespace pass

@@ -109,11 +109,11 @@ void TextureManager::Initialize() {
 	UINT ShadowCubeMapSize = ShadowsInteriors->ShadowCubeMapSize;
 	
 	// create textures used by NVR and bind them to surfaces
-	InitTexture(&TheTextureManager->SourceTexture, &TheTextureManager->SourceSurface, Width, Height, D3DFMT_A8R8G8B8);
-	InitTexture(&TheTextureManager->RenderedTexture, &TheTextureManager->RenderedSurface, Width, Height, D3DFMT_A8R8G8B8);
+	InitTexture(&TheTextureManager->SourceTexture, &TheTextureManager->SourceSurface, Width, Height, D3DFMT_A16B16G16R16F);
+	InitTexture(&TheTextureManager->RenderedTexture, &TheTextureManager->RenderedSurface, Width, Height, D3DFMT_A16B16G16R16F);
 	InitTexture(&TheTextureManager->ShadowPassTexture, &TheTextureManager->ShadowPassSurface, Width, Height, D3DFMT_A8R8G8B8);
 	InitTexture(&TheTextureManager->NormalsTexture, &TheTextureManager->NormalsSurface, Width, Height, D3DFMT_A16B16G16R16F);
-	InitTexture(&TheTextureManager->AvgLumaTexture, &TheTextureManager->AvgLumaSurface, 1, 1, D3DFMT_A8R8G8B8);
+	InitTexture(&TheTextureManager->AvgLumaTexture, &TheTextureManager->AvgLumaSurface, 1, 1, D3DFMT_A16B16G16R16F);
 	//InitTexture(&TheTextureManager->BloomTexture, &TheTextureManager->BloomSurface, Width, Height, D3DFMT_A8R8G8B8);
 
 	TheTextureManager->DepthTexture = NULL;
