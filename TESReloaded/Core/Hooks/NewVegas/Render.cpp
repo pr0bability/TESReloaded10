@@ -113,16 +113,28 @@ float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 }
 
 void (__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void (__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
-void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* RenderedTexture1, BSRenderedTexture* RenderedTexture2) {
-	
-	ProcessImageSpaceShaders(Renderer, RenderedTexture1, RenderedTexture2);
-	if (!RenderedTexture2 && TheRenderManager->currentRTGroup) {
-		TheShaderManager->RenderEffects(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface);
-		TheRenderManager->CheckAndTakeScreenShot(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface);
-	}
+void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* SourceTarget, BSRenderedTexture* DestinationTarget) {
+
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	IDirect3DSurface9* GameSurface = NULL;
+	IDirect3DSurface9* OutputSurface = NULL;
+
+	SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
+	OutputSurface = TheRenderManager->defaultRTGroup->RenderTargets[0]->data->Surface;
+
+	Device->SetRenderTarget(0, GameSurface);
+	Device->StretchRect(GameSurface, NULL, OutputSurface, NULL, D3DTEXF_NONE); // copy the backbuffer to NVR surface
+
+	TheShaderManager->RenderEffectsPreTonemapping(OutputSurface);
+
+	Device->StretchRect(OutputSurface, NULL, GameSurface, NULL, D3DTEXF_NONE); // copy the texture output by NVR to the game's back buffer before imagespace pass
+	ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
+
+	TheShaderManager->RenderEffects(OutputSurface);
+	TheRenderManager->CheckAndTakeScreenShot(OutputSurface);
 }
 
-static void RenderMainMenuMovie() {
+static void RenderMainMenuMovie() { 
 
 	if (TheSettingManager->SettingsMain.Main.ReplaceIntro && InterfaceManager->IsActive(Menu::MenuType::kMenuType_Main))
 		TheBinkManager->Render(MainMenuMovie);
