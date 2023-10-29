@@ -336,7 +336,7 @@ public:
 	virtual void			SetCT();
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable);
 	bool					SwitchEffect();
-	void					Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, bool useSourceBuffer);
+	void					Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer);
 	void					DisposeEffect();
 	bool					LoadEffect(bool alwaysCompile = false); 
 	
@@ -429,6 +429,14 @@ public:
     bool                    orthoRequired;
     bool                    avglumaRequired;
 	float					isDayTime;
+	bool					isExterior;
+	bool					isUnderwater;
+	bool					isDialog;
+	bool					isPersuasion;
+	bool					isCellChanged;
+	bool					VATSIsOn;
+	bool					PipBoyIsOn;
+	bool					OverlayIsOn;
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];
 };

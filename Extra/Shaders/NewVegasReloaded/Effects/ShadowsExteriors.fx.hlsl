@@ -94,12 +94,13 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float brightness = luma(color);
 	float bloomScale = 0.1; 
 
-	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
-	bloom *= brightness * 100;
-	bloom = 1 - saturate(bloom);
+	// float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
+	// bloom *= brightness * 100;
+	// bloom = 1 - saturate(bloom);
 
 	// tint shadowed areas with Sky color before blending
-	float4 colorShadow = luma(color.rgb) * (Shadow.r * bloom) * TESR_SkyColor;
+	// float4 colorShadow = luma(color.rgb) * (Shadow.r * bloom) * TESR_SkyColor;
+	float4 colorShadow = luma(color.rgb) * (Shadow.r) * TESR_SkyColor;
 	return lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.2)); // bias the transition between the 2 colors to make it less noticeable
 }
 
