@@ -192,8 +192,9 @@ float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blu
 		color1.r += BlurWeights[i] * color2.r * useForBlur;
 		WeightSum += BlurWeights[i] * useForBlur;
     }
+	
 	color1.r /= WeightSum;
-    return color1;
+    return float4(color1.rgb, 1);
 }
 
 

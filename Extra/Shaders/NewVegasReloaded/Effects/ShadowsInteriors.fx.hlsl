@@ -38,7 +38,7 @@ VSOUT FrameVS(VSIN IN)
 
 float4 Shadow( VSOUT IN ) : COLOR0 {
 	float4 color = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
-	return color;
+	return float4(color.rgb, 1);
 }
 
 float4 CombineShadow( VSOUT IN ) : COLOR0 {
@@ -61,7 +61,7 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 	finalColor.rgb = lerp(luma(finalColor).xxx, finalColor.rgb, 1 + Shadow * shadowPower * 0.5); // boost saturation in darker areas
 
 	float lumaDiff = invlerps(luma(finalColor.rgb), 1.0f, luma(color.rgb));
-	return lerp(finalColor, color, lumaDiff); // bring back some of the original color based on luma (brightest lights will come through)
+	return float4(lerp(finalColor, color, lumaDiff).rgb, 1); // bring back some of the original color based on luma (brightest lights will come through)
 }
 
 technique {

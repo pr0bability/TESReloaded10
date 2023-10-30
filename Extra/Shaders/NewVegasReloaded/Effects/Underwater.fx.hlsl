@@ -126,7 +126,7 @@ float4 Godrays( VSOUT IN) : COLOR0 {
 	float stepSize = godraysMaxDistance / 50;
 	float3 step = eyeVector * stepSize;
 
-	float4 color = float4(0, 0, 0, 0);
+	float4 color = float4(0, 0, 0, 1);
 	
 	float3 samplingUV = TESR_CameraPosition.xyz;
 	[unroll]
@@ -139,7 +139,7 @@ float4 Godrays( VSOUT IN) : COLOR0 {
 		color += getCaustics(samplingUV) * rayColor * samplingDepthFade * samplingDistanceFade * (distance < depth);
 	}
 
-	return smoothstep(0.1, 0.4, color); // clamp the values to increase the strength and improve blending
+	return float4(smoothstep(0.1, 0.4, color).rgb, 1); // clamp the values to increase the strength and improve blending
 }
 
 

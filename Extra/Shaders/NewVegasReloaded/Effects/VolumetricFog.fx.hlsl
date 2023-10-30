@@ -15,6 +15,9 @@ float4 TESR_SkyData; //
 float4 TESR_DebugVar; 
 float4 TESR_SunsetColor; // color boost for sun when near the horizon
 float4 TESR_SunAmount; // x: isDaytime
+// float4 TESR_HDRBloomData; // 
+// float4 TESR_HDRData; // x: isDaytime
+// float4 TESR_LotteData; // x: isDaytime
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -45,6 +48,7 @@ static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
 
 #include "Includes/Depth.hlsl"
 #include "Includes/Helpers.hlsl"
+// #include "Includes/Tonemapping.hlsl"
 
 struct VSOUT
 {
@@ -108,6 +112,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 	// blend with fog color
 	float3 fogColor = lerp(skyColor, TESR_FogColor.rgb, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
+    // fogColor = pow(tonemap(fogColor), 2.2); // tonemap final color
 	float3 originalFogColor = fogColor;
 	float originalFogLuma = luma(originalFogColor);
 	fogColor = lerp(color, fogColor, fogAmount).rgb; // calculate final color of scene through the fog
@@ -122,6 +127,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
     float3 additiveFogColor = originalFogColor * (1.0f - fogAdditiveLumaRatio);
     color += additiveFogColor;
 
+	// color += lerp(0, ditherMat[ (IN.UVCoord.x)%4 ][ (IN.UVCoord.y)%4 ] / 255, sunAmount);
 
 	// return float4(selectColor(TESR_DebugVar.w, color, float(fogDepth / farZ).xxx, fogAmount.xxx, originalFogColor, sunInfluence.xxx, skyColor, TESR_FogColor, black, black, black), 1);
 

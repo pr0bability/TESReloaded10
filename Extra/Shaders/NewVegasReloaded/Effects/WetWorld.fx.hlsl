@@ -134,7 +134,7 @@ float4 BlurWetMap(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius)
 		WeightSum += BlurWeights[i];
     }
 	color /= WeightSum;
-    return color;
+    return float4(color.rrr, 1);
 }
 
 float4 Wet( VSOUT IN ) : COLOR0
@@ -208,7 +208,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	// transition between surface ripple and deeper puddles
 	float4 color = lerp(rippleColor, puddleColor, puddlemask);
 
-    return lerp(baseColor, color, LODfade); // fade out puddles
+    return float4(lerp(baseColor, color, LODfade).rgb, 1); // fade out puddles
 }
 
 
