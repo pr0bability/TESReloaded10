@@ -192,7 +192,7 @@ float4 SnowCoverage( VSOUT IN ) : COLOR0
 	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
 
 
-	return ortho.xxxx;
+	return float4(ortho.xxx, 1);
 }
 
 
@@ -271,7 +271,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
 
 	color = lerp(color, snowColor, coverage * min(vertical, ortho));
-	return color;
+	return float4(color.rgb, 1);
 }
 
 

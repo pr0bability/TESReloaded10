@@ -59,7 +59,7 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
     //     if (IN.UVCoord.y > 0.5 && IN.UVCoord.y < 0.6) return darks + lights;
 	// }
 
-	return color;
+	return float4(color.rgb, 1);
 }
 
 technique

@@ -101,7 +101,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// tint shadowed areas with Sky color before blending
 	// float4 colorShadow = luma(color.rgb) * (Shadow.r * bloom) * TESR_SkyColor;
 	float4 colorShadow = luma(color.rgb) * (Shadow.r) * TESR_SkyColor;
-	return lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.2)); // bias the transition between the 2 colors to make it less noticeable
+	return float4(lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.2)).rgb, 1); // bias the transition between the 2 colors to make it less noticeable
 	// return color * Shadow.r; // bias the transition between the 2 colors to make it less noticeable
 }
 

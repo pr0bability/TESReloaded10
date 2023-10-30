@@ -28,5 +28,5 @@ float4 DepthBlur(VSOUT IN, uniform sampler2D buffer, uniform float2 OffsetMask, 
 		WeightSum += BlurWeights[i] * useForBlur;
     }
 	color1 /= WeightSum;
-    return color1;
+    return float4(color1.rgb, 1);
 }
