@@ -111,25 +111,26 @@ float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 
 }
 
-void (__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void (__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
+void(__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void(__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
 void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* SourceTarget, BSRenderedTexture* DestinationTarget) {
-	TheShaderManager->UpdateConstants();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	IDirect3DSurface9* GameSurface = NULL;
 	IDirect3DSurface9* OutputSurface = NULL;
 
+	TheShaderManager->UpdateConstants();
+
 	SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
-	OutputSurface = TheRenderManager->defaultRTGroup->RenderTargets[0]->data->Surface;
+	TheShaderManager->RenderEffectsPreTonemapping(GameSurface);
 
-	Device->StretchRect(GameSurface, NULL, OutputSurface, NULL, D3DTEXF_NONE); // copy the backbuffer to NVR surface
-	TheShaderManager->RenderEffectsPreTonemapping(OutputSurface);
-
-	Device->StretchRect(OutputSurface, NULL, GameSurface, NULL, D3DTEXF_NONE); // copy the texture output by NVR to the game's back buffer before imagespace pass
 	ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
 
-	TheShaderManager->RenderEffects(OutputSurface);
-	TheRenderManager->CheckAndTakeScreenShot(OutputSurface);
+	if (!DestinationTarget && TheRenderManager->currentRTGroup) {
+		OutputSurface = TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface;
+
+		TheShaderManager->RenderEffects(OutputSurface);
+		TheRenderManager->CheckAndTakeScreenShot(OutputSurface);
+	}
 }
 
 static void RenderMainMenuMovie() { 
@@ -337,4 +338,4 @@ void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apSha
 
 	// emittance color is index 27
 	ScaleColor(GetLightConstant(27), TheShaderManager->ShaderConst.HDR.PointLightMult);
-}
+}	//ScaleColor(GetLightConstant(27), TheShaderManager->ShaderConst.HDR.PointLightMult);
