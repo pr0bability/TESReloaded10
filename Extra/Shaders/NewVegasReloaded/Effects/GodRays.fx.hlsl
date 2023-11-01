@@ -75,10 +75,10 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 
 	// quick average lum with 4 samples at corner pixels
 	float3 color;
-	color = tex2D(TESR_RenderedBuffer, uv + float2(-1, -1) * TESR_ReciprocalResolution.xy).rgb;
-	color += tex2D(TESR_RenderedBuffer, uv + float2(-1, 1) * TESR_ReciprocalResolution.xy).rgb;
-	color += tex2D(TESR_RenderedBuffer, uv + float2(1, -1) * TESR_ReciprocalResolution.xy).rgb;
-	color += tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb;
+	color = saturate(tex2D(TESR_RenderedBuffer, uv + float2(-1, -1) * TESR_ReciprocalResolution.xy).rgb);
+	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(-1, 1) * TESR_ReciprocalResolution.xy).rgb);
+	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, -1) * TESR_ReciprocalResolution.xy).rgb);
+	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb);
 	color /= 4;
 
 	float threshold = lumTreshold * luma(TESR_SunColor.rgb); // scaling the luma treshold with sun intensity
@@ -87,7 +87,7 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 
 	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
 
-	return float4(bloom * color * 100, 1.0f);
+	return float4(saturate(bloom * color * 100), 1.0f);
 }
 
 
@@ -148,7 +148,7 @@ float4 Combine(VSOUT IN) : COLOR0
 	float glareAttenuation = max(0.3, pows(saturate(distance), glareReduction));
 	float attenuation = shade(TESR_ViewSpaceLightDir.xyz, eyeDir) * glareAttenuation * heightAttenuation;
 
-	rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
+	// rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
 	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
 	rays = saturate(rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1)));
 
@@ -158,8 +158,7 @@ float4 Combine(VSOUT IN) : COLOR0
 	uv /= TESR_ReciprocalResolution.xy;
 	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
-	color.rgb += rays.rgb;
-	return color;
+	return float4(color.rgb + rays.rgb, 1);
 }
  
 technique

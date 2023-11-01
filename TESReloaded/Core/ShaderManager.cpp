@@ -1609,24 +1609,18 @@ void ShaderManager::UpdateConstants() {
 		else if (IsThirdPersonView)
 			sectionName = "Shaders.DepthOfField.ThirdPersonView";
 
+		int Mode = TheSettingManager->GetSettingI(sectionName, "Mode");
 		bool dofActive = TheSettingManager->GetSettingI(sectionName, "Enabled");
-		switch (TheSettingManager->GetSettingI(sectionName, "Mode")){
-			case 1:
-				if (isDialog || isPersuasion) dofActive = false;
-				break;
-			case 2:
-				if (!isDialog) dofActive = false;
-				break;
-			case 3:
-				if (!isPersuasion) dofActive = false;
-				break;
-			case 4:
-				if (!isDialog && !isPersuasion) dofActive = false;
-			default:
-				break;
-		}
 
-		if (ShaderConst.DepthOfField.Enabled = dofActive) {
+		// disable based on settings/context
+		if (Mode == 1 && (isDialog || isPersuasion)) dofActive = false;
+		if (Mode == 2 && (!isDialog)) dofActive = false;
+		if (Mode == 3 && (!isPersuasion)) dofActive = false;
+		if (Mode == 4 && (!isDialog || !isPersuasion)) dofActive = false;
+
+		ShaderConst.DepthOfField.Enabled = dofActive;
+
+		if (dofActive) {
 			ShaderConst.DepthOfField.Blur.x = TheSettingManager->GetSettingF(sectionName, "DistantBlur");
 			ShaderConst.DepthOfField.Blur.y = TheSettingManager->GetSettingF(sectionName, "DistantBlurStartRange");
 			ShaderConst.DepthOfField.Blur.z = TheSettingManager->GetSettingF(sectionName, "DistantBlurEndRange");
@@ -1638,30 +1632,18 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
+	ShaderConst.Cinema.Data.x = 1.0f; // set cinema aspect ratio to native ar
 	if (Effects.Cinema->Enabled) {
 		int Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
+		float aspectRatio = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
 
-		ShaderConst.Cinema.Data.x = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
-		switch (Mode) {
-			case 1:
-				if (isDialog || isPersuasion) Mode = -1; // disabled during dialog an persuation menus
-				break;
-			case 2:
-				if (!isDialog) Mode = -1;
-				break;
-			case 3:
-				if (!isPersuasion) Mode = -1;
-				break;
-			case 4:
-				if (!isDialog && !isPersuasion) Mode = -1;
-				break;
-			default:
-				break;
-		}
+		// disable based on settings/context
+		if (Mode == 1 && (isDialog || isPersuasion)) aspectRatio = 1.0f;
+		if (Mode == 2 && (!isDialog)) aspectRatio = 1.0f;
+		if (Mode == 3 && (!isPersuasion)) aspectRatio = 1.0f;
+		if (Mode == 4 && (!isDialog && !isPersuasion)) aspectRatio = 1.0f;
 
-		if (Mode == -1) {
-			ShaderConst.Cinema.Data.x = 1.0f; // set cinema aspect ratio to native ar
-		}
+		ShaderConst.Cinema.Data.x = aspectRatio;
 	}
 
 	// camera/position change data
@@ -1935,12 +1917,10 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 
 
 void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget) {
-	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
-	if (!Player->parentCell) return;
-	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
-
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
+
+	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
 
 	auto timer = TimeLogger();
 
@@ -1948,6 +1928,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
 	IDirect3DSurface9* RenderedSurface = TheTextureManager->RenderedSurface;
 
+	// prepare device for effects
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
 
@@ -1962,8 +1943,10 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
 	}
 
-	// prepare device for effects
 	Device->SetRenderTarget(0, RenderTarget);
+
+	if (!Player->parentCell) return;
+	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	// copy the source render target to both the rendered and source textures (rendered gets updated after every pass, source once per effect)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
@@ -1972,7 +1955,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// Disable shadows during VATS
-	if (!VATSIsOn) {
+	if (!VATSIsOn && !isDialog) {
 		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 	}
@@ -1990,14 +1973,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
-	// calculate average luma for use by shaders
-	if (avglumaRequired) {
-		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, NULL);
-		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
-	}
-
 	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
@@ -2031,7 +2007,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
 	if (!isUnderwater && isExterior) {
-		Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+		Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 		if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
@@ -2041,6 +2017,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, NULL);
 		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
 	}
+
+	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// screenspace coloring/blurring effects get rendered last
 	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
