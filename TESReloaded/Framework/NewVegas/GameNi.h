@@ -610,7 +610,7 @@ assert(sizeof(SceneGraph) == 0xC0);
 class NiDynamicEffect : public NiAVObject {
 public:
 	UInt8			On;				// 9C
-	UInt8			unk9D;			// 9D
+	UInt8			EffectType;		// 9D
 	UInt8			CastShadows;	// 9E
 	UInt8			CanCarry;		// 9F
 	UInt32			Index;			// A0
@@ -622,6 +622,16 @@ public:
 	UInt32			unkB8;			// B8
 	UInt32			unkBC;			// BC
 	UInt32			unkC0;			// C0
+
+
+	enum EffectTypes {
+		AMBIENT_LIGHT = 0,
+		POINT_LIGHT = 2,
+		DIR_LIGHT = 3,
+		SPOT_LIGHT = 4,
+		TEXTURE_EFFECT = 5,
+		MAX_TYPES = TEXTURE_EFFECT + 1,
+	};
 };
 assert(sizeof(NiDynamicEffect) == 0xC4);
 
