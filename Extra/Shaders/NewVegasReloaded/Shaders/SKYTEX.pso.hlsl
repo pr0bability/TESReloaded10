@@ -51,7 +51,7 @@ struct VS_OUTPUT {
 
 // Code:
 #include "Includes/Helpers.hlsl"
-#include "Includes/Position.hlsl"
+#include "Includes/Sky.hlsl"
 
 float3 getNormal(float2 partial, float3 eyeDir){
 
@@ -112,14 +112,14 @@ VS_OUTPUT main(VS_INPUT IN) {
     float greyScale = lerp(luma(finalColor), 1, TESR_CloudData.w);
     float alpha = finalColor.w * TESR_CloudData.z;
 
-    float3 sunColor = TESR_SunColor; // increase suncolor strength with sun height
-    float sunSet = saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x);
-    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb, sunSet * pow(TESR_SunAmount.x, 5)); // add extra red to the sun at sunsets
+    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
 
-    // calculate sky color to blend in the clouds
-    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
-    skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
-    skyColor += sunInfluence * (1 - sunHeight) * lerp(0.5, 1, athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
+    // calculate sky color to blend in the clouds    
+    float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
+
+    // float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
+    // skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
+    // skyColor += sunInfluence * (1 - sunHeight) * lerp(0.5, 1, athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
 
     float3 scattering = sunInfluence * lerp(0.3, 1, 1 - alpha) * (skyColor + sunColor) * 0.3;
 
@@ -139,7 +139,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     } else {
         // simply tint the clouds
         float sunInfluence = 1 - pow(sunDir, 3.0);
-        float3 cloudTint = lerp(pow(TESR_SkyLowColor.rgb, 5.0), sunColor * 1.5, saturate(sunInfluence * saturate(greyScale))).rgb;
+        float3 cloudTint = lerp(pow(TESR_SkyLowColor.rgb, 5.0), sunColor, saturate(sunInfluence * saturate(greyScale))).rgb;
         cloudTint = lerp(cloudTint, white.rgb, sunHeight * TESR_SunAmount.x); // tint the clouds less when the sun is high in the sky
 
         float dayLight = saturate(luma(sunColor));
