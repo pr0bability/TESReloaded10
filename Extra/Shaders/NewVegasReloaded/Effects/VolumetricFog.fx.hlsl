@@ -11,13 +11,10 @@ float4 TESR_SunAmbient;
 float4 TESR_HorizonColor;
 float4 TESR_SkyLowColor;
 float4 TESR_SkyColor; // top sky color
-float4 TESR_SkyData; //
+float4 TESR_SkyData; // x: athmosphere thickness, y: sun influence, z: sun strength w: sky strength
 float4 TESR_DebugVar; 
 float4 TESR_SunsetColor; // color boost for sun when near the horizon
 float4 TESR_SunAmount; // x: isDaytime
-// float4 TESR_HDRBloomData; // 
-// float4 TESR_HDRData; // x: isDaytime
-// float4 TESR_LotteData; // x: isDaytime
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -48,7 +45,7 @@ static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
 
 #include "Includes/Depth.hlsl"
 #include "Includes/Helpers.hlsl"
-// #include "Includes/Tonemapping.hlsl"
+#include "Includes/Sky.hlsl"
 
 struct VSOUT
 {
@@ -102,42 +99,20 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
     float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
 	float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
-    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, 0.5 + 0.5 * sunHeight); // tint the base more with horizon color when sun is high
-
-	// add extra red to the sun at sunsets
-    float sunSet = saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x);
-    float3 sunColor = lerp(TESR_SunColor.rgb, TESR_SunColor.rgb + TESR_SunsetColor.rgb, sunSet * invlerp(0, 0.5, TESR_SunAmount.x)); 
-	float sunAmount = pows(saturate(sunDir), SunExponent) * (SunGlare * SunGlareCoeff); //sun influence
-    skyColor += sunInfluence * SunGlareCoeff * sunColor;
+    //float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, 0.5 + 0.5 * sunHeight); // tint the base more with horizon color when sun is high
+	float3 sunColor = GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
+	float3 skyColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
 	// blend with fog color
-	float3 fogColor = lerp(skyColor, TESR_FogColor.rgb, saturate(1/ (1 + fogDepth))).rgb; // fade color between fog to horizon based on depth
-    // fogColor = pow(tonemap(fogColor), 2.2); // tonemap final color
-	float3 originalFogColor = fogColor;
-	float originalFogLuma = luma(originalFogColor);
+	float3 fogColor = lerp(TESR_FogColor.rgb, skyColor, pow(depth/farZ, 0.3)).rgb; // fade color between fog to horizon based on depth
 	fogColor = lerp(color, fogColor, fogAmount).rgb; // calculate final color of scene through the fog
 
-    // Blend back in some of the original color based on luma (brightest lights will come through):
-    float fogLuma = luma(fogColor);
-    float lumaDiff = invlerps(saturate(fogLuma), 1.0f, luma(color));
-    color = lerp(fogColor, color, lumaDiff); 
+	float lumaDiff = max(luma (color) - luma(fogColor), 0);
+	fogColor += lumaDiff * (color - luma(fogColor)) * lerp(1, 0.5, fogAmount); // bring back the light above the fog color
 
-    // // Bring back any fog above 1 as additive (there usually isn't any, but it's good for HDR rendering):
-    float fogAdditiveLumaRatio = saturate(1.0f / originalFogLuma); // From (background) color luma to fog luma
-    float3 additiveFogColor = originalFogColor * (1.0f - fogAdditiveLumaRatio);
-    color += additiveFogColor;
+	//color += lerp(0, ditherMat[ (IN.UVCoord.x)%4 ][ (IN.UVCoord.y)%4 ] / 255, TESR_SunAmount.x);
 
-	// color += lerp(0, ditherMat[ (IN.UVCoord.x)%4 ][ (IN.UVCoord.y)%4 ] / 255, sunAmount);
-
-	// return float4(selectColor(TESR_DebugVar.w, color, float(fogDepth / farZ).xxx, fogAmount.xxx, originalFogColor, sunInfluence.xxx, skyColor, TESR_FogColor, black, black, black), 1);
-
-	// if (IN.UVCoord.x > 0.8 && IN.UVCoord.x < 0.9){
-	// 	if (IN.UVCoord.y > 0.3 && IN.UVCoord.y < 0.4) return TESR_FogColor;
-	// 	if (IN.UVCoord.y > 0.4 && IN.UVCoord.y < 0.5) return TESR_HorizonColor;
-	// 	if (IN.UVCoord.y > 0.5 && IN.UVCoord.y < 0.6) return TESR_SunColor;
-	// 	if (IN.UVCoord.y > 0.6 && IN.UVCoord.y < 0.7) return TESR_SunAmbient;
-	// }
-	return float4(color, 1.0f);
+	return float4(fogColor, 1.0f);
 }
 
 technique
