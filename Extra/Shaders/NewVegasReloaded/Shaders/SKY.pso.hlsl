@@ -44,7 +44,7 @@ struct VS_OUTPUT {
 };
 
 #include "Includes/Helpers.hlsl"
-#include "Includes/Position.hlsl"
+#include "Includes/Sky.hlsl"
 
 
 VS_OUTPUT main(VS_INPUT IN) {
@@ -59,12 +59,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunDir = dot(eyeDir, TESR_SunPosition.xyz);
     float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
-    float3 sunColor = (1 + sunHeight) * TESR_SunColor; // increase suncolor strength with sun height
-    sunColor = lerp(sunColor, sunColor + TESR_SunsetColor.rgb, saturate(pows(1 - sunHeight, 8) * TESR_SkyData.x * pows(TESR_SunAmount.x, 5))); // add extra red to the sun at sunsets
-
-    float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, saturate(verticality));
-    skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
-    skyColor += sunInfluence * (1 - sunHeight) * (0.5 + 0.5 * athmosphere) * sunColor * TESR_SkyData.z;
+    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor, TESR_SunsetColor);
+    float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
     // draw the sun procedurally
     float sunDisk = smoothstep(0.9996, 0.9997, sunDir);
