@@ -864,8 +864,7 @@ void ShadowManager::RenderShadowMaps() {
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
 	TESObjectCELL* currentCell = Player->parentCell;
 
-	bool isExterior = false;
-	if (currentCell) isExterior = !currentCell->IsInterior();// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
+	bool isExterior = TheShaderManager->isExterior;// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
 	// Render directional shadows for Sun/Moon
 
@@ -1023,7 +1022,7 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
     RenderState->SetPixelShader(ShadowMapBlurPixel->ShaderHandle, false);
 	RenderState->SetFVF(FrameFVF, false);
 	Device->SetStreamSource(0, BlurShadowVertex[ShadowMapType], 0, sizeof(FrameVS));
-	RenderState->SetTexture(0, SourceShadowMap);
+	RenderState->SetTexture(0, SourceShadowMap); // bind source texture to sampler
 	Device->SetRenderTarget(0, TargetShadowMap);
 	
 	// Pass map resolution to shader as a constant
@@ -1045,8 +1044,7 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
 		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 		Device->EndScene();
 
-		// move texture to render device for next pass
-		RenderState->SetTexture(0, BlurredShadowTexture);
+		RenderState->SetTexture(0, BlurredShadowTexture); // bind blurred texture to sampler for next pass
 	}
     RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
     RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
