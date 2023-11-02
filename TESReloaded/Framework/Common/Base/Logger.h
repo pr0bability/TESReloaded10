@@ -8,6 +8,7 @@ public:
 	static void Log(const char* Message, ...);
 	static void Debug(char* Message, ...);
 	static void Debug(const char* Message, ...);
+	static void TraceRenderState();
 	
 //	static char			MessageBuffer[8192];
 	static FILE*		LogFile;

@@ -12,11 +12,11 @@ float4 Cinematic : register(c19); // x:saturation, y:avgluma, z:brightness, w: c
 float4 Tint : register(c20);  // weather Cinematic IS tint?
 float4 Fade : register(c22);  // Night eye color
 float4 TESR_DebugVar : register(c24);
-float4 TESR_HDRBloomData : register(c25);
+float4 TESR_HDRBloomData : register(c25); //
 float4 TESR_SunAmount : register(c26);
-float4 TESR_HDRData : register(c27);
-float4 TESR_LotteData : register(c28);
-float4 TESR_ToneMapping : register(c29);
+float4 TESR_HDRData : register(c27); //
+float4 TESR_LotteData : register(c28); //
+float4 TESR_ToneMapping : register(c29); //
 
 // Registers:
 //
@@ -47,9 +47,6 @@ struct VS_OUTPUT {
 
 // Code:
 
-
-
-
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
@@ -70,14 +67,15 @@ VS_OUTPUT main(VS_INPUT IN) {
     final = lerp(screenluma.xxx, final, Cinematic.x * TESR_HDRData.z); // saturation
 
     final = tonemap(final);
-   float3 tint = tonemap(screenluma * Tint.rgb); // tonemap tint to simulate tinting before tonemap
+    float3 tint = tonemap(screenluma * Tint.rgb); // tonemap tint to simulate tinting before tonemap
  
     screenluma = saturate(luma(final));
-    final = lerp(final, tint.rgb * screenluma, Tint.a * TESR_ToneMapping.z); // apply tint
+    final = lerp(final, tint.rgb, Tint.a * TESR_ToneMapping.z); // apply tint
     final *= lerp(1, Fade.rgb, lerp(Fade.a, 0, screenluma)); // apply night eye only to darker parts of the scene to avoid dulling bloom
 
-    OUT.color_0.rgb = pows(final, TESR_HDRData.w);
+    OUT.color_0.rgb = pows(final.rgb, TESR_HDRData.w);
     OUT.color_0.a = BlurScale.z;
+    //OUT.color_0.a = 1;
 
     return OUT;
 };
