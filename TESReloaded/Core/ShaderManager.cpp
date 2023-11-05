@@ -1925,12 +1925,18 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	auto timer = TimeLogger();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
 	IDirect3DSurface9* RenderedSurface = TheTextureManager->RenderedSurface;
 
 	// prepare device for effects
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
+
+	// Disable Depth render state settings and enable full color
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, 15, RenderStateArgs);
 
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
@@ -1954,11 +1960,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
-	// Disable shadows during VATS
-	if (!VATSIsOn && !isDialog) {
-		if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-		else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
-	}
+	if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	if (isUnderwater) {
 		// underwater only effects
@@ -1974,6 +1977,10 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	}
 
 	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
+	// Restore render state settings
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
@@ -1993,6 +2000,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	TheRenderManager->SetupSceneCamera();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
 	IDirect3DSurface9* RenderedSurface = TheTextureManager->RenderedSurface;
 
@@ -2048,8 +2056,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	//		}
 	//	}
 	//}
-
-	//PreviousCell = currentCell;
 
 	timer.LogTime("ShaderManager::RenderEffects");
 }
