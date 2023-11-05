@@ -14,6 +14,8 @@
 #define RowSpace MenuSettings->RowSpace
 #define RowsPerPage MenuSettings->RowsPerPage
 
+//#define debugMenuInput
+
 void GameMenuManager::Initialize() {
 
 	Logger::Log("Starting the menu manager...");
@@ -45,19 +47,16 @@ void GameMenuManager::Render() {
 	char TextShaderStatus[20];
 	char SettingText[80];
 	size_t ListSize = 0;
-
-	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
-	bool isStatusSection = !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6);
-	bool isWeatherSection = !memcmp(SelectedNode.Section, "Weathers", 8);
+	std::chrono::time_point now = std::chrono::system_clock::now();
 
 	if (InterfaceManager->IsActive(Menu::MenuType::kMenuType_Main)) {
 		// on main menu, only draw the bottom text as signal the mod has loaded
 		if (!MainMenuOn) {
 			MainMenuOn = true;
-			MainMenuStartTime = std::chrono::system_clock::now();
+			MainMenuStartTime = now;
 		}
 
-		std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now() - MainMenuStartTime;
+		std::chrono::duration<double> elapsed_seconds = now - MainMenuStartTime;
 		if (elapsed_seconds.count() > 3.0) return; // only show message at the bottom of the screen for 3 seconds
 
 		SetRect(&Rect, 0, TheRenderManager->height - MenuSettings->TextSize - 10, TheRenderManager->width, TheRenderManager->height + MenuSettings->TextSize);
@@ -67,12 +66,24 @@ void GameMenuManager::Render() {
 		return;
 	}
 
+	bool menuKeyDown = Global->OnKeyDown(MenuSettings->KeyEnable);
+
+#ifdef debugMenuInput
+	if (TheShaderManager->isExterior) Logger::Log("====Exterior====");
+	else Logger::Log("====Interior====");
+	Logger::Log("Menu key %i is down? %i", MenuSettings->KeyEnable, menuKeyDown);
+#endif
+
 	// check for menu key to toggle display of the menu
-	if (Global->OnKeyDown(MenuSettings->KeyEnable)) {
+	if (menuKeyDown) {
 		Enabled = !Enabled;
 
+#ifdef debugMenuInput
+		Logger::Log("toggling menu : %i", Enabled);
+#endif
+
 		if (Enabled) {
-			lastKeyPressed = std::chrono::system_clock::now();
+			lastKeyPressed = now;
 			keyDown = 999;
 		}
 		EditingMode = false;
@@ -84,9 +95,17 @@ void GameMenuManager::Render() {
 
 	if (!Enabled) return; // skip rendering of menu if it isn't enabled
 
+#ifdef debugMenuInput
+	Logger::Log("drawing menu");
+#endif
+
+	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
+	bool isStatusSection = !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6);
+	bool isWeatherSection = !memcmp(SelectedNode.Section, "Weathers", 8);
+
 	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
 
-	//handle entry using numpad keys
+	//handle entry using numpad keys or number row keys depending on setting
 	int startEntry = useNumpad ? MenuSettings->KeyEditing : 13;
 	int key0 = useNumpad ? 82 : 11;
 	int key1 = useNumpad ? 79 : 2;
@@ -143,7 +162,13 @@ void GameMenuManager::Render() {
 			strcat(EditingValue, "-");
 		if (strlen(EditingValue) > 0 && IsKeyPressed(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
 	}
-	else {
+	else if (SelectedNode.Section){ //SelectedNode.Section is empty the first time the menu renders
+
+#ifdef debugMenuInput
+		Logger::Log("Selected column: %i, selected row: %i, ", 1, SelectedRow[SelectedColumn]);
+		Logger::Log("Selected setting: %s.%s ", SelectedNode.Section, SelectedNode.Key);
+#endif
+
 		// handle other types of user input
 		if (Global->OnKeyDown(MenuSettings->KeySave)) {
 			TheSettingManager->SaveSettings();
@@ -229,6 +254,7 @@ void GameMenuManager::Render() {
 	FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
 	FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
 
+	// draw line under Title
 	SetRect(&Rect, Rect.left, Rect.bottom + RowSpace, Rect.right, Rect.bottom + RowSpace + 2);
 	TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L);
 
@@ -239,11 +265,11 @@ void GameMenuManager::Render() {
 	Rows[0] = 0;
 	SetRect(&Rect, Rect.left + MainItemColumnSize * 0, Rect.bottom + RowSpace, Rect.left + MainItemColumnSize * 1, Rect.bottom + RowSpace + MenuSettings->TextSize);
 	TheSettingManager->FillMenuSections(&Sections, NULL);
+
 	ListSize = Sections.size();
 	Pages[0] = ListSize / RowsPerPage;
-	Item = Sections.begin();
 	for (UInt32 i = 0; i < ListSize; i++) {
-		Text = Item->c_str();
+		Text = Sections[i].c_str();
 		SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
 		if (SelectedRow[0] == Rows[0]) {
 			strcpy(SelectedNode.Section, Text);
@@ -257,11 +283,11 @@ void GameMenuManager::Render() {
 		Rect.left += MainItemColumnSize;
 		Rect.right += MainItemColumnSize;
 		Rows[0]++;
-		Item++;
 	}
 
+	// draw line under header
 	SetRect(&Rect, PositionX, Rect.bottom + RowSpace, PositionX + TitleColumnSize, Rect.bottom + RowSpace + 2);
-	TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L);
+	TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L); //fill rectangle with color
 
 	// render left column (shaders/menu category names)
 	int MenuRectX = PositionX;
@@ -271,10 +297,9 @@ void GameMenuManager::Render() {
 	TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section);
 	ListSize = Sections.size();
 	Pages[1] = ListSize / RowsPerPage;
-	Item = Sections.begin();
 	for (UInt32 i = 0; i < ListSize; i++) {
 		if (i >= RowsPerPage * SelectedPage[1] && i < RowsPerPage * (SelectedPage[1] + 1)) {
-			Text = Item->c_str();
+			Text = Sections[i].c_str();
 			Rect.top += MenuSettings->TextSize + RowSpace;
 			Rect.bottom += MenuSettings->TextSize + RowSpace;
 			SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
@@ -322,7 +347,6 @@ void GameMenuManager::Render() {
 			}
 			Rows[1]++;
 		}
-		Item++;
 	}
 
 
@@ -332,10 +356,9 @@ void GameMenuManager::Render() {
 	TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section); // get a list of sections for a given category
 	ListSize = Sections.size();
 	Pages[2] = ListSize / RowsPerPage;
-	Item = Sections.begin();
 	for (UInt32 i = 0; i < ListSize; i++) {
 		if (i >= RowsPerPage * SelectedPage[2] && i < RowsPerPage * (SelectedPage[2] + 1)) {
-			Text = Item->c_str();
+			Text = Sections[i].c_str();
 			Rect.top += MenuSettings->TextSize + RowSpace;
 			Rect.bottom += MenuSettings->TextSize + RowSpace;
 			SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
@@ -355,7 +378,6 @@ void GameMenuManager::Render() {
 
 			Rows[2]++;
 		}
-		Item++;
 	}
 
 	// render right column (settings name/value pairs)
@@ -424,7 +446,6 @@ void GameMenuManager::Render() {
 
 	FontNormal->DrawTextA(NULL, DescriptionText, -1, &RectShadow, DT_RIGHT, TextShadowColorNormal);
 	FontNormal->DrawTextA(NULL, DescriptionText, -1, &Rect, DT_RIGHT, TextColorNormal);
-
 }
 
 
