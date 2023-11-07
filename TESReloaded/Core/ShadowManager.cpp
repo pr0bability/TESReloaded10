@@ -241,14 +241,26 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 
 // Go through accumulations and render found objects
 void ShadowManager::RenderAccums() {
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	IDirect3DDevice9* Device = TheRenderManager->device;
+
 	// Render normal geometry
-	TheShaderManager->ShaderConst.Shadow.Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
-	CurrentPixel->SetCT();
-	CurrentVertex->SetCT();
-	while (!geometryAccum.empty()) {
-		RenderGeometry(geometryAccum.top());
-		geometryAccum.pop();
+	if (!geometryAccum.empty()) {
+		TheShaderManager->ShaderConst.Shadow.Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+		TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+		CurrentPixel->SetCT();
+		CurrentVertex->SetCT();
+
+		// Set diffuse texture sampler state
+		RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
+		RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
+		RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
+		RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
+		RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+		while (!geometryAccum.empty()) {
+			RenderGeometry(geometryAccum.top());
+			geometryAccum.pop();
+		}
 	}
 
 	// Render skinned geometry
@@ -262,14 +274,31 @@ void ShadowManager::RenderAccums() {
 	}
 
 	// Render speedtree
-	TheShaderManager->ShaderConst.Shadow.Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
-	CurrentPixel->SetCT();
-	CurrentVertex->SetCT();
-	while (!speedTreeAccum.empty()) {
-		RenderSpeedTreeGeometry(speedTreeAccum.top());
-		speedTreeAccum.pop();
+	if (!speedTreeAccum.empty()) {
+		TheShaderManager->ShaderConst.Shadow.Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+		TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+		CurrentPixel->SetCT();
+		CurrentVertex->SetCT();
+
+		// Bind constant values for leaf transformation
+		Device->SetVertexShaderConstantF(63, (float*)&BillboardRight, 1);
+		Device->SetVertexShaderConstantF(64, (float*)&BillboardUp, 1);
+		Device->SetVertexShaderConstantF(65, Pointers::ShaderParams::RockParams, 1);
+		Device->SetVertexShaderConstantF(66, Pointers::ShaderParams::RustleParams, 1);
+		Device->SetVertexShaderConstantF(67, Pointers::ShaderParams::WindMatrixes, 16);
+
+		// Set diffuse texture sampler state
+		RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
+		RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
+		RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
+		RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
+		RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+		while (!speedTreeAccum.empty()) {
+			RenderSpeedTreeGeometry(speedTreeAccum.top());
+			speedTreeAccum.pop();
+		}
 	}
+
 }
 
 // Renders basic geometry
@@ -293,11 +322,6 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 
 				// Set diffuse texture at register 0
 				RenderState->SetTexture(0, Texture->rendererData->dTexture);
-				RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
-				RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
-				RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
-				RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
-				RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
 			}
 		}
 	}
@@ -325,21 +349,10 @@ void ShadowManager::RenderSpeedTreeGeometry(NiGeometry* Geo) {
 	NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
 
 	// Bind constant values for leaf transformation
-	Device->SetVertexShaderConstantF(63, (float*)&BillboardRight, 1);
-	Device->SetVertexShaderConstantF(64, (float*)&BillboardUp, 1);
-	Device->SetVertexShaderConstantF(65, Pointers::ShaderParams::RockParams, 1);
-	Device->SetVertexShaderConstantF(66, Pointers::ShaderParams::RustleParams, 1);
-	Device->SetVertexShaderConstantF(67, Pointers::ShaderParams::WindMatrixes, 16);
 	Device->SetVertexShaderConstantF(83, STProp->leafData->leafBase, 48);
 
 	// Set diffuse texture at register 0
 	RenderState->SetTexture(0, Texture->dTexture);
-	RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
-	RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
-	RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
-	RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
-	RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
-
 	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
 	DrawGeometryBuffer(GeoData, GeoData->VertCount);
 
