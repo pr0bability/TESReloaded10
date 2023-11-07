@@ -1,3 +1,5 @@
+#define RESZ_CODE 0x7FA05000
+
 /*
 * Constructor of Animator class. Starts an animator for a given value.
 */
@@ -975,8 +977,8 @@ void ShaderManager::UpdateConstants() {
 	float sunRiseTransitionTime = SunriseEnd - SunriseStart; // sunriseEnd is only the middle point of the transition before nights get fully dark
 	float sunSetTransitionTime = SunsetEnd - SunsetStart; // sunsetStart is only the middle point of the transition
 
-	float sunRise = smoothStep(SunriseStart - sunRiseTransitionTime, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
-	float sunSet = smoothStep(SunsetEnd + sunSetTransitionTime, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+	float sunRise = invLerp(SunriseStart - sunRiseTransitionTime, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
+	float sunSet = invLerp(SunsetEnd + sunSetTransitionTime, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	float newDayTime = sunRise * sunSet;
 
 	bool isDayTimeChanged = false;
@@ -1009,13 +1011,13 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
 		D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
 
-		if (!isDayTime) {
+		if (isDayTime < 0.5) {
 			// use lighting direction at night time
 			ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
 		}
 		else {
 			ShaderConst.SunDir = ShaderConst.SunPosition;
-			//D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
+			D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
 		}
 	}
 
@@ -1029,23 +1031,10 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.ShadowFade.x = 0;
 
 	if (isExterior) {
-		// fade shadows at sunrise/sunset
-		float shadowFadeTime = 1.0f;
-		if ((GameHour >= SunsetEnd - shadowFadeTime) && GameHour < SunsetEnd) { //sunset
-			ShaderConst.ShadowFade.x = smoothStep(SunsetEnd - shadowFadeTime, SunsetEnd, GameHour);
-		}
-		else if (GameHour >= SunsetEnd && GameHour < SunsetEnd + shadowFadeTime) { //moonrise
-			ShaderConst.ShadowFade.x = 1.0f - smoothStep(SunsetEnd, SunsetEnd + shadowFadeTime, GameHour);
-		}
-		else if (GameHour >= SunriseStart - shadowFadeTime && GameHour < SunriseStart) { //moonset
-			ShaderConst.ShadowFade.x = smoothStep(SunriseStart - shadowFadeTime, SunriseStart, GameHour);
-		}
-		else if (GameHour >= SunriseStart && GameHour < SunriseStart + shadowFadeTime) { //sunrise
-			ShaderConst.ShadowFade.x = 1.0f - smoothStep(SunriseStart, SunriseStart + shadowFadeTime, GameHour);
-		}
+		ShaderConst.ShadowFade.x = smoothStep(0.5, 0, abs(isDayTime - 0.5)); // fade shadows to 0 at sunrise/sunset
 
 		// at night time, fade based on moonphase
-		if (GameHour > SunsetEnd || GameHour < SunriseStart) {
+		if (isDayTime < 0.5) {
 			// moonphase goes from 0 to 8
 			float MoonPhase = (fmod(DaysPassed, 8 * currentClimate->phaseLength & 0x3F)) / (currentClimate->phaseLength & 0x3F);
 
@@ -1055,11 +1044,11 @@ void ShaderManager::UpdateConstants() {
 			// map MoonVisibility to MinNightDarkness/1 range
 			float nightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
 			float MoonVisibility = lerp(0.0, (double)nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
-			ShaderConst.ShadowFade.x = lerp (MoonVisibility, 1, ShaderConst.ShadowFade.x);
+			ShaderConst.ShadowFade.x = lerp (0, MoonVisibility, ShaderConst.ShadowFade.x);
 		}
 
 		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-		const char* PointLightsSettingName = (TheShaderManager->isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
+		const char* PointLightsSettingName = (isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
 		bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
 			
 		ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled && Effects.ShadowsExteriors->Enabled;
@@ -1075,7 +1064,8 @@ void ShaderManager::UpdateConstants() {
 
 	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5;
 
-	ShaderConst.SunAmount.x = isDayTime;
+	isDayTime = smoothStep(0, 1, isDayTime); // smooth daytime progression
+	ShaderConst.SunAmount.x = isDayTime; 
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 	if (TheSettingManager->SettingsChanged) {
 		// sky settings are used in several shaders whether the shader is active or not
@@ -1613,10 +1603,10 @@ void ShaderManager::UpdateConstants() {
 		bool dofActive = TheSettingManager->GetSettingI(sectionName, "Enabled");
 
 		// disable based on settings/context
-		if (Mode == 1 && (isDialog || isPersuasion)) dofActive = false;
-		if (Mode == 2 && (!isDialog)) dofActive = false;
-		if (Mode == 3 && (!isPersuasion)) dofActive = false;
-		if (Mode == 4 && (!isDialog || !isPersuasion)) dofActive = false;
+		if ((Mode == 1 && (isDialog || isPersuasion)) ||
+			(Mode == 2 && (!isDialog)) ||
+			(Mode == 3 && (!isPersuasion)) ||
+			(Mode == 4 && (!isDialog || !isPersuasion))) dofActive = false;
 
 		ShaderConst.DepthOfField.Enabled = dofActive;
 
@@ -1638,10 +1628,10 @@ void ShaderManager::UpdateConstants() {
 		float aspectRatio = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
 
 		// disable based on settings/context
-		if (Mode == 1 && (isDialog || isPersuasion)) aspectRatio = 1.0f;
-		if (Mode == 2 && (!isDialog)) aspectRatio = 1.0f;
-		if (Mode == 3 && (!isPersuasion)) aspectRatio = 1.0f;
-		if (Mode == 4 && (!isDialog && !isPersuasion)) aspectRatio = 1.0f;
+		if ((Mode == 1 && (isDialog || isPersuasion)) ||
+			(Mode == 2 && (!isDialog)) || 
+			(Mode == 3 && (!isPersuasion)) ||
+			(Mode == 4 && (!isDialog && !isPersuasion))) aspectRatio = 1.0f;
 
 		ShaderConst.Cinema.Data.x = aspectRatio;
 	}
