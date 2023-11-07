@@ -152,8 +152,7 @@ void TextureManager::InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9*
 	// create a texture to receive the surface contents
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, Format, D3DPOOL_DEFAULT, Texture, NULL);
 	// set the surface level to the texture.
-	IDirect3DTexture9* t = *Texture;
-	t->GetSurfaceLevel(0, Surface);
+	(*Texture)->GetSurfaceLevel(0, Surface);
 }
 
 /*
