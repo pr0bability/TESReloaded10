@@ -6,3 +6,5 @@ packages
 *.fx
 /build/*
 Configurator/target
+*.pso
+*.vso
