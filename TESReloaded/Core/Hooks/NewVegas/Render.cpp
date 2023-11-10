@@ -117,19 +117,21 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	IDirect3DSurface9* GameSurface = NULL;
 	IDirect3DSurface9* OutputSurface = NULL;
-
+	
 	TheShaderManager->UpdateConstants();
-
 	SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
 	TheShaderManager->RenderEffectsPreTonemapping(GameSurface);
-
 	ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
+
+	if (GameSurface) GameSurface->Release();
 
 	if (!DestinationTarget && TheRenderManager->currentRTGroup) {
 		OutputSurface = TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface;
 
 		TheShaderManager->RenderEffects(OutputSurface);
 		TheRenderManager->CheckAndTakeScreenShot(OutputSurface);
+
+		OutputSurface->Release();
 	}
 }
 
