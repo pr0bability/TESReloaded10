@@ -36,13 +36,8 @@ VSOUT FrameVS(VSIN IN)
 
 #include "Includes/BlurDepth.hlsl"
 
-float4 Shadow( VSOUT IN ) : COLOR0 {
-	float4 color = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
-	return float4(color.rgb, 1);
-}
 
 float4 CombineShadow( VSOUT IN ) : COLOR0 {
-
 	// combine Shadow pass and source using an overlay mode + alpha blending
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float depth = readDepth(IN.UVCoord);
@@ -53,28 +48,22 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 	float Shadow = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
 
 	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, uniformDepth)); // fade shadows with distance
-    float shadowPower = TESR_ShadowData.y * TESR_ShadowFade.y;
+    float shadowPower = TESR_ShadowData.y * TESR_ShadowFade.y; // shadowFade.y is set to 0 when shadows are disabled
 	
-	Shadow = saturate(lerp(1, Shadow, shadowPower)); // shadow darkness (shadowFade.y is set to 0 when shadows are disabled)
+	Shadow = saturate(lerp(1, Shadow, shadowPower)); // shadow darkness
 
-	float4 finalColor = saturate(Shadow * pow(color, 1 - shadowPower * 0.4)); // boost the gamma of the base image
-	finalColor.rgb = lerp(luma(finalColor).xxx, finalColor.rgb, 1 + Shadow * shadowPower * 0.5); // boost saturation in darker areas
+	float4 finalColor = saturate(Shadow * (pow(saturate(color), 1 - shadowPower * 0.4))) + max(color - 1, 0); // boost the gamma of the base image
 
 	float lumaDiff = invlerps(luma(finalColor.rgb), 1.0f, luma(color.rgb));
 	return float4(lerp(finalColor, color, lumaDiff).rgb, 1); // bring back some of the original color based on luma (brightest lights will come through)
 }
 
 technique {
-	
-	pass {
-		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Shadow();
-	}
 
 	pass
 	{ 
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 DepthBlur(TESR_RenderedBuffer, OffsetMaskH, 1, 3500, MAXDISTANCE);
+		PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, 1, 3500, MAXDISTANCE);
 	}
 	
 	pass
