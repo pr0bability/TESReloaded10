@@ -46,6 +46,7 @@ void DetectorWindowDumpAttributes(HWND TreeView, UInt32 Msg, WPARAM wParam, LPTV
 
 void DetectorWindowSetNodeName(char* Buffer, int Size, char* Format, char* ClassName, char* Name, float LPosX, float LPosY, float LPosZ);
 
-__forceinline NiColorAlpha* const GetLightColor(int index);
-__forceinline NiVector4* GetConstant(int index);
-void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apShaderProp, void* apRenderPass, D3DXMATRIX aMatrix, void* apTransform, UInt32 aeRenderPassType, void* apSkinInstance);
+//__forceinline NiVector4* GetConstant(int index);
+//__forceinline NiColorAlpha* GetLightConstant(int index);
+//__forceinline void ScaleColor(NiColorAlpha* Color, float scale);
+//void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apShaderProp, void* apRenderPass, D3DXMATRIX aMatrix, void* apTransform, UInt32 aeRenderPassType, void* apSkinInstance);
