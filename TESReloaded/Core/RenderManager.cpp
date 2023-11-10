@@ -303,6 +303,8 @@ void RenderManager::ResolveDepthBuffer() {
             NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthTextureINTZ, NULL, TheTextureManager->DepthTexture, NULL, D3DTEXF_NONE);
         else 
             NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthSurface, NULL, TheTextureManager->DepthTexture, NULL, D3DTEXF_NONE);
+
+		if (TheTextureManager->DepthSurface) TheTextureManager->DepthSurface->Release();
 	}
 
 }
