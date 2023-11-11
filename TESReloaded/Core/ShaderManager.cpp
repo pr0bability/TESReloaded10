@@ -1493,6 +1493,10 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteMidpoint", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteShoulder", isExterior, transitionCurve);
 		}
+		else {
+			ShaderConst.HDR.BloomData.z = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
+			ShaderConst.HDR.PointLightMult = 1.0;
+		}
 
 		if (Effects.ImageAdjust->Enabled) {
 			ShaderConst.ImageAdjust.Data.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Brightness", isExterior, isDayTime);
