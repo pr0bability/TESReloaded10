@@ -12,7 +12,6 @@ float4 TESR_DebugVar; // used for the luma threshold used for bloom
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_LensSampler : register(s2) < string ResourceName = "Effects\dirtlens.png"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_AvgLumaBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const float scale = 0.5;
 
@@ -47,15 +46,14 @@ float4 Lens(VSOUT IN) : COLOR0
 
     // Get the bloom mask to calculate areas where dirt lens will appear
 	float4 bloom = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-    color = color + saturate(dirtColor * TESR_LensData.x * bloom);
+    color = color + saturate(dirtColor.r * bloom) * TESR_LensData.x;
 
-    return color;
+    return float4(color.rgb, 1);
 }
 
 
 float4 Bloom(VSOUT IN ):COLOR0{
 
-	// float avgLuma = tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).g;
     float2 uv = IN.UVCoord;
 	clip((uv <= scale) - 1);
 	uv /= scale;
@@ -68,7 +66,7 @@ float4 Bloom(VSOUT IN ):COLOR0{
 	color += tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy);
 	color /= 4;
 
-	float threshold = TESR_LensData.y; // scaling the luma between night and day // 2
+	float threshold = TESR_LensData.y;
 	float brightness = luma(color);
 	float bloomScale = 0.1; 
 

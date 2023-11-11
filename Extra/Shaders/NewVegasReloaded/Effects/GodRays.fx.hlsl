@@ -59,9 +59,7 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 
 	float depth = (readDepth(uv) / farZ) > 0.98; //only pixels belonging to the sky will register
 	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.rgb, normalize(reconstructPosition(uv))), 18) * 500; // fake sunglare computed from light direction
-	float sunSetFade = 1 - TESR_ShadowFade.x; //grows to 1 at the height of sunset
-	float3 color = (1 - saturate(tex2D(TESR_SourceBuffer, uv).rgb) +  sunGlare * TESR_SunColor.rgb) * depth * sunSetFade;
-	// float3 color = sunGlare ;
+	float3 color = (tex2D(TESR_SourceBuffer, uv).rgb + sunGlare * TESR_SunColor.rgb) * depth;
 
 	return float4(color, 1.0f);
 }
@@ -81,7 +79,7 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb);
 	color /= 4;
 
-	float threshold = lumTreshold * luma(TESR_SunColor.rgb); // scaling the luma treshold with sun intensity
+	float threshold = lumTreshold; // scaling the luma treshold with sun intensity
 	float brightness = luma(color);
 	float bloomScale = intensity;
 
