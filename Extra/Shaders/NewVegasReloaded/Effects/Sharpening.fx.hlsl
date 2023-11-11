@@ -67,7 +67,7 @@ float4 ContrastAdaptiveSharpening(VSOUT IN) : COLOR
         for (int y = -kernelSize / 2; y <= kernelSize / 2; y++)
         {
             float weight = 1.0 - (abs(x) + abs(y)) / kernelSize; // simulate weights with Manhattan distance
-            average += tex2D(TESR_RenderedBuffer, IN.UVCoord + float2(x, y) * TESR_ReciprocalResolution.xy) * weight;
+            average += tex2D(TESR_RenderedBuffer, IN.UVCoord + float2(x, y) * TESR_ReciprocalResolution.xy).rgb * weight;
             sum += weight;
         }
     }

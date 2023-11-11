@@ -59,7 +59,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunDir = dot(eyeDir, TESR_SunPosition.xyz);
     float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
-    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor, TESR_SunsetColor);
+    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
     float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
     // draw the sun procedurally

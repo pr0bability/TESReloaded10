@@ -104,7 +104,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float3 skyColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
 	// blend with fog color
-	float3 fogColor = lerp(TESR_FogColor.rgb, skyColor, pow(depth/farZ, 0.3)).rgb; // fade color between fog to horizon based on depth
+	float3 fogColor = lerp(TESR_FogColor.rgb, skyColor, pows(depth/farZ, 0.3)).rgb; // fade color between fog to horizon based on depth
 	fogColor = lerp(color, fogColor, fogAmount).rgb; // calculate final color of scene through the fog
 
 	float lumaDiff = max(luma (color) - luma(fogColor), 0);

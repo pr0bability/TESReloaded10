@@ -57,7 +57,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // float maxBloom = max(bloom.r, max(bloom.g, bloom.b));
     // float4 ratio = bloom / maxBloom;
     // bloom.rgb = TESR_HDRBloomData.x * pows(max(maxBloom, 0), TESR_HDRBloomData.y) * ratio;
-    bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom, 0), TESR_HDRBloomData.y);
+    bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0), TESR_HDRBloomData.y);
 
     float4 hdrImage = tex2D(DestBlend, IN.texcoord_1.xy); 
     float3 final = pows(hdrImage.rgb, 1/TESR_ToneMapping.w) * TESR_HDRData.y; // linearize & exposure

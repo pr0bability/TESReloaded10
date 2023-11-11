@@ -51,7 +51,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
     
     OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
-    OUT.location = IN.position;
+    OUT.location = IN.position.xyz;
 
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_2.x = saturate((dot(Model[2].xyzw, IN.position.xyzw) - EyePosition.z) / 17);

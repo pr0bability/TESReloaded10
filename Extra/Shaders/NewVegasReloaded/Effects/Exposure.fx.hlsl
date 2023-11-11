@@ -47,7 +47,7 @@ float4 Exposure(VSOUT IN) : COLOR0
 	if (IN.UVCoord.x > 0.7 && IN.UVCoord.x < 0.8 && IN.UVCoord.y>0.8 && IN.UVCoord.y<0.9) return float4(lumaDiff, -lumaDiff, 0, 1);
 #endif
 
-	color = pow(color, (1 + lumaDiff));
+	color = pows(color, (1 + lumaDiff));
 	return color;
 }
 
