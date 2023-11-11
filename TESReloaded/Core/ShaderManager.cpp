@@ -970,13 +970,7 @@ void ShaderManager::UpdateConstants() {
 	// calculating sun amount for shaders (currently not used by any shaders)
 	float sunRise = step(SunriseStart, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSet = step(SunsetEnd, SunsetStart, GameHour);  // 1 before sunset to 0 at night
-	float newDayTime = sunRise * sunSet;
-
-	bool isDayTimeChanged = false;
-	if (isDayTime != newDayTime) {
-		isDayTime = newDayTime;
-		isDayTimeChanged = true;
-	}
+	isDayTime = sunRise * sunSet;
 
 	ShaderConst.SunTiming.x = WorldSky->GetSunriseColorBegin();
 	ShaderConst.SunTiming.y = SunriseEnd;
@@ -986,8 +980,14 @@ void ShaderManager::UpdateConstants() {
 	// fake sunset time tracking with more time given before sunrise/sunset
 	float sunRiseLight = step(SunriseStart - 1.0, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSetLight = step(SunsetEnd + 1.0, SunsetStart, GameHour);  // 1 before sunset to 0 at night
-	float dayLight = sunRiseLight * sunSetLight;
+	float newDayLight = sunRiseLight * sunSetLight;
 	float transitionCurve = smoothStep(0, 0.6, dayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
+
+	bool isDayTimeChanged = false;
+	if (newDayLight != dayLight) {
+		dayLight = newDayLight;
+		isDayTimeChanged = true; // will fire settings update during sunset/sunrise transitions
+	}
 
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
@@ -1372,9 +1372,8 @@ void ShaderManager::UpdateConstants() {
 		if (Effects.VolumetricFog->Enabled) {
 			ShaderConst.VolumetricFog.Data.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Exponent");
 			ShaderConst.VolumetricFog.Data.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "ColorCoeff");
-			ShaderConst.VolumetricFog.Data.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount");
+			ShaderConst.VolumetricFog.Data.z = isExterior?TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount"): TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "AmountInterior");
 			ShaderConst.VolumetricFog.Data.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "MaxDistance");
-			//if (weatherPercent == 1.0f && ShaderConst.fogData.y > TheSettingManager->SettingsVolumetricFog.MaxDistance) ShaderConst.VolumetricFog.Data.w = 0.0f;
 		}
 
 		// blur settings are used to blur normals for all effects using them
@@ -1490,18 +1489,18 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.ImageAdjust->Enabled) {
-			ShaderConst.ImageAdjust.Data.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Brightness", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.Data.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Contrast", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.Data.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Saturation", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.Data.w = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Strength", isExterior, isDayTime);
+			ShaderConst.ImageAdjust.Data.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Brightness", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.Data.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Contrast", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.Data.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Saturation", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.Data.w = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Strength", isExterior, transitionCurve);
 
-			ShaderConst.ImageAdjust.DarkColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorR", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorG", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorB", isExterior, isDayTime);
+			ShaderConst.ImageAdjust.DarkColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorR", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorG", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorB", isExterior, transitionCurve);
 
-			ShaderConst.ImageAdjust.LightColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorR", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorG", isExterior, isDayTime);
-			ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorB", isExterior, isDayTime);
+			ShaderConst.ImageAdjust.LightColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorR", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorG", isExterior, transitionCurve);
+			ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorB", isExterior, transitionCurve);
 		}
 
 		if (Effects.GodRays->Enabled) {
@@ -1667,20 +1666,21 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	if (Effects.Lens->Enabled) {
-		avglumaRequired = true;
-
-		ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
-		if (isExterior)	ShaderConst.Lens.Data.y = lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), isDayTime);
-		else ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
+		if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
+			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
+			if (isExterior)	ShaderConst.Lens.Data.y = lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), transitionCurve);
+			else ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
+		}
 	}
 
 	if (Effects.Exposure->Enabled) {
 		avglumaRequired = true; // mark average luma calculation as necessary
+
 		if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
-			ShaderConst.Exposure.Data.x = TheSettingManager->GetSettingTransition("Shaders.Exposure", "MinBrightness", isExterior, isDayTime);
-			ShaderConst.Exposure.Data.y = TheSettingManager->GetSettingTransition("Shaders.Exposure", "MaxBrightness", isExterior, isDayTime);
-			ShaderConst.Exposure.Data.z = TheSettingManager->GetSettingTransition("Shaders.Exposure", "DarkAdaptSpeed", isExterior, isDayTime);
-			ShaderConst.Exposure.Data.w = TheSettingManager->GetSettingTransition("Shaders.Exposure", "LightAdaptSpeed", isExterior, isDayTime);
+			ShaderConst.Exposure.Data.x = TheSettingManager->GetSettingTransition("Shaders.Exposure", "MinBrightness", isExterior, transitionCurve);
+			ShaderConst.Exposure.Data.y = TheSettingManager->GetSettingTransition("Shaders.Exposure", "MaxBrightness", isExterior, transitionCurve);
+			ShaderConst.Exposure.Data.z = TheSettingManager->GetSettingTransition("Shaders.Exposure", "DarkAdaptSpeed", isExterior, transitionCurve);
+			ShaderConst.Exposure.Data.w = TheSettingManager->GetSettingTransition("Shaders.Exposure", "LightAdaptSpeed", isExterior, transitionCurve);
 		}
 	}
 

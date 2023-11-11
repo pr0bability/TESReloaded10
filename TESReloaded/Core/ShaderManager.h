@@ -431,6 +431,7 @@ public:
     bool                    orthoRequired;
     bool                    avglumaRequired;
 	float					isDayTime;
+	float					dayLight;
 	bool					isExterior;
 	bool					isUnderwater;
 	bool					isDialog;
