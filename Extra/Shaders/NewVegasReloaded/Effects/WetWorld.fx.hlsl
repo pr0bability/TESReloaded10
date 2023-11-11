@@ -25,6 +25,9 @@ float4 TESR_OrthoData; // max ortho radius
 float4 TESR_WetWorldCoeffs; // Puddle color R, G, B + spec multiplier
 float4 TESR_WaterSettings; // for water height to avoid rendering puddles underwater
 float4 TESR_WetWorldData; // x: current rain amount, y: max rain amount, z: puddle amount, w:puddle darkness/intensity
+float4 TESR_SunPosition;
+float4 TESR_SkyData;
+float4 TESR_SkyLowColor;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -38,7 +41,8 @@ sampler2D TESR_PointShadowBuffer : register(s6) = sampler_state { ADDRESSU = CLA
 //------------------------------------------------------
 // Custimizable
 //------------------------------------------------------
-static const float PI = 3.14159265; //changes intensity of the ripples normal
+static const float SUNINFLUENCE = 1/TESR_SkyData.y;
+static const float PI = 3.14159265;
 static const float time1 = TESR_GameTime.z * 0.96f; // Ripple timing, make sure to offset each by atleast a few
 static const float time2 = TESR_GameTime.z * 0.97f; // Ripple timing, original 1.0-1.4
 static const float time3 = TESR_GameTime.z * 0.98f; // Ripple timing
@@ -72,6 +76,7 @@ VSOUT FrameVS(VSIN IN)
 #include "Includes/Depth.hlsl"
 #include "Includes/Blur.hlsl"
 #include "Includes/Normals.hlsl"
+#include "Includes/Sky.hlsl"
 
 
 float3 ComputeRipple(float2 UV, float CurrentTime, float Weight)
@@ -161,8 +166,9 @@ float4 Wet( VSOUT IN ) : COLOR0
 	// get puddle mask from ortho map
 	float4 pos = mul(worldPos, TESR_WorldViewProjectionTransform);
 	float4 ortho_pos = mul(pos, TESR_ShadowCameraToLightTransformOrtho);
-	float puddles = tex2D(TESR_RenderedBuffer, ScreenCoordToTexCoord(ortho_pos, 1).xy).r; // puddles, ortho height
-	float ortho = tex2D(TESR_OrthoMapBuffer, ScreenCoordToTexCoord(ortho_pos, 1).xy).r; // puddles, ortho height
+	ortho_pos.xy = ScreenCoordToTexCoord(ortho_pos, 1).xy;
+	float puddles = tex2D(TESR_RenderedBuffer, ortho_pos.xy).r; // puddles, ortho height
+	float ortho = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r; // puddles, ortho height
 
 	float aboveGround = ortho_pos.z < ortho + thickness;
 	float belowGround = ortho_pos.z > ortho - thickness;
@@ -192,23 +198,27 @@ float4 Wet( VSOUT IN ) : COLOR0
 	// sample and strenghten the shadow map
 	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord).r / luma(TESR_SunAmbient), 5));
 
+	// calculate sky color
+    float sunHeight = shade(TESR_SunPosition.xyz, up);
+    float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
+	float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
+
 	// calculate puddle color
-	float4 puddleColor = rippleColor * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
-	float4 fresnelColor = TESR_HorizonColor * 0.8;
-	float glossiness = 300;
+	float3 puddleColor = rippleColor * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
+	float3 fresnelColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, TESR_SunColor.rgb);
 	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, TESR_WetWorldData.w);
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
+	float glossiness = 300;
+	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(1, 5, puddlemask)) * inShadow;
 
-	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(2, 5, puddlemask)) * inShadow;
-
-	puddleColor = lerp(puddleColor, fresnelColor, saturate(fresnel * puddlemask));
-	puddleColor += specular * TESR_SunColor * 8;
+	puddleColor = lerp(puddleColor.rgb, fresnelColor, saturate(fresnel * puddlemask));
+	puddleColor += specular * TESR_SunColor * 12;
 
 	// transition between surface ripple and deeper puddles
-	float4 color = lerp(rippleColor, puddleColor, puddlemask);
+	float3 color = lerp(rippleColor.rgb, puddleColor, puddlemask);
 
-    return float4(lerp(baseColor, color, LODfade).rgb, 1); // fade out puddles
+    return float4(lerp(baseColor.rgb, color, LODfade), 1); // fade out puddles
 }
 
 
