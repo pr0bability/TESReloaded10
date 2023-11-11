@@ -381,6 +381,7 @@ public:
 	static float			lerp(float a, float b, float t);
 	static D3DXVECTOR4		lerp(D3DXVECTOR4 a, D3DXVECTOR4 b, float t);
 	static float			invLerp(float a, float b, float t);
+	static float			step(float a, float b, float t);
 	static float			smoothStep(float a, float b, float t);
 	static float			clamp(float a, float b, float t);
 		
@@ -437,6 +438,8 @@ public:
 	bool					isCellChanged;
 	bool					VATSIsOn;
 	bool					PipBoyIsOn;
+	bool					isRainy;
+	bool					isSnow;
 	bool					OverlayIsOn;
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];

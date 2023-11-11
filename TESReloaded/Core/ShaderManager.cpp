@@ -935,14 +935,7 @@ void ShaderManager::UpdateConstants() {
 
 	if (Effects.Debug->Enabled) avglumaRequired = true;
 
-	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
-
 	// context variables
-	isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
-	isUnderwater = Tes->sky->GetIsUnderWater();
-	isCellChanged = currentCell != PreviousCell;
-	PreviousCell = currentCell;
-
 	PipBoyIsOn = InterfaceManager->getIsMenuOpen();
 	VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
 	OverlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
@@ -955,17 +948,18 @@ void ShaderManager::UpdateConstants() {
 	isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
 	isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
 
+	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
+	isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
+	isCellChanged = currentCell != PreviousCell;
+	PreviousCell = currentCell;
 	if (isCellChanged) TheSettingManager->SettingsChanged = true; // force update constants during cell transition
 
-	bool isRainy = false;
-	bool isSnow = false;
-	if (currentWeather) {
-		isRainy = currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Rainy;
-		isSnow = currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Snow;
-	}
+	isUnderwater = Tes->sky->GetIsUnderWater();
+	isRainy = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Rainy : false;
+	isSnow = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Snow : false;
 
 	TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
-	float GameHour = GameTimeGlobals->GameHour->data;
+	float GameHour = fmod(GameTimeGlobals->GameHour->data, 24); // make sure the hours values are less than 24
 	float DaysPassed = GameTimeGlobals->GameDaysPassed ? GameTimeGlobals->GameDaysPassed->data : 1.0f;
 
 	float SunriseStart = WorldSky->GetSunriseBegin();
@@ -974,11 +968,8 @@ void ShaderManager::UpdateConstants() {
 	float SunsetEnd = WorldSky->GetSunsetEnd();
 
 	// calculating sun amount for shaders (currently not used by any shaders)
-	float sunRiseTransitionTime = SunriseEnd - SunriseStart; // sunriseEnd is only the middle point of the transition before nights get fully dark
-	float sunSetTransitionTime = SunsetEnd - SunsetStart; // sunsetStart is only the middle point of the transition
-
-	float sunRise = invLerp(SunriseStart - sunRiseTransitionTime, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
-	float sunSet = invLerp(SunsetEnd + sunSetTransitionTime, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+	float sunRise = step(SunriseStart, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
+	float sunSet = step(SunsetEnd, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	float newDayTime = sunRise * sunSet;
 
 	bool isDayTimeChanged = false;
@@ -986,7 +977,17 @@ void ShaderManager::UpdateConstants() {
 		isDayTime = newDayTime;
 		isDayTimeChanged = true;
 	}
-	float transitionCurve = smoothStep(0, 0.6, isDayTime); // a curve for day/night transitions that occurs mostly during second half of sunset
+
+	ShaderConst.SunTiming.x = WorldSky->GetSunriseColorBegin();
+	ShaderConst.SunTiming.y = SunriseEnd;
+	ShaderConst.SunTiming.z = SunsetStart;
+	ShaderConst.SunTiming.w = WorldSky->GetSunsetColorEnd();
+
+	// fake sunset time tracking with more time given before sunrise/sunset
+	float sunRiseLight = step(SunriseStart - 1.0, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
+	float sunSetLight = step(SunsetEnd + 1.0, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+	float dayLight = sunRiseLight * sunSetLight;
+	float transitionCurve = smoothStep(0, 0.6, dayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
@@ -997,13 +998,6 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.Water.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);
 	ShaderConst.Water.waterSettings.z = isUnderwater;
 
-	//bool isExterior = !currentCell->IsInterior();
-
-	ShaderConst.SunTiming.x = WorldSky->GetSunriseColorBegin();
-	ShaderConst.SunTiming.y = SunriseEnd;
-	ShaderConst.SunTiming.z = SunsetStart;
-	ShaderConst.SunTiming.w = WorldSky->GetSunsetColorEnd();
-
 	if (lastGameTime != ShaderConst.GameTime.y) {
 		// update Sun position
 		float deltaz = ShaderConst.SunDir.z;
@@ -1011,14 +1005,7 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
 		D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
 
-		if (isDayTime < 0.5) {
-			// use lighting direction at night time
-			ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
-		}
-		else {
-			ShaderConst.SunDir = ShaderConst.SunPosition;
-			D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
-		}
+		ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
 	}
 
 	// expose the light vector in view space for screen space lighting
@@ -1028,10 +1015,9 @@ void ShaderManager::UpdateConstants() {
 	D3DXVec4Transform(&ShaderConst.ViewSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewMatrix);
 	D3DXVec4Normalize(&ShaderConst.ViewSpaceLightDir, &ShaderConst.ViewSpaceLightDir);
 
-	ShaderConst.ShadowFade.x = 0;
-
+	ShaderConst.ShadowFade.x = 0; // Fade 1.0 == no shadows
 	if (isExterior) {
-		ShaderConst.ShadowFade.x = smoothStep(0.5, 0, abs(isDayTime - 0.5)); // fade shadows to 0 at sunrise/sunset
+		ShaderConst.ShadowFade.x = smoothStep(0.5, 0, abs(dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
 
 		// at night time, fade based on moonphase
 		if (isDayTime < 0.5) {
@@ -1043,16 +1029,21 @@ void ShaderManager::UpdateConstants() {
 
 			// map MoonVisibility to MinNightDarkness/1 range
 			float nightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-			float MoonVisibility = lerp(0.0, (double)nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
-			ShaderConst.ShadowFade.x = lerp (0, MoonVisibility, ShaderConst.ShadowFade.x);
+			float MoonVisibility = lerp(1.0 - nightMinDarkness, 1.0, cos(MoonPhase) * 0.5 + 0.5);
+			ShaderConst.ShadowFade.x = lerp (MoonVisibility, 1.0, ShaderConst.ShadowFade.x);
+		}
+		else {
+			// during the day, track the sun mesh position instead of the lighting direction in exteriors
+			ShaderConst.SunDir = ShaderConst.SunPosition;
 		}
 
-		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-		const char* PointLightsSettingName = (isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
-		bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
-			
+		if (isDayTimeChanged) {
+			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
+			const char* PointLightsSettingName = (isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
+			bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
+			ShaderConst.ShadowFade.z = usePointLights;
+		}
 		ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled && Effects.ShadowsExteriors->Enabled;
-		ShaderConst.ShadowFade.z = usePointLights;
 		ShaderConst.ShadowFade.w = ShaderConst.ShadowMap.ShadowMapRadius.w; //furthest distance for point lights shadows
 	}
 	else {
@@ -1080,24 +1071,24 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.Sky.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "SphericalNormals");
 		ShaderConst.Sky.CloudData.z = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
 		ShaderConst.Sky.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
-	}
 
-	// only add sunset color boost in exteriors
-	if (isExterior) {
-		ShaderConst.Sky.SunsetColor.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetR");
-		ShaderConst.Sky.SunsetColor.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetG");
-		ShaderConst.Sky.SunsetColor.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetB");
+		// only add sunset color boost in exteriors
+		if (isExterior) {
+			ShaderConst.Sky.SunsetColor.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetR");
+			ShaderConst.Sky.SunsetColor.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetG");
+			ShaderConst.Sky.SunsetColor.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetB");
 
-		// TODO : fix sun culling for sun replacing?
-		//if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
-		//	if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
-		//	else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
-		//}
-	}
-	else {
-		ShaderConst.Sky.SunsetColor.x = 0;
-		ShaderConst.Sky.SunsetColor.y = 0;
-		ShaderConst.Sky.SunsetColor.z = 0;
+			// TODO : fix sun culling for sun replacing?
+			//if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
+			//	if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
+			//	else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
+			//}
+		}
+		else {
+			ShaderConst.Sky.SunsetColor.x = 0;
+			ShaderConst.Sky.SunsetColor.y = 0;
+			ShaderConst.Sky.SunsetColor.z = 0;
+		}
 	}
 
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
@@ -2107,6 +2098,10 @@ D3DXVECTOR4 ShaderManager::lerp(D3DXVECTOR4 a, D3DXVECTOR4 b, float t) {
 	result.w = std::lerp(a.w, b.w, t);
 
 	return result;
+}
+
+float ShaderManager::step(float a, float b, float t) {
+	return max(0, min(1, invLerp(a, b, t)));
 }
 
 float ShaderManager::invLerp(float a, float b, float t) {
