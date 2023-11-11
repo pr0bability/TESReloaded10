@@ -142,6 +142,7 @@ float4 BlurWetMap(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius)
     return float4(color.rrr, 1);
 }
 
+
 float4 Wet( VSOUT IN ) : COLOR0
 {
 	float4 baseColor = tex2D(TESR_SourceBuffer, IN.UVCoord);
@@ -189,7 +190,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 Z = lerp(1, float4(Ripple1.z, Ripple2.z, Ripple3.z, Ripple4.z), Weights);
 	float3 ripple = float3( Weights.x * Ripple1.xy + Weights.y * Ripple2.xy + Weights.z * Ripple3.xy + Weights.w * Ripple4.xy, Z.x * Z.y * Z.z * Z.w);
 	float3 ripnormal = normalize(ripple);
-	float3 combinedNormals = float3(ripnormal.xy * aboveGround * belowGround * LODfade, 1); //only add ripple to surfaces that match ortho depth
+	float3 combinedNormals = float3(ripnormal.xy * aboveGround * belowGround * LODfade, ripnormal.z); //only add ripple to surfaces that match ortho depth
 
 	// refract image through ripple normals
 	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
@@ -204,19 +205,20 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
 	// calculate puddle color
-	float3 puddleColor = rippleColor * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
+	float3 puddleColor = rippleColor.rgb * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
 	float3 fresnelColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, TESR_SunColor.rgb);
 	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, TESR_WetWorldData.w);
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
-	float glossiness = 300;
-	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(1, 5, puddlemask)) * inShadow;
-
-	puddleColor = lerp(puddleColor.rgb, fresnelColor, saturate(fresnel * puddlemask));
-	puddleColor += specular * TESR_SunColor * 12;
+	float glossiness = 200;
+	float specularMask = saturate(puddlemask + invlerp(1.0, 0.98, combinedNormals.z) * 0.5);
+	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(1, 5, specularMask)) * inShadow;
 
 	// transition between surface ripple and deeper puddles
-	float3 color = lerp(rippleColor.rgb, puddleColor, puddlemask);
+	puddleColor = lerp(rippleColor.rgb, puddleColor.rgb, puddlemask);
+
+	float3 color = lerp(puddleColor, fresnelColor, fresnel * specularMask);
+	color += specular * TESR_SunColor.rgb * 12 * specularMask;
 
     return float4(lerp(baseColor.rgb, color, LODfade), 1); // fade out puddles
 }
