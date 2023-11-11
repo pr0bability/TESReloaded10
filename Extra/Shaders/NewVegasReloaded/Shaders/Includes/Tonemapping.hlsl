@@ -55,8 +55,8 @@ float3 ACESFitted(float3 color)
 // https://64.github.io/tonemapping/
 float3 Reinhard(float3 x, float whitepoint) {
     float luminance = luma(x);
-    float tonemappedLuma = luminance * (1 + luminance / (1 + float(whitepoint * whitepoint).rrr))/(1 + luminance);
-    return x * (tonemappedLuma / luminance);
+    float tonemappedLuma = luminance * (1 + luminance / (1 + float(whitepoint * whitepoint)))/(1 + luminance);
+    return x * (tonemappedLuma / luminance).rrr;
 }
 
 float3 Uncharted2Tonemap(float3 x) {
