@@ -981,13 +981,11 @@ void ShaderManager::UpdateConstants() {
 	float sunRiseLight = step(SunriseStart - 1.0, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSetLight = step(SunsetEnd + 1.0, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	float newDayLight = sunRiseLight * sunSetLight;
-	float transitionCurve = smoothStep(0, 0.6, dayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
+	float transitionCurve = smoothStep(0, 0.6, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
-	bool isDayTimeChanged = false;
-	if (newDayLight != dayLight) {
-		dayLight = newDayLight;
-		isDayTimeChanged = true; // will fire settings update during sunset/sunrise transitions
-	}
+	bool isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
+	if (newDayLight == dayLight) isDayTimeChanged = false;
+	dayLight = newDayLight;
 
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
