@@ -1017,8 +1017,8 @@ void ShaderManager::UpdateConstants() {
 			MoonPhase = std::lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
 
 			// map MoonVisibility to MinNightDarkness/1 range
-			float nightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-			float MoonVisibility = lerp(1.0 - nightMinDarkness, 1.0, cos(MoonPhase) * 0.5 + 0.5);
+			float nightMinDarkness = 1 - TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
+			float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
 			ShaderConst.ShadowFade.x = lerp (MoonVisibility, 1.0, ShaderConst.ShadowFade.x);
 		}
 		else {

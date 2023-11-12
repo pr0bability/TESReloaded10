@@ -65,14 +65,14 @@ float4 Shadow(VSOUT IN) : COLOR0
 	if (TESR_WaterSettings.z == 1 && world_pos.z < (TESR_WaterSettings.x + 2) && world_pos.z > (TESR_WaterSettings.x - 2) && dot(world_normal, float3(0, 0, -1)) > 0.999) return color;
 
 	float2 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;
+	Shadow.r = lerp(TESR_ShadowFade.x, 1.0f, Shadow.r); // fade shadows to light when sun is low
 
 	// scale shadows strength to ambient before adding attenuation for pointlights (ShadowFade.z means point Lights are on)
-	float ambient = lerp(1, luma(TESR_SunAmbient), TESR_ShadowFade.z * TESR_ShadowFade.x);
-	Shadow.r = lerp(0, ambient, Shadow.r);
-	Shadow.r += Shadow.g; // Apply poing light attenuation
+	float ambient = lerp(1, luma(TESR_SunAmbient), DARKNESS * TESR_ShadowFade.z);
+	Shadow.r = lerp(0, ambient, Shadow.r); //scale brightest areas to the ambient so it can be lit further with attenuation
+	Shadow.r += Shadow.g; // Apply poing light attenuation (includes point light shadows)
 
-	float darkness = lerp(DARKNESS, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
-	Shadow.r = lerp(darkness, 1.0, Shadow.r); 	// brighten shadow value from 0 to darkness from config value
+	Shadow.r = lerp(DARKNESS, 1.0, Shadow.r); 	// brighten shadow value from 0 to darkness from config value
 
 	// No point for the shadow buffer to be beyond the 0-1 range
 	Shadow.r = saturate(Shadow.r);
