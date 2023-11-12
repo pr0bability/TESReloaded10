@@ -69,16 +69,16 @@ bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
 			Texture = TheTextureManager->AvgLumaTexture;
 			break;
 		case ShadowMapBufferNear:
-			Texture = TheTextureManager->ShadowMapTextureBlurred[ShadowManager::ShadowMapTypeEnum::MapNear];
+			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapNear];
 			break;
 		case ShadowMapBufferMiddle:
-			Texture = TheTextureManager->ShadowMapTextureBlurred[ShadowManager::ShadowMapTypeEnum::MapMiddle];
+			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapMiddle];
 			break;
 		case ShadowMapBufferFar:
-			Texture = TheTextureManager->ShadowMapTextureBlurred[ShadowManager::ShadowMapTypeEnum::MapFar];
+			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapFar];
 			break;
 		case ShadowMapBufferLod:
-			Texture = TheTextureManager->ShadowMapTextureBlurred[ShadowManager::ShadowMapTypeEnum::MapLod];
+			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapLod];
 			break;
 		case OrthoMapBuffer:
 			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapOrtho];
@@ -128,8 +128,6 @@ void TextureManager::Initialize() {
 		Device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &TheTextureManager->ShadowMapDepthSurface[i], NULL);
 
 		// create textures to perform the blur
-		if (i != TheShadowManager->ShadowMapTypeEnum::MapOrtho) //Don't blur orthomap
-			InitTexture(&TheTextureManager->ShadowMapTextureBlurred[i], &TheTextureManager->ShadowMapSurfaceBlurred[i], ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
     }
 	for (int i = 0; i < ShadowCubeMapsMax; i++) {
 		Device->CreateCubeTexture(ShadowCubeMapSize, 1, D3DUSAGE_RENDERTARGET, D3DFMT_R32F, D3DPOOL_DEFAULT, &TheTextureManager->ShadowCubeMapTexture[i], NULL);
