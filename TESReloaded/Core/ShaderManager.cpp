@@ -717,7 +717,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformLod"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[3];
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformOrtho"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4];
 	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapLightPosition"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition;
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition;
 	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition0"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0];
 	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition1"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1];
 	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition2"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2];
@@ -742,14 +741,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_LightPosition9"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[9];
 	TheShaderManager->ConstantsTable["TESR_LightPosition10"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[10];
 	TheShaderManager->ConstantsTable["TESR_LightPosition11"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[11];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation0"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[0];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation1"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[1];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation2"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[2];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation3"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[3];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation4"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[4];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation5"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[5];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation6"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[6];
-	TheShaderManager->ConstantsTable["TESR_LightAttenuation7"] = (D3DXVECTOR4*)&TheShaderManager->LightAttenuation[7];
 	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapBlend"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend;
 	TheShaderManager->ConstantsTable["TESR_OcclusionWorldViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj;
 	TheShaderManager->ConstantsTable["TESR_ReciprocalResolution"] = &TheShaderManager->ShaderConst.ReciprocalResolution;
