@@ -77,8 +77,6 @@ public:
 	IDirect3DSurface9*		DepthSurface;
 	IDirect3DTexture9*		ShadowMapTexture[5];
 	IDirect3DSurface9*		ShadowMapSurface[5];
-	IDirect3DTexture9*		ShadowMapTextureBlurred[4];
-	IDirect3DSurface9*		ShadowMapSurfaceBlurred[4];
 	IDirect3DSurface9*		ShadowMapDepthSurface[5];
 	IDirect3DCubeTexture9*	ShadowCubeMapTexture[ShadowCubeMapsMax];
 	IDirect3DSurface9*		ShadowCubeMapSurface[ShadowCubeMapsMax][6];

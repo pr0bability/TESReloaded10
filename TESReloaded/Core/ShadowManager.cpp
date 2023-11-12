@@ -518,10 +518,6 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 		Logger::Log("ShadowSurface missing for cascade %i", ShadowMapType);
 		return;
 	}
-	if (!TheTextureManager->ShadowMapSurfaceBlurred[ShadowMapType]) {
-		Logger::Log("ShadowSurfaceBlurred missing for cascade %i", ShadowMapType);
-		return;
-	}
 
 	ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
@@ -551,12 +547,8 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
         Device->GetRenderTarget(i , &targ);
         Logger::Log("%u  : %08X", i, targ );
     }*/
-    if(ShadowsExteriors->BlurShadowMaps || ShadowMapType == MapOrtho){
-        Device->SetRenderTarget(0, TheTextureManager->ShadowMapSurface[ShadowMapType]);
-    }
-    else{
-        Device->SetRenderTarget(0, TheTextureManager->ShadowMapSurfaceBlurred[ShadowMapType]);        
-    }
+    Device->SetRenderTarget(0, TheTextureManager->ShadowMapSurface[ShadowMapType]);
+
 	Device->SetDepthStencilSurface(TheTextureManager->ShadowMapDepthSurface[ShadowMapType]);
 	Device->SetViewport(&ShadowMapViewPort[ShadowMapType]);
 
@@ -991,10 +983,6 @@ void ShadowManager::RenderShadowMaps() {
 			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap2.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapFar], NULL, NULL);
 			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap3.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapLod], NULL, NULL);
 			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap4.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapOrtho], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap0B.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurfaceBlurred[0], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap1B.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurfaceBlurred[1], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap2B.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurfaceBlurred[2], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap3B.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurfaceBlurred[3], NULL, NULL);
 
 			InterfaceManager->ShowMessage("Textures taken!");
 		}
@@ -1052,8 +1040,7 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
     IDirect3DDevice9* Device = TheRenderManager->device;
     NiDX9RenderState* RenderState = TheRenderManager->renderState;
     IDirect3DTexture9* SourceShadowMap = TheTextureManager->ShadowMapTexture[ShadowMapType];
-    IDirect3DSurface9* TargetShadowMap = TheTextureManager->ShadowMapSurfaceBlurred[ShadowMapType];
-	IDirect3DTexture9* BlurredShadowTexture = TheTextureManager->ShadowMapTextureBlurred[ShadowMapType];
+    IDirect3DSurface9* TargetShadowMap = TheTextureManager->ShadowMapSurface[ShadowMapType];
 
     Device->SetDepthStencilSurface(NULL);
     RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
@@ -1084,7 +1071,7 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
 		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 		Device->EndScene();
 
-		RenderState->SetTexture(0, BlurredShadowTexture); // bind blurred texture to sampler for next pass
+		RenderState->SetTexture(0, SourceShadowMap); // bind blurred texture to sampler for next pass
 	}
     RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
     RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
