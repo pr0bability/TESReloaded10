@@ -4,7 +4,7 @@ float4x4 TESR_WorldTransform;
 float4 TESR_ShadowData;
 float4 TESR_ShadowFade;
 float4 TESR_ReciprocalResolution;
-//sampler_state removed to avoid a artifact. TODO investigate
+
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -44,18 +44,21 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 	float3 eyeDir = toWorld(IN.UVCoord);
 	float uniformDepth = length(depth * eyeDir);
 
-	//multiply by 2 to only use the lower half of values to impact darkness
 	float Shadow = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
-
 	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, uniformDepth)); // fade shadows with distance
-    float shadowPower = TESR_ShadowData.y * TESR_ShadowFade.y; // shadowFade.y is set to 0 when shadows are disabled
+    float darkness = saturate(1 - TESR_ShadowData.y * TESR_ShadowFade.y); // shadowFade.y is set to 0 when shadows are disabled
 	
-	Shadow = saturate(lerp(1, Shadow, shadowPower)); // shadow darkness
+	Shadow = saturate(lerp(darkness, 1, Shadow)); // shadow darkness to apply in the scene - 0 is full shadow 1 is full light
+	float shadowPower = 1 - Shadow; // 1 is full shadow, useful for scaling effect
 
-	float4 finalColor = saturate(Shadow * (pow(saturate(color), 1 - shadowPower * 0.4))) + max(color - 1, 0); // boost the gamma of the base image
+	// apply shadows to darkest values (< 1)
+	float4 finalColor = saturate(Shadow * (pow(saturate(color), 1 - shadowPower * 0.2))); // boost the gamma of the base image
+	finalColor = lerp(luma(finalColor), finalColor, 1 + shadowPower * 0.3); // add some saturation back to the darker parts of the image
 
-	float lumaDiff = invlerps(luma(finalColor.rgb), 1.0f, luma(color.rgb));
-	return float4(lerp(finalColor, color, lumaDiff).rgb, 1); // bring back some of the original color based on luma (brightest lights will come through)
+	// readd values above 1
+	finalColor += max(color - 1, 0);
+
+	return float4(finalColor.rgb, 1);
 }
 
 technique {
