@@ -91,10 +91,10 @@ float3 Lottes(float3 x, float contrast, float brightness, float midIn, float hdr
     float c = (f.y*f.z - f.w*f.x*params.y)/(f.y*params.y - f.x*params.y);
 
     // test to tonemap color/brighness separately
-    // float peak = max(z.r, max(z.g, z.b));
-    // float3 ratio = z/peak;
-    // return ratio * (peak / (pows(peak, params.z) * b + c));
-    return z / (pows(z, params.z) * b + c);
+    float peak = max(z.r, max(z.g, z.b));
+    float3 ratio = z/peak;
+    return ratio * (peak / (pows(peak, params.z) * b + c));
+    // return z / (pows(z, params.z) * b + c);
 }
 
 float3 tonemap(float3 color){
