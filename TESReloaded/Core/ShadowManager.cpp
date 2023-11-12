@@ -510,6 +510,19 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir) {
 	auto timer = TimeLogger();
 
+	if (!TheTextureManager->ShadowMapDepthSurface[ShadowMapType]) {
+		Logger::Log("ShadowDepthSurface missing for cascade %i", ShadowMapType);
+		return;
+	}
+	if (!TheTextureManager->ShadowMapSurface[ShadowMapType]) {
+		Logger::Log("ShadowSurface missing for cascade %i", ShadowMapType);
+		return;
+	}
+	if (!TheTextureManager->ShadowMapSurfaceBlurred[ShadowMapType]) {
+		Logger::Log("ShadowSurfaceBlurred missing for cascade %i", ShadowMapType);
+		return;
+	}
+
 	ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
@@ -602,6 +615,10 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
 	
 	if (Lights[LightIndex] == NULL) return; // No light at current index
+	if (!TheTextureManager->ShadowCubeMapDepthSurface) {
+		Logger::Log("ShadowCubemapDepth missing for light %i", LightIndex);
+		return;
+	}
 
 	auto timer = TimeLogger();
 
@@ -687,6 +704,12 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 		
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		ShadowMap->ShadowViewProj = View * Proj;
+
+		if (!TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]) {
+			Logger::Log("ShadowCubemapSurface missing for light %i, face %i", LightIndex, Face);
+			continue;
+		}
+
 		Device->SetRenderTarget(0, TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]);
 		Device->SetViewport(&ShadowCubeMapViewPort);
 		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
