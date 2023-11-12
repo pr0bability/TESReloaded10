@@ -229,7 +229,7 @@ struct ShaderConstants {
 	ColoringStruct			Coloring;
 	CinemaStruct			Cinema;
 	LensStruct				Lens;
-	BloomStruct				Bloom;
+	BloomStruct				BloomLegacy;
 	SnowAccumulationStruct	SnowAccumulation;
 	BloodLensStruct			BloodLens;
 	MotionBlurStruct		MotionBlur;
@@ -389,7 +389,7 @@ public:
 		EffectRecord*		AvgLuma;
 		EffectRecord*		AmbientOcclusion;
 		EffectRecord*		BloodLens;
-		EffectRecord*		Bloom;
+		EffectRecord*		BloomLegacy;
 		EffectRecord*		Coloring;
 		EffectRecord*		Cinema;
 		EffectRecord*		Exposure;

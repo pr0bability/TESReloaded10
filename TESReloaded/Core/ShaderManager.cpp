@@ -658,7 +658,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["AvgLuma"] = &TheShaderManager->Effects.AvgLuma;
 	TheShaderManager->EffectsNames["AmbientOcclusion"] = &TheShaderManager->Effects.AmbientOcclusion;
 	TheShaderManager->EffectsNames["BloodLens"] = &TheShaderManager->Effects.BloodLens;
-	TheShaderManager->EffectsNames["Bloom"] = &TheShaderManager->Effects.Bloom;
+	TheShaderManager->EffectsNames["BloomLegacy"] = &TheShaderManager->Effects.BloomLegacy;
 	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = &TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
@@ -785,8 +785,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->ShaderConst.AmbientOcclusion.Data;
 	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->ShaderConst.BloodLens.Params;
 	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->ShaderConst.BloodLens.BloodColor;
-	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->ShaderConst.Bloom.BloomData;
-	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->ShaderConst.Bloom.BloomValues;
+	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomData;
+	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomValues;
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
@@ -1440,20 +1440,18 @@ void ShaderManager::UpdateConstants() {
 			}
 		}
 
-		if (Effects.Bloom->Enabled) {
-			sectionName = "Shaders.Bloom.Exteriors";
-			if (!isExterior) sectionName = "Shaders.Bloom.Interiors";
+		if (Effects.BloomLegacy->Enabled) {
+			sectionName = "Shaders.BloomLegacy.Exteriors";
+			if (!isExterior) sectionName = "Shaders.BloomLegacy.Interiors";
 
-			ShaderConst.Bloom.BloomData.x = TheSettingManager->GetSettingF(sectionName, "Luminance");
-			ShaderConst.Bloom.BloomData.y = TheSettingManager->GetSettingF(sectionName, "MiddleGray");
-			ShaderConst.Bloom.BloomData.z = TheSettingManager->GetSettingF(sectionName, "WhiteCutOff");
-			ShaderConst.Bloom.BloomValues.x = TheSettingManager->GetSettingF(sectionName, "BloomIntensity");
-			ShaderConst.Bloom.BloomValues.y = TheSettingManager->GetSettingF(sectionName, "OriginalIntensity");
-			ShaderConst.Bloom.BloomValues.z = TheSettingManager->GetSettingF(sectionName, "BloomSaturation");
-			ShaderConst.Bloom.BloomValues.w = TheSettingManager->GetSettingF(sectionName, "OriginalSaturation");
+			ShaderConst.BloomLegacy.BloomData.x = TheSettingManager->GetSettingF(sectionName, "Luminance");
+			ShaderConst.BloomLegacy.BloomData.y = TheSettingManager->GetSettingF(sectionName, "MiddleGray");
+			ShaderConst.BloomLegacy.BloomData.z = TheSettingManager->GetSettingF(sectionName, "WhiteCutOff");
+			ShaderConst.BloomLegacy.BloomValues.x = TheSettingManager->GetSettingF(sectionName, "BloomIntensity");
+			ShaderConst.BloomLegacy.BloomValues.y = TheSettingManager->GetSettingF(sectionName, "OriginalIntensity");
+			ShaderConst.BloomLegacy.BloomValues.z = TheSettingManager->GetSettingF(sectionName, "BloomSaturation");
+			ShaderConst.BloomLegacy.BloomValues.w = TheSettingManager->GetSettingF(sectionName, "OriginalSaturation");
 		}
-
-
 
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
 		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
@@ -1959,8 +1957,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
-	Effects.Bloom->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-
 	// Restore render state settings
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
@@ -2002,6 +1998,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 		if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
+
+	Effects.BloomLegacy->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {

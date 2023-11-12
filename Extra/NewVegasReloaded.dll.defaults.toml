@@ -153,7 +153,7 @@ Time = 900.0
 [_Shaders.BloodLens.Status]
 Enabled = false
 
-[_Shaders.Bloom.Exteriors]
+[_Shaders.BloomLegacy.Exteriors]
 BloomIntensity = 1.4
 BloomSaturation = 1.2
 Luminance = 0.06
@@ -162,7 +162,7 @@ OriginalIntensity = 1.0
 OriginalSaturation = 1.0
 WhiteCutOff = 0.8
 
-[_Shaders.Bloom.Interiors]
+[_Shaders.BloomLegacy.Interiors]
 BloomIntensity = 1.4
 BloomSaturation = 1.2
 Luminance = 0.06
@@ -171,7 +171,7 @@ OriginalIntensity = 1.0
 OriginalSaturation = 1.0
 WhiteCutOff = 0.8
 
-[_Shaders.Bloom.Status]
+[_Shaders.BloomLegacy.Status]
 Enabled = false                         # Increases the blurriness and light bleed caused by bright lights.
 
 [_Shaders.Cinema.Main]
