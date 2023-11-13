@@ -72,7 +72,7 @@ float4 Bloom(VSOUT IN ):COLOR0{
 
 	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
 
-	return bloom * color * 100;
+	return float4(bloom * color.rgb * 100, 1);
 }
 
 technique

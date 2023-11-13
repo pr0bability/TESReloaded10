@@ -205,7 +205,7 @@ float4 Combine(VSOUT IN) : COLOR0
 		color *= float4(nearBlurAmount, farBlurAmount, 0, 1);
 	#endif
 
-	return color;
+	return float4(color.rgb, 1);
 }
 
 
