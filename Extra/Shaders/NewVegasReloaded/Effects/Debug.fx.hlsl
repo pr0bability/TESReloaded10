@@ -160,7 +160,7 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	color = displayDepth(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15));
 	color = displayShadows(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15));
 
-    return color;
+    return float4(color.rgb, 1);
 }
 
 technique

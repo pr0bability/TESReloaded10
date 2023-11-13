@@ -135,7 +135,7 @@ float4 SSAO(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 
 	darkness = lerp(darkness, 1.0, saturate(invlerp(startFade, endFade, origin.z))) * color.x;
 
-	return float2(darkness, 1.0).xyyy;
+	return float2(darkness, 1.0).xxxy;
 }
 
 float4 Expand(VSOUT IN) : COLOR0
@@ -158,10 +158,10 @@ float4 Combine(VSOUT IN) : COLOR0
 	color *= ao;
 
     #if viewao
-		return float4(ao, ao, ao, 1);
+		return float4(ao, ao, ao, 1.0f);
 	#endif
 	
-	return float4(color, 1.0f);
+	return float4(color.rgb, 1.0f);
 }
  
 

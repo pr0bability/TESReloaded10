@@ -48,7 +48,7 @@ float4 Exposure(VSOUT IN) : COLOR0
 #endif
 
 	color = pows(color, (1 + lumaDiff));
-	return color;
+	return float4(color.rgb, 1);
 }
 
 technique

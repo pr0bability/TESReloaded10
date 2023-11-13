@@ -109,7 +109,7 @@ float4 Cinema(VSOUT IN) : COLOR0
 		
     color.rgb *= vignette * intensity + (1 - intensity); // Darken vignette zone
 
-    return color;
+    return float4(color.rgb, 1);
 }
 
 
