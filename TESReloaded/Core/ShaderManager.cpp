@@ -624,7 +624,7 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 		UINT Passes;
 		Effect->Begin(&Passes, NULL);
 		for (UINT p = 0; p < Passes; p++) {
-			if (ClearRenderTarget) Device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, 0, 0, 1), 1.0f, 0L);
+			if (ClearRenderTarget) Device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(1, 0, 0, 0), 1.0f, 0L);
 			Effect->BeginPass(p);
 			Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 			Effect->EndPass();
@@ -1908,6 +1908,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	// Disable Depth render state settings and enable full color
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
+	UINT32 ColorWrite = RenderState->GetRenderState(D3DRS_COLORWRITEENABLE);
 	RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, 15, RenderStateArgs);
 
 	// render post process normals for use by shaders
@@ -1921,10 +1922,10 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
 	}
 
-	Device->SetRenderTarget(0, RenderTarget);
+	if (!Player->parentCell) goto resetRenderstate;
+	if (OverlayIsOn) goto resetRenderstate; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
-	if (!Player->parentCell) return;
-	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+	Device->SetRenderTarget(0, RenderTarget);
 
 	// copy the source render target to both the rendered and source textures (rendered gets updated after every pass, source once per effect)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
@@ -1948,9 +1949,11 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
+resetRenderstate:
 	// Restore render state settings
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, ColorWrite, RenderStateArgs);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
