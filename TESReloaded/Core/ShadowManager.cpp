@@ -744,27 +744,29 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
-		float drawDistance = Player->GetWorldSpace() ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
+		float drawDistance = TheShaderManager->isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
 		if ((inFront > 0 || Distance < radius) && (Distance + radius) < drawDistance) {
 			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
 		}
+
 		Entry = Entry->next;
 	}
 
 	// save only the n first lights (based on #define TrackedLightsMax)
 	memset(&TheShaderManager->LightPosition, 0, TrackedLightsMax * sizeof(D3DXVECTOR4)); // clear previous lights from array
-	memset(&TheShaderManager->LightAttenuation, 0, TrackedLightsMax * sizeof(D3DXVECTOR4)); // clear previous lights from array
-	std::map<int, NiPointLight*>::iterator v = SceneLights.begin();
 
 	// get the data for all tracked lights
 	int ShadowIndex = 0;
 	int LightIndex = 0;
 	PointLightsNum = 0;
 
+#if defined(OBLIVION)
 	bool TorchOnBeltEnabled = TheSettingManager->SettingsMain.EquipmentMode.Enabled && TheSettingManager->SettingsMain.EquipmentMode.TorchKey != 255;
+#endif
 
 	D3DXVECTOR4 Empty = D3DXVECTOR4(0, 0, 0, 0);
 
+	std::map<int, NiPointLight*>::iterator v = SceneLights.begin();
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
 		if (v != SceneLights.end())	{
 			NiPointLight* Light = v->second;
@@ -791,18 +793,12 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = Light;
 				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = LightPosition;
-
 				ShadowIndex++;
 				PointLightsNum++; // Constant to track number of shadow casting lights are present
 			}
 			else if (LightIndex < TrackedLightsMax){
-
 				LightsList[LightIndex] = Light;
 				TheShaderManager->LightPosition[LightIndex] = LightPosition;
-
-				//TheShaderManager->LightAttenuation[i] = LightAttenuation;
-				//Logger::Log("light found at index % i", LightIndex);
-
 				LightIndex++;
 			};
 
@@ -818,7 +814,6 @@ void ShadowManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 			}
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
-
 				ShadowLightsList[ShadowIndex] = NULL;
 				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = Empty;
 				ShadowIndex++;
@@ -841,12 +836,13 @@ void ShadowManager::RenderShadowMaps() {
 	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
 	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
 
-	bool ExteriorEnabled = TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
-	bool InteriorEnabled = TheShaderManager->Effects.ShadowsInteriors->Enabled;
 	bool isExterior = TheShaderManager->isExterior;// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
+	bool ExteriorEnabled = isExterior && TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
+	bool InteriorEnabled = !isExterior && TheShaderManager->Effects.ShadowsInteriors->Enabled;
+
 	// early out in case shadow rendering is not required
-	if (isExterior && (!ExteriorEnabled && !TheShaderManager->orthoRequired) || (!isExterior && !InteriorEnabled)) return;
+	if (!ExteriorEnabled && !InteriorEnabled && !TheShaderManager->orthoRequired) return;
 
 	auto timer = TimeLogger();
 
@@ -936,10 +932,8 @@ void ShadowManager::RenderShadowMaps() {
 		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
 
-		int lightsNum = ShadowsInteriors->LightPoints;
-
 		// render the cubemaps for each light
-		for (int i = 0; i < lightsNum; i++) {
+		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
 			RenderShadowCubeMap(ShadowLights, i, ShadowsInteriors);
 		}
 	}
@@ -958,8 +952,8 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// reset renderer to previous state
-	if (DepthSurface) Device->SetDepthStencilSurface(DepthSurface);
-	if (RenderSurface) Device->SetRenderTarget(0, RenderSurface);
+	Device->SetDepthStencilSurface(DepthSurface);
+	Device->SetRenderTarget(0, RenderSurface);
 	Device->SetViewport(&viewport);
 
 	//release smart pointers to prevent memory leak
