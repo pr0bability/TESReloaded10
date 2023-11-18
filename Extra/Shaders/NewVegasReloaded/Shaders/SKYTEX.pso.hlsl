@@ -148,6 +148,6 @@ VS_OUTPUT main(VS_INPUT IN) {
         finalColor.rgb += scattering;
     }
     
-    OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z) * TESR_HDRBloomData.z;
+    OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z) * TESR_SunsetColor.w;
     return OUT;
 };

@@ -97,9 +97,17 @@ float3 Lottes(float3 x, float contrast, float brightness, float midIn, float hdr
     // return z / (pows(z, params.z) * b + c);
 }
 
+
+// applies the 
+float3 applyCinematic(float3 color){
+    return Cinematic.z * (Cinematic.w * color - Cinematic.y) + Cinematic.y;
+}
+
 float3 tonemap(float3 color){
+    color = lerp(color, applyCinematic(color), TESR_HDRBloomData.z);
+
     if (TESR_HDRData.x == 1){
-        return Cinematic.z * (Cinematic.w * color - Cinematic.y) + Cinematic.y;
+        return color;
     }else if (TESR_HDRData.x == 2){
         return ACESFilm(color);
     }else if (TESR_HDRData.x == 3){

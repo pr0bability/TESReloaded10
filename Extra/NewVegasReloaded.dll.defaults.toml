@@ -332,6 +332,7 @@ LotteContrast = 0.5                   # Contrast setting for Lotte Tonemapper
 LotteBrightness = 2.4                 # Brightness setting for Lotte Tonemapper
 LotteMidpoint = 1.2                   # Midpoint setting for Lotte Tonemapper
 LotteShoulder = 20.0                  # Curve shape towards white point for Lotte Tonemapper
+WeatherModifier = 1.0                 # Influence of the vanilla weather modifiers
 
 
 [_Shaders.HDR.Interiors]
@@ -352,6 +353,7 @@ LotteContrast = 1.3                   # Contrast setting for Lotte Tonemapper
 LotteBrightness = 2.0                 # Brightness setting for Lotte Tonemapper
 LotteMidpoint = 1.3                   # Midpoint setting for Lotte Tonemapper
 LotteShoulder = 40.0                   # Curve shape towards white point for Lotte Tonemapper
+WeatherModifier = 1.0                 # Influence of the vanilla weather modifiers
 
 
 [_Shaders.HDR.Night]
@@ -372,6 +374,7 @@ LotteContrast = 1.2                   # Contrast setting for Lotte Tonemapper
 LotteBrightness = 0.0                 # Brightness setting for Lotte Tonemapper
 LotteMidpoint = 0.8                   # Midpoint setting for Lotte Tonemapper
 LotteShoulder = 2.0                   # Curve shape towards white point for Lotte Tonemapper
+WeatherModifier = 1.0                 # Influence of the vanilla weather modifiers
 
 
 [_Shaders.HDR.Status]
