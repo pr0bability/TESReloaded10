@@ -1892,7 +1892,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
 
-	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
+	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
 
 	auto timer = TimeLogger();
 
@@ -1963,7 +1963,7 @@ resetRenderstate:
 * Renders the effect that have been set to enabled.
 */
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
-	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // Main toggle
+	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
 	if (!Player->parentCell) return;
 	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 

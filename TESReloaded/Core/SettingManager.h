@@ -15,6 +15,8 @@ struct SettingsMainStruct {
 		bool	MemoryTextureManagement;
 		bool	ReplaceIntro;
         bool    SkipFog;
+        bool    RenderEffects;
+        bool    RenderPreTonemapping;
 		UInt8	AnisotropicFilter;
 		UInt16	ScreenshotKey;
 		float	FarPlaneDistance;
