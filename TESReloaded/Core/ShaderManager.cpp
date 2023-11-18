@@ -1212,7 +1212,7 @@ void ShaderManager::UpdateConstants() {
 		}
 		ShaderConst.WetWorld.Data.x = ShaderConst.Animators.RainAnimator.GetValue();
 		ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
-		ShaderConst.WetWorld.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
+		if (TheSettingManager->SettingsChanged) ShaderConst.WetWorld.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
 
 		if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
 		ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
@@ -1234,10 +1234,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Snow.SnowData.x = ShaderConst.Animators.SnowAnimator.GetValue();
 
 			if (ShaderConst.Snow.SnowData.x) orthoRequired = true; // mark ortho map calculation as necessary
-
-			if (TheSettingManager->SettingsChanged) {
-				ShaderConst.Snow.SnowData.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
-			}
+			if (TheSettingManager->SettingsChanged) ShaderConst.Snow.SnowData.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
 		}
 
 		if (Effects.SnowAccumulation->Enabled) {
