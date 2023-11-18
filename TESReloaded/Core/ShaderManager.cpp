@@ -289,8 +289,8 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
     }
 
 	auto timer = TimeLogger();
-	FloatShaderValues = new ShaderValue [FloatShaderValuesCount];
-	TextureShaderValues = new ShaderValue [TextureShaderValuesCount];
+	if (FloatShaderValuesCount) FloatShaderValues = new ShaderValue [FloatShaderValuesCount];
+	if (TextureShaderValuesCount) TextureShaderValues = new ShaderValue [TextureShaderValuesCount];
 	
 	// Should be better but still crashes with NVHR -- TODO: Check how to fix it
 	//if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(FloatShaderValuesCount * sizeof(ShaderValue));
@@ -1500,6 +1500,13 @@ void ShaderManager::UpdateConstants() {
 				ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
 			}
 		}
+
+		if (Effects.Lens->Enabled) {
+			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
+			if (isExterior)	ShaderConst.Lens.Data.y = lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), transitionCurve);
+			else ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
+		}
+
 	}
 
 
@@ -1650,14 +1657,6 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.MotionBlur.BlurParams.x = TheSettingManager->GetSettingF(sectionName, "GaussianWeight");
 		ShaderConst.MotionBlur.BlurParams.y = TheSettingManager->GetSettingF(sectionName, "BlurScale");
 		ShaderConst.MotionBlur.BlurParams.z = TheSettingManager->GetSettingF(sectionName, "BlurOffsetMax");
-	}
-
-	if (Effects.Lens->Enabled) {
-		if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
-			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
-			if (isExterior)	ShaderConst.Lens.Data.y = lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), transitionCurve);
-			else ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
-		}
 	}
 
 	if (Effects.Exposure->Enabled) {

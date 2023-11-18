@@ -854,22 +854,6 @@ void ShadowManager::RenderShadowMaps() {
 	IDirect3DSurface9* DepthSurface = NULL;
 	IDirect3DSurface9* RenderSurface = NULL;
 	D3DVIEWPORT9 viewport;
-	/*	if(RenderStateSettings == nullptr){
-		RenderStateSettings = (NiDX9RenderState::NiRenderStateSetting*)malloc(sizeof(NiDX9RenderState::NiRenderStateSetting) * 256);
-		memcpy(RenderStateSettings, RenderState->RenderStateSettings, sizeof(NiDX9RenderState::NiRenderStateSetting) * 256);
-	}
-	else{
-		bool print = false;
-		for(size_t i = 0; i < 256; i++){
-			if(RenderStateSettings[i].CurrentValue != RenderState->RenderStateSettings[i].CurrentValue){
-				Logger::Log("Different state between iterations: State %0X was %u is %0X",i, RenderStateSettings[i].CurrentValue, RenderState->RenderStateSettings[i].CurrentValue);
-				RenderStateSettings[i].CurrentValue = RenderState->RenderStateSettings[i].CurrentValue;
-				print = true;
-
-			}
-		}
-		if(print) Logger::Log("End");
-	} */
 
 	D3DXVECTOR4* ShadowData = &TheShaderManager->ShaderConst.Shadow.Data;
 	D3DXVECTOR4* OrthoData = &TheShaderManager->ShaderConst.Shadow.OrthoData;

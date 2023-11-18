@@ -363,7 +363,6 @@ public:
 
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
 	void					CreateEffects();
-	void					PrepareShaderIncludes();
 	void					InitializeConstants();
 	void					UpdateConstants();
 	bool					CreateShader(const char* Name);
