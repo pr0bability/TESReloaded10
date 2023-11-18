@@ -123,21 +123,20 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 	if (TheSettingManager->SettingsMain.Main.RenderPreTonemapping) {
 		SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
 
-		// Disable Depth render state settings and enable full color
+		// Disable render state settings that create artefacts
 		RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
 		RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
-		UINT32 ColorWrite = RenderState->GetRenderState(D3DRS_COLORWRITEENABLE);
 		RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, 15, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_ALPHATESTENABLE, D3DZB_FALSE, RenderStateArgs);
 		RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, D3DZB_FALSE, RenderStateArgs);
-
-		Logger::TraceRenderState();
+		RenderState->SetRenderState(D3DRS_ALPHAREF, 0, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_NORMALIZENORMALS, D3DZB_FALSE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_POINTSIZE, 810365505, RenderStateArgs); // fix flickering linked to alpha somehow
 
 		TheShaderManager->RenderEffectsPreTonemapping(GameSurface);
 	
-		// Restore render state settings
-		RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
-		RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
-		RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, ColorWrite, RenderStateArgs);
 	}
 
 	ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
