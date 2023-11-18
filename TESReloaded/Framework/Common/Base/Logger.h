@@ -1,5 +1,8 @@
 #pragma once
 #include <chrono>
+#include <map>
+
+typedef std::map<const char*, int> stateMap;
 
 class Logger {
 public:
