@@ -115,12 +115,31 @@ void(__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRe
 void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* SourceTarget, BSRenderedTexture* DestinationTarget) {
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	IDirect3DSurface9* GameSurface = NULL;
 	IDirect3DSurface9* OutputSurface = NULL;
 	
 	TheShaderManager->UpdateConstants();
-	SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
-	if (TheSettingManager->SettingsMain.Main.RenderPreTonemapping) TheShaderManager->RenderEffectsPreTonemapping(GameSurface);
+	if (TheSettingManager->SettingsMain.Main.RenderPreTonemapping) {
+		SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
+
+		// Disable Depth render state settings and enable full color
+		RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
+		UINT32 ColorWrite = RenderState->GetRenderState(D3DRS_COLORWRITEENABLE);
+		RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, 15, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, D3DZB_FALSE, RenderStateArgs);
+
+		Logger::TraceRenderState();
+
+		TheShaderManager->RenderEffectsPreTonemapping(GameSurface);
+	
+		// Restore render state settings
+		RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, ColorWrite, RenderStateArgs);
+	}
+
 	ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
 
 	if (!DestinationTarget && TheRenderManager->currentRTGroup) {

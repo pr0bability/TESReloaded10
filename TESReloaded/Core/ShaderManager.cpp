@@ -1904,12 +1904,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->SetStreamSource(0, FrameVertex, 0, sizeof(FrameVS));
 	Device->SetFVF(FrameFVF);
 
-	// Disable Depth render state settings and enable full color
-	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
-	UINT32 ColorWrite = RenderState->GetRenderState(D3DRS_COLORWRITEENABLE);
-	RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, 15, RenderStateArgs);
-
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
 
@@ -1921,8 +1915,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
 	}
 
-	if (!Player->parentCell) goto resetRenderstate;
-	if (OverlayIsOn) goto resetRenderstate; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+	if (!Player->parentCell) return;
+	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	Device->SetRenderTarget(0, RenderTarget);
 
@@ -1947,12 +1941,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
-
-resetRenderstate:
-	// Restore render state settings
-	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_COLORWRITEENABLE, ColorWrite, RenderStateArgs);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
