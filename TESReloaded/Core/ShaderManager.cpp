@@ -1456,7 +1456,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Linearization", isExterior, transitionCurve);
 			ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomStrength", isExterior, transitionCurve);
 			ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomExponent", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "SkyMultiplier", isExterior, transitionCurve);
+			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "WeatherModifier", isExterior, transitionCurve);
 			ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "WhitePoint", isExterior, transitionCurve);
 			ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "TonemappingMode", isExterior, transitionCurve);
 			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "Exposure", isExterior, transitionCurve);
@@ -1466,6 +1466,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteBrightness", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteMidpoint", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteShoulder", isExterior, transitionCurve);
+			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "SkyMultiplier", isExterior, transitionCurve);
 		}
 		else {
 			ShaderConst.HDR.BloomData.z = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders

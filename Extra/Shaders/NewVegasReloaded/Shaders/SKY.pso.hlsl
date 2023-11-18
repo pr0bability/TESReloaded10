@@ -68,7 +68,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
     skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z; // add sun disk and boost brightness during sunrise/sunset
 
-    OUT.color_0.rgb = skyColor * TESR_HDRBloomData.z; // multiply sky strength for HDR
+    OUT.color_0.rgb = skyColor * TESR_SunsetColor.w; // multiply sky strength for HDR
     OUT.color_0.a = 1;
 
     // dithering
