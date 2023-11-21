@@ -987,29 +987,20 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.Water.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);
 	ShaderConst.Water.waterSettings.z = isUnderwater;
 
-	if (lastGameTime != ShaderConst.GameTime.y) {
-		// update Sun position
-		float deltaz = ShaderConst.SunDir.z;
-
-		ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
-		D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
-
-		ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
-	}
-
-	// expose the light vector in view space for screen space lighting
-	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);
-	D3DXVec4Normalize(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.ScreenSpaceLightDir);
-
-	D3DXVec4Transform(&ShaderConst.ViewSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewMatrix);
-	D3DXVec4Normalize(&ShaderConst.ViewSpaceLightDir, &ShaderConst.ViewSpaceLightDir);
+	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
+	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
+	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
 
 	ShaderConst.ShadowFade.x = 0; // Fade 1.0 == no shadows
 	if (isExterior) {
-		ShaderConst.ShadowFade.x = smoothStep(0.5, 0, abs(dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
+		ShaderConst.ShadowFade.x = smoothStep(0.3, 0, abs(dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
 
-		// at night time, fade based on moonphase
-		if (isDayTime < 0.5) {
+		if (isDayTime) {
+			// during the day, track the sun mesh position instead of the lighting direction in exteriors
+			ShaderConst.SunDir = ShaderConst.SunPosition;
+		}
+		else {
+			// at night time, fade based on moonphase
 			// moonphase goes from 0 to 8
 			float MoonPhase = (fmod(DaysPassed, 8 * currentClimate->phaseLength & 0x3F)) / (currentClimate->phaseLength & 0x3F);
 
@@ -1019,15 +1010,11 @@ void ShaderManager::UpdateConstants() {
 			// map MoonVisibility to MinNightDarkness/1 range
 			float nightMinDarkness = 1 - TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
 			float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
-			ShaderConst.ShadowFade.x = lerp (MoonVisibility, 1.0, ShaderConst.ShadowFade.x);
-		}
-		else {
-			// during the day, track the sun mesh position instead of the lighting direction in exteriors
-			ShaderConst.SunDir = ShaderConst.SunPosition;
+			ShaderConst.ShadowFade.x = lerp(MoonVisibility, 1.0, ShaderConst.ShadowFade.x);
 		}
 
 		if (isDayTimeChanged) {
-			// pass the enabled/disabled property of the shadow maps to the shadowfade constant
+			// pass the enabled/disabled property of the pointlight shadows to the shadowfade constant
 			const char* PointLightsSettingName = (isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
 			bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
 			ShaderConst.ShadowFade.z = usePointLights;
@@ -1038,9 +1025,16 @@ void ShaderManager::UpdateConstants() {
 	else {
 		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
 		ShaderConst.ShadowFade.y = Effects.ShadowsInteriors->Enabled;
-		ShaderConst.ShadowFade.z = 1;
+		ShaderConst.ShadowFade.z = 1; // z enables point lights
 		ShaderConst.ShadowFade.w = TheSettingManager->SettingsShadows.Interiors.DrawDistance; //furthest distance for point lights shadows
 	}
+
+	// expose the light vector in view space for screen space lighting
+	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);
+	D3DXVec4Normalize(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.ScreenSpaceLightDir);
+
+	D3DXVec4Transform(&ShaderConst.ViewSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewMatrix);
+	D3DXVec4Normalize(&ShaderConst.ViewSpaceLightDir, &ShaderConst.ViewSpaceLightDir);
 
 	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5;
 
@@ -1469,7 +1463,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "SkyMultiplier", isExterior, transitionCurve);
 		}
 		else {
-			ShaderConst.HDR.BloomData.z = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
+			ShaderConst.Sky.SunsetColor.w = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
 			ShaderConst.HDR.PointLightMult = 1.0;
 		}
 
