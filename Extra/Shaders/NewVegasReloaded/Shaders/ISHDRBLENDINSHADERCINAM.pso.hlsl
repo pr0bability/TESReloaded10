@@ -73,7 +73,8 @@ VS_OUTPUT main(VS_INPUT IN) {
  
     screenluma = saturate(luma(final));
     final = lerp(final, Tint.rgb, Tint.a * TESR_ToneMapping.z); // apply tint
-    final *= lerp(1, Fade.rgb, lerp(Fade.a, 0, screenluma)); // apply night eye only to darker parts of the scene to avoid dulling bloom
+    // final *= lerp(1, Fade.rgb, lerp(Fade.a, 0, screenluma)); // apply night eye only to darker parts of the scene to avoid dulling bloom
+    final = lerp(final, Fade.rgb, Fade.a); // apply night eye only to darker parts of the scene to avoid dulling bloom
 
     float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
     OUT.color_0.rgb = (background.w == 0 ? background.rgb : pows(final.rgb, TESR_HDRData.w)); //only tonemap the area within the mask
