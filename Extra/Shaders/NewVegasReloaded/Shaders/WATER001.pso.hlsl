@@ -72,7 +72,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float4 color = tex2Dproj(RefractionMap, refractionPos);
     color = getLightTravel(refractedDepth, ShallowColor, DeepColor, sunLuma, color);
-    color = getTurbidityFog(refractedDepth, ShallowColor, sunLuma, color);
+    //color = getTurbidityFog(refractedDepth, ShallowColor, sunLuma, color);
     color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, ShallowColor, color);
     color = getFresnel(surfaceNormal, eyeDirection, TESR_HorizonColor, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb, color);
