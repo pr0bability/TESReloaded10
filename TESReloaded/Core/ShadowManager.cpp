@@ -987,12 +987,12 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
     RenderState->SetPixelShader(ShadowMapBlurPixel->ShaderHandle, false);
 	RenderState->SetFVF(FrameFVF, false);
 	Device->SetStreamSource(0, BlurShadowVertex[ShadowMapType], 0, sizeof(FrameVS));
-	RenderState->SetTexture(0, SourceShadowMap); // bind source texture to sampler
 	Device->SetRenderTarget(0, TargetShadowMap);
 	
 	// Pass map resolution to shader as a constant
 	D3DXVECTOR4 inverseRes = { ShadowMapInverseResolution[ShadowMapType], ShadowMapInverseResolution[ShadowMapType], 0.0f, 0.0f };
 	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
+	RenderState->SetTexture(0, SourceShadowMap);
 
 	// blur in two passes, vertically and horizontally
 	D3DXVECTOR4 Blur[2] = {
@@ -1004,14 +1004,12 @@ void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
 		// set blur direction shader constants
 		ShadowMapBlurPixel->SetShaderConstantF(1, &Blur[i], 1);
 
-		// draw call to execute the shader
 		Device->BeginScene();
-		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2); // draw call to execute the shader
 		Device->EndScene();
-
-		RenderState->SetTexture(0, SourceShadowMap); // bind blurred texture to sampler for next pass
 	}
-    RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
     RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 }
 
