@@ -104,7 +104,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     // finalColor = cloudsWeather1;
 
     if (IN.color_1.r){ // early out if this texture is sun/moon
-        OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a) * TESR_SkyData.z;
+        float alphaPow = pows(IN.color_0.a, lerp(0.5, 1, smoothstep(0, 0.3, sunHeight))); // boost vanilla alpha of sun at sunset
+        OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, pow(finalColor.w, TESR_SkyData.z) * alphaPow) * TESR_SkyData.z;
         return OUT;
     }
 
@@ -116,11 +117,6 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     // calculate sky color to blend in the clouds    
     float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
-
-    // float3 skyColor = lerp(TESR_SkyLowColor.rgb, TESR_SkyColor.rgb, verticality);
-    // skyColor = lerp(skyColor, TESR_HorizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence)));
-    // skyColor += sunInfluence * (1 - sunHeight) * lerp(0.5, 1, athmosphere) * sunColor * TESR_SkyData.z * TESR_SunAmount.x;
-
     float3 scattering = sunInfluence * lerp(0.3, 1, 1 - alpha) * (skyColor + sunColor) * 0.3;
 
     if ( UseNormals){
