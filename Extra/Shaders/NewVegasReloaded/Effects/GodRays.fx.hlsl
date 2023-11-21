@@ -57,8 +57,10 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 	float2 uv = IN.UVCoord / scale;
 	clip((uv <= 1) - 1);
 
+	float sunHeight = smoothstep(0, 0.3, dot(TESR_SunDirection.xyz, float3(0, 0, 1))); // fade flare boost to nothing over sunrise/sunset
+
 	float depth = (readDepth(uv) / farZ) > 0.98; //only pixels belonging to the sky will register
-	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.rgb, normalize(reconstructPosition(uv))), 18) * 500; // fake sunglare computed from light direction
+	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.rgb, normalize(reconstructPosition(uv))), 18) * 500 * sunHeight; // fake sunglare computed from light direction
 	float3 color = (tex2D(TESR_SourceBuffer, uv).rgb + sunGlare * TESR_SunColor.rgb) * depth;
 
 	return float4(color, 1.0f);
