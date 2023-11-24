@@ -115,9 +115,11 @@
     <ClInclude Include="..\TESReloaded\Core\CommandManager.h" />
     <ClInclude Include="..\TESReloaded\Core\Device\Device.h" />
     <ClInclude Include="..\TESReloaded\Core\Device\Hook.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameEventManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\GameCommon.cpp" />
     <ClInclude Include="..\TESReloaded\Core\Hooks\FormsCommon.h" />
