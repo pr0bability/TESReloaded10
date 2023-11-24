@@ -164,6 +164,9 @@
     <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Render.h">
       <Filter>Core\Hooks\NewVegas</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Framework\NewVegas\class_vtbls.h">
+      <Filter>Framework\NewVegas</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

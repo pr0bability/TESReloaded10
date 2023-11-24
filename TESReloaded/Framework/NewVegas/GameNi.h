@@ -840,11 +840,12 @@ public:
 
 class NiGeometry : public NiAVObject {
 public:
-	virtual void	Unk_37();
-	virtual void	Unk_38();
-	virtual void	Unk_39();
-	virtual void	Unk_3A();
-	virtual void	Unk_3B();
+
+	virtual void	RenderImmediate(NiRenderer* pkRenderer);
+	virtual void	RenderImmediateAlt(NiRenderer* pkRenderer);
+	virtual void	SetModelData(NiGeometryData* pkModelData);
+	virtual void	CalculateNormals();
+	virtual void	CalculateConsistency(bool bTool);
 
 	NiProperty*			GetProperty(NiProperty::PropertyType Type);
 

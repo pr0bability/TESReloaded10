@@ -151,6 +151,7 @@
     <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Nvidia\nvapi.h" />
     <ClInclude Include="..\TESReloaded\Framework\NewVegas\Base.h" />
+    <ClInclude Include="..\TESReloaded\Framework\NewVegas\class_vtbls.h" />
     <ClInclude Include="..\TESReloaded\Framework\NewVegas\Defines.h" />
     <ClInclude Include="..\TESReloaded\Framework\NewVegas\Framework.h" />
     <ClInclude Include="..\TESReloaded\Framework\NewVegas\Game.h" />
