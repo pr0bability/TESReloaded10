@@ -42,6 +42,9 @@
     <Filter Include="Framework\Common\Lib\Nvidia">
       <UniqueIdentifier>{48d1ee45-61fd-44e9-bef9-192b8772c194}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Effects">
+      <UniqueIdentifier>{2c6a4700-d3f8-429a-b270-82b45676003b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -167,6 +170,18 @@
     <ClInclude Include="..\TESReloaded\Framework\NewVegas\class_vtbls.h">
       <Filter>Framework\NewVegas</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Effects\ShaderRecord.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\BinkManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -264,6 +279,9 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Render.cpp">
       <Filter>Core\Hooks\NewVegas</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp">
+      <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
