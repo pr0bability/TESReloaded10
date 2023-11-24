@@ -170,16 +170,13 @@
     <ClInclude Include="..\TESReloaded\Framework\NewVegas\class_vtbls.h">
       <Filter>Framework\NewVegas</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Effects\ShaderRecord.h">
-      <Filter>Core\Effects</Filter>
-    </ClInclude>
     <ClInclude Include="..\TESReloaded\Core\BinkManager.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderRecord.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\AmbientOcclusion.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
   </ItemGroup>
@@ -281,6 +278,9 @@
       <Filter>Core\Hooks\NewVegas</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\AmbientOcclusion.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>

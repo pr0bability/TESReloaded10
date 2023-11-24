@@ -79,7 +79,7 @@ void ShaderManager::Initialize() {
 
 	// initializing the list of effect names
 	TheShaderManager->EffectsNames["AvgLuma"] = &TheShaderManager->Effects.AvgLuma;
-	TheShaderManager->EffectsNames["AmbientOcclusion"] = &TheShaderManager->Effects.AmbientOcclusion;
+	TheShaderManager->EffectsNames["AmbientOcclusion"] = (EffectRecord**)&TheShaderManager->Effects.AmbientOcclusion;
 	TheShaderManager->EffectsNames["BloodLens"] = &TheShaderManager->Effects.BloodLens;
 	TheShaderManager->EffectsNames["BloomLegacy"] = &TheShaderManager->Effects.BloomLegacy;
 	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
@@ -196,8 +196,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
 	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
 	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
-	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->ShaderConst.AmbientOcclusion.AOData;
-	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->ShaderConst.AmbientOcclusion.Data;
+	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.AOData;
+	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->ShaderConst.BloodLens.Params;
 	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->ShaderConst.BloodLens.BloodColor;
 	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomData;
@@ -814,11 +814,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.SnowAccumulation.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
 		}
 		
-		if (Effects.ShadowsExteriors->Enabled) {
-			ShaderConst.Shadow.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Effects.ShadowsExteriors->Enabled;
-			ShaderConst.Shadow.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
-			ShaderConst.Shadow.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
-		}
 
 		if (Effects.WetWorld->Enabled) {
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
@@ -852,22 +847,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
 		}
 
-		if (Effects.AmbientOcclusion->Enabled) {
-			sectionName = "Shaders.AmbientOcclusion.Exteriors";
-			if (!isExterior) sectionName = "Shaders.AmbientOcclusion.Interiors";
-
-			ShaderConst.AmbientOcclusion.Enabled = TheSettingManager->GetSettingI(sectionName, "Enabled");
-			if (ShaderConst.AmbientOcclusion.Enabled) {
-				ShaderConst.AmbientOcclusion.AOData.x = TheSettingManager->GetSettingF(sectionName, "Samples");
-				ShaderConst.AmbientOcclusion.AOData.y = TheSettingManager->GetSettingF(sectionName, "StrengthMultiplier");
-				ShaderConst.AmbientOcclusion.AOData.z = TheSettingManager->GetSettingF(sectionName, "ClampStrength");
-				ShaderConst.AmbientOcclusion.AOData.w = TheSettingManager->GetSettingF(sectionName, "Range");
-				ShaderConst.AmbientOcclusion.Data.x = TheSettingManager->GetSettingF(sectionName, "AngleBias");
-				ShaderConst.AmbientOcclusion.Data.y = TheSettingManager->GetSettingF(sectionName, "LumThreshold");
-				ShaderConst.AmbientOcclusion.Data.z = TheSettingManager->GetSettingF(sectionName, "BlurDropThreshold");
-				ShaderConst.AmbientOcclusion.Data.w = TheSettingManager->GetSettingF(sectionName, "BlurRadiusMultiplier");
-			}
-		}
 
 		if (Effects.BloomLegacy->Enabled) {
 			sectionName = "Shaders.BloomLegacy.Exteriors";

@@ -1,4 +1,5 @@
 #include "Effects/ShaderRecord.h"
+#include "Effects/AmbientOcclusion.h"
 
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
@@ -96,11 +97,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Data;
 	};
 	struct ExposureStruct {
-		D3DXVECTOR4		Data;
-	};
-	struct AmbientOcclusionStruct {
-		bool			Enabled;
-		D3DXVECTOR4		AOData;
 		D3DXVECTOR4		Data;
 	};
 	struct ColoringStruct {
@@ -225,7 +221,6 @@ struct ShaderConstants {
 	GodRaysStruct			GodRays;
 	ImageAdjustStruct		ImageAdjust;
 	DepthOfFieldStruct		DepthOfField;
-	AmbientOcclusionStruct	AmbientOcclusion;
 	ColoringStruct			Coloring;
 	CinemaStruct			Cinema;
 	LensStruct				Lens;
@@ -280,7 +275,7 @@ public:
 		
 	struct	EffectsStruct {
 		EffectRecord*		AvgLuma;
-		EffectRecord*		AmbientOcclusion;
+		AmbientOcclusionEffect*		AmbientOcclusion;
 		EffectRecord*		BloodLens;
 		EffectRecord*		BloomLegacy;
 		EffectRecord*		Coloring;
