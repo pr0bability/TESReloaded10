@@ -370,6 +370,7 @@ public:
 	void					CreateEffects();
 	void					InitializeConstants();
 	void					UpdateConstants();
+	void					GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]);
 	bool					CreateShader(const char* Name);
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);

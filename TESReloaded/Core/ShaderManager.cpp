@@ -1851,6 +1851,118 @@ void ShaderManager::DisposeShader(const char* Name) {
 
 }
 
+
+void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]) {
+	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
+	//Logger::Log(" ==== Getting lights ====");
+	auto timer = TimeLogger();
+
+	// create a map of all nearby valid lights and sort them per distance to player
+	std::map<int, NiPointLight*> SceneLights;
+	NiTList<ShadowSceneLight>::Entry* Entry = SceneNode->lights.start;
+
+	while (Entry) {
+		NiPointLight* Light = Entry->data->sourceLight;
+		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
+
+		bool lightCulled = Light->m_flags & NiAVObject::NiFlags::APP_CULLED;
+		bool lightOn = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer > 5.0 / 255.0; // Check for low values in case of human error
+		if (lightCulled || !lightOn) {
+			Entry = Entry->next;
+			continue;
+		}
+
+		D3DXVECTOR4 LightVector = LightPosition - PlayerPosition;
+		D3DXVec4Normalize(&LightVector, &LightVector);
+		float inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward);
+		float Distance = Light->GetDistance(&Player->pos);
+		float radius = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult;
+
+		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
+		// TODO: handle using frustum check
+		float drawDistance = TheShaderManager->isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[TheShadowManager->ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
+		if ((inFront > 0 || Distance < radius) && (Distance + radius) < drawDistance) {
+			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
+		}
+
+		Entry = Entry->next;
+	}
+
+	// save only the n first lights (based on #define TrackedLightsMax)
+	memset(&TheShaderManager->LightPosition, 0, TrackedLightsMax * sizeof(D3DXVECTOR4)); // clear previous lights from array
+
+	// get the data for all tracked lights
+	int ShadowIndex = 0;
+	int LightIndex = 0;
+	TheShadowManager->PointLightsNum = 0;
+
+#if defined(OBLIVION)
+	bool TorchOnBeltEnabled = TheSettingManager->SettingsMain.EquipmentMode.Enabled && TheSettingManager->SettingsMain.EquipmentMode.TorchKey != 255;
+#endif
+
+	D3DXVECTOR4 Empty = D3DXVECTOR4(0, 0, 0, 0);
+
+	std::map<int, NiPointLight*>::iterator v = SceneLights.begin();
+	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
+		if (v != SceneLights.end()) {
+			NiPointLight* Light = v->second;
+			if (!Light || Light->EffectType != NiDynamicEffect::EffectTypes::POINT_LIGHT) {
+				v++;
+				continue;
+			}
+
+			// determin if light is a shadow caster
+			bool CastShadow = TheSettingManager->SettingsShadows.Interiors.UseCastShadowFlag ? Light->CastShadows : true;
+
+#if defined(OBLIVION)
+			// Oblivion exception for carried torch lights 
+			if (TorchOnBeltEnabled && Light->CanCarry == 2) {
+				HighProcessEx* Process = (HighProcessEx*)Player->process;
+				if (Process->OnBeltState == HighProcessEx::State::In) CastShadow = false;
+			}
+#endif
+
+			D3DXVECTOR4 LightPos = Light->m_worldTransform.pos.toD3DXVEC4();
+			LightPos.w = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult;
+
+			if (CastShadow && ShadowIndex < ShadowCubeMapsMax) {
+				// add found light to list of lights that cast shadows
+				ShadowLightsList[ShadowIndex] = Light;
+				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = LightPos;
+				ShadowIndex++;
+				TheShadowManager->PointLightsNum++; // Constant to track number of shadow casting lights are present
+			}
+			else if (LightIndex < TrackedLightsMax) {
+				LightsList[LightIndex] = Light;
+				LightPosition[LightIndex] = LightPos;
+				LightIndex++;
+			};
+
+			v++;
+		}
+		else {
+			// set null values if number of lights in the scene becomes lower than previous iteration
+			if (LightIndex < TrackedLightsMax) {
+				//Logger::Log("clearing light at index %i", LightIndex);
+				LightsList[LightIndex] = NULL;
+				LightPosition[LightIndex] = Empty;
+				LightIndex++;
+			}
+			if (ShadowIndex < ShadowCubeMapsMax) {
+				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
+				ShadowLightsList[ShadowIndex] = NULL;
+				ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = Empty;
+				ShadowIndex++;
+			}
+		}
+	}
+
+	timer.LogTime("ShadowManager::GetNearbyLights");
+
+}
+
+
+
 /*
 * Loads an Effect Shader from the corresponding fx file based on the Effect Record effect Type.
 */
