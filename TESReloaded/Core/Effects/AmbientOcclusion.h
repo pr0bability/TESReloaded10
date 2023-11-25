@@ -3,6 +3,7 @@
 class AmbientOcclusionEffect : public EffectRecord
 {
 public:
+	AmbientOcclusionEffect() : EffectRecord("AmbientOcclusion") {};
 
 	struct AmbientOcclusionStruct {
 		bool			Enabled;
