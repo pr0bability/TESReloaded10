@@ -109,6 +109,17 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["WaterLens"] = &TheShaderManager->Effects.WaterLens;
 	TheShaderManager->EffectsNames["WetWorld"] = &TheShaderManager->Effects.WetWorld;
 
+	// Initialize all effects
+	TheShaderManager->CreateEffects();
+
+	memset(TheShaderManager->WaterVertexShaders, NULL, sizeof(WaterVertexShaders));
+	memset(TheShaderManager->WaterPixelShaders, NULL, sizeof(WaterPixelShaders));
+	TheShaderManager->InitializeConstants();
+	TheShaderManager->CreateFrameVertex(TheRenderManager->width, TheRenderManager->height, &TheShaderManager->FrameVertex);
+
+    TheShaderManager->PreviousCell = nullptr;
+    TheShaderManager->IsMenuSwitch = false;
+
 	//setup map of constant names
 	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &TheShaderManager->ShaderConst.HDR.ToneMapping;
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
@@ -239,27 +250,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->ShaderConst.WetWorld.Data;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
-	// Initialize all effects to NULL
-	EffectsList::iterator v = TheShaderManager->EffectsNames.begin();
-	while (v != TheShaderManager->EffectsNames.end()) {
-		*v->second = NULL;
-		v++;
-	}
-
-	memset(TheShaderManager->WaterVertexShaders, NULL, sizeof(WaterVertexShaders));
-	memset(TheShaderManager->WaterPixelShaders, NULL, sizeof(WaterPixelShaders));
-	TheShaderManager->InitializeConstants();
-	TheShaderManager->ShaderConst.ReciprocalResolution.x = 1.0f / (float)TheRenderManager->width;
-	TheShaderManager->ShaderConst.ReciprocalResolution.y = 1.0f / (float)TheRenderManager->height;
-	TheShaderManager->ShaderConst.ReciprocalResolution.z = (float)TheRenderManager->width / (float)TheRenderManager->height;
-	TheShaderManager->ShaderConst.ReciprocalResolution.w = 0.0f; // Reserved to store the FoV
-	TheShaderManager->CreateFrameVertex(TheRenderManager->width, TheRenderManager->height, &TheShaderManager->FrameVertex);
-
-    TheShaderManager->PreviousCell = nullptr;
-    TheShaderManager->IsMenuSwitch = false;
+	// load actual effect files and initialize constant tables
+	TheShaderManager->LoadEffects();
 
 	timer.LogTime("ShaderManager::Initialize");
-
 }
 
 void ShaderManager::CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex) {
@@ -289,17 +283,8 @@ void ShaderManager::CreateEffects() {
 	auto timer = TimeLogger();
 
 	// create effect records for effects shaders based on name
-	EffectsList::iterator v = TheShaderManager->EffectsNames.begin();
-	while (v != TheShaderManager->EffectsNames.end()) {
-		const char* Name = v->first.c_str();
-		bool enabled = TheSettingManager->GetMenuShaderEnabled(Name);
-
-		EffectRecord* effect = CreateEffect(Name, enabled);
-		*v->second = effect; // assign pointer from Effects struct to the newly created effect record
-
-		enabled = effect->Enabled;
-		TheSettingManager->SetMenuShaderEnabled(Name, enabled); // disable settings of effects that couldn't load
-		v++;
+	for (EffectsList::iterator v = TheShaderManager->EffectsNames.begin(); v != TheShaderManager->EffectsNames.end(); v++) {
+		*v->second = CreateEffect(v->first.c_str());
 	}
 
 	/*TODO*/
@@ -308,6 +293,24 @@ void ShaderManager::CreateEffects() {
 
 	timer.LogTime("ShaderManager::CreateEffects");
 }
+
+void ShaderManager::LoadEffects() {
+
+	auto timer = TimeLogger();
+
+	// load effects from the effects list
+	for (const auto [Name, effect] : TheShaderManager->EffectsNames) {
+		(*effect)->LoadEffect();
+	}
+
+	/*TODO*/
+	//CreateEffect(EffectRecord::EffectRecordType::Extra);
+	//if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
+
+	timer.LogTime("ShaderManager::LoadEffects");
+}
+
+
 
 void ShaderManager::InitializeConstants() {
 
@@ -322,6 +325,11 @@ void ShaderManager::InitializeConstants() {
 	ShaderConst.Rain.RainData.y = 0.0f;
 	ShaderConst.Rain.RainData.z = 0.0f;
 	ShaderConst.Rain.RainData.w = 0.0f;
+
+	ShaderConst.ReciprocalResolution.x = 1.0f / (float)TheRenderManager->width;
+	ShaderConst.ReciprocalResolution.y = 1.0f / (float)TheRenderManager->height;
+	ShaderConst.ReciprocalResolution.z = (float)TheRenderManager->width / (float)TheRenderManager->height;
+	ShaderConst.ReciprocalResolution.w = 0.0f; // Reserved to store the FoV
 
 	ShaderConst.Animators.PuddlesAnimator.Initialize(0);
 	ShaderConst.Animators.RainAnimator.Initialize(0);
@@ -847,6 +855,10 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
 		}
 
+		if (Effects.AmbientOcclusion->Enabled) {
+			Effects.AmbientOcclusion->UpdateConstants();
+
+		}
 
 		if (Effects.BloomLegacy->Enabled) {
 			sectionName = "Shaders.BloomLegacy.Exteriors";
@@ -1360,18 +1372,12 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 /*
 * Loads an Effect Shader from the corresponding fx file based on the Effect Record effect Type.
 */
-EffectRecord* ShaderManager::CreateEffect(const char* Name, bool setEnabled) {
-	
-	char Filename[MAX_PATH];
-	strcpy(Filename, EffectsPath);
-	strcat(Filename, Name);
-	strcat(Filename, ".fx");
+EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 
-	EffectRecord* effect = EffectRecord::LoadEffect(Filename);
-	if (!effect->IsLoaded()) setEnabled = false;
+	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
 
-	effect->Enabled = setEnabled;
-	return effect;
+	return new EffectRecord(Name);
+
 
 	// TODO: simplify and streamline extra shaders creation
 	//SettingsMainStruct* SettingsMain = &TheSettingManager->SettingsMain;

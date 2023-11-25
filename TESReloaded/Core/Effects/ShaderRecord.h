@@ -109,7 +109,6 @@ public:
 	void					DisposeEffect();
 	bool					LoadEffect(bool alwaysCompile = false);
 
-	static EffectRecord* LoadEffect(const char* Name);
 	bool 					IsLoaded();
 	bool					Enabled;
 

@@ -14,27 +14,6 @@ ShaderProgram::~ShaderProgram() {
 }
 
 
-/*
-Declares the constants that can be accessed from the shader code from the Constant Table, and gives them a readable name.
-*/
-void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
-
-	//Logger::Log("Constants contains name %s? %i", Name, TheShaderManager->ConstantsTable.count(Name));
-	//Logger::Log("Constants map size? %i", TheShaderManager->ConstantsTable.size());
-
-	for (auto const& imap : TheShaderManager->ConstantsTable) {
-		if (!strcmp(imap.first, Name)) {
-			FloatShaderValues[Index].Value = TheShaderManager->ConstantsTable.at(imap.first);
-			return;
-		}
-	}
-
-	Logger::Log("Custom constant found: %s", Name);
-	D3DXVECTOR4 v; v.x = v.y = v.z = v.w = 0.0f;
-	TheShaderManager->CustomConst[Name] = v;
-	FloatShaderValues[Index].Value = &TheShaderManager->CustomConst[Name];
-}
-
 ShaderRecord::ShaderRecord() {
 
 	HasRenderedBuffer = false;
@@ -269,6 +248,25 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 }
 
 /*
+Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
+*/
+void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
+
+	for (auto const& imap : TheShaderManager->ConstantsTable) {
+		if (!strcmp(imap.first, Name)) {
+			FloatShaderValues[Index].Value = TheShaderManager->ConstantsTable.at(imap.first);
+			return;
+		}
+	}
+
+	Logger::Log("Custom constant found: %s", Name);
+	D3DXVECTOR4 v; v.x = v.y = v.z = v.w = 0.0f;
+	TheShaderManager->CustomConst[Name] = v;
+	FloatShaderValues[Index].Value = &TheShaderManager->CustomConst[Name];
+}
+
+
+/*
 * Sets the Constant Table for the shader
 */
 void ShaderRecord::SetCT() {
@@ -339,14 +337,16 @@ EffectRecord::EffectRecord(const char* effectName) {
 	Path = new std::string(effectName);
 
 	char FileName[MAX_PATH];
-	strcpy(FileName, effectName);
+	strcpy(FileName, EffectsPath);
+	strcat(FileName, Name);
+	strcat(FileName, ".fx");
 	strcat(FileName, ".hlsl");
 	SourcePath = new std::string(FileName);
 
-	Enabled = false;
 	Effect = NULL;
-
+	Enabled = false;
 }
+
 /*Shader Values arrays are freed in the superclass Destructor*/
 EffectRecord::~EffectRecord() {
 	if (Effect) Effect->Release();
@@ -426,6 +426,9 @@ cleanup:
 		Errors->Release();
 	}
 
+	// set enabled status of effect based on success and setting
+	Enabled = Effect != nullptr && TheSettingManager->GetMenuShaderEnabled(Name);
+
 	timer.LogTime("EffectRecord::LoadSEffect");
 
 	return success;
@@ -436,11 +439,6 @@ cleanup:
 * @param Name the name for the effect
 * @returns an EffectRecord describing the effect shader.
 */
-EffectRecord* EffectRecord::LoadEffect(const char* Name) {
-	EffectRecord* EffectProg = new EffectRecord(Name);
-	EffectProg->LoadEffect();
-	return EffectProg;
-}
 
 bool EffectRecord::IsLoaded() {
 	return Effect != nullptr;
@@ -580,4 +578,8 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 	char name[255] = "EffectRecord::Render ";
 	strcat(name, Path->c_str());
 	timer.LogTime(name);
+}
+
+
+void EffectRecord::UpdateConstants() {
 }

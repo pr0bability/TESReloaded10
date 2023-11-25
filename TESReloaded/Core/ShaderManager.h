@@ -258,7 +258,8 @@ public:
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
 	void					DisposeShader(const char* Name);
-	EffectRecord*			CreateEffect(const char* Name, bool setEnabled);
+	EffectRecord*			CreateEffect(const char* Name);
+	void					LoadEffects();
 	void					DisposeEffect(EffectRecord** Effect);  // unused?
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
 	void					RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget);
