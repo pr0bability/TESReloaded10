@@ -78,7 +78,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->FrameVertex = NULL;
 
 	// initializing the list of effect names
-	TheShaderManager->EffectsNames["AvgLuma"] = &TheShaderManager->Effects.AvgLuma;
+	TheShaderManager->EffectsNames["AvgLuma"] = (EffectRecord**)&TheShaderManager->Effects.AvgLuma;
 	TheShaderManager->EffectsNames["AmbientOcclusion"] = (EffectRecord**)&TheShaderManager->Effects.AmbientOcclusion;
 	TheShaderManager->EffectsNames["BloodLens"] = &TheShaderManager->Effects.BloodLens;
 	TheShaderManager->EffectsNames["BloomLegacy"] = &TheShaderManager->Effects.BloomLegacy;
@@ -1377,6 +1377,7 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 */
 EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 
+	if (!memcmp(Name, "AvgLuma", 8)) return new AvgLumaEffect();
 	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
 	if (!memcmp(Name, "ShadowsExterior", 16)) return new ShadowsExteriorEffect();
 
