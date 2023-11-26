@@ -252,8 +252,8 @@ public:
 	static float			clamp(float a, float b, float t);
 		
 	struct	EffectsStruct {
-		AvgLumaEffect*		AvgLuma;
 		AmbientOcclusionEffect*		AmbientOcclusion;
+		AvgLumaEffect*			AvgLuma;
 		BloodLensEffect*		BloodLens;
 		BloomLegacyEffect*		BloomLegacy;
 		CinemaEffect*		Cinema;
