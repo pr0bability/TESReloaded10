@@ -201,7 +201,6 @@ struct ShaderConstants {
 	GodRaysStruct			GodRays;
 	ImageAdjustStruct		ImageAdjust;
 	DepthOfFieldStruct		DepthOfField;
-	ColoringStruct			Coloring;
 	LensStruct				Lens;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
