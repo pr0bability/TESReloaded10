@@ -1,6 +1,7 @@
 #include "Effects/ShaderRecord.h"
 #include "Effects/AmbientOcclusion.h"
 #include "Effects/ShadowsExterior.h"
+#include "Effects/AvgLuma.h"
 
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
@@ -270,7 +271,7 @@ public:
 	static float			clamp(float a, float b, float t);
 		
 	struct	EffectsStruct {
-		EffectRecord*		AvgLuma;
+		AvgLumaEffect*		AvgLuma;
 		AmbientOcclusionEffect*		AmbientOcclusion;
 		EffectRecord*		BloodLens;
 		EffectRecord*		BloomLegacy;
