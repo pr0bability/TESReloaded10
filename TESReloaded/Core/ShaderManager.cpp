@@ -856,11 +856,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Cinema.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
 			ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
 		}
-
-		if (Effects.AmbientOcclusion->Enabled) {
-			Effects.AmbientOcclusion->UpdateConstants();
-
-		}
+		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
 		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
 
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
