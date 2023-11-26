@@ -80,8 +80,8 @@ void ShaderManager::Initialize() {
 	// initializing the list of effect names
 	TheShaderManager->EffectsNames["AvgLuma"] = (EffectRecord**)&TheShaderManager->Effects.AvgLuma;
 	TheShaderManager->EffectsNames["AmbientOcclusion"] = (EffectRecord**)&TheShaderManager->Effects.AmbientOcclusion;
-	TheShaderManager->EffectsNames["BloodLens"] = &TheShaderManager->Effects.BloodLens;
 	TheShaderManager->EffectsNames["BloomLegacy"] = &TheShaderManager->Effects.BloomLegacy;
+	TheShaderManager->EffectsNames["BloodLens"] = (EffectRecord**)&TheShaderManager->Effects.BloodLens;
 	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = &TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
@@ -209,10 +209,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
 	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.AOData;
 	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->ShaderConst.BloodLens.Params;
-	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->ShaderConst.BloodLens.BloodColor;
 	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomData;
 	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomValues;
+	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->Effects.BloodLens->Constants.Params;
+	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->Effects.BloodLens->Constants.BloodColor;
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
@@ -316,7 +316,6 @@ void ShaderManager::InitializeConstants() {
 
 	ShaderConst.pWeather = NULL;
 	ShaderConst.WaterLens.Percent = 0.0f;
-	ShaderConst.BloodLens.Percent = 0.0f;
 	ShaderConst.SnowAccumulation.Params.w = 0.0f;
 	ShaderConst.WetWorld.Data.x = 0.0f;
 	ShaderConst.WetWorld.Data.y = 0.0f;
@@ -608,7 +607,7 @@ void ShaderManager::UpdateConstants() {
 	}		
 
 	if (isUnderwater) {
-		ShaderConst.BloodLens.Percent = 0.0f;
+		Effects.BloodLens->Constants.Percent = 0.0f;
 		ShaderConst.WaterLens.Percent = -1.0f;
 		ShaderConst.Animators.WaterLensAnimator.switched = true;
 		ShaderConst.Animators.WaterLensAnimator.Start(0.0, 0);
@@ -988,24 +987,7 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	if (Effects.BloodLens->Enabled) {
-		if (ShaderConst.BloodLens.Percent > 0.0f) {
-			ShaderConst.BloodLens.Time.z = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Time");
-			if (ShaderConst.BloodLens.Percent == 1.0f) {
-				ShaderConst.BloodLens.Time.w = 0.0f;
-				srand(time(NULL));
-				ShaderConst.BloodLens.Params.x = (double)rand() / (RAND_MAX + 1) * (0.75f - 0.25f) + 0.25f; //from 0.25 to 0.75
-				ShaderConst.BloodLens.Params.y = (double)rand() / (RAND_MAX + 1) * (0.5f + 0.1f) - 0.1f; //from -0.1 to 0.5
-				ShaderConst.BloodLens.Params.z = (double)rand() / (RAND_MAX + 1) * (2.0f + 2.0f) - 2.0f; //from -2 to 2
-			}
-			ShaderConst.BloodLens.Time.w += 1.0f;
-			ShaderConst.BloodLens.Percent = 1.0f - ShaderConst.BloodLens.Time.w / ShaderConst.BloodLens.Time.z;
-			if (ShaderConst.BloodLens.Percent < 0.0f)
-				ShaderConst.BloodLens.Percent = 0.0f;
-			ShaderConst.BloodLens.Params.w = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Intensity") * ShaderConst.BloodLens.Percent;
-			ShaderConst.BloodLens.BloodColor.x = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorR");
-			ShaderConst.BloodLens.BloodColor.y = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorG");
-			ShaderConst.BloodLens.BloodColor.z = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorB");
-		}
+		Effects.BloodLens->UpdateConstants();
 	}
 
 	if (Effects.LowHF->Enabled) {
@@ -1380,6 +1362,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "AvgLuma", 8)) return new AvgLumaEffect();
 	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
 	if (!memcmp(Name, "ShadowsExterior", 16)) return new ShadowsExteriorEffect();
+	if (!memcmp(Name, "BloodLens", 10)) return new BloodLensEffect();
 
 	return new EffectRecord(Name);
 
@@ -1562,7 +1545,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	if (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// lens effects
-	if (ShaderConst.BloodLens.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	if (Effects.BloodLens->Constants.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
