@@ -2,6 +2,7 @@
 #include "Effects/AmbientOcclusion.h"
 #include "Effects/ShadowsExterior.h"
 #include "Effects/AvgLuma.h"
+#include "Effects/BloodLens.h"
 
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
@@ -117,12 +118,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Params;
 		D3DXVECTOR4		Color;
 	};
-	struct BloodLensStruct {
-		D3DXVECTOR4		Params;
-		D3DXVECTOR4		BloodColor;
-		D3DXVECTOR4		Time;
-		float			Percent;
-	};
 	struct MotionBlurStruct {
 		D3DXVECTOR4		BlurParams;
 		D3DXVECTOR4		Data;
@@ -222,7 +217,6 @@ struct ShaderConstants {
 	LensStruct				Lens;
 	BloomStruct				BloomLegacy;
 	SnowAccumulationStruct	SnowAccumulation;
-	BloodLensStruct			BloodLens;
 	MotionBlurStruct		MotionBlur;
 	LowHFStruct				LowHF;
 	WetWorldStruct			WetWorld;
@@ -273,8 +267,8 @@ public:
 	struct	EffectsStruct {
 		AvgLumaEffect*		AvgLuma;
 		AmbientOcclusionEffect*		AmbientOcclusion;
-		EffectRecord*		BloodLens;
 		EffectRecord*		BloomLegacy;
+		BloodLensEffect*		BloodLens;
 		EffectRecord*		Coloring;
 		EffectRecord*		Cinema;
 		EffectRecord*		Exposure;
