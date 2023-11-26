@@ -182,6 +182,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\AvgLuma.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

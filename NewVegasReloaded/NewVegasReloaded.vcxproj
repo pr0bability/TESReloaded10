@@ -116,6 +116,7 @@
     <ClInclude Include="..\TESReloaded\Core\Device\Device.h" />
     <ClInclude Include="..\TESReloaded\Core\Device\Hook.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\AmbientOcclusion.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\AvgLuma.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
