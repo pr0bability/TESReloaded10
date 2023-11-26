@@ -3,6 +3,7 @@
 #include "Effects/ShadowsExterior.h"
 #include "Effects/AvgLuma.h"
 #include "Effects/BloodLens.h"
+#include "Effects/BloomLegacy.h"
 
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
@@ -110,10 +111,6 @@ struct ShaderConstants {
 	struct LensStruct {
 		D3DXVECTOR4		Data;
 	};
-	struct BloomStruct {
-		D3DXVECTOR4		BloomData;
-		D3DXVECTOR4		BloomValues;
-	};
 	struct SnowAccumulationStruct {
 		D3DXVECTOR4		Params;
 		D3DXVECTOR4		Color;
@@ -215,7 +212,6 @@ struct ShaderConstants {
 	ColoringStruct			Coloring;
 	CinemaStruct			Cinema;
 	LensStruct				Lens;
-	BloomStruct				BloomLegacy;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
 	LowHFStruct				LowHF;
@@ -267,8 +263,8 @@ public:
 	struct	EffectsStruct {
 		AvgLumaEffect*		AvgLuma;
 		AmbientOcclusionEffect*		AmbientOcclusion;
-		EffectRecord*		BloomLegacy;
 		BloodLensEffect*		BloodLens;
+		BloomLegacyEffect*		BloomLegacy;
 		EffectRecord*		Coloring;
 		EffectRecord*		Cinema;
 		EffectRecord*		Exposure;
