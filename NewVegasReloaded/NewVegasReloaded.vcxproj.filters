@@ -179,6 +179,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\AmbientOcclusion.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -281,6 +284,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\AmbientOcclusion.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
