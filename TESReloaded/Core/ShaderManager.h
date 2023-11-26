@@ -9,6 +9,7 @@
 #include "Effects/BloomLegacy.h"
 #include "Effects/Cinema.h"
 #include "Effects/Coloring.h"
+#include "Effects/DepthOfField.h"
 
 
 
@@ -90,11 +91,6 @@ struct ShaderConstants {
 	struct GodRaysStruct {
 		D3DXVECTOR4		Ray;
 		D3DXVECTOR4		RayColor;
-		D3DXVECTOR4		Data;
-	};
-	struct DepthOfFieldStruct {
-		bool			Enabled;
-		D3DXVECTOR4		Blur;
 		D3DXVECTOR4		Data;
 	};
 	struct ExposureStruct {
@@ -200,7 +196,6 @@ struct ShaderConstants {
 	WaterLensStruct			WaterLens;
 	GodRaysStruct			GodRays;
 	ImageAdjustStruct		ImageAdjust;
-	DepthOfFieldStruct		DepthOfField;
 	LensStruct				Lens;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
@@ -258,7 +253,7 @@ public:
 		ColoringEffect*			Coloring;
 		CinemaEffect*			Cinema;
 		EffectRecord*		Exposure;
-		EffectRecord*		DepthOfField;
+		DepthOfFieldEffect*		DepthOfField;
 		EffectRecord*		Debug;
 		EffectRecord*		GodRays;
 		EffectRecord*		ImageAdjust;

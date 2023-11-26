@@ -84,7 +84,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["BloomLegacy"] = (EffectRecord**)&TheShaderManager->Effects.BloomLegacy;
 	TheShaderManager->EffectsNames["Coloring"] = (EffectRecord**)&TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = (EffectRecord**)&TheShaderManager->Effects.Cinema;
-	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
+	TheShaderManager->EffectsNames["DepthOfField"] = (EffectRecord**)&TheShaderManager->Effects.DepthOfField;
 	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
@@ -222,8 +222,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &TheShaderManager->Effects.Coloring->Constants.EffectGamma;
 	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &TheShaderManager->Effects.Coloring->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &TheShaderManager->Effects.Coloring->Constants.Values;
-	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &TheShaderManager->ShaderConst.DepthOfField.Blur;
-	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &TheShaderManager->ShaderConst.DepthOfField.Data;
+	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &TheShaderManager->Effects.DepthOfField->Constants.Blur;
+	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &TheShaderManager->Effects.DepthOfField->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &TheShaderManager->ShaderConst.Exposure.Data;
 	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->ShaderConst.GodRays.Ray;
 	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->ShaderConst.GodRays.RayColor;
@@ -970,37 +970,7 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
-	if (Effects.DepthOfField->Enabled) {
-		avglumaRequired = true;
-
-		sectionName = "Shaders.DepthOfField.FirstPersonView";
-		if (TheCameraManager->IsVanity())
-			sectionName = "Shaders.DepthOfField.VanityView";
-		else if (IsThirdPersonView)
-			sectionName = "Shaders.DepthOfField.ThirdPersonView";
-
-		int Mode = TheSettingManager->GetSettingI(sectionName, "Mode");
-		bool dofActive = TheSettingManager->GetSettingI(sectionName, "Enabled");
-
-		// disable based on settings/context
-		if ((Mode == 1 && (isDialog || isPersuasion)) ||
-			(Mode == 2 && (!isDialog)) ||
-			(Mode == 3 && (!isPersuasion)) ||
-			(Mode == 4 && (!isDialog || !isPersuasion))) dofActive = false;
-
-		ShaderConst.DepthOfField.Enabled = dofActive;
-
-		if (dofActive) {
-			ShaderConst.DepthOfField.Blur.x = TheSettingManager->GetSettingF(sectionName, "DistantBlur");
-			ShaderConst.DepthOfField.Blur.y = TheSettingManager->GetSettingF(sectionName, "DistantBlurStartRange");
-			ShaderConst.DepthOfField.Blur.z = TheSettingManager->GetSettingF(sectionName, "DistantBlurEndRange");
-			ShaderConst.DepthOfField.Blur.w = TheSettingManager->GetSettingF(sectionName, "BaseBlurRadius");
-			ShaderConst.DepthOfField.Data.x = TheSettingManager->GetSettingF(sectionName, "BlurFallOff");
-			ShaderConst.DepthOfField.Data.y = TheSettingManager->GetSettingF(sectionName, "Radius");
-			ShaderConst.DepthOfField.Data.z = TheSettingManager->GetSettingF(sectionName, "DiameterRange");
-			ShaderConst.DepthOfField.Data.w = TheSettingManager->GetSettingF(sectionName, "NearBlurCutOff");
-		}
-	}
+	if (Effects.DepthOfField->Enabled) Effects.DepthOfField->UpdateConstants();
 
 
 
@@ -1310,6 +1280,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "BloodLens", 10)) return new BloodLensEffect();
 	if (!memcmp(Name, "BloomLegacy", 12)) return new BloomLegacyEffect();
 	if (!memcmp(Name, "Cinema", 7)) return new CinemaEffect();
+	if (!memcmp(Name, "DepthOfField", 13)) return new DepthOfFieldEffect();
 
 	return new EffectRecord(Name);
 
@@ -1388,7 +1359,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	auto timer = TimeLogger();
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
-	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	IDirect3DSurface9* SourceSurface = TheTextureManager->SourceSurface;
 	IDirect3DSurface9* RenderedSurface = TheTextureManager->RenderedSurface;
 
@@ -1488,7 +1458,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// screenspace coloring/blurring effects get rendered last
 	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (ShaderConst.DepthOfField.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	if (Effects.DepthOfField->Constants.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	if (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// lens effects
