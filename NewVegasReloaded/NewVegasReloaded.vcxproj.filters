@@ -200,6 +200,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\DepthOfField.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Exposure.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -320,6 +323,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\DepthOfField.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\Exposure.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
