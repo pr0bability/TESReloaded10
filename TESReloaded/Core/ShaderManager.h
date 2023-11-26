@@ -256,8 +256,8 @@ public:
 		AvgLumaEffect*			AvgLuma;
 		BloodLensEffect*		BloodLens;
 		BloomLegacyEffect*		BloomLegacy;
-		CinemaEffect*		Cinema;
 		ColoringEffect*			Coloring;
+		CinemaEffect*			Cinema;
 		EffectRecord*		Exposure;
 		EffectRecord*		DepthOfField;
 		EffectRecord*		Debug;
