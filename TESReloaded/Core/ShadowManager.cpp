@@ -243,11 +243,12 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 void ShadowManager::RenderAccums() {
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	IDirect3DDevice9* Device = TheRenderManager->device;
+	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 
 	// Render normal geometry
 	if (!geometryAccum.empty()) {
-		TheShaderManager->ShaderConst.Shadow.Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-		TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+		Constants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+		Constants->Data.y = 0.0f; // Alpha control
 		CurrentPixel->SetCT();
 		CurrentVertex->SetCT();
 
@@ -264,8 +265,9 @@ void ShadowManager::RenderAccums() {
 	}
 
 	// Render skinned geometry
-	TheShaderManager->ShaderConst.Shadow.Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+	Constants->Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	Constants->Data.y = 0.0f; // Alpha control
+
 	CurrentPixel->SetCT();
 	CurrentVertex->SetCT();
 	while (!skinnedGeoAccum.empty()) {
@@ -275,8 +277,8 @@ void ShadowManager::RenderAccums() {
 
 	// Render speedtree
 	if (!speedTreeAccum.empty()) {
-		TheShaderManager->ShaderConst.Shadow.Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-		TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha control
+		Constants->Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+		Constants->Data.y = 0.0f; // Alpha control
 		CurrentPixel->SetCT();
 		CurrentVertex->SetCT();
 
@@ -307,18 +309,19 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryData* ModelData = Geo->geomData;
 	NiGeometryBufferData* GeoData = ModelData->BuffData;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
+	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 
 	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
 
-	TheShaderManager->ShaderConst.Shadow.Data.y = 0.0f; // Alpha Control
+	Constants->Data.y = 0.0f; // Alpha Control
 	if (AlphaEnabled) {
 		NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
 		if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
 			if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0]) {
 				
-				TheShaderManager->ShaderConst.Shadow.Data.y = 1.0f; // Alpha Control
+				Constants->Data.y = 1.0f; // Alpha Control
 
 				// Set diffuse texture at register 0
 				RenderState->SetTexture(0, Texture->rendererData->dTexture);
@@ -635,7 +638,7 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 	ShadowMap->ShadowCubeMapLightPosition.y = Eye.y;
 	ShadowMap->ShadowCubeMapLightPosition.z = Eye.z;
 	ShadowMap->ShadowCubeMapLightPosition.w = Radius;
-	TheShaderManager->ShaderConst.Shadow.Data.z = Radius;
+	TheShaderManager->Effects.ShadowsExteriors->Constants.Data.z = Radius;
 	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(90.0f), 1.0f, 0.1f, Radius);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
@@ -747,8 +750,8 @@ void ShadowManager::RenderShadowMaps() {
 	IDirect3DSurface9* RenderSurface = NULL;
 	D3DVIEWPORT9 viewport;
 
-	D3DXVECTOR4* ShadowData = &TheShaderManager->ShaderConst.Shadow.Data;
-	D3DXVECTOR4* OrthoData = &TheShaderManager->ShaderConst.Shadow.OrthoData;
+	D3DXVECTOR4* ShadowData = &TheShaderManager->Effects.ShadowsExteriors->Constants.Data;
+	D3DXVECTOR4* OrthoData = &TheShaderManager->Effects.ShadowsExteriors->Constants.OrthoData;
 	Device->GetDepthStencilSurface(&DepthSurface);
 	Device->GetRenderTarget(0, &RenderSurface);
 	Device->GetViewport(&viewport);	

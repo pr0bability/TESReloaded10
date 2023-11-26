@@ -83,7 +83,7 @@ void __fastcall RenderFirstPersonHook(Main* This, UInt32 edx, NiDX9Renderer* Ren
 void (__thiscall* RenderReflections)(WaterManager*, NiCamera*, ShadowSceneNode*) = (void (__thiscall*)(WaterManager*, NiCamera*, ShadowSceneNode*))Hooks::RenderReflections;
 void __fastcall RenderReflectionsHook(WaterManager* This, UInt32 edx, NiCamera* Camera, ShadowSceneNode* SceneNode) {
 	
-	D3DXVECTOR4* ShadowData = &TheShaderManager->ShaderConst.Shadow.Data;
+	D3DXVECTOR4* ShadowData = &TheShaderManager->Effects.ShadowsExteriors->Constants.Data;
 	float ShadowDataBackup = ShadowData->x;
 
 	if (DWNode::Get()) DWNode::AddNode("BEGIN REFLECTIONS RENDERING", NULL, NULL);

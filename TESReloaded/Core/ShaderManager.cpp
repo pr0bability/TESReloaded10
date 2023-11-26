@@ -96,7 +96,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
 	TheShaderManager->EffectsNames["Precipitations"] = &TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
-	TheShaderManager->EffectsNames["ShadowsExteriors"] = &TheShaderManager->Effects.ShadowsExteriors;
+	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
 	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
 	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
@@ -127,10 +127,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
 	TheShaderManager->ConstantsTable["TESR_SkinData"] = &TheShaderManager->ShaderConst.Skin.SkinData;
 	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &TheShaderManager->ShaderConst.Skin.SkinColor;
-	TheShaderManager->ConstantsTable["TESR_ShadowData"] = &TheShaderManager->ShaderConst.Shadow.Data;
-	TheShaderManager->ConstantsTable["TESR_ShadowScreenSpaceData"] = &TheShaderManager->ShaderConst.Shadow.ScreenSpaceData;
+	TheShaderManager->ConstantsTable["TESR_ShadowData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_ShadowScreenSpaceData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.ScreenSpaceData;
 	TheShaderManager->ConstantsTable["TESR_ShadowRadius"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius;
-	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &TheShaderManager->ShaderConst.Shadow.OrthoData;
+	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.OrthoData;
 	TheShaderManager->ConstantsTable["TESR_RainData"] = &TheShaderManager->ShaderConst.Rain.RainData;
 	TheShaderManager->ConstantsTable["TESR_RainAspect"] = &TheShaderManager->ShaderConst.Rain.RainAspect;
 	TheShaderManager->ConstantsTable["TESR_SnowData"] = &TheShaderManager->ShaderConst.Snow.SnowData;
@@ -822,6 +822,9 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.SnowAccumulation.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
 		}
 		
+		if (Effects.ShadowsExteriors->Enabled) {
+			Effects.ShadowsExteriors->UpdateConstants();
+		}
 
 		if (Effects.WetWorld->Enabled) {
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
@@ -1375,6 +1378,7 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 
 	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
+	if (!memcmp(Name, "ShadowsExterior", 16)) return new ShadowsExteriorEffect();
 
 	return new EffectRecord(Name);
 

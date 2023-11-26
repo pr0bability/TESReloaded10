@@ -1,5 +1,6 @@
 #include "Effects/ShaderRecord.h"
 #include "Effects/AmbientOcclusion.h"
+#include "Effects/ShadowsExterior.h"
 
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
@@ -68,11 +69,6 @@ struct ShaderConstants {
 	struct SkinStruct {
 		D3DXVECTOR4		SkinData;
 		D3DXVECTOR4		SkinColor;
-	};
-	struct ShadowStruct {
-		D3DXVECTOR4		Data;
-		D3DXVECTOR4		ScreenSpaceData;
-		D3DXVECTOR4		OrthoData;
 	};
 	struct RainStruct{
 		D3DXVECTOR4		RainData;
@@ -214,7 +210,6 @@ struct ShaderConstants {
 	POMStruct				POM;
 	TerrainStruct			Terrain;
 	SkinStruct				Skin;
-	ShadowStruct			Shadow;
 	RainStruct				Rain;
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
@@ -296,7 +291,7 @@ public:
 		EffectRecord*		Specular;
 		EffectRecord*		Snow;
 		EffectRecord*		SnowAccumulation;
-		EffectRecord*		ShadowsExteriors;
+		ShadowsExteriorEffect*		ShadowsExteriors;
 		EffectRecord*		ShadowsInteriors;
 		EffectRecord*		PointShadows;
 		EffectRecord*		PointShadows2;
