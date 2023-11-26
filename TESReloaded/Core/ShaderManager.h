@@ -8,6 +8,7 @@
 #include "Effects/BloodLens.h"
 #include "Effects/BloomLegacy.h"
 #include "Effects/Cinema.h"
+#include "Effects/Coloring.h"
 
 
 
@@ -98,12 +99,6 @@ struct ShaderConstants {
 	};
 	struct ExposureStruct {
 		D3DXVECTOR4		Data;
-	};
-	struct ColoringStruct {
-		D3DXVECTOR4		ColorCurve;
-		D3DXVECTOR4		EffectGamma;
-		D3DXVECTOR4		Data;
-		D3DXVECTOR4		Values;
 	};
 	struct LensStruct {
 		D3DXVECTOR4		Data;
@@ -261,8 +256,8 @@ public:
 		AmbientOcclusionEffect*		AmbientOcclusion;
 		BloodLensEffect*		BloodLens;
 		BloomLegacyEffect*		BloomLegacy;
-		EffectRecord*		Coloring;
 		CinemaEffect*		Cinema;
+		ColoringEffect*			Coloring;
 		EffectRecord*		Exposure;
 		EffectRecord*		DepthOfField;
 		EffectRecord*		Debug;
