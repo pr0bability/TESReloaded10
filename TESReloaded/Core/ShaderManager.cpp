@@ -83,7 +83,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["BloodLens"] = (EffectRecord**)&TheShaderManager->Effects.BloodLens;
 	TheShaderManager->EffectsNames["BloomLegacy"] = (EffectRecord**)&TheShaderManager->Effects.BloomLegacy;
 	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
-	TheShaderManager->EffectsNames["Cinema"] = &TheShaderManager->Effects.Cinema;
+	TheShaderManager->EffectsNames["Cinema"] = (EffectRecord**)&TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
 	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
@@ -216,8 +216,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
-	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->ShaderConst.Cinema.Data;
-	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->ShaderConst.Cinema.Settings;
+	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->Effects.Cinema->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->Effects.Cinema->Constants.Settings;
 	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->ShaderConst.Coloring.ColorCurve;
 	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &TheShaderManager->ShaderConst.Coloring.EffectGamma;
 	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &TheShaderManager->ShaderConst.Coloring.Data;
@@ -604,7 +604,7 @@ void ShaderManager::UpdateConstants() {
 
 			ShaderConst.Water.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
 		}
-	}		
+	}
 
 	if (isUnderwater) {
 		Effects.BloodLens->Constants.Percent = 0.0f;
@@ -848,14 +848,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Rain.RainAspect.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Bloom");
 		}
 			
-		if (Effects.Cinema->Enabled) {
-			ShaderConst.Cinema.Data.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
-			ShaderConst.Cinema.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
-			ShaderConst.Cinema.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
-			ShaderConst.Cinema.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
-			ShaderConst.Cinema.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
-			ShaderConst.Cinema.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
-		}
+		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
 		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
 		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
 
@@ -1030,19 +1023,8 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
-	ShaderConst.Cinema.Data.x = 1.0f; // set cinema aspect ratio to native ar
-	if (Effects.Cinema->Enabled) {
-		int Mode = TheSettingManager->GetSettingI("Shaders.Cinema.Main", "Mode");
-		float aspectRatio = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
 
-		// disable based on settings/context
-		if ((Mode == 1 && (isDialog || isPersuasion)) ||
-			(Mode == 2 && (!isDialog)) || 
-			(Mode == 3 && (!isPersuasion)) ||
-			(Mode == 4 && (!isDialog && !isPersuasion))) aspectRatio = 1.0f;
 
-		ShaderConst.Cinema.Data.x = aspectRatio;
-	}
 
 	// camera/position change data
 	if (Effects.MotionBlur->Enabled) {
@@ -1348,6 +1330,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "ShadowsExterior", 16)) return new ShadowsExteriorEffect();
 	if (!memcmp(Name, "BloodLens", 10)) return new BloodLensEffect();
 	if (!memcmp(Name, "BloomLegacy", 12)) return new BloomLegacyEffect();
+	if (!memcmp(Name, "Cinema", 7)) return new CinemaEffect();
 
 	return new EffectRecord(Name);
 
