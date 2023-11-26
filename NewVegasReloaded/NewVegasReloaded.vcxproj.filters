@@ -194,6 +194,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Cinema.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Coloring.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -308,6 +311,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Cinema.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\Coloring.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>

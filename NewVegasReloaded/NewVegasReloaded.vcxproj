@@ -120,6 +120,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\BloodLens.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\BloomLegacy.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Cinema.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Coloring.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
@@ -129,6 +130,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\BloodLens.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\BloomLegacy.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Cinema.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Coloring.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp" />
