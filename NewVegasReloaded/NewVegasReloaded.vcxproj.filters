@@ -185,6 +185,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\AvgLuma.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\BloodLens.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -290,6 +293,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\BloodLens.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
