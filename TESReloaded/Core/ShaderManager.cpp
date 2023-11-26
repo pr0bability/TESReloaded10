@@ -86,7 +86,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Cinema"] = (EffectRecord**)&TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = (EffectRecord**)&TheShaderManager->Effects.DepthOfField;
 	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
-	TheShaderManager->EffectsNames["Exposure"] = &TheShaderManager->Effects.Exposure;
+	TheShaderManager->EffectsNames["Exposure"] = (EffectRecord**)&TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
 	TheShaderManager->EffectsNames["ImageAdjust"] = &TheShaderManager->Effects.ImageAdjust;
 	TheShaderManager->EffectsNames["Lens"] = &TheShaderManager->Effects.Lens;
@@ -224,7 +224,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &TheShaderManager->Effects.Coloring->Constants.Values;
 	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &TheShaderManager->Effects.DepthOfField->Constants.Blur;
 	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &TheShaderManager->Effects.DepthOfField->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &TheShaderManager->ShaderConst.Exposure.Data;
+	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &TheShaderManager->Effects.Exposure->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->ShaderConst.GodRays.Ray;
 	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->ShaderConst.GodRays.RayColor;
 	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &TheShaderManager->ShaderConst.GodRays.Data;
@@ -409,7 +409,7 @@ void ShaderManager::UpdateConstants() {
 	float newDayLight = sunRiseLight * sunSetLight;
 	float transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
-	bool isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
+	isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
 	if (newDayLight == dayLight) isDayTimeChanged = false;
 	dayLight = newDayLight;
 
@@ -1010,16 +1010,8 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.MotionBlur.BlurParams.z = TheSettingManager->GetSettingF(sectionName, "BlurOffsetMax");
 	}
 
-	if (Effects.Exposure->Enabled) {
-		avglumaRequired = true; // mark average luma calculation as necessary
+	if (Effects.Exposure->Enabled) Effects.Exposure->UpdateConstants();
 
-		if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
-			ShaderConst.Exposure.Data.x = TheSettingManager->GetSettingTransition("Shaders.Exposure", "MinBrightness", isExterior, transitionCurve);
-			ShaderConst.Exposure.Data.y = TheSettingManager->GetSettingTransition("Shaders.Exposure", "MaxBrightness", isExterior, transitionCurve);
-			ShaderConst.Exposure.Data.z = TheSettingManager->GetSettingTransition("Shaders.Exposure", "DarkAdaptSpeed", isExterior, transitionCurve);
-			ShaderConst.Exposure.Data.w = TheSettingManager->GetSettingTransition("Shaders.Exposure", "LightAdaptSpeed", isExterior, transitionCurve);
-		}
-	}
 
 	if (Effects.Specular->Enabled) {
 		float rainyPercent = ShaderConst.Animators.RainAnimator.GetValue();
@@ -1281,6 +1273,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "BloomLegacy", 12)) return new BloomLegacyEffect();
 	if (!memcmp(Name, "Cinema", 7)) return new CinemaEffect();
 	if (!memcmp(Name, "DepthOfField", 13)) return new DepthOfFieldEffect();
+	if (!memcmp(Name, "Exposure", 9)) return new ExposureEffect();
 
 	return new EffectRecord(Name);
 

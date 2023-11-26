@@ -10,7 +10,7 @@
 #include "Effects/Cinema.h"
 #include "Effects/Coloring.h"
 #include "Effects/DepthOfField.h"
-
+#include "Effects/Exposure.h"
 
 
 class Animator {
@@ -91,9 +91,6 @@ struct ShaderConstants {
 	struct GodRaysStruct {
 		D3DXVECTOR4		Ray;
 		D3DXVECTOR4		RayColor;
-		D3DXVECTOR4		Data;
-	};
-	struct ExposureStruct {
 		D3DXVECTOR4		Data;
 	};
 	struct LensStruct {
@@ -181,7 +178,6 @@ struct ShaderConstants {
 	float					fogStart;
 	float					fogEnd;
 	float					fogPower;
-	ExposureStruct			Exposure;
 	AnimatorsStruct			Animators;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
@@ -252,7 +248,7 @@ public:
 		BloomLegacyEffect*		BloomLegacy;
 		ColoringEffect*			Coloring;
 		CinemaEffect*			Cinema;
-		EffectRecord*		Exposure;
+		ExposureEffect*		Exposure;
 		DepthOfFieldEffect*		DepthOfField;
 		EffectRecord*		Debug;
 		EffectRecord*		GodRays;
@@ -292,6 +288,8 @@ public:
     bool                    orthoRequired;
     bool                    avglumaRequired;
 	float					isDayTime;
+	bool					isDayTimeChanged;
+	float					transitionCurve;
 	float					dayLight;
 	bool					isExterior;
 	bool					isUnderwater;
