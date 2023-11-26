@@ -1,13 +1,14 @@
+#pragma once
+#define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
+
 #include "Effects/ShaderRecord.h"
 #include "Effects/AmbientOcclusion.h"
 #include "Effects/ShadowsExterior.h"
 #include "Effects/AvgLuma.h"
 #include "Effects/BloodLens.h"
 #include "Effects/BloomLegacy.h"
+#include "Effects/Cinema.h"
 
-#pragma once
-#define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
-#include <numbers>
 
 
 class Animator {
@@ -103,10 +104,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		EffectGamma;
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		Values;
-	};
-	struct CinemaStruct {
-		D3DXVECTOR4		Data;
-		D3DXVECTOR4		Settings;
 	};
 	struct LensStruct {
 		D3DXVECTOR4		Data;
@@ -210,7 +207,6 @@ struct ShaderConstants {
 	ImageAdjustStruct		ImageAdjust;
 	DepthOfFieldStruct		DepthOfField;
 	ColoringStruct			Coloring;
-	CinemaStruct			Cinema;
 	LensStruct				Lens;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
@@ -266,7 +262,7 @@ public:
 		BloodLensEffect*		BloodLens;
 		BloomLegacyEffect*		BloomLegacy;
 		EffectRecord*		Coloring;
-		EffectRecord*		Cinema;
+		CinemaEffect*		Cinema;
 		EffectRecord*		Exposure;
 		EffectRecord*		DepthOfField;
 		EffectRecord*		Debug;
