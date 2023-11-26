@@ -82,7 +82,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["AmbientOcclusion"] = (EffectRecord**)&TheShaderManager->Effects.AmbientOcclusion;
 	TheShaderManager->EffectsNames["BloodLens"] = (EffectRecord**)&TheShaderManager->Effects.BloodLens;
 	TheShaderManager->EffectsNames["BloomLegacy"] = (EffectRecord**)&TheShaderManager->Effects.BloomLegacy;
-	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
+	TheShaderManager->EffectsNames["Coloring"] = (EffectRecord**)&TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = (EffectRecord**)&TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
 	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
@@ -218,10 +218,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
 	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->Effects.Cinema->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->Effects.Cinema->Constants.Settings;
-	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->ShaderConst.Coloring.ColorCurve;
-	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &TheShaderManager->ShaderConst.Coloring.EffectGamma;
-	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &TheShaderManager->ShaderConst.Coloring.Data;
-	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &TheShaderManager->ShaderConst.Coloring.Values;
+	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->Effects.Coloring->Constants.ColorCurve;
+	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &TheShaderManager->Effects.Coloring->Constants.EffectGamma;
+	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &TheShaderManager->Effects.Coloring->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &TheShaderManager->Effects.Coloring->Constants.Values;
 	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &TheShaderManager->ShaderConst.DepthOfField.Blur;
 	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &TheShaderManager->ShaderConst.DepthOfField.Data;
 	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &TheShaderManager->ShaderConst.Exposure.Data;
@@ -940,28 +940,7 @@ void ShaderManager::UpdateConstants() {
 	}
 
 
-	if (Effects.Coloring->Enabled) {
-		SettingsColoringStruct* scs = TheSettingManager->GetSettingsColoring(currentCell->GetEditorName());
-
-		if (!scs && isExterior) scs = TheSettingManager->GetSettingsColoring(currentWorldSpace->GetEditorName());
-		if (!scs) scs = TheSettingManager->GetSettingsColoring("Default");
-		ShaderConst.Coloring.Data.x = scs->Strength;
-		ShaderConst.Coloring.Data.y = scs->BaseGamma;
-		ShaderConst.Coloring.Data.z = scs->Fade;
-		ShaderConst.Coloring.Data.w = scs->Contrast;
-		ShaderConst.Coloring.Values.x = scs->Saturation;
-		ShaderConst.Coloring.Values.y = scs->Bleach;
-		ShaderConst.Coloring.Values.z = scs->BleachLuma;
-		ShaderConst.Coloring.Values.w = scs->Linearization;
-		ShaderConst.Coloring.ColorCurve.x = scs->ColorCurve;
-		ShaderConst.Coloring.ColorCurve.y = scs->ColorCurveR;
-		ShaderConst.Coloring.ColorCurve.z = scs->ColorCurveG;
-		ShaderConst.Coloring.ColorCurve.w = scs->ColorCurveB;
-		ShaderConst.Coloring.EffectGamma.x = scs->EffectGamma;
-		ShaderConst.Coloring.EffectGamma.y = scs->EffectGammaR;
-		ShaderConst.Coloring.EffectGamma.z = scs->EffectGammaG;
-		ShaderConst.Coloring.EffectGamma.w = scs->EffectGammaB;
-	}
+	if (Effects.Coloring->Enabled) Effects.Coloring->UpdateConstants();
 
 	if (Effects.BloodLens->Enabled) {
 		Effects.BloodLens->UpdateConstants();
