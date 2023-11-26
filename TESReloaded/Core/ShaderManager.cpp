@@ -80,8 +80,8 @@ void ShaderManager::Initialize() {
 	// initializing the list of effect names
 	TheShaderManager->EffectsNames["AvgLuma"] = (EffectRecord**)&TheShaderManager->Effects.AvgLuma;
 	TheShaderManager->EffectsNames["AmbientOcclusion"] = (EffectRecord**)&TheShaderManager->Effects.AmbientOcclusion;
-	TheShaderManager->EffectsNames["BloomLegacy"] = &TheShaderManager->Effects.BloomLegacy;
 	TheShaderManager->EffectsNames["BloodLens"] = (EffectRecord**)&TheShaderManager->Effects.BloodLens;
+	TheShaderManager->EffectsNames["BloomLegacy"] = (EffectRecord**)&TheShaderManager->Effects.BloomLegacy;
 	TheShaderManager->EffectsNames["Coloring"] = &TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = &TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = &TheShaderManager->Effects.DepthOfField;
@@ -209,10 +209,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
 	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.AOData;
 	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomData;
-	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->ShaderConst.BloomLegacy.BloomValues;
 	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->Effects.BloodLens->Constants.Params;
 	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->Effects.BloodLens->Constants.BloodColor;
+	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->Effects.BloomLegacy->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->Effects.BloomLegacy->Constants.Values;
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
@@ -861,19 +861,7 @@ void ShaderManager::UpdateConstants() {
 			Effects.AmbientOcclusion->UpdateConstants();
 
 		}
-
-		if (Effects.BloomLegacy->Enabled) {
-			sectionName = "Shaders.BloomLegacy.Exteriors";
-			if (!isExterior) sectionName = "Shaders.BloomLegacy.Interiors";
-
-			ShaderConst.BloomLegacy.BloomData.x = TheSettingManager->GetSettingF(sectionName, "Luminance");
-			ShaderConst.BloomLegacy.BloomData.y = TheSettingManager->GetSettingF(sectionName, "MiddleGray");
-			ShaderConst.BloomLegacy.BloomData.z = TheSettingManager->GetSettingF(sectionName, "WhiteCutOff");
-			ShaderConst.BloomLegacy.BloomValues.x = TheSettingManager->GetSettingF(sectionName, "BloomIntensity");
-			ShaderConst.BloomLegacy.BloomValues.y = TheSettingManager->GetSettingF(sectionName, "OriginalIntensity");
-			ShaderConst.BloomLegacy.BloomValues.z = TheSettingManager->GetSettingF(sectionName, "BloomSaturation");
-			ShaderConst.BloomLegacy.BloomValues.w = TheSettingManager->GetSettingF(sectionName, "OriginalSaturation");
-		}
+		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
 
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
 		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
@@ -1363,6 +1351,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
 	if (!memcmp(Name, "ShadowsExterior", 16)) return new ShadowsExteriorEffect();
 	if (!memcmp(Name, "BloodLens", 10)) return new BloodLensEffect();
+	if (!memcmp(Name, "BloomLegacy", 12)) return new BloomLegacyEffect();
 
 	return new EffectRecord(Name);
 
