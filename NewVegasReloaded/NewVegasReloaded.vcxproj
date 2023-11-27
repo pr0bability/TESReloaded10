@@ -121,6 +121,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\BloomLegacy.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Cinema.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Coloring.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Debug.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\DepthOfField.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Exposure.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
@@ -133,6 +134,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\BloomLegacy.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Cinema.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Coloring.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Debug.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\DepthOfField.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Exposure.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />

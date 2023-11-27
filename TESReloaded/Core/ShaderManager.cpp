@@ -85,7 +85,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Coloring"] = (EffectRecord**)&TheShaderManager->Effects.Coloring;
 	TheShaderManager->EffectsNames["Cinema"] = (EffectRecord**)&TheShaderManager->Effects.Cinema;
 	TheShaderManager->EffectsNames["DepthOfField"] = (EffectRecord**)&TheShaderManager->Effects.DepthOfField;
-	TheShaderManager->EffectsNames["Debug"] = &TheShaderManager->Effects.Debug;
+	TheShaderManager->EffectsNames["Debug"] = (EffectRecord**)&TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = (EffectRecord**)&TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
 	TheShaderManager->EffectsNames["ImageAdjust"] = &TheShaderManager->Effects.ImageAdjust;
@@ -1274,6 +1274,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Cinema", 7)) return new CinemaEffect();
 	if (!memcmp(Name, "DepthOfField", 13)) return new DepthOfFieldEffect();
 	if (!memcmp(Name, "Exposure", 9)) return new ExposureEffect();
+	if (!memcmp(Name, "Debug", 6)) return new DebugEffect();
 
 	return new EffectRecord(Name);
 

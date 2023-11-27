@@ -11,6 +11,7 @@
 #include "Effects/Coloring.h"
 #include "Effects/DepthOfField.h"
 #include "Effects/Exposure.h"
+#include "Effects/Debug.h"
 
 
 class Animator {
@@ -250,7 +251,7 @@ public:
 		CinemaEffect*			Cinema;
 		ExposureEffect*		Exposure;
 		DepthOfFieldEffect*		DepthOfField;
-		EffectRecord*		Debug;
+		DebugEffect*		Debug;
 		EffectRecord*		GodRays;
 		EffectRecord*		ImageAdjust;
 		EffectRecord*		Lens;
