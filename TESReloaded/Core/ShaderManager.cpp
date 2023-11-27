@@ -87,7 +87,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["DepthOfField"] = (EffectRecord**)&TheShaderManager->Effects.DepthOfField;
 	TheShaderManager->EffectsNames["Debug"] = (EffectRecord**)&TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = (EffectRecord**)&TheShaderManager->Effects.Exposure;
-	TheShaderManager->EffectsNames["GodRays"] = &TheShaderManager->Effects.GodRays;
+	TheShaderManager->EffectsNames["GodRays"] = (EffectRecord**)&TheShaderManager->Effects.GodRays;
 	TheShaderManager->EffectsNames["ImageAdjust"] = &TheShaderManager->Effects.ImageAdjust;
 	TheShaderManager->EffectsNames["Lens"] = &TheShaderManager->Effects.Lens;
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
@@ -225,9 +225,9 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &TheShaderManager->Effects.DepthOfField->Constants.Blur;
 	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &TheShaderManager->Effects.DepthOfField->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &TheShaderManager->Effects.Exposure->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->ShaderConst.GodRays.Ray;
-	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->ShaderConst.GodRays.RayColor;
-	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &TheShaderManager->ShaderConst.GodRays.Data;
+	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->Effects.GodRays->Constants.Ray;
+	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->Effects.GodRays->Constants.RayColor;
+	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &TheShaderManager->Effects.GodRays->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &TheShaderManager->ShaderConst.ImageAdjust.Data;
 	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &TheShaderManager->ShaderConst.ImageAdjust.DarkColor;
 	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->ShaderConst.ImageAdjust.LightColor;
@@ -765,19 +765,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Skin.SkinColor.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffBlue");
 		}
 
-		if (Effects.GodRays->Enabled) {
-			ShaderConst.GodRays.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
-			ShaderConst.GodRays.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
-			ShaderConst.GodRays.Ray.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayDensity");
-			ShaderConst.GodRays.Ray.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayVisibility");
-			ShaderConst.GodRays.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayR");
-			ShaderConst.GodRays.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayG");
-			ShaderConst.GodRays.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayB");
-			ShaderConst.GodRays.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "Saturate");
-			ShaderConst.GodRays.Data.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "LightShaftPasses");
-			ShaderConst.GodRays.Data.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Luminance");
-			ShaderConst.GodRays.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
-		}
 
 		if (Effects.Sharpening->Enabled) {
 			ShaderConst.Sharpening.Data.x = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Strength");
@@ -920,16 +907,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorB", isExterior, transitionCurve);
 		}
 
-		if (Effects.GodRays->Enabled) {
-			float dayMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "DayMultiplier");
-			float nightMult = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "NightMultiplier");
-			ShaderConst.GodRays.Data.z = lerp(nightMult, dayMult, transitionCurve);
 
-			if (TheSettingManager->GetSettingI("Shaders.GodRays.Main", "SunGlareEnabled")) {
-				ShaderConst.GodRays.Ray.z *= ShaderConst.sunGlare;
-				ShaderConst.GodRays.Ray.w *= ShaderConst.sunGlare;
-			}
-		}
 
 		if (Effects.Lens->Enabled) {
 			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
@@ -939,6 +917,7 @@ void ShaderManager::UpdateConstants() {
 
 	}
 
+	if (Effects.GodRays->Enabled) Effects.GodRays->UpdateConstants();
 
 	if (Effects.Coloring->Enabled) Effects.Coloring->UpdateConstants();
 
@@ -1275,6 +1254,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "DepthOfField", 13)) return new DepthOfFieldEffect();
 	if (!memcmp(Name, "Exposure", 9)) return new ExposureEffect();
 	if (!memcmp(Name, "Debug", 6)) return new DebugEffect();
+	if (!memcmp(Name, "GodRays", 8)) return new GodRaysEffect();
 
 	return new EffectRecord(Name);
 
