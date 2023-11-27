@@ -12,6 +12,7 @@
 #include "Effects/DepthOfField.h"
 #include "Effects/Exposure.h"
 #include "Effects/Debug.h"
+#include "Effects/GodRays.h"
 
 
 class Animator {
@@ -88,11 +89,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Time;
 		float			TimeAmount;
 		float			Percent;
-	};
-	struct GodRaysStruct {
-		D3DXVECTOR4		Ray;
-		D3DXVECTOR4		RayColor;
-		D3DXVECTOR4		Data;
 	};
 	struct LensStruct {
 		D3DXVECTOR4		Data;
@@ -191,7 +187,6 @@ struct ShaderConstants {
 	RainStruct				Rain;
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
-	GodRaysStruct			GodRays;
 	ImageAdjustStruct		ImageAdjust;
 	LensStruct				Lens;
 	SnowAccumulationStruct	SnowAccumulation;
@@ -243,16 +238,16 @@ public:
 	static float			clamp(float a, float b, float t);
 		
 	struct	EffectsStruct {
-		AmbientOcclusionEffect*		AmbientOcclusion;
+		AmbientOcclusionEffect*	AmbientOcclusion;
 		AvgLumaEffect*			AvgLuma;
 		BloodLensEffect*		BloodLens;
 		BloomLegacyEffect*		BloomLegacy;
 		ColoringEffect*			Coloring;
 		CinemaEffect*			Cinema;
-		ExposureEffect*		Exposure;
+		ExposureEffect*			Exposure;
 		DepthOfFieldEffect*		DepthOfField;
-		DebugEffect*		Debug;
-		EffectRecord*		GodRays;
+		DebugEffect*			Debug;
+		GodRaysEffect*			GodRays;
 		EffectRecord*		ImageAdjust;
 		EffectRecord*		Lens;
 		EffectRecord*		LowHF;

@@ -572,7 +572,7 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 		Effect->End();
 	}
 	catch (const std::exception& e) {
-		Logger::Log("Error during rendering of effect %s: %s", Path->c_str(), e.what());
+		Logger::Log("Error during rendering of effect %s: %s", Name, e.what());
 	}
 
 	char name[255] = "EffectRecord::Render ";
