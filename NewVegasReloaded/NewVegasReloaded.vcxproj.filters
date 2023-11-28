@@ -215,6 +215,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Lens.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\LowHF.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -350,6 +353,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Lens.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\LowHF.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
