@@ -92,7 +92,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Lens"] = (EffectRecord**)&TheShaderManager->Effects.Lens;
 	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
-	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
+	TheShaderManager->EffectsNames["Normals"] = (EffectRecord**)&TheShaderManager->Effects.Normals;
 	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
 	TheShaderManager->EffectsNames["Precipitations"] = &TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
@@ -1218,6 +1218,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "ImageAdjust", 12)) return new ImageAdjustEffect();
 	if (!memcmp(Name, "Lens", 5)) return new LensEffect();
 	if (!memcmp(Name, "LowHF", 6)) return new LowHFEffect();
+	if (!memcmp(Name, "Normals", 8)) return new NormalsEffect();
 
 	return new EffectRecord(Name);
 
