@@ -16,6 +16,7 @@
 #include "Effects/ImageAdjust.h"
 #include "Effects/Lens.h"
 #include "Effects/LowHF.h"
+#include "Effects/MotionBlur.h"
 #include "Effects/Normals.h"
 
 
@@ -98,16 +99,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Params;
 		D3DXVECTOR4		Color;
 	};
-	struct MotionBlurStruct {
-		D3DXVECTOR4		BlurParams;
-		D3DXVECTOR4		Data;
-		float			oldAngleX;
-		float			oldAngleZ;
-		float			oldAmountX;
-		float			oldAmountY;
-		float			oldoldAmountX;
-		float			oldoldAmountY;
-	};
 	struct WetWorldStruct {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
@@ -179,7 +170,6 @@ struct ShaderConstants {
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
 	SnowAccumulationStruct	SnowAccumulation;
-	MotionBlurStruct		MotionBlur;
 	WetWorldStruct			WetWorld;
 	SharpeningStruct		Sharpening;
 	SpecularStruct			Specular;
@@ -239,7 +229,7 @@ public:
 		ImageAdjustEffect*		ImageAdjust;
 		LensEffect*				Lens;
 		LowHFEffect*			LowHF;
-		EffectRecord*		MotionBlur;
+		MotionBlurEffect*		MotionBlur;
 		NormalsEffect*			Normals;
 		EffectRecord*		PreTonemapper;
 		EffectRecord*		Rain;

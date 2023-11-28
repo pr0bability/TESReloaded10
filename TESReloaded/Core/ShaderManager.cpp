@@ -91,7 +91,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["ImageAdjust"] = (EffectRecord**)&TheShaderManager->Effects.ImageAdjust;
 	TheShaderManager->EffectsNames["Lens"] = (EffectRecord**)&TheShaderManager->Effects.Lens;
 	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
-	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
+	TheShaderManager->EffectsNames["MotionBlur"] = (EffectRecord**)&TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = (EffectRecord**)&TheShaderManager->Effects.Normals;
 	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
 	TheShaderManager->EffectsNames["Precipitations"] = &TheShaderManager->Effects.Rain;
@@ -233,8 +233,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.LightColor;
 	TheShaderManager->ConstantsTable["TESR_LensData"] = &TheShaderManager->Effects.Lens->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->Effects.LowHF->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->ShaderConst.MotionBlur.BlurParams;
-	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->ShaderConst.MotionBlur.Data;
+	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->Effects.MotionBlur->Constants.BlurParams;
+	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->Effects.MotionBlur->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->ShaderConst.Sharpening.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->ShaderConst.Specular.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->ShaderConst.Specular.EffectStrength;
@@ -911,43 +911,7 @@ void ShaderManager::UpdateConstants() {
 
 	if (Effects.DepthOfField->Enabled) Effects.DepthOfField->UpdateConstants();
 
-
-
-
-	// camera/position change data
-	if (Effects.MotionBlur->Enabled) {
-		sectionName = "Shaders.MotionBlur.FirstPersonView";
-		if (IsThirdPersonView) sectionName = "Shaders.MotionBlur.ThirdPersonView";
-
-		float AngleZ = D3DXToDegree(Player->rot.z);
-		float AngleX = D3DXToDegree(Player->rot.x);
-		float fMotionBlurAmtX = ShaderConst.MotionBlur.oldAngleZ - AngleZ;
-		float fMotionBlurAmtY = ShaderConst.MotionBlur.oldAngleX - AngleX;
-		float fBlurDistScratchpad = fMotionBlurAmtX + 360.0f;
-		float fBlurDistScratchpad2 = (AngleZ - ShaderConst.MotionBlur.oldAngleZ + 360.0f) * -1.0f;
-
-		if (abs(fMotionBlurAmtX) > abs(fBlurDistScratchpad))
-			fMotionBlurAmtX = fBlurDistScratchpad;
-		else if (abs(fMotionBlurAmtX) > abs(fBlurDistScratchpad2))
-			fMotionBlurAmtX = fBlurDistScratchpad2;
-
-		if (pow(fMotionBlurAmtX, 2) + pow(fMotionBlurAmtY, 2) < TheSettingManager->GetSettingF(sectionName, "BlurCutOff")) {
-			fMotionBlurAmtX = 0.0f;
-			fMotionBlurAmtY = 0.0f;
-		}
-
-		ShaderConst.MotionBlur.Data.x = (ShaderConst.MotionBlur.oldoldAmountX + ShaderConst.MotionBlur.oldAmountX + fMotionBlurAmtX) / 3.0f;
-		ShaderConst.MotionBlur.Data.y = (ShaderConst.MotionBlur.oldoldAmountY + ShaderConst.MotionBlur.oldAmountY + fMotionBlurAmtY) / 3.0f;
-		ShaderConst.MotionBlur.oldAngleZ = AngleZ;
-		ShaderConst.MotionBlur.oldAngleX = AngleX;
-		ShaderConst.MotionBlur.oldoldAmountX = ShaderConst.MotionBlur.oldAmountX;
-		ShaderConst.MotionBlur.oldoldAmountY = ShaderConst.MotionBlur.oldAmountY;
-		ShaderConst.MotionBlur.oldAmountX = fMotionBlurAmtX;
-		ShaderConst.MotionBlur.oldAmountY = fMotionBlurAmtY;
-		ShaderConst.MotionBlur.BlurParams.x = TheSettingManager->GetSettingF(sectionName, "GaussianWeight");
-		ShaderConst.MotionBlur.BlurParams.y = TheSettingManager->GetSettingF(sectionName, "BlurScale");
-		ShaderConst.MotionBlur.BlurParams.z = TheSettingManager->GetSettingF(sectionName, "BlurOffsetMax");
-	}
+	if (Effects.MotionBlur->Enabled) Effects.MotionBlur->UpdateConstants();
 
 	if (Effects.Exposure->Enabled) Effects.Exposure->UpdateConstants();
 
@@ -1219,6 +1183,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Lens", 5)) return new LensEffect();
 	if (!memcmp(Name, "LowHF", 6)) return new LowHFEffect();
 	if (!memcmp(Name, "Normals", 8)) return new NormalsEffect();
+	if (!memcmp(Name, "MotionBlur", 11)) return new MotionBlurEffect();
 
 	return new EffectRecord(Name);
 
@@ -1397,7 +1362,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	// screenspace coloring/blurring effects get rendered last
 	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (Effects.DepthOfField->Constants.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	if (ShaderConst.MotionBlur.Data.x || ShaderConst.MotionBlur.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	if (Effects.MotionBlur->Constants.Data.x || Effects.MotionBlur->Constants.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// lens effects
 	if (Effects.BloodLens->Constants.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
