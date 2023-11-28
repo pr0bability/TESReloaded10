@@ -88,8 +88,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Debug"] = (EffectRecord**)&TheShaderManager->Effects.Debug;
 	TheShaderManager->EffectsNames["Exposure"] = (EffectRecord**)&TheShaderManager->Effects.Exposure;
 	TheShaderManager->EffectsNames["GodRays"] = (EffectRecord**)&TheShaderManager->Effects.GodRays;
-	TheShaderManager->EffectsNames["ImageAdjust"] = &TheShaderManager->Effects.ImageAdjust;
-	TheShaderManager->EffectsNames["Lens"] = &TheShaderManager->Effects.Lens;
+	TheShaderManager->EffectsNames["ImageAdjust"] = (EffectRecord**)&TheShaderManager->Effects.ImageAdjust;
+	TheShaderManager->EffectsNames["Lens"] = (EffectRecord**)&TheShaderManager->Effects.Lens;
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
@@ -228,10 +228,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->Effects.GodRays->Constants.Ray;
 	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->Effects.GodRays->Constants.RayColor;
 	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &TheShaderManager->Effects.GodRays->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &TheShaderManager->ShaderConst.ImageAdjust.Data;
-	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &TheShaderManager->ShaderConst.ImageAdjust.DarkColor;
-	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->ShaderConst.ImageAdjust.LightColor;
-	TheShaderManager->ConstantsTable["TESR_LensData"] = &TheShaderManager->ShaderConst.Lens.Data;
+	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &TheShaderManager->Effects.ImageAdjust->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.DarkColor;
+	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.LightColor;
+	TheShaderManager->ConstantsTable["TESR_LensData"] = &TheShaderManager->Effects.Lens->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->ShaderConst.LowHF.Data;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->ShaderConst.MotionBlur.BlurParams;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->ShaderConst.MotionBlur.Data;
@@ -893,27 +893,9 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.PointLightMult = 1.0;
 		}
 
-		if (Effects.ImageAdjust->Enabled) {
-			ShaderConst.ImageAdjust.Data.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Brightness", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.Data.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Contrast", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.Data.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Saturation", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.Data.w = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Strength", isExterior, transitionCurve);
+		if (Effects.ImageAdjust->Enabled) Effects.ImageAdjust->UpdateConstants();
 
-			ShaderConst.ImageAdjust.DarkColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorR", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorG", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorB", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.LightColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorR", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorG", isExterior, transitionCurve);
-			ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorB", isExterior, transitionCurve);
-		}
-
-
-
-		if (Effects.Lens->Enabled) {
-			ShaderConst.Lens.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
-			if (isExterior)	ShaderConst.Lens.Data.y = lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), transitionCurve);
-			else ShaderConst.Lens.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
-		}
+		if (Effects.Lens->Enabled) Effects.Lens->UpdateConstants();
 
 	}
 
@@ -1255,6 +1237,8 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Exposure", 9)) return new ExposureEffect();
 	if (!memcmp(Name, "Debug", 6)) return new DebugEffect();
 	if (!memcmp(Name, "GodRays", 8)) return new GodRaysEffect();
+	if (!memcmp(Name, "ImageAdjust", 12)) return new ImageAdjustEffect();
+	if (!memcmp(Name, "Lens", 5)) return new LensEffect();
 
 	return new EffectRecord(Name);
 
