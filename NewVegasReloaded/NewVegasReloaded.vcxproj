@@ -128,6 +128,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\ImageAdjust.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Lens.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\LowHF.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\MotionBlur.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Normals.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
@@ -146,6 +147,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\ImageAdjust.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Lens.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\LowHF.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\MotionBlur.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp" />

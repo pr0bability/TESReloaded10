@@ -221,6 +221,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Normals.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\MotionBlur.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -359,6 +362,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\LowHF.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\MotionBlur.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
