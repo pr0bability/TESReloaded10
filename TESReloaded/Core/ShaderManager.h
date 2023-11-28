@@ -15,6 +15,7 @@
 #include "Effects/GodRays.h"
 #include "Effects/ImageAdjust.h"
 #include "Effects/Lens.h"
+#include "Effects/LowHF.h"
 
 
 class Animator {
@@ -106,11 +107,6 @@ struct ShaderConstants {
 		float			oldoldAmountX;
 		float			oldoldAmountY;
 	};
-	struct LowHFStruct {
-		D3DXVECTOR4		Data;
-		float			HealthCoeff;
-		float			FatigueCoeff;
-	};
 	struct WetWorldStruct {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
@@ -183,7 +179,6 @@ struct ShaderConstants {
 	WaterLensStruct			WaterLens;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
-	LowHFStruct				LowHF;
 	WetWorldStruct			WetWorld;
 	SharpeningStruct		Sharpening;
 	SpecularStruct			Specular;
@@ -242,7 +237,7 @@ public:
 		GodRaysEffect*			GodRays;
 		ImageAdjustEffect*		ImageAdjust;
 		LensEffect*				Lens;
-		EffectRecord*		LowHF;
+		LowHFEffect*		LowHF;
 		EffectRecord*		MotionBlur;
 		EffectRecord*		Normals;
 		EffectRecord*		PreTonemapper;

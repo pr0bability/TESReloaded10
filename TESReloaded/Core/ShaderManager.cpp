@@ -90,7 +90,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["GodRays"] = (EffectRecord**)&TheShaderManager->Effects.GodRays;
 	TheShaderManager->EffectsNames["ImageAdjust"] = (EffectRecord**)&TheShaderManager->Effects.ImageAdjust;
 	TheShaderManager->EffectsNames["Lens"] = (EffectRecord**)&TheShaderManager->Effects.Lens;
-	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
+	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
 	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
@@ -232,7 +232,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.DarkColor;
 	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.LightColor;
 	TheShaderManager->ConstantsTable["TESR_LensData"] = &TheShaderManager->Effects.Lens->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->ShaderConst.LowHF.Data;
+	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->Effects.LowHF->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->ShaderConst.MotionBlur.BlurParams;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->ShaderConst.MotionBlur.Data;
 	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->ShaderConst.Sharpening.Data;
@@ -907,29 +907,7 @@ void ShaderManager::UpdateConstants() {
 		Effects.BloodLens->UpdateConstants();
 	}
 
-	if (Effects.LowHF->Enabled) {
-		float PlayerHealthPercent = (float)Player->GetActorValue(Actor::ActorVal::kActorVal_Health) / (float)Player->GetBaseActorValue(Actor::ActorVal::kActorVal_Health);
-		float PlayerFatiguePercent = (float)Player->GetActorValue(Actor::ActorVal::kActorVal_Stamina) / (float)Player->GetBaseActorValue(Actor::ActorVal::kActorVal_Stamina);
-
-		ShaderConst.LowHF.Data.x = 0.0f;
-		ShaderConst.LowHF.Data.y = 0.0f;
-		ShaderConst.LowHF.Data.z = 0.0f;
-		ShaderConst.LowHF.Data.w = 0.0f;
-
-		float healthLimit = TheSettingManager->GetSettingF("Shaders.LowHF.Main", "HealthLimit");
-		if (Player->IsAlive()) {
-			ShaderConst.LowHF.HealthCoeff = 1.0f - PlayerHealthPercent / healthLimit;
-			ShaderConst.LowHF.FatigueCoeff = 1.0f - PlayerFatiguePercent / TheSettingManager->GetSettingF("Shaders.LowHF.Main", "FatigueLimit");
-			if (PlayerHealthPercent < healthLimit) {
-				ShaderConst.LowHF.Data.x = ShaderConst.LowHF.HealthCoeff * TheSettingManager->GetSettingF("Shaders.LowHF.Main", "LumaMultiplier");
-				ShaderConst.LowHF.Data.y = ShaderConst.LowHF.HealthCoeff * 0.01f * TheSettingManager->GetSettingF("Shaders.LowHF.Main", "BlurMultiplier");
-				ShaderConst.LowHF.Data.z = ShaderConst.LowHF.HealthCoeff * 20.0f * TheSettingManager->GetSettingF("Shaders.LowHF.Main", "VignetteMultiplier");
-				ShaderConst.LowHF.Data.w = (1.0f - ShaderConst.LowHF.HealthCoeff) * TheSettingManager->GetSettingF("Shaders.LowHF.Main", "DarknessMultiplier");
-			}
-			if (!ShaderConst.LowHF.Data.x && PlayerFatiguePercent < TheSettingManager->GetSettingF("Shaders.LowHF.Main", "FatigueLimit"))
-				ShaderConst.LowHF.Data.x = ShaderConst.LowHF.FatigueCoeff * TheSettingManager->GetSettingF("Shaders.LowHF.Main", "LumaMultiplier");
-		}
-	}
+	if (Effects.LowHF->Enabled) Effects.LowHF->UpdateConstants();
 
 	if (Effects.DepthOfField->Enabled) Effects.DepthOfField->UpdateConstants();
 
@@ -1239,6 +1217,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "GodRays", 8)) return new GodRaysEffect();
 	if (!memcmp(Name, "ImageAdjust", 12)) return new ImageAdjustEffect();
 	if (!memcmp(Name, "Lens", 5)) return new LensEffect();
+	if (!memcmp(Name, "LowHF", 6)) return new LowHFEffect();
 
 	return new EffectRecord(Name);
 
@@ -1422,7 +1401,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	// lens effects
 	if (Effects.BloodLens->Constants.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (ShaderConst.LowHF.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	if (Effects.LowHF->Constants.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 
