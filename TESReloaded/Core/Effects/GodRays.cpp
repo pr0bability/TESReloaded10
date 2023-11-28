@@ -1,8 +1,6 @@
 #include "GodRays.h"
 
 void GodRaysEffect::UpdateConstants() {
-	Logger::Log("Update godrays constants");
-
 	if (TheSettingManager->SettingsChanged || TheShaderManager->isDayTimeChanged) {
 		Constants.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
 		Constants.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
