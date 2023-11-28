@@ -16,6 +16,7 @@
 #include "Effects/ImageAdjust.h"
 #include "Effects/Lens.h"
 #include "Effects/LowHF.h"
+#include "Effects/Normals.h"
 
 
 class Animator {
@@ -237,9 +238,9 @@ public:
 		GodRaysEffect*			GodRays;
 		ImageAdjustEffect*		ImageAdjust;
 		LensEffect*				Lens;
-		LowHFEffect*		LowHF;
+		LowHFEffect*			LowHF;
 		EffectRecord*		MotionBlur;
-		EffectRecord*		Normals;
+		NormalsEffect*			Normals;
 		EffectRecord*		PreTonemapper;
 		EffectRecord*		Rain;
 		EffectRecord*		Sharpening;
