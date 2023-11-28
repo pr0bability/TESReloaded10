@@ -126,6 +126,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Exposure.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\GodRays.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ImageAdjust.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Lens.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
@@ -141,6 +142,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\Exposure.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\GodRays.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ImageAdjust.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Lens.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp" />

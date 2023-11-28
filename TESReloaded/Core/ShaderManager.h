@@ -14,6 +14,7 @@
 #include "Effects/Debug.h"
 #include "Effects/GodRays.h"
 #include "Effects/ImageAdjust.h"
+#include "Effects/Lens.h"
 
 
 class Animator {
@@ -90,9 +91,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Time;
 		float			TimeAmount;
 		float			Percent;
-	};
-	struct LensStruct {
-		D3DXVECTOR4		Data;
 	};
 	struct SnowAccumulationStruct {
 		D3DXVECTOR4		Params;
@@ -183,7 +181,6 @@ struct ShaderConstants {
 	RainStruct				Rain;
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
-	LensStruct				Lens;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
 	LowHFStruct				LowHF;
@@ -244,7 +241,7 @@ public:
 		DebugEffect*			Debug;
 		GodRaysEffect*			GodRays;
 		ImageAdjustEffect*		ImageAdjust;
-		EffectRecord*		Lens;
+		LensEffect*				Lens;
 		EffectRecord*		LowHF;
 		EffectRecord*		MotionBlur;
 		EffectRecord*		Normals;
