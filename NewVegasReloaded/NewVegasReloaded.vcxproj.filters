@@ -209,6 +209,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\GodRays.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\ImageAdjust.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -338,6 +341,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\GodRays.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\ImageAdjust.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>

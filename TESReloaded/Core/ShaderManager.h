@@ -13,6 +13,7 @@
 #include "Effects/Exposure.h"
 #include "Effects/Debug.h"
 #include "Effects/GodRays.h"
+#include "Effects/ImageAdjust.h"
 
 
 class Animator {
@@ -112,11 +113,6 @@ struct ShaderConstants {
 		float			HealthCoeff;
 		float			FatigueCoeff;
 	};
-	struct ImageAdjustStruct {
-		D3DXVECTOR4		Data;
-		D3DXVECTOR4		DarkColor;
-		D3DXVECTOR4		LightColor;
-	};
 	struct WetWorldStruct {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
@@ -187,7 +183,6 @@ struct ShaderConstants {
 	RainStruct				Rain;
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
-	ImageAdjustStruct		ImageAdjust;
 	LensStruct				Lens;
 	SnowAccumulationStruct	SnowAccumulation;
 	MotionBlurStruct		MotionBlur;
@@ -248,7 +243,7 @@ public:
 		DepthOfFieldEffect*		DepthOfField;
 		DebugEffect*			Debug;
 		GodRaysEffect*			GodRays;
-		EffectRecord*		ImageAdjust;
+		ImageAdjustEffect*		ImageAdjust;
 		EffectRecord*		Lens;
 		EffectRecord*		LowHF;
 		EffectRecord*		MotionBlur;
