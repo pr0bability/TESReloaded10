@@ -93,8 +93,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = (EffectRecord**)&TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = (EffectRecord**)&TheShaderManager->Effects.Normals;
+	TheShaderManager->EffectsNames["Precipitations"] = (EffectRecord**)&TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
-	TheShaderManager->EffectsNames["Precipitations"] = &TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
@@ -131,8 +131,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ShadowScreenSpaceData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.ScreenSpaceData;
 	TheShaderManager->ConstantsTable["TESR_ShadowRadius"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius;
 	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.OrthoData;
-	TheShaderManager->ConstantsTable["TESR_RainData"] = &TheShaderManager->ShaderConst.Rain.RainData;
-	TheShaderManager->ConstantsTable["TESR_RainAspect"] = &TheShaderManager->ShaderConst.Rain.RainAspect;
+	TheShaderManager->ConstantsTable["TESR_RainData"] = &TheShaderManager->Effects.Rain->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_RainAspect"] = &TheShaderManager->Effects.Rain->Constants.Aspect;
 	TheShaderManager->ConstantsTable["TESR_SnowData"] = &TheShaderManager->ShaderConst.Snow.SnowData;
 	TheShaderManager->ConstantsTable["TESR_WorldTransform"] = (D3DXVECTOR4*)&TheRenderManager->worldMatrix;
 	TheShaderManager->ConstantsTable["TESR_ViewTransform"] = (D3DXVECTOR4*)&TheRenderManager->viewMatrix;
@@ -320,10 +320,6 @@ void ShaderManager::InitializeConstants() {
 	ShaderConst.WetWorld.Data.x = 0.0f;
 	ShaderConst.WetWorld.Data.y = 0.0f;
 	ShaderConst.WetWorld.Data.z = 0.0f;
-	ShaderConst.Rain.RainData.x = 0.0f;
-	ShaderConst.Rain.RainData.y = 0.0f;
-	ShaderConst.Rain.RainData.z = 0.0f;
-	ShaderConst.Rain.RainData.w = 0.0f;
 
 	ShaderConst.ReciprocalResolution.x = 1.0f / (float)TheRenderManager->width;
 	ShaderConst.ReciprocalResolution.y = 1.0f / (float)TheRenderManager->height;
@@ -645,7 +641,7 @@ void ShaderManager::UpdateConstants() {
 		if (TheSettingManager->SettingsChanged) ShaderConst.WetWorld.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
 
 		if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
-		ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
+		//ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
 
 		if (Effects.Snow->Enabled) {
 			// Snow fall
@@ -824,16 +820,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.WaterLens.Time.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
 			ShaderConst.WaterLens.Time.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
 		}
-
-		if (Effects.Rain->Enabled) {
-			ShaderConst.Rain.RainData.y = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "VerticalScale");
-			ShaderConst.Rain.RainData.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Speed");
-			ShaderConst.Rain.RainData.w = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Opacity");
-
-			ShaderConst.Rain.RainAspect.x = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Refraction");
-			ShaderConst.Rain.RainAspect.y = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Coloring");
-			ShaderConst.Rain.RainAspect.z = TheSettingManager->GetSettingF("Shaders.Precipitations.Main", "Bloom");
-		}
 			
 		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
 		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
@@ -844,6 +830,8 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
 		ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
 	}
+
+	if (Effects.Rain->Enabled) Effects.Rain->UpdateConstants();
 
 	if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
 		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping") || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
@@ -1184,6 +1172,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "LowHF", 6)) return new LowHFEffect();
 	if (!memcmp(Name, "Normals", 8)) return new NormalsEffect();
 	if (!memcmp(Name, "MotionBlur", 11)) return new MotionBlurEffect();
+	if (!memcmp(Name, "Precipitations", 15)) return new RainEffect();
 
 	return new EffectRecord(Name);
 
@@ -1345,7 +1334,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
 	if (!isUnderwater && isExterior) {
-		if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+		Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+		if (Effects.Rain->Constants.Data.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
