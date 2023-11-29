@@ -19,6 +19,7 @@
 #include "Effects/MotionBlur.h"
 #include "Effects/Normals.h"
 #include "Effects/Rain.h"
+#include "Effects/Sharpening.h"
 
 
 class Animator {
@@ -100,9 +101,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
 	};
-	struct SharpeningStruct {
-		D3DXVECTOR4		Data;
-	};
 	struct VolumetricFogStruct {
 		D3DXVECTOR4		LowFog;
 		D3DXVECTOR4		GeneralFog;
@@ -167,7 +165,6 @@ struct ShaderConstants {
 	WaterLensStruct			WaterLens;
 	SnowAccumulationStruct	SnowAccumulation;
 	WetWorldStruct			WetWorld;
-	SharpeningStruct		Sharpening;
 	SpecularStruct			Specular;
 	SkyStruct				Sky;
 	VolumetricFogStruct		VolumetricFog;
@@ -229,7 +226,7 @@ public:
 		NormalsEffect*			Normals;
 		EffectRecord*			PreTonemapper;
 		RainEffect*				Rain;
-		EffectRecord*		Sharpening;
+		SharpeningEffect*		Sharpening;
 		EffectRecord*		Specular;
 		EffectRecord*		Snow;
 		EffectRecord*		SnowAccumulation;

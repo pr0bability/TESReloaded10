@@ -133,6 +133,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Rain.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Sharpening.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameEventManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h" />
@@ -152,6 +153,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\Rain.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Sharpening.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\GameCommon.cpp" />
     <ClInclude Include="..\TESReloaded\Core\Hooks\FormsCommon.h" />
