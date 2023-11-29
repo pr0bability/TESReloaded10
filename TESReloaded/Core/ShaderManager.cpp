@@ -93,9 +93,9 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = (EffectRecord**)&TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = (EffectRecord**)&TheShaderManager->Effects.Normals;
-	TheShaderManager->EffectsNames["Precipitations"] = (EffectRecord**)&TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
-	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
+	TheShaderManager->EffectsNames["Precipitations"] = (EffectRecord**)&TheShaderManager->Effects.Rain;
+	TheShaderManager->EffectsNames["Sharpening"] = (EffectRecord**)&TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
 	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
@@ -235,7 +235,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->Effects.LowHF->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->Effects.MotionBlur->Constants.BlurParams;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->Effects.MotionBlur->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->ShaderConst.Sharpening.Data;
+	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->Effects.Sharpening->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->ShaderConst.Specular.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->ShaderConst.Specular.EffectStrength;
 	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->ShaderConst.SnowAccumulation.Params;
@@ -762,11 +762,7 @@ void ShaderManager::UpdateConstants() {
 		}
 
 
-		if (Effects.Sharpening->Enabled) {
-			ShaderConst.Sharpening.Data.x = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Strength");
-			ShaderConst.Sharpening.Data.y = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Clamp");
-			ShaderConst.Sharpening.Data.z = TheSettingManager->GetSettingF("Shaders.Sharpening.Main", "Offset");
-		}
+		if (Effects.Sharpening->Enabled) Effects.Sharpening->UpdateConstants();
 
 		if (Effects.VolumetricFog->Enabled) {
 			ShaderConst.VolumetricFog.LowFog.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SunPower");
@@ -1173,6 +1169,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Normals", 8)) return new NormalsEffect();
 	if (!memcmp(Name, "MotionBlur", 11)) return new MotionBlurEffect();
 	if (!memcmp(Name, "Precipitations", 15)) return new RainEffect();
+	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
 
 	return new EffectRecord(Name);
 
