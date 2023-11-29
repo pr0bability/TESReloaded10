@@ -18,6 +18,7 @@
 #include "Effects/LowHF.h"
 #include "Effects/MotionBlur.h"
 #include "Effects/Normals.h"
+#include "Effects/Rain.h"
 
 
 class Animator {
@@ -82,10 +83,6 @@ struct ShaderConstants {
 	struct SkinStruct {
 		D3DXVECTOR4		SkinData;
 		D3DXVECTOR4		SkinColor;
-	};
-	struct RainStruct{
-		D3DXVECTOR4		RainData;
-		D3DXVECTOR4		RainAspect;
 	};
 	struct SnowStruct{
 		D3DXVECTOR4		SnowData;
@@ -166,7 +163,6 @@ struct ShaderConstants {
 	POMStruct				POM;
 	TerrainStruct			Terrain;
 	SkinStruct				Skin;
-	RainStruct				Rain;
 	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
 	SnowAccumulationStruct	SnowAccumulation;
@@ -231,8 +227,8 @@ public:
 		LowHFEffect*			LowHF;
 		MotionBlurEffect*		MotionBlur;
 		NormalsEffect*			Normals;
-		EffectRecord*		PreTonemapper;
-		EffectRecord*		Rain;
+		EffectRecord*			PreTonemapper;
+		RainEffect*				Rain;
 		EffectRecord*		Sharpening;
 		EffectRecord*		Specular;
 		EffectRecord*		Snow;
