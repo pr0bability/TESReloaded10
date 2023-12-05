@@ -23,6 +23,7 @@
 #include "Effects/Sharpening.h"
 #include "Effects/Specular.h"
 #include "Effects/SunShadows.h"
+#include "Effects/Snow.h"
 
 
 struct ShaderConstants {
@@ -69,9 +70,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		SkinData;
 		D3DXVECTOR4		SkinColor;
 	};
-	struct SnowStruct{
-		D3DXVECTOR4		SnowData;
-	};
 	struct WaterLensStruct {
 		D3DXVECTOR4		Time;
 		float			TimeAmount;
@@ -104,7 +102,6 @@ struct ShaderConstants {
 		Animator			RainAnimator;
 		Animator			PuddlesAnimator;
 		Animator			WaterLensAnimator;
-		Animator			SnowAnimator;
 		Animator			SnowAccumulationAnimator;
 	};
 
@@ -141,7 +138,6 @@ struct ShaderConstants {
 	POMStruct				POM;
 	TerrainStruct			Terrain;
 	SkinStruct				Skin;
-	SnowStruct				Snow;
 	WaterLensStruct			WaterLens;
 	SnowAccumulationStruct	SnowAccumulation;
 	WetWorldStruct			WetWorld;
@@ -207,7 +203,7 @@ public:
 		RainEffect*				Rain;
 		SharpeningEffect*		Sharpening;
 		SpecularEffect*			Specular;
-		EffectRecord*		Snow;
+		SnowEffect*				Snow;
 		EffectRecord*		SnowAccumulation;
 		ShadowsExteriorEffect*		ShadowsExteriors;
 		EffectRecord*		ShadowsInteriors;
