@@ -20,6 +20,7 @@
 #include "Effects/Normals.h"
 #include "Effects/Rain.h"
 #include "Effects/Sharpening.h"
+#include "Effects/SunShadows.h"
 
 
 class Animator {
@@ -234,7 +235,7 @@ public:
 		EffectRecord*		ShadowsInteriors;
 		EffectRecord*		PointShadows;
 		EffectRecord*		PointShadows2;
-		EffectRecord*		SunShadows;
+		SunShadowsEffect*		SunShadows;
 		EffectRecord*		Underwater;
 		EffectRecord*		VolumetricFog;
 		EffectRecord*		WaterLens;

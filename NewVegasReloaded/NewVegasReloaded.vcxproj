@@ -134,6 +134,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Sharpening.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\SunShadows.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameEventManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h" />
