@@ -38,7 +38,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
 	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
 	TheShaderManager->EffectsNames["Specular"] = (EffectRecord**)&TheShaderManager->Effects.Specular;
-	TheShaderManager->EffectsNames["Snow"] = &TheShaderManager->Effects.Snow;
+	TheShaderManager->EffectsNames["Snow"] = (EffectRecord**)&TheShaderManager->Effects.Snow;
 	TheShaderManager->EffectsNames["SnowAccumulation"] = &TheShaderManager->Effects.SnowAccumulation;
 	TheShaderManager->EffectsNames["Underwater"] = &TheShaderManager->Effects.Underwater;
 	TheShaderManager->EffectsNames["VolumetricFog"] = &TheShaderManager->Effects.VolumetricFog;
@@ -69,7 +69,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.OrthoData;
 	TheShaderManager->ConstantsTable["TESR_RainData"] = &TheShaderManager->Effects.Rain->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_RainAspect"] = &TheShaderManager->Effects.Rain->Constants.Aspect;
-	TheShaderManager->ConstantsTable["TESR_SnowData"] = &TheShaderManager->ShaderConst.Snow.SnowData;
+	TheShaderManager->ConstantsTable["TESR_SnowData"] = &TheShaderManager->Effects.Snow->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WorldTransform"] = (D3DXVECTOR4*)&TheRenderManager->worldMatrix;
 	TheShaderManager->ConstantsTable["TESR_ViewTransform"] = (D3DXVECTOR4*)&TheRenderManager->viewMatrix;
 	TheShaderManager->ConstantsTable["TESR_ProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->projMatrix;
@@ -264,7 +264,6 @@ void ShaderManager::InitializeConstants() {
 
 	ShaderConst.Animators.PuddlesAnimator.Initialize(0);
 	ShaderConst.Animators.RainAnimator.Initialize(0);
-	ShaderConst.Animators.SnowAnimator.Initialize(0);
 	ShaderConst.Animators.SnowAccumulationAnimator.Initialize(0);
 }
 
@@ -579,25 +578,7 @@ void ShaderManager::UpdateConstants() {
 		if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
 		//ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
 
-		if (Effects.Snow->Enabled) {
-			// Snow fall
-			if (isSnow && ShaderConst.Animators.SnowAnimator.switched == false) {
-				// it just started snowing
-				ShaderConst.Animators.PuddlesAnimator.Start(0.3f, 0.0f); // fade out any puddles if they exist
-				ShaderConst.Animators.SnowAnimator.switched = true;
-				ShaderConst.Animators.SnowAnimator.Initialize(0);
-				ShaderConst.Animators.SnowAnimator.Start(0.5f, 1.0f);
-			}
-			else if (!isSnow && ShaderConst.Animators.SnowAnimator.switched) {
-				// it just stopped snowing
-				ShaderConst.Animators.SnowAnimator.switched = false;
-				ShaderConst.Animators.SnowAnimator.Start(0.2f, 0.0f);
-			}
-			ShaderConst.Snow.SnowData.x = ShaderConst.Animators.SnowAnimator.GetValue();
-
-			if (ShaderConst.Snow.SnowData.x) orthoRequired = true; // mark ortho map calculation as necessary
-			if (TheSettingManager->SettingsChanged) ShaderConst.Snow.SnowData.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
-		}
+		if (Effects.Snow->Enabled) Effects.Snow->UpdateConstants();
 
 		if (Effects.SnowAccumulation->Enabled) {
 			// Snow Accumulation
@@ -1091,6 +1072,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
 	if (!memcmp(Name, "Specular", 9)) return new SpecularEffect();
 	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
+	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
 
 	return new EffectRecord(Name);
 
@@ -1254,7 +1236,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	if (!isUnderwater && isExterior) {
 		Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 		if (Effects.Rain->Constants.Data.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-		if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+		if (Effects.Snow->Constants.Data.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 
 	Effects.BloomLegacy->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
