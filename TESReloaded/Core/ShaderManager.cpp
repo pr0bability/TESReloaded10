@@ -100,8 +100,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
 	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
 	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
-	TheShaderManager->EffectsNames["SunShadows"] = &TheShaderManager->Effects.SunShadows;
 	TheShaderManager->EffectsNames["Specular"] = &TheShaderManager->Effects.Specular;
+	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
 	TheShaderManager->EffectsNames["Snow"] = &TheShaderManager->Effects.Snow;
 	TheShaderManager->EffectsNames["SnowAccumulation"] = &TheShaderManager->Effects.SnowAccumulation;
 	TheShaderManager->EffectsNames["Underwater"] = &TheShaderManager->Effects.Underwater;
@@ -800,9 +800,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.SnowAccumulation.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
 		}
 		
-		if (Effects.ShadowsExteriors->Enabled) {
-			Effects.ShadowsExteriors->UpdateConstants();
-		}
+		if (Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->UpdateConstants();
 
 		if (Effects.WetWorld->Enabled) {
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
@@ -1155,7 +1153,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 
 	if (!memcmp(Name, "AvgLuma", 8)) return new AvgLumaEffect();
 	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
-	if (!memcmp(Name, "ShadowsExterior", 16)) return new ShadowsExteriorEffect();
+	if (!memcmp(Name, "ShadowsExteriors", 17)) return new ShadowsExteriorEffect();
 	if (!memcmp(Name, "BloodLens", 10)) return new BloodLensEffect();
 	if (!memcmp(Name, "BloomLegacy", 12)) return new BloomLegacyEffect();
 	if (!memcmp(Name, "Cinema", 7)) return new CinemaEffect();
@@ -1170,6 +1168,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "MotionBlur", 11)) return new MotionBlurEffect();
 	if (!memcmp(Name, "Precipitations", 15)) return new RainEffect();
 	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
+	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
 
 	return new EffectRecord(Name);
 
