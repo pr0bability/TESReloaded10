@@ -1,6 +1,7 @@
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
 
+#include "Effects/Animator.h"
 #include "Effects/ShaderRecord.h"
 #include "Effects/AmbientOcclusion.h"
 #include "Effects/ShadowsExterior.h"
@@ -22,25 +23,6 @@
 #include "Effects/Sharpening.h"
 #include "Effects/Specular.h"
 #include "Effects/SunShadows.h"
-
-
-class Animator {
-public:
-	Animator();
-	virtual ~Animator();
-	void				Initialize(float startValue);
-	float				GetValue();
-	void				Start(float duration, float finalValue);
-
-	TimeGlobals* time;
-	float				startValue;
-	float				endValue;
-	float				startTime;
-	float				endTime;
-	bool				running;
-	bool				switched; // set to true/false to detect if animator has been run before
-};
-
 
 
 struct ShaderConstants {
