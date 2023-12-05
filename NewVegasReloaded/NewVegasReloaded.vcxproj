@@ -116,6 +116,7 @@
     <ClInclude Include="..\TESReloaded\Core\Device\Device.h" />
     <ClInclude Include="..\TESReloaded\Core\Device\Hook.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\AmbientOcclusion.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Animator.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\AvgLuma.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\BloodLens.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\BloomLegacy.h" />
@@ -140,6 +141,7 @@
     <ClInclude Include="..\TESReloaded\Core\GameEventManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h" />
     <ClCompile Include="..\TESReloaded\Core\Effects\AmbientOcclusion.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Animator.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\BloodLens.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\BloomLegacy.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Cinema.cpp" />
