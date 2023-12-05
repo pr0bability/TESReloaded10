@@ -230,6 +230,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Sharpening.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Specular.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
     <ClInclude Include="..\TESReloaded\Core\Effects\SunShadows.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
@@ -380,6 +383,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Sharpening.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\Specular.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>

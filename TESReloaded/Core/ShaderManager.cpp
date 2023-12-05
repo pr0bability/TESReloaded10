@@ -100,8 +100,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
 	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
 	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
-	TheShaderManager->EffectsNames["Specular"] = &TheShaderManager->Effects.Specular;
 	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
+	TheShaderManager->EffectsNames["Specular"] = (EffectRecord**)&TheShaderManager->Effects.Specular;
 	TheShaderManager->EffectsNames["Snow"] = &TheShaderManager->Effects.Snow;
 	TheShaderManager->EffectsNames["SnowAccumulation"] = &TheShaderManager->Effects.SnowAccumulation;
 	TheShaderManager->EffectsNames["Underwater"] = &TheShaderManager->Effects.Underwater;
@@ -236,8 +236,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->Effects.MotionBlur->Constants.BlurParams;
 	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->Effects.MotionBlur->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->Effects.Sharpening->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->ShaderConst.Specular.Data;
-	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->ShaderConst.Specular.EffectStrength;
+	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->Effects.Specular->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->Effects.Specular->Constants.EffectStrength;
 	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->ShaderConst.SnowAccumulation.Params;
 	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &TheShaderManager->ShaderConst.SnowAccumulation.Color;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogLow"] = &TheShaderManager->ShaderConst.VolumetricFog.LowFog;
@@ -897,22 +897,7 @@ void ShaderManager::UpdateConstants() {
 
 	if (Effects.Exposure->Enabled) Effects.Exposure->UpdateConstants();
 
-
-	if (Effects.Specular->Enabled) {
-		float rainyPercent = ShaderConst.Animators.RainAnimator.GetValue();
-		const char* ext = "Shaders.Specular.Exterior";
-		const char* rain = "Shaders.Specular.Rain";
-
-		// handle transition by interpolating previous and current weather settings
-		ShaderConst.Specular.Data.x = lerp(TheSettingManager->GetSettingF(ext, "SpecLumaTreshold"), TheSettingManager->GetSettingF(rain, "SpecLumaTreshold"), rainyPercent);
-		ShaderConst.Specular.Data.y = lerp(TheSettingManager->GetSettingF(ext, "BlurMultiplier"), TheSettingManager->GetSettingF(rain, "BlurMultiplier"), rainyPercent);
-		ShaderConst.Specular.Data.z = lerp(TheSettingManager->GetSettingF(ext, "Glossiness"), TheSettingManager->GetSettingF(rain, "Glossiness"), rainyPercent);
-		ShaderConst.Specular.Data.w = lerp(TheSettingManager->GetSettingF(ext, "DistanceFade"), TheSettingManager->GetSettingF(rain, "DistanceFade"), rainyPercent);
-		ShaderConst.Specular.EffectStrength.x = lerp(TheSettingManager->GetSettingF(ext, "SpecularStrength"), TheSettingManager->GetSettingF(rain, "SpecularStrength"), rainyPercent);
-		ShaderConst.Specular.EffectStrength.y = lerp(TheSettingManager->GetSettingF(ext, "SkyTintStrength"), TheSettingManager->GetSettingF(rain, "SkyTintStrength"), rainyPercent);
-		ShaderConst.Specular.EffectStrength.z = lerp(TheSettingManager->GetSettingF(ext, "FresnelStrength"), TheSettingManager->GetSettingF(rain, "FresnelStrength"), rainyPercent);
-		ShaderConst.Specular.EffectStrength.w = lerp(TheSettingManager->GetSettingF(ext, "SkyTintSaturation"), TheSettingManager->GetSettingF(rain, "SkyTintSaturation"), rainyPercent);
-	}
+	if (Effects.Specular->Enabled) Effects.Specular->UpdateConstants();
 
 	TheSettingManager->SettingsChanged = false;
 	timer.LogTime("ShaderManager::UpdateConstants");
@@ -1168,6 +1153,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "MotionBlur", 11)) return new MotionBlurEffect();
 	if (!memcmp(Name, "Precipitations", 15)) return new RainEffect();
 	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
+	if (!memcmp(Name, "Specular", 9)) return new SpecularEffect();
 	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
 
 	return new EffectRecord(Name);

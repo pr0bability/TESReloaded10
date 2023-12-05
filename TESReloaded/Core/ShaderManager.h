@@ -20,6 +20,7 @@
 #include "Effects/Normals.h"
 #include "Effects/Rain.h"
 #include "Effects/Sharpening.h"
+#include "Effects/Specular.h"
 #include "Effects/SunShadows.h"
 
 
@@ -110,10 +111,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Height;
 	};
 
-	struct SpecularStruct {
-		D3DXVECTOR4		EffectStrength;
-		D3DXVECTOR4		Data;
-	};
 
 	struct SkyStruct {
 		D3DXVECTOR4		SkyData;
@@ -166,7 +163,6 @@ struct ShaderConstants {
 	WaterLensStruct			WaterLens;
 	SnowAccumulationStruct	SnowAccumulation;
 	WetWorldStruct			WetWorld;
-	SpecularStruct			Specular;
 	SkyStruct				Sky;
 	VolumetricFogStruct		VolumetricFog;
 	D3DXVECTOR4				DebugVar;
@@ -228,7 +224,7 @@ public:
 		EffectRecord*			PreTonemapper;
 		RainEffect*				Rain;
 		SharpeningEffect*		Sharpening;
-		EffectRecord*		Specular;
+		SpecularEffect*			Specular;
 		EffectRecord*		Snow;
 		EffectRecord*		SnowAccumulation;
 		ShadowsExteriorEffect*		ShadowsExteriors;
