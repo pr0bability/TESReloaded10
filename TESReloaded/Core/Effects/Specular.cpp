@@ -2,7 +2,7 @@
 
 void SpecularEffect::UpdateConstants() {
 
-	float rainyPercent = TheShaderManager->ShaderConst.Animators.RainAnimator.GetValue();
+	float rainyPercent = TheShaderManager->Effects.Rain->Constants.RainAnimator.GetValue();
 	const char* ext = "Shaders.Specular.Exterior";
 	const char* rain = "Shaders.Specular.Rain";
 
