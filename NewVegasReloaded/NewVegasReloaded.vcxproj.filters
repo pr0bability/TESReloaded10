@@ -242,6 +242,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Animator.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsInteriors.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -398,6 +401,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Animator.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsInteriors.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>

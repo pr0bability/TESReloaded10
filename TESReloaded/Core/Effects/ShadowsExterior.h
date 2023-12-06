@@ -9,6 +9,7 @@ public:
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		ScreenSpaceData;
 		D3DXVECTOR4		OrthoData;
+		D3DXVECTOR4		ShadowFade;
 	};
 	ShadowStruct	Constants;
 

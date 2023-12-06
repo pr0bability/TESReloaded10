@@ -653,10 +653,6 @@ void SettingManager::LoadSettings() {
 	SettingsShadows.Exteriors.UsePointShadowsDay = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
 	SettingsShadows.Exteriors.UsePointShadowsNight = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
-	SettingsShadows.ScreenSpace.Enabled = GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled");
-	SettingsShadows.ScreenSpace.BlurRadius = GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
-	SettingsShadows.ScreenSpace.RenderDistance = GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
-
 	//Shadows Cascade settings
 	for (int shadowType = 0; shadowType <= ShadowManager::ShadowMapTypeEnum::MapOrtho; shadowType++) {
 		char sectionName[256] = "Shaders.ShadowsExteriors.";

@@ -23,6 +23,7 @@
 #include "Effects/Sharpening.h"
 #include "Effects/Specular.h"
 #include "Effects/SunShadows.h"
+#include "Effects/ShadowsInteriors.h"
 #include "Effects/Snow.h"
 
 
@@ -110,7 +111,6 @@ struct ShaderConstants {
 	D3DXVECTOR4				SunPosition;
 	D3DXVECTOR4				SunTiming;
 	D3DXVECTOR4				SunAmount;
-	D3DXVECTOR4				ShadowFade;
 	D3DXVECTOR4				ViewSpaceLightDir;
 	D3DXVECTOR4				ScreenSpaceLightDir;
 	D3DXVECTOR4				GameTime;
@@ -205,8 +205,8 @@ public:
 		SpecularEffect*			Specular;
 		SnowEffect*				Snow;
 		EffectRecord*		SnowAccumulation;
-		ShadowsExteriorEffect*		ShadowsExteriors;
-		EffectRecord*		ShadowsInteriors;
+		ShadowsExteriorEffect*	ShadowsExteriors;
+		ShadowsInteriorsEffect*	ShadowsInteriors;
 		EffectRecord*		PointShadows;
 		EffectRecord*		PointShadows2;
 		SunShadowsEffect*		SunShadows;
