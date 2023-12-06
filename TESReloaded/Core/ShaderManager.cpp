@@ -33,7 +33,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Precipitations"] = (EffectRecord**)&TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = (EffectRecord**)&TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
-	TheShaderManager->EffectsNames["ShadowsInteriors"] = &TheShaderManager->Effects.ShadowsInteriors;
+	TheShaderManager->EffectsNames["ShadowsInteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsInteriors;
 	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
 	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
 	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
@@ -124,7 +124,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunTiming"] = &TheShaderManager->ShaderConst.SunTiming;
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
 	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
-	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowFade;
+	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = (D3DXVECTOR4*)&TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowFade;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
@@ -263,7 +263,6 @@ void ShaderManager::InitializeConstants() {
 	ShaderConst.ReciprocalResolution.w = 0.0f; // Reserved to store the FoV
 
 	ShaderConst.Animators.PuddlesAnimator.Initialize(0);
-	ShaderConst.Animators.RainAnimator.Initialize(0);
 	ShaderConst.Animators.SnowAccumulationAnimator.Initialize(0);
 }
 
@@ -317,7 +316,6 @@ void ShaderManager::UpdateConstants() {
 
 	TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
 	float GameHour = fmod(GameTimeGlobals->GameHour->data, 24); // make sure the hours values are less than 24
-	float DaysPassed = GameTimeGlobals->GameDaysPassed ? GameTimeGlobals->GameDaysPassed->data : 1.0f;
 
 	float SunriseStart = WorldSky->GetSunriseBegin();
 	float SunriseEnd = WorldSky->GetSunriseEnd();
@@ -357,43 +355,8 @@ void ShaderManager::UpdateConstants() {
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
-	ShaderConst.ShadowFade.x = 0; // Fade 1.0 == no shadows
-	if (isExterior) {
-		ShaderConst.ShadowFade.x = smoothStep(0.3f, 0.0f, abs(dayLight - 0.5f)); // fade shadows to 0 at sunrise/sunset.  
-
-		if (isDayTime) {
-			// during the day, track the sun mesh position instead of the lighting direction in exteriors
-			ShaderConst.SunDir = ShaderConst.SunPosition;
-		}
-		else {
-			// at night time, fade based on moonphase
-			// moonphase goes from 0 to 8
-			float MoonPhase = (fmod(DaysPassed, 8 * currentClimate->phaseLength & 0x3F)) / (currentClimate->phaseLength & 0x3F);
-
-			float PI = std::numbers::pi_v<float>; // use cos curve to fade moon light shadows strength
-			MoonPhase = std::lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
-
-			// map MoonVisibility to MinNightDarkness/1 range
-			float nightMinDarkness = 1 - TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-			float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5f + 0.5f);
-			ShaderConst.ShadowFade.x = lerp(MoonVisibility, 1.0f, ShaderConst.ShadowFade.x);
-		}
-
-		if (isDayTimeChanged) {
-			// pass the enabled/disabled property of the pointlight shadows to the shadowfade constant
-			const char* PointLightsSettingName = (isDayTime > 0.5f) ? "UsePointShadowsDay" : "UsePointShadowsNight";
-			bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
-			ShaderConst.ShadowFade.z = usePointLights;
-		}
-		ShaderConst.ShadowFade.y = TheSettingManager->SettingsShadows.Exteriors.Enabled && Effects.ShadowsExteriors->Enabled;
-		ShaderConst.ShadowFade.w = ShaderConst.ShadowMap.ShadowMapRadius.w; //furthest distance for point lights shadows
-	}
-	else {
-		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-		ShaderConst.ShadowFade.y = Effects.ShadowsInteriors->Enabled;
-		ShaderConst.ShadowFade.z = 1; // z enables point lights
-		ShaderConst.ShadowFade.w = TheSettingManager->SettingsShadows.Interiors.DrawDistance; //furthest distance for point lights shadows
-	}
+	// during the day, track the sun mesh position instead of the lighting direction in exteriors
+	if (isExterior && isDayTime) ShaderConst.SunDir = ShaderConst.SunPosition;
 
 	// expose the light vector in view space for screen space lighting
 	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);
@@ -717,7 +680,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.SnowAccumulation.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
 		}
 		
-		if (Effects.ShadowsExteriors->Enabled) Effects.ShadowsExteriors->UpdateConstants();
 
 		if (Effects.WetWorld->Enabled) {
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
@@ -741,6 +703,8 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
 		ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
 	}
+
+	Effects.ShadowsExteriors->UpdateConstants();
 
 	if (Effects.Rain->Enabled) Effects.Rain->UpdateConstants();
 
@@ -1072,6 +1036,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
 	if (!memcmp(Name, "Specular", 9)) return new SpecularEffect();
 	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
+	if (!memcmp(Name, "ShadowsInteriors", 17)) return new ShadowsInteriorsEffect();
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
 
 	return new EffectRecord(Name);
