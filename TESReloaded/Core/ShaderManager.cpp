@@ -39,7 +39,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
 	TheShaderManager->EffectsNames["Specular"] = (EffectRecord**)&TheShaderManager->Effects.Specular;
 	TheShaderManager->EffectsNames["Snow"] = (EffectRecord**)&TheShaderManager->Effects.Snow;
-	TheShaderManager->EffectsNames["SnowAccumulation"] = &TheShaderManager->Effects.SnowAccumulation;
+	TheShaderManager->EffectsNames["SnowAccumulation"] = (EffectRecord**)&TheShaderManager->Effects.SnowAccumulation;
 	TheShaderManager->EffectsNames["Underwater"] = &TheShaderManager->Effects.Underwater;
 	TheShaderManager->EffectsNames["VolumetricFog"] = &TheShaderManager->Effects.VolumetricFog;
 	TheShaderManager->EffectsNames["WaterLens"] = &TheShaderManager->Effects.WaterLens;
@@ -174,16 +174,18 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->Effects.Sharpening->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->Effects.Specular->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->Effects.Specular->Constants.EffectStrength;
-	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->ShaderConst.SnowAccumulation.Params;
-	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &TheShaderManager->ShaderConst.SnowAccumulation.Color;
+	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->Effects.SnowAccumulation->Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &TheShaderManager->Effects.SnowAccumulation->Constants.Color;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogLow"] = &TheShaderManager->ShaderConst.VolumetricFog.LowFog;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogHigh"] = &TheShaderManager->ShaderConst.VolumetricFog.GeneralFog;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogSimple"] = &TheShaderManager->ShaderConst.VolumetricFog.SimpleFog;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogBlend"] = &TheShaderManager->ShaderConst.VolumetricFog.Blend;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &TheShaderManager->ShaderConst.VolumetricFog.Height;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->ShaderConst.VolumetricFog.Data;
 	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->ShaderConst.WaterLens.Time;
 	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->ShaderConst.WetWorld.Coeffs;
 	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->ShaderConst.WetWorld.Data;
+	TheShaderManager->ConstantsTable["TESR_NormalsData"] = &TheShaderManager->Effects.Normals->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -252,7 +254,6 @@ void ShaderManager::InitializeConstants() {
 
 	ShaderConst.pWeather = NULL;
 	ShaderConst.WaterLens.Percent = 0.0f;
-	ShaderConst.SnowAccumulation.Params.w = 0.0f;
 	ShaderConst.WetWorld.Data.x = 0.0f;
 	ShaderConst.WetWorld.Data.y = 0.0f;
 	ShaderConst.WetWorld.Data.z = 0.0f;
@@ -263,7 +264,6 @@ void ShaderManager::InitializeConstants() {
 	ShaderConst.ReciprocalResolution.w = 0.0f; // Reserved to store the FoV
 
 	ShaderConst.Animators.PuddlesAnimator.Initialize(0);
-	ShaderConst.Animators.SnowAccumulationAnimator.Initialize(0);
 }
 
 
@@ -537,26 +537,13 @@ void ShaderManager::UpdateConstants() {
 
 		if (Effects.Snow->Enabled) Effects.Snow->UpdateConstants();
 
-		if (Effects.SnowAccumulation->Enabled) {
-			// Snow Accumulation
-			if (isSnow && !ShaderConst.Animators.SnowAccumulationAnimator.switched) {
-				// it just started snowing
-				ShaderConst.Animators.SnowAccumulationAnimator.switched = true;
-				ShaderConst.Animators.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Increase"), 1);
-			}
-			else if (!isSnow && ShaderConst.Animators.SnowAccumulationAnimator.switched) {
-				// it just stopped snowing
-				ShaderConst.Animators.SnowAccumulationAnimator.switched = false;
-				ShaderConst.Animators.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Decrease"), 0);
-			}
+		if (Effects.SnowAccumulation->Enabled) Effects.SnowAccumulation->UpdateConstants();
 
-			ShaderConst.SnowAccumulation.Params.w = ShaderConst.Animators.SnowAccumulationAnimator.GetValue();
-			if (ShaderConst.SnowAccumulation.Params.w) orthoRequired = true; // mark ortho map calculation as necessary
-		}
 	}
 
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
+		Effects.Normals->UpdateConstants();
 
 		if (TheSettingManager->GetMenuShaderEnabled("Grass")) {
 			ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
@@ -663,16 +650,7 @@ void ShaderManager::UpdateConstants() {
 			
 		}
 
-		// blur settings are used to blur normals for all effects using them
-		ShaderConst.SnowAccumulation.Params.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
-		ShaderConst.SnowAccumulation.Params.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
 
-		if (Effects.SnowAccumulation->Enabled) {
-			ShaderConst.SnowAccumulation.Params.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
-			ShaderConst.SnowAccumulation.Color.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorR");
-			ShaderConst.SnowAccumulation.Color.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorG");
-			ShaderConst.SnowAccumulation.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
-		}
 		
 
 		if (Effects.WetWorld->Enabled) {
@@ -1031,6 +1009,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Specular", 9)) return new SpecularEffect();
 	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
 	if (!memcmp(Name, "ShadowsInteriors", 17)) return new ShadowsInteriorsEffect();
+	if (!memcmp(Name, "SnowAccumulation", 17)) return new SnowAccumulationEffect();
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
 
 	return new EffectRecord(Name);
@@ -1149,7 +1128,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (isExterior) {
 			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 			if (ShaderConst.WetWorld.Data.z > 0.0f) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-			if (ShaderConst.SnowAccumulation.Params.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+			if (Effects.SnowAccumulation->Constants.Data.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		}
 
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
