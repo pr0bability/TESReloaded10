@@ -520,26 +520,20 @@ void ShaderManager::UpdateConstants() {
 			
 	if (isExterior) {
 		// Rain fall & puddles
-		if (isRainy && ShaderConst.Animators.RainAnimator.switched == false) {
+		if (isRainy && ShaderConst.Animators.PuddlesAnimator.switched == false) {
 			// it just started raining
-			ShaderConst.WetWorld.Data.y = 1.0f;
 			ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase"), 1);
-			ShaderConst.Animators.RainAnimator.switched = true;
-			ShaderConst.Animators.RainAnimator.Start(0.05f, 1.0f);
 		}
-		else if (!isRainy && ShaderConst.Animators.RainAnimator.switched) {
+		else if (!isRainy && ShaderConst.Animators.PuddlesAnimator.switched) {
 			// it just stopped raining
-			ShaderConst.WetWorld.Data.y = 0.0f;
 			ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease"), 0);
-			ShaderConst.Animators.RainAnimator.switched = false;
-			ShaderConst.Animators.RainAnimator.Start(0.07f, 0.0f);
 		}
-		ShaderConst.WetWorld.Data.x = ShaderConst.Animators.RainAnimator.GetValue();
+		ShaderConst.WetWorld.Data.x = Effects.Rain->Constants.RainAnimator.GetValue();
+		ShaderConst.WetWorld.Data.y = isRainy;
 		ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
 		if (TheSettingManager->SettingsChanged) ShaderConst.WetWorld.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
 
 		if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
-		//ShaderConst.Rain.RainData.x = ShaderConst.Animators.RainAnimator.GetValue();
 
 		if (Effects.Snow->Enabled) Effects.Snow->UpdateConstants();
 

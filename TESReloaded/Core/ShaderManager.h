@@ -100,7 +100,6 @@ struct ShaderConstants {
 	};
 
 	struct AnimatorsStruct {
-		Animator			RainAnimator;
 		Animator			PuddlesAnimator;
 		Animator			WaterLensAnimator;
 		Animator			SnowAccumulationAnimator;
