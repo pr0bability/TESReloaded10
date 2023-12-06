@@ -24,6 +24,7 @@
 #include "Effects/Specular.h"
 #include "Effects/SunShadows.h"
 #include "Effects/ShadowsInteriors.h"
+#include "Effects/SnowAccumulation.h"
 #include "Effects/Snow.h"
 
 
@@ -76,10 +77,6 @@ struct ShaderConstants {
 		float			TimeAmount;
 		float			Percent;
 	};
-	struct SnowAccumulationStruct {
-		D3DXVECTOR4		Params;
-		D3DXVECTOR4		Color;
-	};
 	struct WetWorldStruct {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
@@ -102,7 +99,6 @@ struct ShaderConstants {
 	struct AnimatorsStruct {
 		Animator			PuddlesAnimator;
 		Animator			WaterLensAnimator;
-		Animator			SnowAccumulationAnimator;
 	};
 
 	D3DXVECTOR4				ReciprocalResolution;
@@ -138,7 +134,6 @@ struct ShaderConstants {
 	TerrainStruct			Terrain;
 	SkinStruct				Skin;
 	WaterLensStruct			WaterLens;
-	SnowAccumulationStruct	SnowAccumulation;
 	WetWorldStruct			WetWorld;
 	SkyStruct				Sky;
 	VolumetricFogStruct		VolumetricFog;
@@ -203,7 +198,7 @@ public:
 		SharpeningEffect*		Sharpening;
 		SpecularEffect*			Specular;
 		SnowEffect*				Snow;
-		EffectRecord*		SnowAccumulation;
+		SnowAccumulationEffect*	SnowAccumulation;
 		ShadowsExteriorEffect*	ShadowsExteriors;
 		ShadowsInteriorsEffect*	ShadowsInteriors;
 		EffectRecord*		PointShadows;

@@ -6,8 +6,9 @@ public:
 	NormalsEffect() : EffectRecord("Normals") {};
 
 	struct NormalsStruct {
+		D3DXVECTOR4		Data;
 	};
 	NormalsStruct	Constants;
 
-	void	UpdateConstants() {};
+	void	UpdateConstants();
 };
