@@ -26,6 +26,7 @@
 #include "Effects/ShadowsInteriors.h"
 #include "Effects/SnowAccumulation.h"
 #include "Effects/Snow.h"
+#include "Effects/Underwater.h"
 
 
 struct ShaderConstants {
@@ -204,7 +205,7 @@ public:
 		EffectRecord*		PointShadows;
 		EffectRecord*		PointShadows2;
 		SunShadowsEffect*		SunShadows;
-		EffectRecord*		Underwater;
+		UnderwaterEffect*		Underwater;
 		EffectRecord*		VolumetricFog;
 		EffectRecord*		WaterLens;
 		EffectRecord*		WetWorld;

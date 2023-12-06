@@ -40,7 +40,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Specular"] = (EffectRecord**)&TheShaderManager->Effects.Specular;
 	TheShaderManager->EffectsNames["Snow"] = (EffectRecord**)&TheShaderManager->Effects.Snow;
 	TheShaderManager->EffectsNames["SnowAccumulation"] = (EffectRecord**)&TheShaderManager->Effects.SnowAccumulation;
-	TheShaderManager->EffectsNames["Underwater"] = &TheShaderManager->Effects.Underwater;
+	TheShaderManager->EffectsNames["Underwater"] = (EffectRecord**)&TheShaderManager->Effects.Underwater;
 	TheShaderManager->EffectsNames["VolumetricFog"] = &TheShaderManager->Effects.VolumetricFog;
 	TheShaderManager->EffectsNames["WaterLens"] = &TheShaderManager->Effects.WaterLens;
 	TheShaderManager->EffectsNames["WetWorld"] = &TheShaderManager->Effects.WetWorld;
@@ -1011,6 +1011,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "ShadowsInteriors", 17)) return new ShadowsInteriorsEffect();
 	if (!memcmp(Name, "SnowAccumulation", 17)) return new SnowAccumulationEffect();
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
+	if (!memcmp(Name, "Underwater", 11)) return new UnderwaterEffect();
 
 	return new EffectRecord(Name);
 
