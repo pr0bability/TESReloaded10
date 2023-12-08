@@ -43,7 +43,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Underwater"] = (EffectRecord**)&TheShaderManager->Effects.Underwater;
 	TheShaderManager->EffectsNames["VolumetricFog"] = (EffectRecord**)&TheShaderManager->Effects.VolumetricFog;
 	TheShaderManager->EffectsNames["WaterLens"] = (EffectRecord**)&TheShaderManager->Effects.WaterLens;
-	TheShaderManager->EffectsNames["WetWorld"] = &TheShaderManager->Effects.WetWorld;
+	TheShaderManager->EffectsNames["WetWorld"] = (EffectRecord**)&TheShaderManager->Effects.WetWorld;
 
 	// Initialize all effects
 	TheShaderManager->CreateEffects();
@@ -184,8 +184,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->ShaderConst.VolumetricFog.Data;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->Effects.VolumetricFog->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->Effects.WaterLens->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->ShaderConst.WetWorld.Coeffs;
-	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->ShaderConst.WetWorld.Data;
+	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->Effects.WetWorld->Constants.Coeffs;
+	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->Effects.WetWorld->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_NormalsData"] = &TheShaderManager->Effects.Normals->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
@@ -254,16 +254,11 @@ void ShaderManager::LoadEffects() {
 void ShaderManager::InitializeConstants() {
 
 	ShaderConst.pWeather = NULL;
-	ShaderConst.WetWorld.Data.x = 0.0f;
-	ShaderConst.WetWorld.Data.y = 0.0f;
-	ShaderConst.WetWorld.Data.z = 0.0f;
 
 	ShaderConst.ReciprocalResolution.x = 1.0f / (float)TheRenderManager->width;
 	ShaderConst.ReciprocalResolution.y = 1.0f / (float)TheRenderManager->height;
 	ShaderConst.ReciprocalResolution.z = (float)TheRenderManager->width / (float)TheRenderManager->height;
 	ShaderConst.ReciprocalResolution.w = 0.0f; // Reserved to store the FoV
-
-	ShaderConst.Animators.PuddlesAnimator.Initialize(0);
 }
 
 
@@ -500,28 +495,12 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
-
 	if (Effects.WaterLens->Enabled) Effects.WaterLens->UpdateConstants();
 			
 	if (isExterior) {
-		// Rain fall & puddles
-		if (isRainy && ShaderConst.Animators.PuddlesAnimator.switched == false) {
-			// it just started raining
-			ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase"), 1);
-		}
-		else if (!isRainy && ShaderConst.Animators.PuddlesAnimator.switched) {
-			// it just stopped raining
-			ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease"), 0);
-		}
-		ShaderConst.WetWorld.Data.x = Effects.Rain->Constants.RainAnimator.GetValue();
-		ShaderConst.WetWorld.Data.y = isRainy;
-		ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
-		if (TheSettingManager->SettingsChanged) ShaderConst.WetWorld.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
-
-		if (ShaderConst.WetWorld.Data.x || ShaderConst.WetWorld.Data.z) orthoRequired = true; // mark ortho map calculation as necessary
-
+		if (Effects.Rain->Enabled) Effects.Rain->UpdateConstants();
+		if (Effects.WetWorld->Enabled) Effects.WetWorld->UpdateConstants();
 		if (Effects.Snow->Enabled) Effects.Snow->UpdateConstants();
-
 		if (Effects.SnowAccumulation->Enabled) Effects.SnowAccumulation->UpdateConstants();
 	}
 
@@ -637,13 +616,6 @@ void ShaderManager::UpdateConstants() {
 		
 		if (Effects.VolumetricFog->Enabled) Effects.VolumetricFog->UpdateConstants();
 
-		if (Effects.WetWorld->Enabled) {
-			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
-			ShaderConst.WetWorld.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
-			ShaderConst.WetWorld.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
-			ShaderConst.WetWorld.Coeffs.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
-		}
-
 		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
 		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
 		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
@@ -655,8 +627,6 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	Effects.ShadowsExteriors->UpdateConstants();
-
-	if (Effects.Rain->Enabled) Effects.Rain->UpdateConstants();
 
 	if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
 		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping") || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
@@ -991,6 +961,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Underwater", 11)) return new UnderwaterEffect();
 	if (!memcmp(Name, "VolumetricFog", 14)) return new VolumetricFogEffect();
 	if (!memcmp(Name, "WaterLens", 10)) return new WaterLensEffect();
+	if (!memcmp(Name, "WetWorld", 9)) return new WetWorldEffect();
 
 	return new EffectRecord(Name);
 
@@ -1107,7 +1078,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	} else {
 		if (isExterior) {
 			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-			if (ShaderConst.WetWorld.Data.z > 0.0f) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+			if (Effects.WetWorld->Constants.Data.z > 0.0f) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 			if (Effects.SnowAccumulation->Constants.Data.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		}
 
