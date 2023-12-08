@@ -41,7 +41,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Snow"] = (EffectRecord**)&TheShaderManager->Effects.Snow;
 	TheShaderManager->EffectsNames["SnowAccumulation"] = (EffectRecord**)&TheShaderManager->Effects.SnowAccumulation;
 	TheShaderManager->EffectsNames["Underwater"] = (EffectRecord**)&TheShaderManager->Effects.Underwater;
-	TheShaderManager->EffectsNames["VolumetricFog"] = &TheShaderManager->Effects.VolumetricFog;
+	TheShaderManager->EffectsNames["VolumetricFog"] = (EffectRecord**)&TheShaderManager->Effects.VolumetricFog;
 	TheShaderManager->EffectsNames["WaterLens"] = &TheShaderManager->Effects.WaterLens;
 	TheShaderManager->EffectsNames["WetWorld"] = &TheShaderManager->Effects.WetWorld;
 
@@ -182,6 +182,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogBlend"] = &TheShaderManager->ShaderConst.VolumetricFog.Blend;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &TheShaderManager->ShaderConst.VolumetricFog.Height;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->ShaderConst.VolumetricFog.Data;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->Effects.VolumetricFog->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->ShaderConst.WaterLens.Time;
 	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->ShaderConst.WetWorld.Coeffs;
 	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->ShaderConst.WetWorld.Data;
@@ -538,7 +539,6 @@ void ShaderManager::UpdateConstants() {
 		if (Effects.Snow->Enabled) Effects.Snow->UpdateConstants();
 
 		if (Effects.SnowAccumulation->Enabled) Effects.SnowAccumulation->UpdateConstants();
-
 	}
 
 	if (TheSettingManager->SettingsChanged) {
@@ -622,7 +622,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Skin.SkinColor.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffBlue");
 		}
 
-
 		if (Effects.Sharpening->Enabled) Effects.Sharpening->UpdateConstants();
 
 		if (Effects.VolumetricFog->Enabled) {
@@ -652,6 +651,7 @@ void ShaderManager::UpdateConstants() {
 
 
 		
+		if (Effects.VolumetricFog->Enabled) Effects.VolumetricFog->UpdateConstants();
 
 		if (Effects.WetWorld->Enabled) {
 			ShaderConst.WetWorld.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
@@ -731,7 +731,6 @@ void ShaderManager::UpdateConstants() {
 		if (Effects.ImageAdjust->Enabled) Effects.ImageAdjust->UpdateConstants();
 
 		if (Effects.Lens->Enabled) Effects.Lens->UpdateConstants();
-
 	}
 
 	if (Effects.GodRays->Enabled) Effects.GodRays->UpdateConstants();
@@ -1012,6 +1011,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "SnowAccumulation", 17)) return new SnowAccumulationEffect();
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
 	if (!memcmp(Name, "Underwater", 11)) return new UnderwaterEffect();
+	if (!memcmp(Name, "VolumetricFog", 14)) return new VolumetricFogEffect();
 
 	return new EffectRecord(Name);
 

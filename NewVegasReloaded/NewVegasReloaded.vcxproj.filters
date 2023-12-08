@@ -251,6 +251,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Underwater.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\VolumetricFog.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -419,6 +422,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Underwater.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\VolumetricFog.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
