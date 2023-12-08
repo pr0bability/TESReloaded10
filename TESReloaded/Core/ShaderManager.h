@@ -27,6 +27,7 @@
 #include "Effects/SnowAccumulation.h"
 #include "Effects/Snow.h"
 #include "Effects/Underwater.h"
+#include "Effects/VolumetricFog.h"
 
 
 struct ShaderConstants {
@@ -137,7 +138,6 @@ struct ShaderConstants {
 	WaterLensStruct			WaterLens;
 	WetWorldStruct			WetWorld;
 	SkyStruct				Sky;
-	VolumetricFogStruct		VolumetricFog;
 	D3DXVECTOR4				DebugVar;
 };
 
@@ -206,7 +206,7 @@ public:
 		EffectRecord*		PointShadows2;
 		SunShadowsEffect*		SunShadows;
 		UnderwaterEffect*		Underwater;
-		EffectRecord*		VolumetricFog;
+		VolumetricFogEffect*	VolumetricFog;
 		EffectRecord*		WaterLens;
 		EffectRecord*		WetWorld;
 		EffectsList			ExtraEffects;
