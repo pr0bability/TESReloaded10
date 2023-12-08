@@ -1,6 +1,10 @@
 #include "BloodLens.h"
 
 void BloodLensEffect::UpdateConstants() {
+	if (TheShaderManager->isUnderwater) {
+		Constants.Percent = 0.0f;
+	}
+
 	if (Constants.Percent > 0.0f) {
 		Constants.Time.z = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Time");
 		if (Constants.Percent == 1.0f) {

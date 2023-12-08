@@ -28,6 +28,7 @@
 #include "Effects/Snow.h"
 #include "Effects/Underwater.h"
 #include "Effects/VolumetricFog.h"
+#include "Effects/WaterLens.h"
 
 
 struct ShaderConstants {
@@ -74,11 +75,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		SkinData;
 		D3DXVECTOR4		SkinColor;
 	};
-	struct WaterLensStruct {
-		D3DXVECTOR4		Time;
-		float			TimeAmount;
-		float			Percent;
-	};
 	struct WetWorldStruct {
 		D3DXVECTOR4		Coeffs;
 		D3DXVECTOR4		Data;
@@ -91,7 +87,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		Height;
 	};
 
-
 	struct SkyStruct {
 		D3DXVECTOR4		SkyData;
 		D3DXVECTOR4		SunsetColor;
@@ -100,7 +95,6 @@ struct ShaderConstants {
 
 	struct AnimatorsStruct {
 		Animator			PuddlesAnimator;
-		Animator			WaterLensAnimator;
 	};
 
 	D3DXVECTOR4				ReciprocalResolution;
@@ -135,7 +129,6 @@ struct ShaderConstants {
 	POMStruct				POM;
 	TerrainStruct			Terrain;
 	SkinStruct				Skin;
-	WaterLensStruct			WaterLens;
 	WetWorldStruct			WetWorld;
 	SkyStruct				Sky;
 	D3DXVECTOR4				DebugVar;
@@ -207,7 +200,7 @@ public:
 		SunShadowsEffect*		SunShadows;
 		UnderwaterEffect*		Underwater;
 		VolumetricFogEffect*	VolumetricFog;
-		EffectRecord*		WaterLens;
+		WaterLensEffect*		WaterLens;
 		EffectRecord*		WetWorld;
 		EffectsList			ExtraEffects;
 	};
