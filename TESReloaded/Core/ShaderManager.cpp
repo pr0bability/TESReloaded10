@@ -53,8 +53,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->InitializeConstants();
 	TheShaderManager->CreateFrameVertex(TheRenderManager->width, TheRenderManager->height, &TheShaderManager->FrameVertex);
 
-    TheShaderManager->PreviousCell = nullptr;
-    TheShaderManager->IsMenuSwitch = false;
+	TheShaderManager->PreviousCell = nullptr;
+	TheShaderManager->IsMenuSwitch = false;
 
 	//setup map of constant names
 	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &TheShaderManager->ShaderConst.HDR.ToneMapping;
@@ -77,8 +77,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_WorldViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->WorldViewProjMatrix;
 	TheShaderManager->ConstantsTable["TESR_InvViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->InvViewProjMatrix;
 	TheShaderManager->ConstantsTable["TESR_ViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->ViewProjMatrix;
-	TheShaderManager->ConstantsTable["TESR_ViewSpaceLightDir"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ViewSpaceLightDir;
-	TheShaderManager->ConstantsTable["TESR_ScreenSpaceLightDir"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ScreenSpaceLightDir;
 	TheShaderManager->ConstantsTable["TESR_ShadowWorldTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld;
 	TheShaderManager->ConstantsTable["TESR_ShadowViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowViewProj;
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight;
@@ -88,30 +86,32 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformLod"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[3];
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformOrtho"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4];
 	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapLightPosition"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition;
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition0"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition1"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition2"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition3"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[3];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition4"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[4];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition5"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[5];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition6"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[6];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition7"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[7];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition8"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[8];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition9"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[9];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition10"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[10];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition11"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[11];
-	TheShaderManager->ConstantsTable["TESR_LightPosition0"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[0];
-	TheShaderManager->ConstantsTable["TESR_LightPosition1"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[1];
-	TheShaderManager->ConstantsTable["TESR_LightPosition2"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[2];
-	TheShaderManager->ConstantsTable["TESR_LightPosition3"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[3];
-	TheShaderManager->ConstantsTable["TESR_LightPosition4"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[4];
-	TheShaderManager->ConstantsTable["TESR_LightPosition5"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[5];
-	TheShaderManager->ConstantsTable["TESR_LightPosition6"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[6];
-	TheShaderManager->ConstantsTable["TESR_LightPosition7"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[7];
-	TheShaderManager->ConstantsTable["TESR_LightPosition8"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[8];
-	TheShaderManager->ConstantsTable["TESR_LightPosition9"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[9];
-	TheShaderManager->ConstantsTable["TESR_LightPosition10"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[10];
-	TheShaderManager->ConstantsTable["TESR_LightPosition11"] = (D3DXVECTOR4*)&TheShaderManager->LightPosition[11];
+	TheShaderManager->ConstantsTable["TESR_ViewSpaceLightDir"] = &TheShaderManager->ShaderConst.ViewSpaceLightDir;
+	TheShaderManager->ConstantsTable["TESR_ScreenSpaceLightDir"] = &TheShaderManager->ShaderConst.ScreenSpaceLightDir;
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition0"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition1"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition2"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition3"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[3];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition4"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[4];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition5"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[5];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition6"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[6];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition7"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[7];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition8"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[8];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition9"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[9];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition10"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[10];
+	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition11"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[11];
+	TheShaderManager->ConstantsTable["TESR_LightPosition0"] = &TheShaderManager->LightPosition[0];
+	TheShaderManager->ConstantsTable["TESR_LightPosition1"] = &TheShaderManager->LightPosition[1];
+	TheShaderManager->ConstantsTable["TESR_LightPosition2"] = &TheShaderManager->LightPosition[2];
+	TheShaderManager->ConstantsTable["TESR_LightPosition3"] = &TheShaderManager->LightPosition[3];
+	TheShaderManager->ConstantsTable["TESR_LightPosition4"] = &TheShaderManager->LightPosition[4];
+	TheShaderManager->ConstantsTable["TESR_LightPosition5"] = &TheShaderManager->LightPosition[5];
+	TheShaderManager->ConstantsTable["TESR_LightPosition6"] = &TheShaderManager->LightPosition[6];
+	TheShaderManager->ConstantsTable["TESR_LightPosition7"] = &TheShaderManager->LightPosition[7];
+	TheShaderManager->ConstantsTable["TESR_LightPosition8"] = &TheShaderManager->LightPosition[8];
+	TheShaderManager->ConstantsTable["TESR_LightPosition9"] = &TheShaderManager->LightPosition[9];
+	TheShaderManager->ConstantsTable["TESR_LightPosition10"] = &TheShaderManager->LightPosition[10];
+	TheShaderManager->ConstantsTable["TESR_LightPosition11"] = &TheShaderManager->LightPosition[11];
 	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapBlend"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend;
 	TheShaderManager->ConstantsTable["TESR_OcclusionWorldViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj;
 	TheShaderManager->ConstantsTable["TESR_ReciprocalResolution"] = &TheShaderManager->ShaderConst.ReciprocalResolution;
@@ -124,7 +124,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunTiming"] = &TheShaderManager->ShaderConst.SunTiming;
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
 	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
-	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = (D3DXVECTOR4*)&TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowFade;
+	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowFade;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
@@ -611,11 +611,8 @@ void ShaderManager::UpdateConstants() {
 			else ShaderConst.VolumetricFog.Height.w = 1.0f;
 			
 		}
-
-
 		
 		if (Effects.VolumetricFog->Enabled) Effects.VolumetricFog->UpdateConstants();
-
 		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
 		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
 		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
@@ -677,26 +674,16 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		if (Effects.ImageAdjust->Enabled) Effects.ImageAdjust->UpdateConstants();
-
 		if (Effects.Lens->Enabled) Effects.Lens->UpdateConstants();
 	}
 
 	if (Effects.GodRays->Enabled) Effects.GodRays->UpdateConstants();
-
 	if (Effects.Coloring->Enabled) Effects.Coloring->UpdateConstants();
-
-	if (Effects.BloodLens->Enabled) {
-		Effects.BloodLens->UpdateConstants();
-	}
-
+	if (Effects.BloodLens->Enabled) Effects.BloodLens->UpdateConstants();
 	if (Effects.LowHF->Enabled) Effects.LowHF->UpdateConstants();
-
 	if (Effects.DepthOfField->Enabled) Effects.DepthOfField->UpdateConstants();
-
 	if (Effects.MotionBlur->Enabled) Effects.MotionBlur->UpdateConstants();
-
 	if (Effects.Exposure->Enabled) Effects.Exposure->UpdateConstants();
-
 	if (Effects.Specular->Enabled) Effects.Specular->UpdateConstants();
 
 	TheSettingManager->SettingsChanged = false;
