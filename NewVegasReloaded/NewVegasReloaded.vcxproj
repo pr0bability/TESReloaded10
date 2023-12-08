@@ -142,6 +142,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\SunShadows.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Underwater.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\VolumetricFog.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\WaterLens.h" />
     <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameEventManager.h" />
     <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\Specular.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Underwater.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\VolumetricFog.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\WaterLens.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Hooks\GameCommon.cpp" />
     <ClInclude Include="..\TESReloaded\Core\Hooks\FormsCommon.h" />

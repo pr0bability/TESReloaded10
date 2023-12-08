@@ -42,7 +42,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["SnowAccumulation"] = (EffectRecord**)&TheShaderManager->Effects.SnowAccumulation;
 	TheShaderManager->EffectsNames["Underwater"] = (EffectRecord**)&TheShaderManager->Effects.Underwater;
 	TheShaderManager->EffectsNames["VolumetricFog"] = (EffectRecord**)&TheShaderManager->Effects.VolumetricFog;
-	TheShaderManager->EffectsNames["WaterLens"] = &TheShaderManager->Effects.WaterLens;
+	TheShaderManager->EffectsNames["WaterLens"] = (EffectRecord**)&TheShaderManager->Effects.WaterLens;
 	TheShaderManager->EffectsNames["WetWorld"] = &TheShaderManager->Effects.WetWorld;
 
 	// Initialize all effects
@@ -183,7 +183,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &TheShaderManager->ShaderConst.VolumetricFog.Height;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->ShaderConst.VolumetricFog.Data;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->Effects.VolumetricFog->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->ShaderConst.WaterLens.Time;
+	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->Effects.WaterLens->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->ShaderConst.WetWorld.Coeffs;
 	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->ShaderConst.WetWorld.Data;
 	TheShaderManager->ConstantsTable["TESR_NormalsData"] = &TheShaderManager->Effects.Normals->Constants.Data;
@@ -254,7 +254,6 @@ void ShaderManager::LoadEffects() {
 void ShaderManager::InitializeConstants() {
 
 	ShaderConst.pWeather = NULL;
-	ShaderConst.WaterLens.Percent = 0.0f;
 	ShaderConst.WetWorld.Data.x = 0.0f;
 	ShaderConst.WetWorld.Data.y = 0.0f;
 	ShaderConst.WetWorld.Data.z = 0.0f;
@@ -501,23 +500,8 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
-	if (isUnderwater) {
-		Effects.BloodLens->Constants.Percent = 0.0f;
-		ShaderConst.WaterLens.Percent = -1.0f;
-		ShaderConst.Animators.WaterLensAnimator.switched = true;
-		ShaderConst.Animators.WaterLensAnimator.Start(0.0, 0);
-	}
 
-	if (Effects.WaterLens->Enabled) {
-		if (!isUnderwater && ShaderConst.Animators.WaterLensAnimator.switched == true) {
-			ShaderConst.Animators.WaterLensAnimator.switched = false;
-			// start the waterlens effect and animate it fading
-			ShaderConst.Animators.WaterLensAnimator.Initialize(1);
-			ShaderConst.Animators.WaterLensAnimator.Start(0.01f, 0.0f);
-		}
-		ShaderConst.WaterLens.Percent = ShaderConst.Animators.WaterLensAnimator.GetValue();
-		ShaderConst.WaterLens.Time.w = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Amount") * ShaderConst.WaterLens.Percent;
-	}
+	if (Effects.WaterLens->Enabled) Effects.WaterLens->UpdateConstants();
 			
 	if (isExterior) {
 		// Rain fall & puddles
@@ -660,12 +644,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.WetWorld.Coeffs.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
 		}
 
-		if (Effects.WaterLens->Enabled) {
-			ShaderConst.WaterLens.Time.x = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
-			ShaderConst.WaterLens.Time.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
-			ShaderConst.WaterLens.Time.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
-		}
-			
 		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
 		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
 		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
@@ -1012,6 +990,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
 	if (!memcmp(Name, "Underwater", 11)) return new UnderwaterEffect();
 	if (!memcmp(Name, "VolumetricFog", 14)) return new VolumetricFogEffect();
+	if (!memcmp(Name, "WaterLens", 10)) return new WaterLensEffect();
 
 	return new EffectRecord(Name);
 
@@ -1195,7 +1174,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// lens effects
 	if (Effects.BloodLens->Constants.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (ShaderConst.WaterLens.Percent > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	if (Effects.WaterLens->Constants.Data.w > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (Effects.LowHF->Constants.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
