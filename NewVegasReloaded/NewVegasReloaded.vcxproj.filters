@@ -260,6 +260,12 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\WetWorld.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\PointShadows.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\PointShadows2.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

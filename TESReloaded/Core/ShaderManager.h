@@ -23,6 +23,8 @@
 #include "Effects/Sharpening.h"
 #include "Effects/Specular.h"
 #include "Effects/SunShadows.h"
+#include "Effects/PointShadows.h"
+#include "Effects/PointShadows2.h"
 #include "Effects/ShadowsInteriors.h"
 #include "Effects/SnowAccumulation.h"
 #include "Effects/Snow.h"
@@ -191,14 +193,14 @@ public:
 		SnowAccumulationEffect*	SnowAccumulation;
 		ShadowsExteriorEffect*	ShadowsExteriors;
 		ShadowsInteriorsEffect*	ShadowsInteriors;
-		EffectRecord*		PointShadows;
-		EffectRecord*		PointShadows2;
+		PointShadowsEffect*		PointShadows;
+		PointShadows2Effect*	PointShadows2;
 		SunShadowsEffect*		SunShadows;
 		UnderwaterEffect*		Underwater;
 		VolumetricFogEffect*	VolumetricFog;
 		WaterLensEffect*		WaterLens;
 		WetWorldEffect*			WetWorld;
-		EffectsList			ExtraEffects;
+		EffectsList				ExtraEffects;
 	};
 
 	EffectsStruct			Effects;
