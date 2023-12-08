@@ -34,8 +34,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["Sharpening"] = (EffectRecord**)&TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
 	TheShaderManager->EffectsNames["ShadowsInteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsInteriors;
-	TheShaderManager->EffectsNames["PointShadows"] = &TheShaderManager->Effects.PointShadows;
-	TheShaderManager->EffectsNames["PointShadows2"] = &TheShaderManager->Effects.PointShadows2;
+	TheShaderManager->EffectsNames["PointShadows"] = (EffectRecord**)&TheShaderManager->Effects.PointShadows;
+	TheShaderManager->EffectsNames["PointShadows2"] = (EffectRecord**)&TheShaderManager->Effects.PointShadows2;
 	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
 	TheShaderManager->EffectsNames["Specular"] = (EffectRecord**)&TheShaderManager->Effects.Specular;
 	TheShaderManager->EffectsNames["Snow"] = (EffectRecord**)&TheShaderManager->Effects.Snow;
@@ -955,6 +955,8 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
 	if (!memcmp(Name, "Specular", 9)) return new SpecularEffect();
 	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
+	if (!memcmp(Name, "PointShadows", 13)) return new PointShadowsEffect();
+	if (!memcmp(Name, "PointShadows2", 14)) return new PointShadows2Effect();
 	if (!memcmp(Name, "ShadowsInteriors", 17)) return new ShadowsInteriorsEffect();
 	if (!memcmp(Name, "SnowAccumulation", 17)) return new SnowAccumulationEffect();
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
