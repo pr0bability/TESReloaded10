@@ -1,5 +1,6 @@
 #pragma once
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
+#include <numbers>
 
 
 class Animator {
