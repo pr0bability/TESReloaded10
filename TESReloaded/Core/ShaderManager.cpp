@@ -168,7 +168,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	else if (!memcmp(Name, "GRASS", 5)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("Grass")) return NULL;
 	}
-	else if (!memcmp(Name, "Tonemapping", 3) || !memcmp(Name, "ISHDR", 5)) {
+	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
 		// load tonemapping shaders, with different names between New vegas and Oblivion
 		if (!TheSettingManager->GetMenuShaderEnabled("Tonemapping")) return NULL;
 	}
@@ -1044,6 +1044,7 @@ void ShaderManager::UpdateConstants() {
 	if (TheSettingManager->SettingsChanged) {
 		// sky settings are used in several shaders whether the shader is active or not
 		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
+		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
 
 		ShaderConst.Sky.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
 		ShaderConst.Sky.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
@@ -1899,6 +1900,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
 
+
+
 	// render a shadow pass for point lights
 	if ((isExterior && Effects.ShadowsExteriors->Enabled) || (!isExterior && Effects.ShadowsInteriors->Enabled)) {
 		// separate lights in 2 batches
@@ -1933,6 +1936,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
+	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	// final adjustments, pre-tonemap once Contrast is adapted
 	//Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
@@ -1970,7 +1974,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
 	if (!isUnderwater && isExterior) {
-		Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 		if (ShaderConst.Rain.RainData.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		if (ShaderConst.Snow.SnowData.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}

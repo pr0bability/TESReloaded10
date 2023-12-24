@@ -77,7 +77,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     final = pows(final.rgb, 1.0/max(1.0, TESR_HDRData.w)); // delinearise
     
     final = lerp(final.rgb, Cinematic.z * (final.rgb - Cinematic.y) + Cinematic.y, TESR_HDRData.z * TESR_ToneMapping.y); // apply contrast from Cinematic, scaled by modifier
-    final = lerp(final.rgb, Fade.rgb, Fade.a); // apply night eye and fade, gamma-space but vanilla-accurate
+    final = lerp(final.rgb, Fade.rgb, Fade.a); // apply night eye and fade, gamma-space but vanilla accurate
 
     float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
     OUT.color_0.rgb = (background.w == 0 ? background.rgb : final); //only tonemap the area within the mask
