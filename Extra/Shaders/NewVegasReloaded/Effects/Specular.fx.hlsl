@@ -97,26 +97,34 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	float depth = smoothstep(0, farZ / 4, readDepth(IN.UVCoord));
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float4 light = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	float luminance = luma(color);
-	float sunLuma = luma(TESR_SunColor);
-	float invLuma = 1 - sunLuma;
-	float sunSetFade = 1 - TESR_ShadowFade.x;
+    color.rgb = pows(color.rgb, 2.2); // linearise
+    light.rgb = pows(light.rgb, 2.2); // linearise
 
 	float4 result = color;
 
+	float4 skyColor_t = float4(pows(TESR_SkyColor.rgb, 2.2),TESR_SkyColor.a);
+	float4 horizonColor = float4(pows(TESR_HorizonColor.rgb, 2.2),TESR_HorizonColor.a);
+	float4 sunColor = float4(pows(TESR_SunColor.rgb, 2.2),TESR_SunColor.a);
+
+	float luminance = luma(color);
+	float sunLuma = luma(sunColor);
+	float invLuma = 1 - sunLuma;
+	float sunSetFade = 1 - TESR_ShadowFade.x;
+
 	// skylight
-	float4 skyColor = lerp(TESR_SkyColor, TESR_HorizonColor, depth);
+	float4 skyColor = lerp(skyColor_t, horizonColor, depth);
 	skyColor = lerp(luma(skyColor).rrrr, skyColor, SkySaturation);
 
 	// fresnel
-	result += light.b * color * saturate(luminance * 2) * FresnelStrength * invLuma * sunSetFade; //fresnel scales with the luminance, but reaches full power at half max luminance
+	result += light.b * color * luminance * 2 * FresnelStrength * max(0.0,invLuma * sunSetFade); //fresnel scales with the luminance, but reaches full power at half max luminance
 
 	// return skyColor;
-	result += SkyStrength * light.g * skyColor * 0.1 * saturate(smoothstep(0.4, 0, luminance)) * invLuma * sunSetFade; // skylight is more pronounced in darker areas
+	result += SkyStrength * light.g * skyColor * 0.1 * smoothstep(0.4, 0, luminance) * max(0.0,invLuma * sunSetFade); // skylight is more pronounced in darker areas
 
 	// specular
-	result += lerp(0, light.r * SpecStrength * TESR_SunColor * color, invlerps(LumTreshold * sunLuma, 1, luminance)); // specular will boost areas above treshold
+	result += lerp(0, light.r * SpecStrength * 10.0 * sunColor * color, invlerps(LumTreshold * sunLuma, 1, luminance)); // specular will boost areas above treshold
 
+    result.rgb = pows(result.rgb, 1.0/2.2); // delinearise
 	return float4 (result.rgb, 1.0f);
 }
  

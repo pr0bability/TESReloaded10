@@ -57,11 +57,15 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 	float2 uv = IN.UVCoord / scale;
 	clip((uv <= 1) - 1);
 
+    float3 sunColor = pows(TESR_SunColor.rgb, 2.2); // linearise
+
 	float sunHeight = smoothstep(0, 0.3, dot(TESR_SunDirection.xyz, float3(0, 0, 1))); // fade flare boost to nothing over sunrise/sunset
 
 	float depth = (readDepth(uv) / farZ) > 0.98; //only pixels belonging to the sky will register
-	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.rgb, normalize(reconstructPosition(uv))), 18) * 500 * sunHeight; // fake sunglare computed from light direction
-	float3 color = (tex2D(TESR_SourceBuffer, uv).rgb + sunGlare * TESR_SunColor.rgb) * depth;
+	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(uv))), 18) * 500 * sunHeight; // fake sunglare computed from light direction
+	float3 color = tex2D(TESR_SourceBuffer, uv).rgb;
+    color = pows(color, 2.2); // linearise
+	color = (color + sunGlare * sunColor) * depth;
 
 	return float4(color, 1.0f);
 }
@@ -80,6 +84,7 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, -1) * TESR_ReciprocalResolution.xy).rgb);
 	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb);
 	color /= 4;
+    color.rgb = pows(color.rgb, 2.2); // linearise
 
 	float threshold = lumTreshold; // scaling the luma treshold with sun intensity
 	float brightness = luma(color);
@@ -87,7 +92,9 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 
 	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
 
-	return float4(saturate(bloom * color * 100), 1.0f);
+	color = saturate(bloom * color * 100);
+
+	return float4(color.rgb,1.0f);
 }
 
 
@@ -118,11 +125,13 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 		samplePos = saturate(uv + (dir * length / float2(1, raspect))); // apply aspect ratio correction
 
 		float doStep = (i <= maxStep && samplePos.x > 0 && samplePos.y > 0 && samplePos.x < 1 && samplePos.y < 1); // check if we haven't overshot the sun position or exited the screen
-		
-		color += tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
+		float4 newColor = tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
+    	newColor.rgb = pows(newColor.rgb, 2.2); // linearise
+		color += newColor;
 		total += doStep;
 	}
 	color /= total;
+    color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
 
 	return float4(color.rgb, 1);
 }
@@ -134,7 +143,12 @@ float4 Combine(VSOUT IN) : COLOR0
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float2 uv = IN.UVCoord;
 	float3 eyeDir = normalize(reconstructPosition(uv));
+    color.rgb = pows(color.rgb, 2.2); // linearise
 
+    float3 sunColor = pows(TESR_SunColor.rgb, 2.2); // linearise
+    float3 godRayColor = pows(TESR_GodRaysRayColor.rgb, 2.2); // linearise
+	float3 sunDir = pows(TESR_SunDirection.xyz,2.2);
+	
 	// calculate vector from pixel to sun along which we'll sample
 	float2 sunPos = projectPosition(TESR_ViewSpaceLightDir.xyz * farZ).xy;
 	float2 blurDirection = (sunPos.xy - uv) * float2(1.0f, raspect); // apply aspect ratio correction
@@ -142,6 +156,7 @@ float4 Combine(VSOUT IN) : COLOR0
 	uv *= scale;
 
 	float4 rays = tex2D(TESR_RenderedBuffer, uv);
+    rays.rgb = pows(rays.rgb, 2.2); // linearise
 
 	// attentuate intensity with distance from sun to fade the edges and reduce sunglare
 	float heightAttenuation = lerp(1, lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1)))), TESR_GodRaysData.w); // when the sun is high and timeEnabled is on, godrays strength is reduced
@@ -149,16 +164,18 @@ float4 Combine(VSOUT IN) : COLOR0
 	float attenuation = shade(TESR_ViewSpaceLightDir.xyz, eyeDir) * glareAttenuation * heightAttenuation;
 
 	// rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
-	rays.rgb *= multiplier * lerp(TESR_SunColor.rgb, TESR_GodRaysRayColor.rgb, TESR_GodRaysRayColor.w);
-	rays = saturate(rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1)));
+	rays.rgb *= multiplier * lerp(sunColor, godRayColor, TESR_GodRaysRayColor.w);
+	rays = rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1));
 
 	// reduce banding by dithering areas impacted by the rays
-	float maxDitherLuma = 0.4;
-	bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
+	float maxDitherLuma = 0.05; // 0.2 ^ 2.2, rounded down
+	bool useDither = (rays.r + rays.g + rays.b > 0) && (pows(tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)),2.2).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
 	uv /= TESR_ReciprocalResolution.xy;
 	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
-	return float4(color.rgb + rays.rgb, 1);
+	color.rgb = color.rgb + rays.rgb;
+    color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
+	return float4(color.rgb, 1);
 }
  
 technique

@@ -241,7 +241,7 @@ float3 VTLottes(float3 color, float contrast, float midOut, float midIn, float h
     // then process ratio
 
     // probably want send these pre-computed (so send over saturation/crossSaturation as a constant)
-    float crosstalk = max(1.0,crossTalk * 3.0); // controls amount of channel crosstalk
+    float crosstalk = max(1.0,crossTalk * 4.0); // controls amount of channel crosstalk
     float saturation = contrast; // full tonal range saturation control
     float crossSaturation = contrast * (64.0 / crosstalk); // crosstalk saturation
 
