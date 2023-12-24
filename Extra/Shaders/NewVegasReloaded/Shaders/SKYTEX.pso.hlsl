@@ -129,7 +129,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         float2 normal2D = finalColor.xy; // normal x and y are in red and green, blue is reconstructed
         float3 normal = getNormal(normal2D, -eyeDir); // reconstruct world normal from red and green
 
-        greyScale = lerp(TESR_CloudData.w, 1, finalColor.z); // greyscale is stored in blue channel
+        greyScale = lerp(TESR_CloudData.w, 1.0f, finalColor.z); // greyscale is stored in blue channel
         float3 ambient = skyColor * greyScale * lerp(0.5, 0.7, sunDir); // fade ambient with sun direction
         float3 diffuse = compress(dot(normal, TESR_SunPosition.xyz)) * sunColor * (1 - luma(ambient)) * lerp(0.8, 1, sunDir); // scale diffuse if ambient is high
         float3 fresnel = pows(1 - shade(-eyeDir, normal), 4) * pows(saturate(expand(sunDir)), 2) * shade(normal, up) * (sunColor + skyColor) * 0.2;
@@ -139,8 +139,8 @@ VS_OUTPUT main(VS_INPUT IN) {
         // finalColor.rgb = selectColor(TESR_DebugVar.x, finalColor, ambient, diffuse, fresnel, bounce, scattering, sunColor, skyColor, normal, float3(IN.TexUV, 1));
     } else {
         // simply tint the clouds
-        float sunInfluence = 1 - pow(sunDir, 3.0);
-        float3 cloudTint = lerp(pow(TESR_SkyLowColor.rgb, 5.0), sunColor, saturate(sunInfluence * saturate(greyScale))).rgb;
+        float sunInfluence = 1 - pows(sunDir, 3.0);
+        float3 cloudTint = lerp(pows(TESR_SkyLowColor.rgb, 2.2), sunColor, saturate(sunInfluence * saturate(greyScale))).rgb;
         cloudTint = lerp(cloudTint, white.rgb, sunHeight * TESR_SunAmount.x); // tint the clouds less when the sun is high in the sky
 
         float dayLight = saturate(luma(sunColor));
@@ -149,6 +149,6 @@ VS_OUTPUT main(VS_INPUT IN) {
         finalColor.rgb += scattering;
     }
     
-    OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z) * TESR_SunsetColor.w;
+    OUT.color_0 = float4(finalColor.rgb * IN.color_0.rgb * Params.y, finalColor.w * IN.color_0.a * TESR_CloudData.z) * TESR_SunsetColor.w * 0.915f;
     return OUT;
 };

@@ -168,9 +168,9 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	else if (!memcmp(Name, "GRASS", 5)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("Grass")) return NULL;
 	}
-	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
+	else if (!memcmp(Name, "Tonemapping", 3) || !memcmp(Name, "ISHDR", 5)) {
 		// load tonemapping shaders, with different names between New vegas and Oblivion
-		if (!TheSettingManager->GetMenuShaderEnabled("HDR")) return NULL;
+		if (!TheSettingManager->GetMenuShaderEnabled("Tonemapping")) return NULL;
 	}
 	else if (!memcmp(Name, "PAR", 3)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("POM")) return NULL;
@@ -969,10 +969,10 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunTiming.w = WorldSky->GetSunsetColorEnd();
 
 	// fake sunset time tracking with more time given before sunrise/sunset
-	float sunRiseLight = step(SunriseStart - 1.0, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
-	float sunSetLight = step(SunsetEnd + 1.0, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+	float sunRiseLight = step(SunriseStart - 1.0f, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
+	float sunSetLight = step(SunsetEnd + 1.0f, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	float newDayLight = sunRiseLight * sunSetLight;
-	float transitionCurve = smoothStep(0, 0.6, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
+	float transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
 	bool isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
 	if (newDayLight == dayLight) isDayTimeChanged = false;
@@ -989,11 +989,11 @@ void ShaderManager::UpdateConstants() {
 
 	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
-	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1;
+	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	ShaderConst.ShadowFade.x = 0; // Fade 1.0 == no shadows
 	if (isExterior) {
-		ShaderConst.ShadowFade.x = smoothStep(0.3, 0, abs(dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
+		ShaderConst.ShadowFade.x = smoothStep(0.3f, 0.0f, abs(dayLight - 0.5f)); // fade shadows to 0 at sunrise/sunset.  
 
 		if (isDayTime) {
 			// during the day, track the sun mesh position instead of the lighting direction in exteriors
@@ -1004,18 +1004,18 @@ void ShaderManager::UpdateConstants() {
 			// moonphase goes from 0 to 8
 			float MoonPhase = (fmod(DaysPassed, 8 * currentClimate->phaseLength & 0x3F)) / (currentClimate->phaseLength & 0x3F);
 
-			float PI = 3.1416; // use cos curve to fade moon light shadows strength
+			float PI = std::numbers::pi_v<float>; // use cos curve to fade moon light shadows strength
 			MoonPhase = std::lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
 
 			// map MoonVisibility to MinNightDarkness/1 range
 			float nightMinDarkness = 1 - TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-			float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5 + 0.5);
-			ShaderConst.ShadowFade.x = lerp(MoonVisibility, 1.0, ShaderConst.ShadowFade.x);
+			float MoonVisibility = lerp(0.0, nightMinDarkness, cos(MoonPhase) * 0.5f + 0.5f);
+			ShaderConst.ShadowFade.x = lerp(MoonVisibility, 1.0f, ShaderConst.ShadowFade.x);
 		}
 
 		if (isDayTimeChanged) {
 			// pass the enabled/disabled property of the pointlight shadows to the shadowfade constant
-			const char* PointLightsSettingName = (isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
+			const char* PointLightsSettingName = (isDayTime > 0.5f) ? "UsePointShadowsDay" : "UsePointShadowsNight";
 			bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
 			ShaderConst.ShadowFade.z = usePointLights;
 		}
@@ -1036,7 +1036,7 @@ void ShaderManager::UpdateConstants() {
 	D3DXVec4Transform(&ShaderConst.ViewSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewMatrix);
 	D3DXVec4Normalize(&ShaderConst.ViewSpaceLightDir, &ShaderConst.ViewSpaceLightDir);
 
-	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5;
+	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5f;
 
 	isDayTime = smoothStep(0, 1, isDayTime); // smooth daytime progression
 	ShaderConst.SunAmount.x = isDayTime; 
@@ -1182,7 +1182,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Animators.WaterLensAnimator.switched = false;
 			// start the waterlens effect and animate it fading
 			ShaderConst.Animators.WaterLensAnimator.Initialize(1);
-			ShaderConst.Animators.WaterLensAnimator.Start(0.01, 0);
+			ShaderConst.Animators.WaterLensAnimator.Start(0.01f, 0.0f);
 		}
 		ShaderConst.WaterLens.Percent = ShaderConst.Animators.WaterLensAnimator.GetValue();
 		ShaderConst.WaterLens.Time.w = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Amount") * ShaderConst.WaterLens.Percent;
@@ -1195,14 +1195,14 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.WetWorld.Data.y = 1.0f;
 			ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase"), 1);
 			ShaderConst.Animators.RainAnimator.switched = true;
-			ShaderConst.Animators.RainAnimator.Start(0.05, 1);
+			ShaderConst.Animators.RainAnimator.Start(0.05f, 1.0f);
 		}
 		else if (!isRainy && ShaderConst.Animators.RainAnimator.switched) {
 			// it just stopped raining
 			ShaderConst.WetWorld.Data.y = 0.0f;
 			ShaderConst.Animators.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease"), 0);
 			ShaderConst.Animators.RainAnimator.switched = false;
-			ShaderConst.Animators.RainAnimator.Start(0.07, 0);
+			ShaderConst.Animators.RainAnimator.Start(0.07f, 0.0f);
 		}
 		ShaderConst.WetWorld.Data.x = ShaderConst.Animators.RainAnimator.GetValue();
 		ShaderConst.WetWorld.Data.z = ShaderConst.Animators.PuddlesAnimator.GetValue();
@@ -1215,15 +1215,15 @@ void ShaderManager::UpdateConstants() {
 			// Snow fall
 			if (isSnow && ShaderConst.Animators.SnowAnimator.switched == false) {
 				// it just started snowing
-				ShaderConst.Animators.PuddlesAnimator.Start(0.3, 0); // fade out any puddles if they exist
+				ShaderConst.Animators.PuddlesAnimator.Start(0.3f, 0.0f); // fade out any puddles if they exist
 				ShaderConst.Animators.SnowAnimator.switched = true;
 				ShaderConst.Animators.SnowAnimator.Initialize(0);
-				ShaderConst.Animators.SnowAnimator.Start(0.5, 1);
+				ShaderConst.Animators.SnowAnimator.Start(0.5f, 1.0f);
 			}
 			else if (!isSnow && ShaderConst.Animators.SnowAnimator.switched) {
 				// it just stopped snowing
 				ShaderConst.Animators.SnowAnimator.switched = false;
-				ShaderConst.Animators.SnowAnimator.Start(0.2, 0);
+				ShaderConst.Animators.SnowAnimator.Start(0.2f, 0.0f);
 			}
 			ShaderConst.Snow.SnowData.x = ShaderConst.Animators.SnowAnimator.GetValue();
 
@@ -1442,25 +1442,25 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
-		if (TheSettingManager->GetMenuShaderEnabled("HDR")) {
-			ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.HDR", "PointLightMultiplier", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMapping", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMappingBlur", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "ToneMappingColor", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Linearization", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomStrength", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "BloomExponent", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "WeatherModifier", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "WhitePoint", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "TonemappingMode", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "Exposure", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "Saturation", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "Gamma", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteContrast", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteBrightness", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteMidpoint", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "LotteShoulder", isExterior, transitionCurve);
-			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.HDR", "SkyMultiplier", isExterior, transitionCurve);
+		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping")) {
+			ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "PointLightMultiplier", isExterior, transitionCurve);
+			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "HighlightSaturation", isExterior, transitionCurve);
+			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "WeatherContrast", isExterior, transitionCurve);
+			ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "ToneMappingColor", isExterior, transitionCurve);
+			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Linearization", isExterior, transitionCurve);
+			ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "BloomStrength", isExterior, transitionCurve);
+			ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "BloomExponent", isExterior, transitionCurve);
+			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "WeatherModifier", isExterior, transitionCurve);
+			ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapWhitePoint", isExterior, transitionCurve);
+			ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemappingMode", isExterior, transitionCurve);
+			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Exposure", isExterior, transitionCurve);
+			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Saturation", isExterior, transitionCurve);
+			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Gamma", isExterior, transitionCurve);
+			ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapContrast", isExterior, transitionCurve);
+			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapBrightness", isExterior, transitionCurve);
+			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapMidpoint", isExterior, transitionCurve);
+			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapShoulder", isExterior, transitionCurve);
+			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", isExterior, transitionCurve);
 		}
 		else {
 			ShaderConst.Sky.SunsetColor.w = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
@@ -1933,6 +1933,9 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
+
+	// final adjustments, pre-tonemap once Contrast is adapted
+	//Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
