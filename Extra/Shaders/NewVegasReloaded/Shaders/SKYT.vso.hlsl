@@ -45,14 +45,13 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.rgb = (IN.color_0.r * BlendColor[0].rgb) + (BlendColor[1].rgb * IN.color_0.g) + (IN.color_0.b * BlendColor[2].rgb);
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
-
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
     OUT.position.z *= 0.99998; // place in front of the moon mask that hides the stars
 
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1.xy = IN.texcoord_0.xy;
 
-    OUT.location = IN.position.xyz;
+    OUT.location = OUT.position.xyz;
     OUT.color_1 = float4(1, 0, 0, 1); // identify this object as being the sun/sunglare/moon
 
     return OUT;
