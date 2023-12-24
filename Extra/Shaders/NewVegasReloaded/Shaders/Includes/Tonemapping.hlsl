@@ -225,7 +225,7 @@ float3 VTLottes(float3 color, float contrast, float midOut, float midIn, float h
 {
     hdrMax = max(1.0, hdrMax * 100.0);
     contrast = max(0.01, contrast * 1.35);
-    shoulder = saturate(0.993); // shoulder should not! exceed 1.0
+    shoulder = saturate(shoulder * 0.993); // shoulder should not! exceed 1.0
     midIn = max(0.01, midIn * 0.18);
     midOut = max(0.01, midOut * 0.18);
 	
@@ -264,7 +264,7 @@ float3 Lottes(float3 x, float contrast, float midOut, float midIn, float hdrMax,
 {
     hdrMax = max(1.0, hdrMax * 100.0);
     contrast = max(0.01, contrast * 1.35);
-    shoulder = saturate(0.993); // shoulder should not! exceed 1.0
+    shoulder = saturate(shoulder * 0.993); // shoulder should not! exceed 1.0
     midIn = max(0.01, midIn * 0.18);
     midOut = max(0.01, midOut * 0.18);
 
