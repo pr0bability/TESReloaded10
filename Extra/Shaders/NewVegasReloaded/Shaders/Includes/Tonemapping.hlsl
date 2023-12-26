@@ -197,7 +197,7 @@ float3 agx(float3 val)
 // https://gist.github.com/vtastek/935be12fb8d87adda751b5276fd88f0c
 // Lottes (2016) adapted by vtastek
 
-
+/*
 float ColToneB(float hdrMax, float contrast, float shoulder, float midIn, float midOut)
 {
     return
@@ -215,12 +215,13 @@ float ColToneC(float hdrMax, float contrast, float shoulder, float midIn, float 
 }
 
 // General tonemapping operator, p := {contrast,shoulder,b,c}.
-float ColTone(float x, float4 p)
+float ColTone(float3 x, float4 p)
 {
-    float z = pows(x, p.r);
+    float3 z = pows(x, p.r);
     return z / (pows(z, p.g) * p.b + p.a);
 }
 #define CMAX 1.6e+6f
+#define EPS 1e-6f
 float3 VTLottes(float3 color, float contrast, float midOut, float midIn, float hdrMax, float shoulder, float crossTalk)
 {
     hdrMax = max(1.0, hdrMax * 100.0);
@@ -228,34 +229,75 @@ float3 VTLottes(float3 color, float contrast, float midOut, float midIn, float h
     shoulder = saturate(shoulder * 0.993); // shoulder should not! exceed 1.0
     midIn = max(0.01, midIn * 0.18);
     midOut = max(0.01, midOut * 0.18);
+    //static const float hdrMax = 100.0; // How much HDR range before clipping. HDR modes likely need this pushed up to say 25.0.
+   // float contrast = 1.7; // Use as a baseline to tune the amount of contrast the tonemapper has.
+    //static const float shoulder = 0.993; // Likely don?t need to mess with this factor, unless matching existing tonemapper is not working well..
+    //static const float midIn = 0.18; // most games will have a {0.0 to 1.0} range for LDR so midIn should be 0.18.
+   // float midOut = 0.1818; // 0.23/(-0.760 + 2.896*contrast - 1.980*contrast*contrast + 0.673*contrast*contrast*contrast); // Use for LDR. For HDR10 10:10:10:2 use maybe 0.18/25.0 to start. For scRGB, I forget what a good starting point is, need to re-calculate.
 	
     float b = ColToneB(hdrMax, contrast, shoulder, midIn, midOut);
     float c = ColToneC(hdrMax, contrast, shoulder, midIn, midOut);
 
-    #define EPS 1e-6f
-    float peak = max(color.r, max(color.g, color.b));
+    float3 peak = max(color.r, max(color.g, color.b));
     peak = min(CMAX, max(EPS, peak));
 
     float3 ratio = min(CMAX, color / peak);
-    peak = ColTone(peak, float4(contrast, shoulder, b, c));
-    // then process ratio
 
-    // probably want send these pre-computed (so send over saturation/crossSaturation as a constant)
-    float crosstalk = max(1.0,crossTalk * 4.0); // controls amount of channel crosstalk
+    float lum = dot(color, float3(0.5, 0.4, 0.33));
+    float gray = min(color.r, min(color.g, color.b));
+	gray = max(0.0, gray);
+    peak += min(peak, gray);
+    peak *= 0.5;
+    peak *= 1.0 + 1.666 * max(0, (peak - lum) / peak);
+
+    peak = ColTone(peak, float4(contrast, shoulder, b, c) );
+
+    //float crosstalk = max(1.0,crossTalk * 4.0); // controls amount of channel crosstalk
     float saturation = contrast; // full tonal range saturation control
-    float crossSaturation = contrast * (64.0 / crosstalk); // crosstalk saturation
+    float crossSaturation = contrast * 64.0; // crosstalk saturation
+    //float crossSaturation = contrast * (64.0 / crosstalk); // crosstalk saturation
 
     float3 rgb = 1.0;
 
     // wrap crosstalk in transform
-    ratio = pows(abs(ratio), saturation / crossSaturation);
-    ratio = lerp(ratio, rgb, pows(peak, crosstalk));
-    ratio = pows(min(CMAX, ratio), crossSaturation);
+    ratio = pow(abs(ratio + 0.11) * 0.90909, saturation / crossSaturation);
+    ratio = lerp(ratio, rgb, pow(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
+    //ratio = lerp(ratio, rgb, pows(peak, crosstalk));
+    ratio = pow(min(1.0, ratio), crossSaturation);
 
     // then apply ratio to peak
+    float3 lincol = color;
     color = peak * ratio;
-
     return color;
+}*/
+
+// Code:
+float3 AMDLottes(float3 color, float contrast, float b, float c, float shoulder, float crosstalk)
+{
+    float3 peak = max(color.r, max(color.g, color.b));
+    peak = min(1.6e+6f, max(1e-6f, peak));
+
+    float3 ratio = min(1.6e+6f, color / peak);
+
+    float lum = dot(color, float3(0.5, 0.4, 0.33));
+    float gray = min(color.r, min(color.g, color.b));
+	gray = max(0.0, gray);
+    peak += min(peak, gray);
+    peak *= 0.5;
+    peak *= 1.0 + 1.666 * max(0, (peak - lum) / peak);
+
+    float3 z = pows(peak, contrast);
+    peak = z / (pows(z, b) * shoulder + c);
+
+    crosstalk = max(1.0,crosstalk); // controls amount of channel crosstalk
+    float saturation = contrast; // crosstalk saturation
+    float crossSaturation = contrast * (64.0 / crosstalk); // crosstalk saturation
+    // wrap crosstalk in transform
+    ratio = pows(abs(ratio + 0.11) * 0.90909, saturation / crossSaturation);
+    ratio = lerp(ratio, 1.0, pows(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
+    ratio = pows(min(1.0, ratio), crossSaturation);
+
+    return peak * ratio;
 }
 
 // https://gpuopen.com/wp-content/uploads/2016/03/GdcVdrLottes.pdf
@@ -318,51 +360,32 @@ float3 Uchimura(float3 x, float contrast, float brightness, float midIn, float h
     return T * w0 + L * w1 + S * w2;
 }
 
-float3 tonemap(float3 color)
-{
 
-    if (TESR_HDRData.x == 0)
+float3 tonemap(float3 color, float contrast, float midOut, float midIn, float shoulder, float hdrMax, float highlightSaturation)
+{
+    switch(int(abs(TESR_HDRData.x)))
     {
-        return color;
-    }
-    else if (TESR_HDRData.x == 1)
-    {
-        return max(0.0, VTLottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w, TESR_ToneMapping.x));
-    }
-    else if (TESR_HDRData.x == 2)
-    {
-        return max(0.0, Lottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w));
-    }
-    else if (TESR_HDRData.x == 3)
-    {
-        return ReinhardExtended(color, TESR_HDRBloomData.w);
-    }
-    else if (TESR_HDRData.x == 4)
-    {
-        return ReinhardJodie(color);
-    }
-    else if (TESR_HDRData.x == 5)
-    {
-        return ACESFilm(color);
-    }
-    else if (TESR_HDRData.x == 6)
-    {
-        return ACESFitted(color);
-    }
-    else if (TESR_HDRData.x == 7)
-    {
-        return Uncharted2Tonemap(color, TESR_LotteData.y, TESR_HDRBloomData.w);
-    }
-    else if (TESR_HDRData.x == 8)
-    {
-        return Uchimura(color, TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w);
-    }
-    else if (TESR_HDRData.x == 9)
-    {
-        return agx(color);
-    }
-    else
-    {
-        return color;
+        case 0:
+            return color; 
+        case 1:
+            return max(0.0, AMDLottes(min(1.6e+6f, color), contrast, midIn, midOut, shoulder, highlightSaturation));
+        case 2:
+            return max(0.0, Lottes(min(1.6e+6f, color), contrast, midOut, midIn, hdrMax, shoulder));
+        case 3:
+            return ReinhardExtended(color, hdrMax);
+        case 4:
+            return ReinhardJodie(color);
+        case 5:
+            return ACESFilm(color);
+        case 6:
+            return ACESFitted(color);
+        case 7:
+            return Uncharted2Tonemap(color, midOut, hdrMax);
+        case 8:
+            return Uchimura(color, contrast, midOut, midIn, hdrMax, shoulder);
+        case 9:
+            return agx(color);
+        default:
+            return color; 
     }
 }
