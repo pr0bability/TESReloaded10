@@ -84,7 +84,6 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, -1) * TESR_ReciprocalResolution.xy).rgb);
 	color += saturate(tex2D(TESR_RenderedBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy).rgb);
 	color /= 4;
-    color.rgb = pows(color.rgb, 2.2); // linearise
 
 	float threshold = lumTreshold; // scaling the luma treshold with sun intensity
 	float brightness = luma(color);
@@ -125,13 +124,10 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 		samplePos = saturate(uv + (dir * length / float2(1, raspect))); // apply aspect ratio correction
 
 		float doStep = (i <= maxStep && samplePos.x > 0 && samplePos.y > 0 && samplePos.x < 1 && samplePos.y < 1); // check if we haven't overshot the sun position or exited the screen
-		float4 newColor = tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
-    	newColor.rgb = pows(newColor.rgb, 2.2); // linearise
-		color += newColor;
+		color += tex2D(TESR_RenderedBuffer, samplePos * scale) * doStep;
 		total += doStep;
 	}
 	color /= total;
-    color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
 
 	return float4(color.rgb, 1);
 }
@@ -147,7 +143,6 @@ float4 Combine(VSOUT IN) : COLOR0
 
     float3 sunColor = pows(TESR_SunColor.rgb, 2.2); // linearise
     float3 godRayColor = pows(TESR_GodRaysRayColor.rgb, 2.2); // linearise
-	float3 sunDir = pows(TESR_SunDirection.xyz,2.2);
 	
 	// calculate vector from pixel to sun along which we'll sample
 	float2 sunPos = projectPosition(TESR_ViewSpaceLightDir.xyz * farZ).xy;
@@ -168,10 +163,10 @@ float4 Combine(VSOUT IN) : COLOR0
 	rays = rays * attenuation * shade(TESR_ViewSpaceLightDir.xyz, float3(0, 0, 1));
 
 	// reduce banding by dithering areas impacted by the rays
-	float maxDitherLuma = 0.05; // 0.2 ^ 2.2, rounded down
-	bool useDither = (rays.r + rays.g + rays.b > 0) && (pows(tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)),2.2).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
-	uv /= TESR_ReciprocalResolution.xy;
-	rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
+	//float maxDitherLuma = 0.05; // 0.2 ^ 2.2, rounded down
+	//bool useDither = (rays.r + rays.g + rays.b > 0) && (pows(tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)),2.2).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
+	//uv /= TESR_ReciprocalResolution.xy;
+	//rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
 	color.rgb = color.rgb + rays.rgb;
     color.rgb = pows(color.rgb, 1.0/2.2); // delinearise

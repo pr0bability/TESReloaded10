@@ -17,7 +17,7 @@ sampler2D TESR_PointShadowBuffer : register(s2)  = sampler_state { ADDRESSU = CL
 sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 
-static const float DARKNESS = 1-TESR_ShadowData.y;
+static const float DARKNESS = max(0.0,1-TESR_ShadowData.y);
 
 struct VSOUT
 {
@@ -68,22 +68,24 @@ float4 Shadow(VSOUT IN) : COLOR0
 	Shadow.r = lerp(TESR_ShadowFade.x, 1.0f, Shadow.r); // fade shadows to light when sun is low
 
 	// scale shadows strength to ambient before adding attenuation for pointlights (ShadowFade.z means point Lights are on)
-	float ambient = lerp(1, luma(TESR_SunAmbient), DARKNESS * TESR_ShadowFade.z);
+	float ambient = lerp(1, luma(pows(TESR_SunAmbient,2.2)), DARKNESS * TESR_ShadowFade.z);
 	Shadow.r = lerp(0, ambient, Shadow.r); //scale brightest areas to the ambient so it can be lit further with attenuation
 	Shadow.r += Shadow.g; // Apply poing light attenuation (includes point light shadows)
 
 	Shadow.r = lerp(DARKNESS, 1.0, Shadow.r); 	// brighten shadow value from 0 to darkness from config value
 
-	// No point for the shadow buffer to be beyond the 0-1 range
 	Shadow.r = saturate(Shadow.r);
 
 #if viewshadows == 1
 	return Shadow;
 #endif
-
+    color.rgb = pows(color.rgb, 2.2); // linearise
+    float4 skyColor = float4(pows(TESR_SkyColor.rgb, 2.2),TESR_SkyColor.w); // linearise
 	// tint shadowed areas with Sky color before blending
-	float4 colorShadow = luma(color.rgb) * (Shadow.r) * TESR_SkyColor;
-	return float4(lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.2)).rgb, 1); // bias the transition between the 2 colors to make it less noticeable
+	float4 colorShadow = luma(color.rgb) * (Shadow.r) * skyColor;
+	colorShadow.rgb = lerp(colorShadow, color * Shadow.r, Shadow.r).rgb;// bias the transition between the 2 colors to make it less noticeable
+    colorShadow.rgb = pows(max(0.0,colorShadow.rgb), 1.0/2.2); // delinearise
+	return float4(colorShadow.rgb, 1.0); 
 }
 
 
@@ -93,3 +95,4 @@ technique {
 		PixelShader = compile ps_3_0 Shadow();
 	}
 }
+ 

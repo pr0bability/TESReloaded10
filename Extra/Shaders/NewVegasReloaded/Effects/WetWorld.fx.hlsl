@@ -109,7 +109,7 @@ float4 WetMap (VSOUT IN ) : COLOR0
 {
 	// sample the ortho map and detect pockets by sampling around the center and comparing depth
 	float2 uv = IN.UVCoord;
-	float4 color = tex2D(TESR_SourceBuffer, uv);
+	//float4 color = tex2D(TESR_SourceBuffer, uv);
 	float bias = 0.000001;
 
 	float radius = 0.05 * TESR_WetWorldData.z;// radius will increase with rain status
@@ -146,6 +146,7 @@ float4 BlurWetMap(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius)
 float4 Wet( VSOUT IN ) : COLOR0
 {
 	float4 baseColor = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	baseColor.rgb = pows(baseColor.rgb, 2.2); //linearise
 
 	float depth = readDepth(IN.UVCoord);
 	float3 eyeDirection = toWorld(IN.UVCoord);
@@ -194,10 +195,11 @@ float4 Wet( VSOUT IN ) : COLOR0
 
 	// refract image through ripple normals
 	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
-	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord);
+	float4 rippleColor = pows(tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord),2.2); //linearise
 
 	// sample and strenghten the shadow map
-	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord).r / luma(TESR_SunAmbient), 5));
+	float3 sunAmbient = luma(pows(TESR_SunAmbient.rgb,2.2)); //linearise
+	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord).r / sunAmbient, 5));
 
 	// calculate sky color
     float sunHeight = shade(TESR_SunPosition.xyz, up);
@@ -217,9 +219,13 @@ float4 Wet( VSOUT IN ) : COLOR0
 	// transition between surface ripple and deeper puddles
 	puddleColor = lerp(rippleColor.rgb, puddleColor.rgb, puddlemask);
 
-	float3 color = lerp(puddleColor, fresnelColor, fresnel * specularMask);
-	color += specular * TESR_SunColor.rgb * 12 * specularMask;
+	float3 sunColor = pows(TESR_SunColor.rgb,2.2); //linearise
 
+	float3 color = lerp(puddleColor, fresnelColor, fresnel * specularMask);
+	color += specular * sunColor * 12 * specularMask;
+	
+	color = lerp(baseColor.rgb, color, LODfade);
+	color = pows(color, 1.0/2.2); //delinearise
     return float4(lerp(baseColor.rgb, color, LODfade), 1); // fade out puddles
 }
 

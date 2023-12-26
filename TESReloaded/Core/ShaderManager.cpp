@@ -1,5 +1,12 @@
 #define RESZ_CODE 0x7FA05000
 
+
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
+}
+
+#define pows(a, b)          (pow(abs(a), b) * sgn(a)) // no more pow/abs warning!
+
 /*
 * Constructor of Animator class. Starts an animator for a given value.
 */
@@ -1462,8 +1469,29 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapMidpoint", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapShoulder", isExterior, transitionCurve);
 			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", isExterior, transitionCurve);
+
+			if (ShaderConst.HDR.HDRData.x == 1.0) {
+				float hdrMax = max(1.0, ShaderConst.HDR.BloomData.w * 100.0);
+				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.4);
+				float shoulder = max(0.0,(min(1.0,ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0
+				float midIn = max(0.01, ShaderConst.HDR.LotteData.z * 0.18);
+				float midOut = max(0.01, (ShaderConst.HDR.LotteData.y * 0.18) / shoulder);
+				float colToneB = -((-pows(midIn, contrast) + (midOut * (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) -
+						pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut)) /
+						(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut)) /
+						(pows(midIn, contrast * shoulder) * midOut));
+
+				float colToneC = (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) - pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut) /
+					(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut);
+
+				ShaderConst.HDR.LotteData.x = contrast;
+				ShaderConst.HDR.LotteData.w = shoulder;
+				ShaderConst.HDR.LotteData.z = colToneB;
+				ShaderConst.HDR.LotteData.y = colToneC;
+			}
 		}
 		else {
+
 			ShaderConst.Sky.SunsetColor.w = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
 			ShaderConst.HDR.PointLightMult = 1.0;
 		}
@@ -1919,10 +1947,10 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-
 	if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+
+	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	if (isUnderwater) {
 		// underwater only effects
@@ -1937,9 +1965,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
-
-	// final adjustments, pre-tonemap once Contrast is adapted
-	//Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
