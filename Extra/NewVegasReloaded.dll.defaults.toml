@@ -294,7 +294,7 @@ Enabled = false                       # Not currently used. Replaces grass shade
 [_Shaders.GodRays.Main]
 DayMultiplier = 0.5                   # Strength of godrays during the day.
 LightShaftPasses = 8                  # Not used.
-Luminance = 0.7                       # Treshold for minimum luminosity of areas casting rays. Lower means more of the sky will cast rays.
+Luminance = 0.8                       # Treshold for minimum luminosity of areas casting rays. Lower means more of the sky will cast rays.
 NightMultiplier = 1.0                 # Strength of godrays during the night.
 RayDensity = 0.5                      # Curve for reduction of the intensity of godrays near the sunglare.
 RayIntensity = 1.0                    # Multiplier for the intensity of the bright areas being blurred to create the rays.
@@ -321,7 +321,7 @@ Gamma = 2.2                           # Gamma modifier to be applied after tonem
 Linearization = 2.2                   # Converts image to corrected linear space before tonemapping. 1.0 is non-linear, if so place Gamma at 1.0 as well
 SkyMultiplier = 1.0                   # Scales the brightness of the sky/sun textures. Requires Sky shader enabled
 WeatherModifier = 1.0                 # Influence of the vanilla weather modifiers (brightness, contrast, saturation)
-WeatherContrast = 0.25                # Influence of the vanilla contrast setting, applies post-tonemap. Scales atop WeatherModifier, can cause black crush
+WeatherContrast = 0.1                # Influence of the vanilla contrast setting, applies post-tonemap. Scales atop WeatherModifier, can cause black crush
 Saturation = 1.0                      # Saturation of the image before tonemapping
 ToneMappingColor = 1.0                # Changes the strength of the vanilla tint influence (not fades)
 TonemapContrast = 1.0                 # Contrast setting for Lottes, Uchimura
@@ -342,7 +342,7 @@ Gamma = 2.2                           # Gamma modifier to be applied after tonem
 Linearization = 2.2                   # Converts image to corrected linear space before tonemapping. 1.0 is non-linear, if so place Gamma at 1.0 as well
 SkyMultiplier = 1.0                   # Scales the brightness of the sky/sun textures. Requires Sky shader enabled
 WeatherModifier = 1.0                 # Influence of the vanilla weather modifiers (brightness, contrast, saturation)
-WeatherContrast = 0.25                # Influence of the vanilla contrast setting, applies post-tonemap. Scales atop WeatherModifier, can cause black crush notably in Interiors
+WeatherContrast = 0.1                # Influence of the vanilla contrast setting, applies post-tonemap. Scales atop WeatherModifier, can cause black crush notably in Interiors
 Saturation = 1.0                      # Saturation of the image before tonemapping
 ToneMappingColor = 1.0                # Changes the strength of the vanilla tint influence (not fades)
 TonemapContrast = 1.0                 # Contrast setting for Lottes, Uchimura
@@ -363,7 +363,7 @@ Gamma = 2.2                           # Gamma modifier to be applied after tonem
 Linearization = 2.2                   # Converts image to corrected linear space before tonemapping. 1.0 is non-linear, if so place Gamma at 1.0 as well
 SkyMultiplier = 1.0                   # Scales the brightness of the sky/sun textures. Requires Sky shader enabled
 WeatherModifier = 1.0                 # Influence of the vanilla weather modifiers (brightness, contrast, saturation)
-WeatherContrast = 0.25                # Influence of the vanilla contrast setting, applies post-tonemap. Scales atop WeatherModifier, can cause black crush notably in Interiors
+WeatherContrast = 0.1                # Influence of the vanilla contrast setting, applies post-tonemap. Scales atop WeatherModifier, can cause black crush notably in Interiors
 Saturation = 1.0                      # Saturation of the image before tonemapping
 ToneMappingColor = 1.0                # Changes the strength of the vanilla tint influence (not fades)
 TonemapContrast = 1.0                 # Contrast setting for Lottes, Uchimura
@@ -512,7 +512,7 @@ Trees = true                         # Wether to include Trees when rendering sh
 [_Shaders.ShadowsExteriors.Main]
 PostProcess = true                   # Wether to render shadows as a post process effect. Currently the only supported mode.
 BlurShadowMaps = true                # Blur shadow maps for soft shadows.
-Darkness = 0.5                       # Darkness of shadows.
+Darkness = 0.7                       # Darkness of shadows.
 Enabled = true                       # Enable sun shadows using rendered shadow maps.
 NightMinDarkness = 0.3               # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
 Quality = 2                          # Not used.
@@ -627,9 +627,9 @@ Enabled = false                     # Not currently used. Replaces the skin shad
 
 
 [_Shaders.Sky.Main]
-AthmosphereThickness = 2.0          # Determins the height of the athmosphere on the horizon
-SunInfluence = 2.0                  # How wide a side of the athmosphere will the sky lit up.
-SunStrength = 2.0                   # How strong is the sun brighness when reflected by athmosphere
+AthmosphereThickness = 1.0          # Determins the height of the athmosphere on the horizon
+SunInfluence = 1.0                  # How wide a side of the athmosphere will the sky lit up.
+SunStrength = 1.0                   # How strong is the sun brighness when reflected by athmosphere
 GlareStrength = 1.0                 # How much influence does the Sun have over Glare, inversed
 StarStrength = 1.0                  # Multiplier for stars brightness
 ReplaceSun = false                  # Replaces vanilla sun by a procedural sun for whatever reason
@@ -704,9 +704,9 @@ Enabled = true                      # Post Process underwater fog/godrays/causti
 
 [_Shaders.VolumetricFog.Main]
 Amount = 1.0                        # Multiplier for the strength of the fog, otherwise dependent on weathers.
-ColorCoeff = 0.5                    # Influence of the sun coloring in the tinting of the fog.
-Exponent = 8.0                      # Exponent for the sun coloring. A higher value will affect a smaller area around the sun
-MaxDistance = 80000                 # Max Fog height for vertical effect.
+ColorCoeff = 1.0                    # Influence of the sun coloring in the tinting of the fog.
+Exponent = 1.0                      # Exponent for the sun coloring. A higher value will affect a smaller area around the sun
+MaxDistance = 1.0                 # Max Fog height for vertical effect.
 
 [_Shaders.VolumetricFog.Status]
 Enabled = true                      # Volumetric fog shader tinted by the sun. Rendered after shadows and other effects for more accurate effect.
