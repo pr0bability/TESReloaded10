@@ -39,7 +39,7 @@ static const float scattCoeff = TESR_WaterCoefficients.w;// * turbidity;
 static const float waveWidth = TESR_WaveParams.y;
 static const float depthDarkness = TESR_WaterSettings.y;
 static const float3 up = float3(0, 0, 1);
-static const float sunLuma = luma(pows(TESR_SunColor.rgb,2.2));
+static const float sunLuma = luma(pows(TESR_SunColor.rgb,2.2)); // linearise
 
 struct VSOUT {
 	float4 vertPos : POSITION;
@@ -68,9 +68,8 @@ float3 random(float2 seed)
 }
 
 // lerp between sky colors to recreate the sky for refractions as vanilla buffer is tinted
-float3 getSkyColor(float3 eyeDirection){
-	float3 sunColor = pows(TESR_SunColor.rgb,2.2); //linearise
-    float3 skyColor = lerp(TESR_HorizonColor.rgb, TESR_SkyColor.rgb, pow(shade(eyeDirection, float3(0, 0, 1)), 0.5));
+float3 getSkyColor(float3 eyeDirection, float3 sunColor){
+    float3 skyColor = lerp(pows(TESR_HorizonColor.rgb,2.2), pows(TESR_SkyColor.rgb,2.2), pow(shade(eyeDirection, float3(0, 0, 1)), 0.5)); // linearise
     skyColor += sunColor * pows(shades(eyeDirection, TESR_SunDirection.xyz), 12);
     return skyColor;
 }
@@ -159,13 +158,13 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float falloff = 0.00225; // tie to darkness setting?
 	float fogAmount = saturate((density/falloff) * exp(-TESR_CameraPosition.z*falloff) * (1.0 - exp( -fogDepth*eyeDirection.z*falloff ))/eyeDirection.z);
 
-	// horizontal scattering
-	float3 skyColor = getSkyColor(eyeDirection);
-
 	float3 waterDeepColor = pows(TESR_WaterDeepColor.rgb,2.2); //linearise
 	float3 waterShallowColor = pows(TESR_WaterShallowColor.rgb,2.2); //linearise
 	float3 sunColor = pows(TESR_SunColor.rgb,2.2); //linearise
 	float3 fogColor_t = pows(TESR_FogColor.rgb,2.2); //linearise
+
+	// horizontal scattering
+	float3 skyColor = getSkyColor(eyeDirection, sunColor);
 
 	// interpolate fog color between shallow and deep water based on viewing angle. Shallow waters get tinted with the sky
 	float verticalFade = saturate(compress(dot(eyeDirection, up) * 3)); // fade from deep to shallow based on viewing angle

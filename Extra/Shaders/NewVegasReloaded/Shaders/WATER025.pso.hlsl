@@ -37,6 +37,10 @@ sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\waterc
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
+    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
+    float4 linDeepColor = pows(DeepColor,2.2); //linearise
+    float4 linFogColor = pows(FogColor,2.2); //linearise
+
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
     float distance = length(eyeVector.xy);              // surface distance to eye
@@ -69,12 +73,13 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * interiorDepthModifier;
 
     float4 color = tex2Dproj(RefractionMap, refractionPos);
-    color = getLightTravel(refractedDepth, ShallowColor, DeepColor, 0.5, color);
-    color = getTurbidityFog(refractedDepth, ShallowColor, sunLuma, color);
-    color = getDiffuse(surfaceNormal, lightDir, eyeDirection, distance, FogColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, FogColor, color);
+    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, 0.5, color);
+    color = getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color);
+    color = getDiffuse(surfaceNormal, lightDir, eyeDirection, distance, linFogColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, linFogColor, color);
     color = getSpecular(surfaceNormal, lightDir, eyeDirection, float3(0.1, 0.1, 0.1), color);
 
+    color = pows(color, 1.0/2.2); //delinearise
     OUT.color_0 = color;
     return OUT;
 

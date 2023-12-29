@@ -63,10 +63,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
     // draw the sun procedurally
-    float sunDisk = smoothstep(0.9990, 0.9991, sunDir);
-    float sunGlare = saturate(pow(saturate(sunDir), 400) * TESR_SunAmount.y * sunHeight);
-    // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
-    skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z * (TESR_SunAmount.x > 0); // add sun disk and boost brightness during sunrise/sunset
+    // float sunDisk = smoothstep(0.9990, 0.9991, sunDir);
+    // float sunGlare = saturate(pow(saturate(sunDir), 400) * TESR_SunAmount.y * sunHeight);
+    // // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
+    // skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z * (TESR_SunAmount.x > 0); // add sun disk and boost brightness during sunrise/sunset
 
     OUT.color_0.rgb = pows(skyColor, 1.0 / 2.2);//* TESR_SunsetColor.w; // multiply sky strength for HDR
     OUT.color_0.a = 1;

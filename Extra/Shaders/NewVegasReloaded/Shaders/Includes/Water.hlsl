@@ -5,8 +5,8 @@
 //   Name            Reg   Size
 //   --------------- ----- ----
 //   EyePos          const_1       1
-//   ShallowColor    const_2       1
-//   DeepColor       const_3       1
+//   shallowColor    const_2       1
+//   deepColor       const_3       1
 //   ReflectionColor const_4       1
 //   FresnelRI       const_5       1  //x: reflectamount, y:fresnel, w: opacity, z:speed
 //   BlendRadius     const_6       1
@@ -106,17 +106,17 @@ float3 getDisplacement(PS_INPUT IN, float blendRadius, float3 surfaceNormal){
     return surfaceNormal;
 }
 
-float4 getLightTravel(float3 refractedDepth, float4 ShallowColor, float4 DeepColor, float sunLuma, float4 color){
-    float4 waterColor = lerp(ShallowColor, DeepColor, refractedDepth.y); 
+float4 getLightTravel(float3 refractedDepth, float4 shallowColor, float4 deepColor, float sunLuma, float4 color){
+    float4 waterColor = lerp(shallowColor, deepColor, refractedDepth.y); 
     // return color * waterColor * sunLuma / TESR_WaterSettings.y;
     float3 result = color.rgb * lerp(0.7, waterColor.rgb * sunLuma / TESR_WaterSettings.y, pow(abs(refractedDepth.x), TESR_WaterSettings.y)); //never reach 1 so that water is always absorbing some light
     return float4(result, 1);
 }
 
-float4 getTurbidityFog(float3 refractedDepth, float4 ShallowColor, float sunLuma, float4 color){
+float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float sunLuma, float4 color){
     float turbidity = max(0.00001, TESR_WaterVolume.z); // clamp minimum value to avoid division by 0
     float fogCoeff = 1 - saturate((FogParam.z - (refractedDepth.x * FogParam.z)) / FogParam.w);
-    float3 fog = ShallowColor.rgb * sunLuma;
+    float3 fog = shallowColor.rgb * sunLuma;
 
     float3 result = lerp(color.rgb, fog.rgb, saturate(fogCoeff * FogColor.a * turbidity));
 
@@ -139,8 +139,8 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
     float fresnelCoeff = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
 
     // float reflectionLuma = 1 - luma(reflection);
-    float4 reflectionColor = lerp (reflection * ReflectionColor, reflection, saturate(reflectivity));
-    // reflectionColor = lerp (reflectionColor, ShallowColor, reflectionLuma);
+    float4 reflectionColor = lerp (reflection * pows(ReflectionColor,2.2), reflection, saturate(reflectivity));
+    // reflectionColor = lerp (reflectionColor, shallowColor, reflectionLuma);
     // float3 reflectionColor = VarAmounts.y * (reflection - ReflectionColor) + ReflectionColor.rgbb;
 	float3 result = lerp(color.rgb, reflectionColor.rgb, saturate(fresnelCoeff * reflectivity));
     return float4(result, 1);

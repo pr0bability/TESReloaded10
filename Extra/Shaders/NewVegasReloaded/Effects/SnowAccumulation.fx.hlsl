@@ -214,6 +214,9 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float isWaterSurface = (dot(norm, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
 	if (isWaterSurface || !(ortho > 0)) return color;
 	
+    color.rgb = pows(color.rgb, 2.2); // linearise
+	float3 sunColor = pows(TESR_SunColor.rgb,2.2); // linearise
+
 	float2 uv = worldPos.xy / 200.0f;
 	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
 	float3 surfaceNormal = normalize(float3(localNorm.xy + norm.xy, localNorm.z * norm.z));
@@ -224,14 +227,14 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
 	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
 
-	float3 ambient = snow_tex * TESR_SunAmbient.rgb;
+	float3 ambient = snow_tex * pows(TESR_SunAmbient.rgb,2.2); // linearise
 	float2 shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;
 	shadow.r = lerp(1.0f, shadow.r, useShadows); // disable shadow sampling if shadows are disabled in game
 	shadow.r = lerp(shadow.r, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
 
-	float3 diffuse = snow_tex * shade(TESR_SunDirection, normal) * TESR_SunColor.rgb * diffusePower * shadow.r;
-	float3 spec = snowSpec * TESR_SunColor.rgb * specularPower * shadow.r;
-	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
+	float3 diffuse = snow_tex * shade(TESR_SunDirection, normal) * sunColor * diffusePower * shadow.r;
+	float3 spec = snowSpec * sunColor * specularPower * shadow.r;
+	float3 fresnel = fresnelCoeff * sunColor * fresnelPower;
 	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.2 * shadow.r;
 
 	// float4 snowColor = float4(ambient + diffuse + spec + fresnel, 1);
@@ -271,6 +274,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
 
 	color = lerp(color, snowColor, coverage * min(vertical, ortho));
+	
+    color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
 	return float4(color.rgb, 1);
 }
 

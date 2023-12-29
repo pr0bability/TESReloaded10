@@ -53,7 +53,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
-    //bloom.rgb = pows(bloom.rgb, max(1.0, gammaCorrection)); // linearize bloom
+    bloom.rgb = pows(bloom.rgb, max(1.0, gammaCorrection)); // linearize bloom
     final.rgb = pows(final.rgb, max(1.0, gammaCorrection)); // linearize color
     
     // scale bloom while maintaining color
@@ -67,7 +67,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
     
     final.rgb = lerp(final.rgb, final.rgb * Cinematic.z, cinematicScalar); // apply brightness from Cinematic
-    final.rgb = tonemap(final.rgb * TESR_HDRData.y, TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_LotteData.w, TESR_HDRBloomData.w, TESR_ToneMapping.x); // exposure & tonemap using provided tonemapper
+    final.rgb = tonemap(final.rgb * TESR_HDRData.y); // exposure & tonemap using provided tonemapper
    
     final.rgb = pows(final.rgb, 1.0/max(1.0, TESR_HDRData.w)); // delinearise
     

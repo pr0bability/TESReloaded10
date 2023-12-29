@@ -40,6 +40,11 @@ sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitati
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
+    float4 linSunColor = pows(SunColor,2.2); //linearise
+    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
+    float4 linDeepColor = pows(DeepColor,2.2); //linearise
+    float4 linHorizonColor = pows(TESR_HorizonColor,2.2); //linearise
+
     float alpha = IN.LTEXCOORD_6.w; // color alpha?
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
@@ -47,7 +52,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float distance = length(eyeVector.xy);              // surface distance to eye
     float depth = length(eyeVector);                    // depth distance to eye
 
-	float sunLuma = luma(SunColor);
+	float sunLuma = luma(linSunColor);
 	float placedWaterRefractionModifier = 0.7;		// reduce refraction because of the way placed depth is encoded
 	float placedWaterDepthModifier = 0.7;			// reduce depth value for fog because of the way placed depth is encoded
 
@@ -71,12 +76,13 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * placedWaterDepthModifier;
 
     float4 color = tex2Dproj(RefractionMap, refractionPos);
-    color = getLightTravel(refractedDepth, ShallowColor, DeepColor, sunLuma, color);
+    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
     //color = getTurbidityFog(refractedDepth, ShallowColor, sunLuma, color);
-    color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, ShallowColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, TESR_HorizonColor, color);
-    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb, color);
+    color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, color);
+    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
 
+    color = pows(color, 1.0/2.2);  //delinearise
     OUT.color_0 = color;
     return OUT;
 };

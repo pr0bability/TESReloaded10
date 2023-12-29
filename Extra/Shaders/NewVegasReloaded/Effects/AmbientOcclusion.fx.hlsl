@@ -135,7 +135,6 @@ float4 SSAO(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 
 	darkness = lerp(darkness, 1.0, saturate(invlerp(startFade, endFade, origin.z))) * color.x;
 
-	//darkness = pows(darkness,1.0/2.2);
 	return float2(darkness, 1.0).xxxy;
 }
 
@@ -148,7 +147,7 @@ float4 Expand(VSOUT IN) : COLOR0
 float4 Combine(VSOUT IN) : COLOR0
 {
 	float3 color = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
-	color = pows(color,2.2);
+	color = pows(color,2.2); // linearise
 	float ao = lerp(AOclamp, 1.0, tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
 
 	float luminance = luma(color);
@@ -163,7 +162,7 @@ float4 Combine(VSOUT IN) : COLOR0
 		return float4(ao, ao, ao, 1.0f);
 	#endif
 	
-	color.rgb = pows(color.rgb,1.0/2.2);
+	color.rgb = pows(color.rgb,1.0/2.2); // delinearise
 	return float4(color.rgb, 1.0f);
 }
  

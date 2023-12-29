@@ -45,14 +45,17 @@ float4 getFresnelBelowWater(float3 surfaceNormal, float3 eyeDirection, float4 re
 }
 
 
-float4 skyColor(float3 eyeDirection){
-    float3 skyColor = lerp(TESR_HorizonColor, TESR_SkyColor, pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb;
-    skyColor += TESR_SunColor.rgb * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 12);
+float4 skyColor(float3 eyeDirection, float4 sunColor){
+    float3 skyColor = lerp(pows(TESR_HorizonColor.rgb, 2.2), pows(TESR_SkyColor.rgb, 2.2), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
+    skyColor += sunColor.rgb * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 12);
     return float4(skyColor, 1);
 }
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
+
+    float4 linSunColor = pows(SunColor,2.2); //linearise
+    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
@@ -61,7 +64,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     // calculate fog coeffs
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
 
-    float sunLuma = luma(TESR_SunColor);
+    float sunLuma = luma(linSunColor.rgb);
     float exteriorRefractionModifier = 0.5;		// reduce refraction because of the way interior depth is encoded
 
     float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
@@ -70,14 +73,15 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 refractionPos = getReflectionSamplePosition(IN, surfaceNormal, exteriorRefractionModifier);
     refractionPos.y = refractionPos.w - refractionPos.y;
 
-    float4 sky = skyColor(eyeDirection);
+    float4 sky = skyColor(eyeDirection, linSunColor);
     float depth = TESR_WaterSettings.x - TESR_CameraPosition.z;
     float4 refractions = tex2Dproj(RefractionMap, refractionPos) * smoothstep(200, 0, depth) + sky; // mix & fade refraction with depth because vanilla refractions suck
 
     float4 color = sky;
-    color = getFresnelBelowWater(surfaceNormal, eyeDirection, (color * 0.3) + (ShallowColor+sky) / 2 * sunLuma, color);
+    color = getFresnelBelowWater(surfaceNormal, eyeDirection, (color * 0.3) + (linShallowColor+sky) / 2 * sunLuma, color);
     color +=  2 * pow(dot(surfaceNormal, eyeDirection), 2) * (refractions); // highlight
 
+    color = pows(color, 1.0/2.2); //delinearise
     OUT.color_0 = float4(color.rgb, 1);
     return OUT;
 };

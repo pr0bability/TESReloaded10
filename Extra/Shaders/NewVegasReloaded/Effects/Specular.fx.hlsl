@@ -101,9 +101,9 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 
 	float4 result = color;
 
-	float4 skyColor_t = float4(pows(TESR_SkyColor.rgb, 2.2),TESR_SkyColor.a);
-	float4 horizonColor = float4(pows(TESR_HorizonColor.rgb, 2.2),TESR_HorizonColor.a);
-	float4 sunColor = float4(pows(TESR_SunColor.rgb, 2.2),TESR_SunColor.a);
+	float4 skyColor_t = float4(pows(TESR_SkyColor.rgb, 2.2),TESR_SkyColor.a); // linearise
+	float4 horizonColor = float4(pows(TESR_HorizonColor.rgb, 2.2),TESR_HorizonColor.a); // linearise
+	float4 sunColor = float4(pows(TESR_SunColor.rgb, 2.2),TESR_SunColor.a); // linearise
 
 	float luminance = luma(color);
 	float sunLuma = luma(sunColor);
