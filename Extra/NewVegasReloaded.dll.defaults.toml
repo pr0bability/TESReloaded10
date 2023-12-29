@@ -703,10 +703,22 @@ Enabled = false                     # Not currently used. Replaces shaders used 
 Enabled = true                      # Post Process underwater fog/godrays/caustics effect.
 
 [_Shaders.VolumetricFog.Main]
-Amount = 1.0                        # Multiplier for the strength of the fog, otherwise dependent on weathers.
-ColorCoeff = 1.0                    # Influence of the sun coloring in the tinting of the fog.
-Exponent = 1.0                      # Exponent for the sun coloring. A higher value will affect a smaller area around the sun
-MaxDistance = 1.0                 # Max Fog height for vertical effect.
+SunPower = 1.0                      # Controls the influence of Sun Color when shining through fog
+LowFogDensity = 1.0                 # Density of low lying fog using weather fog colors and sun influence
+LowFogFalloff = 1.0                 # Vertical falloff of low fog
+LowFogDist = 1.0                    # Distance falloff of low fog, low values disperse fog vs concentrate distant fog
+LowFogBlend = 1.0                   # Influence of low fog vs height fog when blending the two forms
+HeightFogDensity = 1.0              # Density of low lying fog using a weather fog color, sky color blend and sun color blend
+HeightFogFalloff = 1.0              # Vertical falloff of atmospheric height fog
+HeightFogDist = 1.0                 # Distance falloff of atmospheric height fog, low values disperse fog vs concentrate distant fog
+HeightFogSkyColor = 1.0             # Distance falloff of Sky Coloring in Height Fog, lower values push sky color closer to the camera
+HeightFogRolloff = 1.0              # Combined falloff of Height and Low fog, low values disperse fog vs concentrate distant fog
+HeightFogBlend = 1.0                # Influence of height fog vs low fog when blending the two forms
+SimpleFogExtinction = 1.0           # Extinction factor in coloring, or light lost due to absorption of particles
+SimpleFogInscattering = 1.0         # Inscattering factor in coloring, or light gained from sun scaterring
+SimpleFogNight = 1.0                # Power of extinction factor at night time, which uses only simple fog
+SimpleFogSkyColor = 1.0             # Distance falloff of Sky Coloring in Simple Fog, lower values push sky color closer to the camera
+SimpleFogBlend = 1.0                # Final blend of simple fog vs height/low fog, low values can remove influence of latter forms and vice versa
 
 [_Shaders.VolumetricFog.Status]
 Enabled = true                      # Volumetric fog shader tinted by the sun. Rendered after shadows and other effects for more accurate effect.
