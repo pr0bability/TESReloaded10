@@ -32,33 +32,30 @@ VSOUT FrameVS(VSIN IN)
 float4 ImageAdjust(VSOUT IN) : COLOR0
 {
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	float2 io = float2(1, 0);
-
-	float4 darks = smoothstep(1, 0, color) * color * TESR_DarkAdjustColor;
-	float4 lights = smoothstep(0, 1, color) * color * TESR_LightAdjustColor;
-
-	float4 newColor = darks + lights;
 	
 	// saturation
-	newColor = lerp(luma(newColor).rrrr, newColor, TESR_ImageAdjustData.z);
+	color = max(0.0,lerp(luma(color).rrrr, color, TESR_ImageAdjustData.z))
+	
+	color.rgb = pows(color.rgb, 2.2); // linearise
+	float2 io = float2(1, 0);
 
-	// contrast
-	newColor = (newColor - float(0.5).rrrr) * TESR_ImageAdjustData.y + float(0.5).rrrr;
+	float3 darks = smoothstep(1, 0, color.rgb) * color.rgb * pows(TESR_DarkAdjustColor.rgb,2.2); // linearise
+	float3 lights = smoothstep(0, 1, color.rgb) * color.rgb * pows(TESR_LightAdjustColor.rgb,2.2); // linearise
+
+	float3 newColor = darks.rgb + lights.rgb;;
 
 	// brightness
-	newColor += (TESR_ImageAdjustData.x - 1);
+	newColor *= max(0.0,TESR_ImageAdjustData.x);
 
-	color = lerp(color, newColor, TESR_ImageAdjustData.w); // strength of the effect
+	color.rgb = lerp(color.rgb, newColor, TESR_ImageAdjustData.w); // strength of the effect
 
-    // if (IN.UVCoord.x > 0.8 && IN.UVCoord.x < 0.95){
-    //     if (IN.UVCoord.y > 0.15 && IN.UVCoord.y < 0.2) return TESR_ImageAdjustData;
-    //     if (IN.UVCoord.y > 0.2 && IN.UVCoord.y < 0.25) return TESR_DarkAdjustColor;
-    //     if (IN.UVCoord.y > 0.25 && IN.UVCoord.y < 0.3) return TESR_LightAdjustColor;
-    //     if (IN.UVCoord.y > 0.3 && IN.UVCoord.y < 0.4) return darks;
-    //     if (IN.UVCoord.y > 0.4 && IN.UVCoord.y < 0.5) return lights;
-    //     if (IN.UVCoord.y > 0.5 && IN.UVCoord.y < 0.6) return darks + lights;
-	// }
+	color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
 
+	// contrast
+	//0.5^2.2=0.21764
+	newColor = max(0.0,(color - float(0.5).rrr) * TESR_ImageAdjustData.y + float(0.5).rrr);
+
+	color.rgb = lerp(color.rgb, newColor, TESR_ImageAdjustData.w); // strength of the effect
 	return float4(color.rgb, 1);
 }
 

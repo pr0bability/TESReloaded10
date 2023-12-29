@@ -107,8 +107,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 finalColor = (weight(cloudsWeather1.xyz) == 0.0 ? cloudsWeather2 : (weight(cloudsWeather2.xyz) == 0.0 ? cloudsWeather1 : cloudsWeatherBlend)); // select either weather or blend
     finalColor.a = cloudsWeatherBlend.a;
     // finalColor = cloudsWeather1;
-    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
     float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
+    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
 
 		//ShaderConst.Sky.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
 		//ShaderConst.Sky.SkyData.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
@@ -122,7 +122,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         finalColor.rgb *= color.rgb * Params.y;
         
         finalColor = float4(finalColor.rgb + (isSun * sunColor) * TESR_SunAmount.w, pows(alpha, TESR_SunAmount.w));
-        finalColor.rgb = pows(finalColor.rgb, 1.0/2.2);
+        finalColor.rgb = pows(finalColor.rgb, 1.0/2.2); //delinearise
 
         OUT.color_0 = finalColor;
 
@@ -146,7 +146,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         float3 ambient = skyColor * greyScale * lerp(0.5, 0.7, sunDir); // fade ambient with sun direction
         float3 diffuse = compress(dot(normal, TESR_SunPosition.xyz)) * sunColor * (1.0 - luma(ambient)) * lerp(0.8, 1, sunDir); // scale diffuse if ambient is high
         float3 fresnel = pows(1.0 - shade(-eyeDir, normal), 4.0) * pows(saturate(expand(sunDir)), 2.0) * shade(normal, up) * (sunColor + skyColor) * 0.2;
-        float3 bounce = shade(normal, -up) * pows(TESR_HorizonColor.rgb, 2.2) * 0.1 * sunHeight; // light from the ground bouncing up to the underside of clouds
+        float3 bounce = shade(normal, -up) * pows(TESR_HorizonColor.rgb, 2.2) * 0.1 * sunHeight; // linearise, light from the ground bouncing up to the underside of clouds
 
         finalColor = float4(ambient + diffuse + fresnel + scattering + bounce, alpha);
         // finalColor.rgb = selectColor(TESR_DebugVar.x, finalColor, ambient, diffuse, fresnel, bounce, scattering, sunColor, skyColor, normal, float3(IN.TexUV, 1));
@@ -161,7 +161,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     }
     finalColor = float4(finalColor.rgb * color.rgb * Params.y, saturate(finalColor.w * IN.color_0.a * TESR_CloudData.z));
     
-    finalColor.rgb = pows(finalColor.rgb * TESR_SunsetColor.w, 1.0/2.2);
+    finalColor.rgb = pows(finalColor.rgb * TESR_SunsetColor.w, 1.0/2.2); //delinearise
     
     OUT.color_0 = finalColor;
     return OUT;

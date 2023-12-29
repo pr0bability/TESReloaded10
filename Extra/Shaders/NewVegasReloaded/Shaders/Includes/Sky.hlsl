@@ -1,7 +1,7 @@
 
 float3 GetSunColor(float sunHeight, float athmosphere, float dayTime, float3 sunColor, float3 sunsetColor ){
-    sunColor = pows(sunColor, 2.2);
-    sunsetColor = pows(sunsetColor, 2.2);
+    sunColor = pows(sunColor, 2.2); //linearise
+    sunsetColor = pows(sunsetColor, 2.2);  //linearise
 
     float3 color = (1 + sunHeight) * sunColor; // increase suncolor strength with sun height
     float sunSet = saturate(pows(1 - sunHeight, 8.0)) * dayTime;
@@ -10,9 +10,9 @@ float3 GetSunColor(float sunHeight, float athmosphere, float dayTime, float3 sun
 }
 
 float3 GetSkyColor(float verticality, float athmosphere, float sunHeight, float sunInfluence, float sunStrength, float3 skyColor, float3 skyLowColor, float3 horizonColor, float3 sunColor){
-    skyColor = pows(skyColor, 2.2);
-    skyLowColor = pows(skyLowColor, 2.2);
-    horizonColor = pows(horizonColor, 2.2);
+    skyColor = pows(skyColor, 2.2); //linearise
+    skyLowColor = pows(skyLowColor, 2.2); //linearise
+    horizonColor = pows(horizonColor, 2.2); //linearise
 
     float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
 

@@ -66,6 +66,7 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 	float3 color = tex2D(TESR_SourceBuffer, uv).rgb;
     color = pows(color, 2.2); // linearise
 	color = (color + sunGlare * sunColor) * depth;
+    color = pows(color, 1.0/2.2); // delinearise
 
 	return float4(color, 1.0f);
 }
@@ -151,7 +152,6 @@ float4 Combine(VSOUT IN) : COLOR0
 	uv *= scale;
 
 	float4 rays = tex2D(TESR_RenderedBuffer, uv);
-    rays.rgb = pows(rays.rgb, 2.2); // linearise
 
 	// attentuate intensity with distance from sun to fade the edges and reduce sunglare
 	float heightAttenuation = lerp(1, lerp(0.2, 1, (1 - dot(TESR_SunDirection.xyz, float3(0, 0, 1)))), TESR_GodRaysData.w); // when the sun is high and timeEnabled is on, godrays strength is reduced

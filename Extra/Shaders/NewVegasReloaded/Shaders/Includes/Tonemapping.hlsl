@@ -136,7 +136,7 @@ float3 agxEotf(float3 val)
   // sRGB IEC 61966-2-1 2.2 Exponent Reference EOTF Display
   // NOTE: We're linearizing the output here. Comment/adjust when
   // *not* using a sRGB render target
-    val = pows(val, 2.2);
+    val = pows(val, 2.2); //linearise
 
     return val;
 }
@@ -271,13 +271,15 @@ float3 VTLottes(float3 color, float contrast, float midOut, float midIn, float h
     return color;
 }*/
 
+#define CMAX 1.6e+6f
+#define EPS 1e-6f
 // Code:
 float3 AMDLottes(float3 color, float contrast, float b, float c, float shoulder, float crosstalk)
 {
     float3 peak = max(color.r, max(color.g, color.b));
-    peak = min(1.6e+6f, max(1e-6f, peak));
+    peak = min(CMAX, max(EPS, peak));
 
-    float3 ratio = min(1.6e+6f, color / peak);
+    float3 ratio = min(CMAX, color / peak);
 
     float lum = dot(color, float3(0.5, 0.4, 0.33));
     float gray = min(color.r, min(color.g, color.b));
@@ -361,31 +363,51 @@ float3 Uchimura(float3 x, float contrast, float brightness, float midIn, float h
 }
 
 
-float3 tonemap(float3 color, float contrast, float midOut, float midIn, float shoulder, float hdrMax, float highlightSaturation)
+float3 tonemap(float3 color)
 {
-    switch(int(abs(TESR_HDRData.x)))
+    color = max(0.0, color);
+    if (TESR_HDRData.x == 0)
     {
-        case 0:
-            return color; 
-        case 1:
-            return max(0.0, AMDLottes(min(1.6e+6f, color), contrast, midIn, midOut, shoulder, highlightSaturation));
-        case 2:
-            return max(0.0, Lottes(min(1.6e+6f, color), contrast, midOut, midIn, hdrMax, shoulder));
-        case 3:
-            return ReinhardExtended(color, hdrMax);
-        case 4:
-            return ReinhardJodie(color);
-        case 5:
-            return ACESFilm(color);
-        case 6:
-            return ACESFitted(color);
-        case 7:
-            return Uncharted2Tonemap(color, midOut, hdrMax);
-        case 8:
-            return Uchimura(color, contrast, midOut, midIn, hdrMax, shoulder);
-        case 9:
-            return agx(color);
-        default:
-            return color; 
+        return color;
+    }
+    else if (TESR_HDRData.x == 1)
+    {
+        return max(0.0, AMDLottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.z, TESR_LotteData.y, TESR_LotteData.w, TESR_ToneMapping.x));
+    }
+    else if (TESR_HDRData.x == 2)
+    {
+        return max(0.0, Lottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w));
+    }
+    else if (TESR_HDRData.x == 3)
+    {
+        return ReinhardExtended(color, TESR_HDRBloomData.w);
+    }
+    else if (TESR_HDRData.x == 4)
+    {
+        return ReinhardJodie(color);
+    }
+    else if (TESR_HDRData.x == 5)
+    {
+        return ACESFilm(color);
+    }
+    else if (TESR_HDRData.x == 6)
+    {
+        return ACESFitted(color);
+    }
+    else if (TESR_HDRData.x == 7)
+    {
+        return Uncharted2Tonemap(color, TESR_LotteData.y, TESR_HDRBloomData.w);
+    }
+    else if (TESR_HDRData.x == 8)
+    {
+        return Uchimura(color, TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w);
+    }
+    else if (TESR_HDRData.x == 9)
+    {
+        return agx(color);
+    }
+    else
+    {
+        return color;
     }
 }

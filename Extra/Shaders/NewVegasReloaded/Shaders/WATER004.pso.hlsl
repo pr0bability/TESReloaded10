@@ -146,12 +146,15 @@ PS_OUTPUT main(VS_OUTPUT IN, float2 PixelPos : VPOS){
 	eyepos.z = -IN.texcoord_0.z;
 
     float4 color = tex2D(TESR_RenderedBuffer, UVCoord);
+    color.rgb = pow(color.rgb,2.2); //linearise
+    float4 linFogColor = pow(FogColor,2.2); //linearise
+
     float depth = readDepth(UVCoord);
     float3 camera_vector = toWorld(UVCoord);
 	float3 norm_camera_vector = normalize( camera_vector );
     float3 world_pos = eyepos + camera_vector*depth;
 
-	float4 sunColor = float4(TESR_SunColor.rgb, 1);
+	float4 sunColor = float4(pow(TESR_SunColor.rgb,2.2), 1);
 	float nightAmount = TESR_SunColor.a;
 	float causticsStrength = TESR_WaterVolume.x;
 	float shoreFactor = TESR_WaterVolume.y;
@@ -177,11 +180,13 @@ PS_OUTPUT main(VS_OUTPUT IN, float2 PixelPos : VPOS){
 	float2 refPos = UVCoord + 0.01*normal.yx;
 	float3 refract_world_pos = eyepos + toWorld( refPos )*readDepth( refPos );
 
-	if (refract_world_pos.z < 0)
+	if (refract_world_pos.z < 0) {
 		refract_color = tex2D( TESR_RenderedBuffer, refPos );
-	else
+    	refract_color = pow(refract_color,2.2); //linearise
+		}
+	else {
 		refract_world_pos = world_pos;
-
+	}
 	//Render Caustics
 	float3 dx = ddx(world_pos);
     float3 dy = ddy(world_pos);
@@ -197,14 +202,14 @@ PS_OUTPUT main(VS_OUTPUT IN, float2 PixelPos : VPOS){
     refract_color.rgb *= exp( -extCoeff * (refract_uw_pos - refract_world_pos.z) / 70 );
 
 	float SinBoverSinA = -norm_camera_vector.z;
-	float3 waterVolColor = scattCoeff * FogColor.xyz / ( extCoeff * (1 + SinBoverSinA) );
+	float3 waterVolColor = scattCoeff * linFogColor.xyz / ( extCoeff * (1 + SinBoverSinA) );
 
 	waterVolColor *= 1 - exp( -extCoeff * (1 + SinBoverSinA) * refract_uw_pos / 70 );
 
 	refract_color.rgb += waterVolColor;
 
 	//Calculate reflection color
-	float4 reflection = FogColor;
+	float4 reflection = linFogColor;
 
 	//refPos = UVCoord + 0.05*normal.yx;
 	//float3 reflect_world_pos = eyepos + toWorld( refPos )*readDepth( refPos );
@@ -226,7 +231,7 @@ PS_OUTPUT main(VS_OUTPUT IN, float2 PixelPos : VPOS){
 
 	float eyeFogDist = eyepos.z * (1.28 - 0.28 * (2*UVCoord.x-1)*(2*UVCoord.x-1));
 	float eyeFog = saturate(eyeFogDist/30500 + 0.37);
-	reflection = lerp(reflection, FogColor, eyeFog);
+	reflection = lerp(reflection, linFogColor, eyeFog);
 
 	//Add above water fog
     float fog = 1 - saturate((FogParam.x - length(IN.texcoord_0.xyz)) / FogParam.y);
@@ -234,8 +239,10 @@ PS_OUTPUT main(VS_OUTPUT IN, float2 PixelPos : VPOS){
 
 	water_result.rgb += ditherMat[ PixelPos.x%4 ][ PixelPos.y%4 ] / 255;
 
+	color.rgb = lerp(water_result.rgb, color.rgb, saturate( pow(saturate(exp(world_pos.z/(800*shoreFactor))), 90) ));
+    color.rgb = pow(color.rgb, 1.0/2.2); //delinearise
 	//Smooth shore transitions
-	OUT.color_0.rgb = lerp(water_result.rgb, color.rgb, saturate( pow(saturate(exp(world_pos.z/(800*shoreFactor))), 90) ));
+	OUT.color_0.rgb = color.rgb;
 	OUT.color_0.a = 1;
 	
     //OUT.color_0 = float4(0.0, 0.0, 1.0, 1.0);

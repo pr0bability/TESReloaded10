@@ -70,6 +70,7 @@ float GetOrtho(float4 OrthoPos) {
 float4 Rain( VSOUT IN ) : COLOR0
 {
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	color.rgb = pows(color.rgb,2.2); //linearise
 	int iterations = RainLayers;
 
 	// calculating the ray along which the  volumetric rain will be calculated
@@ -111,14 +112,15 @@ float4 Rain( VSOUT IN ) : COLOR0
 	}
 
 	// a rain tint color that scales with the sun direction
-	float4 rainColor = lerp(float(0.5).xxxx, TESR_SunColor * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
+	float4 rainColor = lerp(float(0.5).xxxx, pows(TESR_SunColor,2.2) * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
 
 	// sample the bloom buffer and the source buffer with refracted UV to shade the rain with
 	float2 refractedUV = IN.UVCoord + float2(totalRain * TESR_RainAspect.x, -totalRain * TESR_RainAspect.x);
 	float4 refractedColor = tex2D(TESR_SourceBuffer, refractedUV);
+	refractedColor.rgb = pows(refractedColor.rgb,2.2); //linearise
 	refractedColor += tex2D(TESR_RenderedBuffer, refractedUV);
 
-	return lerp(color, refractedColor + rainColor * TESR_RainAspect.y, totalRain* TESR_RainData.w);
+	return pows(lerp(color, refractedColor + rainColor * TESR_RainAspect.y, totalRain* TESR_RainData.w),1.0/2.2); //delinearise
 }
 
 // places the different things to blur separately into separate quadrants of the screen

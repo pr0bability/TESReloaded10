@@ -37,6 +37,11 @@ sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitati
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
+    float4 linSunColor = pows(SunColor,2.2); //linearise
+    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
+    float4 linDeepColor = pows(DeepColor,2.2); //linearise
+    float4 linHorizonColor = pows(TESR_HorizonColor,2.2); //linearise
+
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
     float distance = length(eyeVector.xy);              // surface distance to eye
@@ -57,7 +62,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     surfaceNormal = getDisplacement(IN, BlendRadius.w, surfaceNormal);
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
-    float sunLuma = luma(SunColor);
+    float sunLuma = luma(linSunColor);
     float exteriorRefractionModifier = 0.5;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 
@@ -69,13 +74,14 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb;
 
     float4 color = tex2Dproj(RefractionMap, refractionPos);
-    color = getLightTravel(refractedDepth, ShallowColor, DeepColor, sunLuma, color);
-    color = getTurbidityFog(refractedDepth, ShallowColor, sunLuma, color); // fade to full fog to hide LOD seam
-    color = lerp(getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, TESR_HorizonColor, color), ShallowColor,LODfade);
+    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
+    color = getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color); // fade to full fog to hide LOD seam
+    color = lerp(getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color), linShallowColor,LODfade);
     color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
-    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb, color);
+    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
     color = getShoreFade(IN, waterDepth.x, color);
 
+    color = pows(color, 1.0/2.2); //delinearise
     OUT.color_0 = color;
     OUT.color_0.a = lerp(color.a, 1, LODfade); // fade to full opacity to hide LOD seam
     return OUT;

@@ -65,7 +65,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
     float4 stars = tex2D(TexMap, IN.TexUV.xy);
+    stars.rgb = pows(stars.rgb,2.2); //linearise
     float4 sky = IN.color_0;
+    sky.rgb = pows(sky.rgb,2.2); //linearise
 
     float starFlicker = 0.05;
     float noiseScale = 4;
@@ -78,7 +80,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     n *= noise((TESR_GameTime.x * flickerSpeed).xxx + noiseScale * eyeDir) * 2;
 
     OUT.color_0.a = (stars.a * sky.a) * IN.texcoord_2.x * TESR_SkyData.w * (n + 1);
-    OUT.color_0.rgb = stars.rgb * (n * 0.3 + 1) * sky.rgb;
-
+    stars.rgb = stars.rgb * (n * 0.3 + 1) * sky.rgb;
+    stars.rgb = pows(stars.rgb,1.0/2.2); //delinearise
+    OUT.color_0.rgb = stars.rgb;
     return OUT;
 };
