@@ -627,7 +627,7 @@ Enabled = false                     # Not currently used. Replaces the skin shad
 
 
 [_Shaders.Sky.Main]
-AthmosphereThickness = 1.0          # Determins the height of the athmosphere on the horizon
+AthmosphereThickness = 2.0          # Determins the height of the athmosphere on the horizon
 SunInfluence = 1.0                  # How wide a side of the athmosphere will the sky lit up.
 SunStrength = 1.0                   # How strong is the sun brighness when reflected by athmosphere
 GlareStrength = 1.0                 # How much influence does the Sun have over Glare, inversed
@@ -708,16 +708,20 @@ LowFogDensity = 1.0                 # Density of low lying fog using weather fog
 LowFogFalloff = 1.0                 # Vertical falloff of low fog
 LowFogDist = 1.0                    # Distance falloff of low fog, low values disperse fog vs concentrate distant fog
 LowFogBlend = 1.0                   # Influence of low fog vs height fog when blending the two forms
+LowFogHeight = 1.0                  # Adjusts the level that additional height falloff occurs at for low fog
 HeightFogDensity = 1.0              # Density of low lying fog using a weather fog color, sky color blend and sun color blend
-HeightFogFalloff = 1.0              # Vertical falloff of atmospheric height fog
+HeightFogFalloff = 1.0              # Vertical falloff of atmospheric height fog,
 HeightFogDist = 1.0                 # Distance falloff of atmospheric height fog, low values disperse fog vs concentrate distant fog
 HeightFogSkyColor = 1.0             # Distance falloff of Sky Coloring in Height Fog, lower values push sky color closer to the camera
-HeightFogRolloff = 1.0              # Combined falloff of Height and Low fog, low values disperse fog vs concentrate distant fog
+HeightFogHeight = 1.0               # Adjusts the level that additional height falloff occurs at for high fog
 HeightFogBlend = 1.0                # Influence of height fog vs low fog when blending the two forms
+HeightFogRolloff = 1.0              # Combined falloff of Height and Low fog, high values disperse fog vs low values concentrating distant fog
 SimpleFogExtinction = 1.0           # Extinction factor in coloring, or light lost due to absorption of particles
 SimpleFogInscattering = 1.0         # Inscattering factor in coloring, or light gained from sun scaterring
 SimpleFogNight = 1.0                # Power of extinction factor at night time, which uses only simple fog
 SimpleFogSkyColor = 1.0             # Distance falloff of Sky Coloring in Simple Fog, lower values push sky color closer to the camera
+SimpleFogHeight = 1.0               # Adjusts the level that additional height falloff occurs at for simple fog
+SimpleFogDist = 1.0                 # Distance falloff of simple fog, low values disperse fog vs concentrate distant fog
 SimpleFogBlend = 1.0                # Final blend of simple fog vs height/low fog, low values can remove influence of latter forms and vice versa
 
 [_Shaders.VolumetricFog.Status]
