@@ -11,7 +11,7 @@ float3 BlurScale : register(c2);
 float4 Cinematic : register(c19); // x:saturation, y:avgluma, z:brightness, w: contrast
 float4 Tint : register(c20);  // weather Cinematic IS tint ?
 float4 Fade : register(c22);  // Night eye color
-//float4 TESR_DebugVar : register(c24);
+float4 TESR_DebugVar : register(c24);
 float4 TESR_HDRBloomData : register(c25); //
 //float4 TESR_SunAmount : register(c26);
 float4 TESR_HDRData : register(c27); //
@@ -64,7 +64,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = lerp(final.rgb, Tint.rgb * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     
     float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x, brights cutoff
-    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
+    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * (TESR_DebugVar.x * 0.5)), 0.0); // blend image and bloom
     
     final.rgb = lerp(final.rgb, final.rgb * Cinematic.z, cinematicScalar); // apply brightness from Cinematic
     final.rgb = tonemap(final.rgb * TESR_HDRData.y); // exposure & tonemap using provided tonemapper
