@@ -156,7 +156,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         float3 cloudTint = lerp(pows(TESR_SkyLowColor.rgb, 5.0), sunColor, saturate(sunInfluence * saturate(greyScale))).rgb;
         cloudTint = lerp(cloudTint, white.rgb, sunHeight * isDayTime); // tint the clouds less when the sun is high in the sky
 
-        finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.5 * TESR_DebugVar.z, isDayTime); // cancel tint at night
+        finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.333 * TESR_DebugVar.z, isDayTime); // cancel tint at night
         finalColor.rgb += scattering;
     }
     finalColor = float4(finalColor.rgb * color.rgb * Params.y, saturate(finalColor.w * IN.color_0.a * TESR_CloudData.z));
