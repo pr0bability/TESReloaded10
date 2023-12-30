@@ -11,7 +11,7 @@ float4 Cinematic : register(c19);
 float4 Tint : register(c20);
 float4 Fade : register(c22);
 float4 UseAlphaMask : register(c23);
-//float4 TESR_DebugVar : register(c24);
+float4 TESR_DebugVar : register(c24);
 float4 TESR_HDRBloomData : register(c25);
 //float4 TESR_SunAmount : register(c26);
 float4 TESR_HDRData : register(c27);
@@ -56,7 +56,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
-    //bloom.rgb = pows(bloom.rgb, max(1.0, gammaCorrection)); // linearize bloom
+    bloom.rgb = pows(bloom.rgb, max(1.0, gammaCorrection)); // linearize bloom
     final.rgb = pows(final.rgb, max(1.0, gammaCorrection)); // linearize color
     
     // scale bloom while maintaining color
@@ -67,7 +67,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = lerp(final.rgb, Tint.rgb * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     
     float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x, brights cutoff
-    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
+    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * (TESR_DebugVar.x * 0.5)), 0.0); // blend image and bloom
     
     final.rgb = lerp(final.rgb, final.rgb * Cinematic.z, cinematicScalar); // apply brightness from Cinematic
     final.rgb = tonemap(final.rgb * TESR_HDRData.y); // exposure & tonemap using provided tonemapper

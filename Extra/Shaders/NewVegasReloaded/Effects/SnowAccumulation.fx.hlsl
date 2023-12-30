@@ -49,9 +49,9 @@ sampler2D TESR_SnowNormSampler : register(s6) < string ResourceName = "Precipita
 sampler2D TESR_BlueNoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const int KernelSize = 24;
-static const float diffusePower = 0.17f * TESR_SnowAccumulationParams.z;
-static const float specularPower = 0.3f * TESR_SnowAccumulationParams.z;
-static const float fresnelPower = 0.2f * TESR_SnowAccumulationParams.z;
+static const float diffusePower = 0.56f * TESR_SnowAccumulationParams.z;
+static const float specularPower = 1.0f * TESR_SnowAccumulationParams.z;
+static const float fresnelPower = 0.65f * TESR_SnowAccumulationParams.z;
 static const float DARKNESS = 1-TESR_ShadowData.y;
 static const float orthoRadius = TESR_SnowAccumulationParams.x; // radius of the area to sample ortho from
 static const float noiseSize = 200; // scale for the noise used for snow coverage
