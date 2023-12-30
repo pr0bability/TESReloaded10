@@ -69,6 +69,7 @@ float GetOrtho(float4 OrthoPos) {
 float4 Snow( VSOUT IN ) : COLOR0
 {
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+    color.rgb = pows(color.rgb, 2.2); // linearise
 
 	// calculating the ray along which the volumetric snow will be calculated
 	float3 world = toWorld(IN.UVCoord);
@@ -113,9 +114,12 @@ float4 Snow( VSOUT IN ) : COLOR0
 
 	// a rain tint color that scales with the sun direction
 	//float4 rainColor = lerp(TESR_SunColor, TESR_SkyColor * 0.5, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
-	float4 snowColor = max(TESR_SunAmbient, TESR_SunColor);
+	float4 snowColor = max(float4(pows(TESR_SunAmbient.rgb,2.2),TESR_SunAmbient.a), float4(pows(TESR_SunColor.rgb,2.2),TESR_SunColor.a));
 
-	return lerp(color, snowColor, totalSnow);
+	color = lerp(color, snowColor, totalSnow);
+    color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
+
+	return color;
 }
 
 
