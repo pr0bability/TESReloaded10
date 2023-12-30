@@ -68,7 +68,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	Shadow.r = lerp(TESR_ShadowFade.x, 1.0f, Shadow.r); // fade shadows to light when sun is low
 
 	// scale shadows strength to ambient before adding attenuation for pointlights (ShadowFade.z means point Lights are on)
-	float ambient = lerp(1, luma(pows(TESR_SunAmbient,2.2)), DARKNESS * TESR_ShadowFade.z); // linearise
+	float ambient = lerp(1, luma(TESR_SunAmbient), DARKNESS * TESR_ShadowFade.z); // linearise
 	Shadow.r = lerp(0, ambient, Shadow.r); //scale brightest areas to the ambient so it can be lit further with attenuation
 	Shadow.r += Shadow.g; // Apply poing light attenuation (includes point light shadows)
 
