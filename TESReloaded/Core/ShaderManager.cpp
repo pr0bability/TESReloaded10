@@ -1494,7 +1494,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapMidpoint", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapShoulder", isExterior, transitionCurve);
 			
-			if (ShaderConst.HDR.HDRData.x == 1.0) {
+			if (ShaderConst.HDR.HDRData.x == 1.0 || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
 				float hdrMax = max(1.0, ShaderConst.HDR.BloomData.w * 100.0);
 				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.35);
 				float shoulder = max(0.0, (min(1.0, ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0

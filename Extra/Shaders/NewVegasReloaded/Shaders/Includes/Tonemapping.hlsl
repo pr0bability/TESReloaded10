@@ -195,86 +195,12 @@ float3 agx(float3 val)
 
 // https://gist.github.com/KelSolaar/1213139203911a72fef531c32c3d4ec2
 // https://gist.github.com/vtastek/935be12fb8d87adda751b5276fd88f0c
-// Lottes (2016) adapted by vtastek
-
-/*
-float ColToneB(float hdrMax, float contrast, float shoulder, float midIn, float midOut)
-{
-    return
-        -((-pows(midIn, contrast) + (midOut * (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) -
-            pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut)) /
-            (pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut)) /
-            (pows(midIn, contrast * shoulder) * midOut));
-}
-
-// General tonemapping operator, build 'c' term.
-float ColToneC(float hdrMax, float contrast, float shoulder, float midIn, float midOut)
-{
-    return (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) - pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut) /
-           (pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut);
-}
-
-// General tonemapping operator, p := {contrast,shoulder,b,c}.
-float ColTone(float3 x, float4 p)
-{
-    float3 z = pows(x, p.r);
-    return z / (pows(z, p.g) * p.b + p.a);
-}
-#define CMAX 1.6e+6f
-#define EPS 1e-6f
-float3 VTLottes(float3 color, float contrast, float midOut, float midIn, float hdrMax, float shoulder, float crossTalk)
-{
-    hdrMax = max(1.0, hdrMax * 100.0);
-    contrast = max(0.01, contrast * 1.35);
-    shoulder = saturate(shoulder * 0.993); // shoulder should not! exceed 1.0
-    midIn = max(0.01, midIn * 0.18);
-    midOut = max(0.01, midOut * 0.18);
-    //static const float hdrMax = 100.0; // How much HDR range before clipping. HDR modes likely need this pushed up to say 25.0.
-   // float contrast = 1.7; // Use as a baseline to tune the amount of contrast the tonemapper has.
-    //static const float shoulder = 0.993; // Likely don?t need to mess with this factor, unless matching existing tonemapper is not working well..
-    //static const float midIn = 0.18; // most games will have a {0.0 to 1.0} range for LDR so midIn should be 0.18.
-   // float midOut = 0.1818; // 0.23/(-0.760 + 2.896*contrast - 1.980*contrast*contrast + 0.673*contrast*contrast*contrast); // Use for LDR. For HDR10 10:10:10:2 use maybe 0.18/25.0 to start. For scRGB, I forget what a good starting point is, need to re-calculate.
-	
-    float b = ColToneB(hdrMax, contrast, shoulder, midIn, midOut);
-    float c = ColToneC(hdrMax, contrast, shoulder, midIn, midOut);
-
-    float3 peak = max(color.r, max(color.g, color.b));
-    peak = min(CMAX, max(EPS, peak));
-
-    float3 ratio = min(CMAX, color / peak);
-
-    float lum = dot(color, float3(0.5, 0.4, 0.33));
-    float gray = min(color.r, min(color.g, color.b));
-	gray = max(0.0, gray);
-    peak += min(peak, gray);
-    peak *= 0.5;
-    peak *= 1.0 + 1.666 * max(0, (peak - lum) / peak);
-
-    peak = ColTone(peak, float4(contrast, shoulder, b, c) );
-
-    //float crosstalk = max(1.0,crossTalk * 4.0); // controls amount of channel crosstalk
-    float saturation = contrast; // full tonal range saturation control
-    float crossSaturation = contrast * 64.0; // crosstalk saturation
-    //float crossSaturation = contrast * (64.0 / crosstalk); // crosstalk saturation
-
-    float3 rgb = 1.0;
-
-    // wrap crosstalk in transform
-    ratio = pow(abs(ratio + 0.11) * 0.90909, saturation / crossSaturation);
-    ratio = lerp(ratio, rgb, pow(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
-    //ratio = lerp(ratio, rgb, pows(peak, crosstalk));
-    ratio = pow(min(1.0, ratio), crossSaturation);
-
-    // then apply ratio to peak
-    float3 lincol = color;
-    color = peak * ratio;
-    return color;
-}*/
+// Lottes (2016) adapted by vtastek, optimised as the default tonemapper
 
 #define CMAX 1.6e+6f
 #define EPS 1e-6f
 // Code:
-float3 AMDLottes(float3 color, float contrast, float b, float c, float shoulder, float crosstalk)
+float3 VTLottes(float3 color, float contrast, float b, float c, float shoulder, float crosstalk)
 {
     float3 peak = max(color.r, max(color.g, color.b));
     peak = min(CMAX, max(EPS, peak));
@@ -372,7 +298,7 @@ float3 tonemap(float3 color)
     }
     else if (TESR_HDRData.x == 1)
     {
-        return max(0.0, AMDLottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.z, TESR_LotteData.y, TESR_LotteData.w, TESR_ToneMapping.x));
+        return max(0.0, VTLottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.z, TESR_LotteData.y, TESR_LotteData.w, TESR_ToneMapping.x));
     }
     else if (TESR_HDRData.x == 2)
     {
