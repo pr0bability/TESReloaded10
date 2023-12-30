@@ -405,6 +405,7 @@ public:
 		EffectRecord*		LowHF;
 		EffectRecord*		MotionBlur;
 		EffectRecord*		Normals;
+		EffectRecord*		PreTonemapper;
 		EffectRecord*		Rain;
 		EffectRecord*		Sharpening;
 		EffectRecord*		Specular;

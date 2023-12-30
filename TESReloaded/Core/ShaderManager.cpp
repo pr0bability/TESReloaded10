@@ -677,6 +677,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["LowHF"] = &TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = &TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = &TheShaderManager->Effects.Normals;
+	TheShaderManager->EffectsNames["PreTonemapper"] = &TheShaderManager->Effects.PreTonemapper;
 	TheShaderManager->EffectsNames["Precipitations"] = &TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = &TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = &TheShaderManager->Effects.ShadowsExteriors;
@@ -1472,7 +1473,7 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
-		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping")) {
+		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping") || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
 			ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "PointLightMultiplier", isExterior, transitionCurve);
 			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "HighlightSaturation", isExterior, transitionCurve);
 			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "WeatherContrast", isExterior, transitionCurve);
@@ -1486,22 +1487,23 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Exposure", isExterior, transitionCurve);
 			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Saturation", isExterior, transitionCurve);
 			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Gamma", isExterior, transitionCurve);
+			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", isExterior, transitionCurve);
+
 			ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapContrast", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapBrightness", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapMidpoint", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapShoulder", isExterior, transitionCurve);
-			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", isExterior, transitionCurve);
-
+			
 			if (ShaderConst.HDR.HDRData.x == 1.0) {
 				float hdrMax = max(1.0, ShaderConst.HDR.BloomData.w * 100.0);
 				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.35);
-				float shoulder = max(0.0,(min(1.0,ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0
+				float shoulder = max(0.0, (min(1.0, ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0
 				float midIn = max(0.01, ShaderConst.HDR.LotteData.z * 0.18);
 				float midOut = max(0.01, (ShaderConst.HDR.LotteData.y * 0.18) / shoulder);
 				float colToneB = -((-pows(midIn, contrast) + (midOut * (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) -
-						pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut)) /
-						(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut)) /
-						(pows(midIn, contrast * shoulder) * midOut));
+					pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut)) /
+					(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut)) /
+					(pows(midIn, contrast * shoulder) * midOut));
 
 				float colToneC = (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) - pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut) /
 					(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut);
@@ -1527,7 +1529,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.ImageAdjust.DarkColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorR", isExterior, transitionCurve);
 			ShaderConst.ImageAdjust.DarkColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorG", isExterior, transitionCurve);
 			ShaderConst.ImageAdjust.DarkColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "DarkColorB", isExterior, transitionCurve);
-
 			ShaderConst.ImageAdjust.LightColor.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorR", isExterior, transitionCurve);
 			ShaderConst.ImageAdjust.LightColor.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorG", isExterior, transitionCurve);
 			ShaderConst.ImageAdjust.LightColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorB", isExterior, transitionCurve);
@@ -1987,6 +1988,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+	Effects.PreTonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
