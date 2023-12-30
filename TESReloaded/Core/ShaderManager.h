@@ -167,6 +167,7 @@ struct ShaderConstants {
 		D3DXVECTOR4		GeneralFog;
 		D3DXVECTOR4		SimpleFog;
 		D3DXVECTOR4		Blend;
+		D3DXVECTOR4		Height;
 	};
 
 	struct SpecularStruct {
