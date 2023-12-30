@@ -1379,9 +1379,11 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.VolumetricFog.SimpleFog.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogInscattering");
 			ShaderConst.VolumetricFog.SimpleFog.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogNight");
 			ShaderConst.VolumetricFog.Height.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogHeight");
-			ShaderConst.VolumetricFog.Height.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogDist");
 			ShaderConst.VolumetricFog.SimpleFog.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogSkyColor");
 			ShaderConst.VolumetricFog.Blend.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogBlend");
+			if (!isExterior) ShaderConst.VolumetricFog.Height.w = 0.0f;
+			else ShaderConst.VolumetricFog.Height.w = 1.0f;
+			
 		}
 
 		// blur settings are used to blur normals for all effects using them
@@ -1492,7 +1494,7 @@ void ShaderManager::UpdateConstants() {
 
 			if (ShaderConst.HDR.HDRData.x == 1.0) {
 				float hdrMax = max(1.0, ShaderConst.HDR.BloomData.w * 100.0);
-				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.4);
+				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.35);
 				float shoulder = max(0.0,(min(1.0,ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0
 				float midIn = max(0.01, ShaderConst.HDR.LotteData.z * 0.18);
 				float midOut = max(0.01, (ShaderConst.HDR.LotteData.y * 0.18) / shoulder);
