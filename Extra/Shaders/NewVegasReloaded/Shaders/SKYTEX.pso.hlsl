@@ -93,7 +93,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float sunDir = compress(dot(eyeDir, TESR_SunPosition.xyz)); // stores wether the camera is looking in the direction of the sun in range 0/1
 
-    float athmosphere = pows(1 - verticality, 8 * TESR_DebugVar.y) * TESR_SkyData.x;
+    float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
     float sunInfluence = pows(sunDir, SUNINFLUENCE);
 
     float cloudsPower = Params.x;
@@ -130,7 +130,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     }
 
     // shade clouds 
-    float greyScale = lerp(luma(finalColor), 1.0, saturate(TESR_CloudData.w * TESR_DebugVar.w));
+    float greyScale = lerp(luma(finalColor), 1.0, saturate(TESR_CloudData.w));
     float alpha = finalColor.w * TESR_CloudData.z;
 
     // calculate sky color to blend in the clouds    
@@ -156,7 +156,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         float3 cloudTint = lerp(pows(TESR_SkyLowColor.rgb, 5.0), sunColor, saturate(sunInfluence * saturate(greyScale))).rgb;
         cloudTint = lerp(cloudTint, white.rgb, sunHeight * isDayTime); // tint the clouds less when the sun is high in the sky
 
-        finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.333 * TESR_DebugVar.z, isDayTime); // cancel tint at night
+        finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.333, isDayTime); // cancel tint at night
         finalColor.rgb += scattering;
     }
     finalColor = float4(finalColor.rgb * color.rgb * Params.y, saturate(finalColor.w * IN.color_0.a * TESR_CloudData.z));

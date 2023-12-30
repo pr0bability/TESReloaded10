@@ -56,8 +56,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
-    bloom.rgb = pows(bloom.rgb, max(1.0, gammaCorrection)); // linearize bloom
-    final.rgb = pows(final.rgb, max(1.0, gammaCorrection)); // linearize color
+    bloom.rgb = pows(bloom.rgb, gammaCorrection); // linearize bloom
+    final.rgb = pows(final.rgb, gammaCorrection); // linearize color
     
     // scale bloom while maintaining color
     bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0.0), TESR_HDRBloomData.y);
@@ -67,14 +67,14 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = lerp(final.rgb, Tint.rgb * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     
     float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x, brights cutoff
-    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * (TESR_DebugVar.x * 0.5)), 0.0); // blend image and bloom
+    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
     
-    final.rgb = lerp(final.rgb, final.rgb * Cinematic.z, cinematicScalar); // apply brightness from Cinematic
+    final.rgb = lerp(final.rgb, final.rgb * Cinematic.w, cinematicScalar); // apply brightness from Cinematic
     final.rgb = tonemap(final.rgb * TESR_HDRData.y); // exposure & tonemap using provided tonemapper
     
     final.rgb = pows(final.rgb, 1.0/max(1.0, TESR_HDRData.w)); // delinearise
     
-    final.rgb = lerp(final.rgb, Cinematic.w * (final.rgb - Cinematic.y) + Cinematic.y, cinematicScalar * TESR_ToneMapping.y); // apply contrast from Cinematic, scaled by modifier
+    final.rgb = lerp(final.rgb, (Cinematic.z * (final.rgb - Cinematic.y)) + Cinematic.y, cinematicScalar * TESR_ToneMapping.y); // apply contrast from Cinematic, scaled by modifier
     final.rgb = lerp(final.rgb, Fade.rgb, Fade.a); // apply night eye and fade, gamma-space but vanilla accurate
 
     OUT.color_0 = float4(background.w == 0 ? background.rgb : final.rgb, BlurScale.z);
