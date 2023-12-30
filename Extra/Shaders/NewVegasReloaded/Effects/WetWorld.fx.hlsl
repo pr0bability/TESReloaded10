@@ -146,7 +146,6 @@ float4 BlurWetMap(VSOUT IN, uniform float2 OffsetMask, uniform float blurRadius)
 float4 Wet( VSOUT IN ) : COLOR0
 {
 	float4 baseColor = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	baseColor.rgb = pows(baseColor.rgb, 2.2); //linearise
 
 	float depth = readDepth(IN.UVCoord);
 	float3 eyeDirection = toWorld(IN.UVCoord);
@@ -161,6 +160,8 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float waterTreshold = (depth/farZ) * 200;
 	float isWaterSurface = (dot(normal, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
     if (depth > DrawD || floorAngle == 0 || isWaterSurface) return baseColor;
+
+	baseColor.rgb = pows(baseColor.rgb, 2.2); //linearise
 
 	float LODfade = smoothstep(DrawD, 0, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
@@ -226,6 +227,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	
 	color = lerp(baseColor.rgb, color, LODfade);
 	color = pows(color, 1.0/2.2); //delinearise
+	baseColor = pows(baseColor, 1.0/2.2); //delinearise
     return float4(lerp(baseColor.rgb, color, LODfade), 1); // fade out puddles
 }
 
