@@ -380,9 +380,6 @@ PointLightMultiplier = 1.0            # Experimental - modifies the strength of 
 [_Shaders.Tonemapping.Status]
 Enabled = true                        # Replaces vanilla HDR tonemapping shaders with custom ones.
 
-[_Shaders.PreTonemapper.Status]
-Enabled = false                       # Enables an alternate pre-vanilla tonemapper, doesn't replace the default bloom and tint blending but tonemaps all highlights. Bloom and tints are applied atop, only use as a fallback
-
 
 [_Shaders.ImageAdjust.Main]
 Brightness = 1.0                      # Overall image brightness.

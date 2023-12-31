@@ -208,6 +208,56 @@ void RenderManager::SetupSceneCamera() {
 
 }
 
+// detect if dxvk is present
+bool getDXVKPresent() {
+	DWORD  verHandle = 0;
+	LPBYTE lpBuffer = NULL;
+
+	DWORD  verSize = GetFileVersionInfoSizeA("d3d9.dll", &verHandle);
+	if (verSize == NULL) return false;
+
+	LPSTR verData = new char[verSize];
+	if (!GetFileVersionInfoA("d3d9.dll", verHandle, verSize, verData)) {
+		Logger::Log("couldn't find file version info");
+		delete[] verData;
+		return false;
+	}
+
+	struct LANGANDCODEPAGE {
+		WORD wLanguage;
+		WORD wCodePage;
+	} *lpTranslate;
+
+	UINT size = 0;
+	if (!VerQueryValueA(verData, "\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &size)) {
+		delete[] verData;
+		return false;
+	}
+
+	if (!size) {
+		delete[] verData;
+		return false;
+	}
+
+	for (UINT i = 0; i < (size / sizeof(struct LANGANDCODEPAGE)); i++)
+	{
+		char subblock[256];
+		StringCchPrintfA(subblock, 256, "\\StringFileInfo\\%04x%04x\\ProductName", lpTranslate[i].wLanguage, lpTranslate[i].wCodePage);
+
+		char* description = NULL;
+		UINT dwBytes;
+		VerQueryValueA(verData, subblock, (LPVOID*)&description, &dwBytes);
+
+		if (!memcmp(description, "DXVK", 4)) {
+			delete[] verData;
+			return true;
+		}
+	}
+
+	delete[] verData;
+	return false;
+}
+
 void RenderManager::Initialize() {
 
 	IDirect3D9* D3D = NULL;
@@ -222,8 +272,13 @@ void RenderManager::Initialize() {
 	device->GetDirect3D(&D3D);
 	D3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &currentDisplayMode);
 	RESZ = D3D->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, currentDisplayMode.Format, D3DUSAGE_RENDERTARGET, D3DRTYPE_SURFACE, (D3DFORMAT)MAKEFOURCC('R','E','S','Z')) == D3D_OK;
-	if (RESZ)
+	DXVK = false;
+
+	if (RESZ) {
 		Logger::Log("AMD/Intel detected: RESZ supported.");
+		DXVK = getDXVKPresent();
+		if (DXVK) Logger::Log("DXVK found");
+	}
 	else if (NvAPI_Initialize() == NVAPI_OK)
 		Logger::Log("NVIDIA detected: NVAPI supported.");
 	else
