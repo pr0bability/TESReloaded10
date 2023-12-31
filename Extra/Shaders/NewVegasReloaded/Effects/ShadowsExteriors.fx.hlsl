@@ -82,8 +82,8 @@ float4 Shadow(VSOUT IN) : COLOR0
     color.rgb = pows(color.rgb, 2.2); // linearise
     float4 skyColor = float4(pows(TESR_SkyColor.rgb, 2.2),TESR_SkyColor.w); // linearise
 	// tint shadowed areas with Sky color before blending
-	float4 colorShadow = luma(color.rgb) * (Shadow.r) * skyColor;
-	colorShadow.rgb = lerp(colorShadow, color * Shadow.r, Shadow.r).rgb;// bias the transition between the 2 colors to make it less noticeable
+	float4 colorShadow = luma(color.rgb) * Shadow.r * skyColor;
+	colorShadow.rgb = lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.5)).rgb;// bias the transition between the 2 colors to make it less noticeable
     colorShadow.rgb = pows(max(0.0,colorShadow.rgb), 1.0/2.2); // delinearise
 	return float4(colorShadow.rgb, 1.0); 
 }
