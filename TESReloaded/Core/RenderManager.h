@@ -25,6 +25,7 @@ public:
 	RECT				SaveGameScreenShotRECT;
 	bool				IsSaveGameScreenShot;
 	bool				RESZ;
+	bool				DXVK;
 };
 
 class DWNode : public NiNode {

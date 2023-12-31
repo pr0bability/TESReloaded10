@@ -177,7 +177,8 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	}
 	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
 		// load tonemapping shaders, with different names between New vegas and Oblivion
-		if (!TheSettingManager->GetMenuShaderEnabled("Tonemapping")) return NULL;
+		// disable this shader replacement for AMD cards without DXVK
+		if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) || !TheSettingManager->GetMenuShaderEnabled("Tonemapping")) return NULL;
 	}
 	else if (!memcmp(Name, "PAR", 3)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("POM")) return NULL;
@@ -1951,8 +1952,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	// render post process normals for use by shaders
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
 
-
-
 	// render a shadow pass for point lights
 	if ((isExterior && Effects.ShadowsExteriors->Enabled) || (!isExterior && Effects.ShadowsInteriors->Enabled)) {
 		// separate lights in 2 batches
@@ -1988,7 +1987,10 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
-	Effects.PreTonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+	
+	// For AMD devices without DXVK, replace vanilla tonemapping replacement with an Effect
+	if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) && TheSettingManager->GetMenuShaderEnabled("Tonemapping"))
+		Effects.PreTonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
