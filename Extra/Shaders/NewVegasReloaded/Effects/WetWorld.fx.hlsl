@@ -161,8 +161,6 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float isWaterSurface = (dot(normal, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
     if (depth > DrawD || floorAngle == 0 || isWaterSurface) return baseColor;
 
-	baseColor.rgb = pows(baseColor.rgb, 2.2); //linearise
-
 	float LODfade = smoothstep(DrawD, 0, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
@@ -196,39 +194,37 @@ float4 Wet( VSOUT IN ) : COLOR0
 
 	// refract image through ripple normals
 	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
-	float4 rippleColor = pows(tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord),2.2); //linearise
+	float4 rippleColor = linearize(tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord)); 
 
 	// sample and strenghten the shadow map
-	float3 sunAmbient = luma(pows(TESR_SunAmbient.rgb,2.2)); //linearise
+	float sunAmbient = luma(linearize(TESR_SunAmbient));
 	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord).r / sunAmbient, 5));
 
 	// calculate sky color
     float sunHeight = shade(TESR_SunPosition.xyz, up);
     float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
 	float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
+	float3 fresnelColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, TESR_SunColor.rgb);
 
 	// calculate puddle color
 	float3 puddleColor = rippleColor.rgb * lerp(1, 0.5, TESR_WetWorldData.w); // base color is just darkened ground color
-	float3 fresnelColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, TESR_SunColor.rgb);
-	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, TESR_WetWorldData.w);
+	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, 0.5 * TESR_WetWorldData.w);
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
-	float glossiness = 200;
+	float glossiness = 1000;
 	float specularMask = saturate(puddlemask + invlerp(1.0, 0.98, combinedNormals.z) * 0.5);
 	float specular = pow(shades(combinedNormals, halfwayDir), glossiness * lerp(1, 5, specularMask)) * inShadow;
 
 	// transition between surface ripple and deeper puddles
 	puddleColor = lerp(rippleColor.rgb, puddleColor.rgb, puddlemask);
 
-	float3 sunColor = pows(TESR_SunColor.rgb,2.2); //linearise
+	float4 sunColor = linearize(TESR_SunColor);
 
-	float3 color = lerp(puddleColor, fresnelColor, fresnel * specularMask);
-	color += specular * sunColor * 12 * specularMask;
+	float4 color = float4(lerp(puddleColor, fresnelColor, fresnel * specularMask), 1.0);
+	color += specular * sunColor * 1000 * specularMask;
 	
-	color = lerp(baseColor.rgb, color, LODfade);
-	color = pows(color, 1.0/2.2); //delinearise
-	baseColor = pows(baseColor, 1.0/2.2); //delinearise
-    return float4(lerp(baseColor.rgb, color, LODfade), 1); // fade out puddles
+	color = delinearize(color);
+    return float4(lerp(baseColor.rgb, color.rgb, LODfade), 1); // fade out puddles
 }
 
 
