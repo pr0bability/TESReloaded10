@@ -66,7 +66,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
     float refractionCoeff = ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff);
-    float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
+    float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
 
     float4 color = linShallowColor * sunLuma;
     color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);

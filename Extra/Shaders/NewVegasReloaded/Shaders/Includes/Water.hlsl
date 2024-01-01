@@ -139,7 +139,7 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
     float fresnelCoeff = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
 
     // float reflectionLuma = 1 - luma(reflection);
-    float4 reflectionColor = lerp (reflection * pows(ReflectionColor,2.2), reflection, saturate(reflectivity));
+    float4 reflectionColor = lerp (reflection * linearize(ReflectionColor), reflection, saturate(reflectivity));
     // reflectionColor = lerp (reflectionColor, shallowColor, reflectionLuma);
     // float3 reflectionColor = VarAmounts.y * (reflection - ReflectionColor) + ReflectionColor.rgbb;
 	float3 result = lerp(color.rgb, reflectionColor.rgb, saturate(fresnelCoeff * reflectivity));

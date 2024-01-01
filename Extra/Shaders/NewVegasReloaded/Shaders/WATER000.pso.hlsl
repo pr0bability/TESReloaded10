@@ -72,7 +72,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * exteriorRefractionModifier);
-    float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
+    float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
     float4 refractionPos = reflectionPos;
     refractionPos.y = refractionPos.w - reflectionPos.y;
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * exteriorDepthModifier;
@@ -81,7 +81,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     // float water = max(waterDepth.y, 0.0000000001) * 4096;
     // float4 floorNormal = float4(normalize(float4(ddx(water), ddy(water), 1, 1).rgb) + eyeDirection.rgb, 1);
 
-    float4 color = tex2Dproj(RefractionMap, refractionPos);
+    float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
     color = lerp(getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color), float4(linShallowColor.rgb * sunLuma, 1), LODfade); // fade to full fog to hide LOD seam
     color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
@@ -89,7 +89,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb * dot(TESR_SunDirection.rgb, float3(0, 0, 1)), color);
     color = getShoreFade(IN, waterDepth.x, color);
 
-    color = pows(color, 1.0/2.2);  //delinearise
+    color = delinearize(color);
     OUT.color_0 = color;
     // OUT.color_0.a = lerp(color.a, 1, LODfade); // fade to full opacity to hide LOD seam
     return OUT;
