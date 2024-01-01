@@ -71,7 +71,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float starFlicker = 0.05;
     float noiseScale = 4;
-    float flickerSpeed = 0.005;
+    float flickerSpeed = 0.01;
 
     float3 eyeDir = normalize(IN.location);
   
