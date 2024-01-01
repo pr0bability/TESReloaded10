@@ -72,14 +72,14 @@ float4 specularHighlight( VSOUT IN) : COLOR0
 
 	float3 viewRay = normalize(positionVector * -1);
 
-	float fresnel = pow(1 - dot(viewRay, worldNormal), 5);
+	float fresnel = pows(1 - dot(viewRay, worldNormal), 5);
 	float reflectance = 0.04;
 	fresnel = fresnel + reflectance * (1 - fresnel);
 	fresnel *= compress(dot(viewRay, TESR_SunDirection.xyz * -1)); // scale fresnel with light direction
 
 	// blinn phong specular
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz + viewRay);
-	float specular = pow(shades(worldNormal, halfwayDir), Glossiness) * (1 + fresnel); // scale specular with fresnel
+	float specular = pows(shades(worldNormal, halfwayDir), Glossiness) * (1 + fresnel); // scale specular with fresnel
 	float skyLight = dot(worldNormal, float3(0, 0, 1));
 
 	float3 result = float3(specular, skyLight, fresnel);
@@ -115,10 +115,10 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	skyColor = lerp(luma(skyColor).rrrr, skyColor, SkySaturation);
 
 	// fresnel
-	result += light.b * color * luminance * 2 * FresnelStrength * max(0.0,invLuma * sunSetFade); //fresnel scales with the luminance, but reaches full power at half max luminance
+	result += light.b * color * saturate(luminance * 2) * FresnelStrength * max(0.0,invLuma * sunSetFade); //fresnel scales with the luminance, but reaches full power at half max luminance
 
 	// return skyColor;
-	result += SkyStrength * light.g * skyColor * 0.01 * smoothstep(0.4, 0, luminance) * max(0.0,invLuma * sunSetFade); // skylight is more pronounced in darker areas
+	result += SkyStrength * light.g * skyColor * 0.01 * saturate(smoothstep(0.4, 0, luminance)) * max(0.0,invLuma * sunSetFade); // skylight is more pronounced in darker areas
 
 	// specular
 	result += lerp(0, light.r * SpecStrength * 10.0 * sunColor * color, invlerps(LumTreshold * sunLuma, 1, luminance)); // specular will boost areas above treshold
