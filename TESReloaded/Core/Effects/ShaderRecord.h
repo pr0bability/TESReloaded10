@@ -9,13 +9,45 @@ enum ShaderCompileType {
 };
 
 
-struct ShaderValue {
+class ShaderValue {
+public:
+	ShaderValue() {};
+	virtual ~ShaderValue() {};
+
+	const char*			Name;
 	UInt32				RegisterIndex;
 	UInt32				RegisterCount;
-	union {
-		D3DXVECTOR4* Value;
-		TextureRecord* Texture;
+};
+
+
+class ShaderFloatValue : public ShaderValue {
+public:
+	ShaderFloatValue() {
+		Value = nullptr;
 	};
+	virtual ~ShaderFloatValue() {};
+
+	void				GetValueFromConstantTable();
+
+	D3DXVECTOR4* Value;
+	D3DXPARAMETER_TYPE	Type;
+};
+
+
+class ShaderTextureValue : public ShaderValue {
+public:
+	ShaderTextureValue() {
+		Texture = nullptr;
+	};
+	virtual ~ShaderTextureValue() {};
+
+	void				GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32 Index);
+	void				GetTexturePath(std::string& resourceSubstring);
+
+	std::string			SamplerString;
+	std::string			TexturePath;
+	TextureRecord*		Texture;
+	TextureRecord::TextureRecordType	Type;
 };
 
 
@@ -27,12 +59,12 @@ public:
 	virtual void			SetCT() = 0;
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) = 0;
 
-	void					SetConstantTableValue(LPCSTR Name, UInt32 Index);
-	static bool ShouldCompileShader(const char* fileBin, const char* fileHlsl, ShaderCompileType CompileStatus);
+	static bool				ShouldCompileShader(const char* fileBin, const char* fileHlsl, ShaderCompileType CompileStatus);
 
-	ShaderValue* FloatShaderValues;
+
+	ShaderFloatValue*		FloatShaderValues;
 	UInt32					FloatShaderValuesCount;
-	ShaderValue* TextureShaderValues;
+	ShaderTextureValue*		TextureShaderValues;
 	UInt32					TextureShaderValuesCount;
 };
 
@@ -45,11 +77,11 @@ public:
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable);
 	virtual void			SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount) = 0;
 
-	static ShaderRecord* LoadShader(const char* Name, const char* SubPath);
+	static ShaderRecord*	LoadShader(const char* Name, const char* SubPath);
 
+	const char* Name;
 	bool					HasRenderedBuffer;
 	bool					HasDepthBuffer;
-	const char* Name;
 };
 
 class ShaderRecordVertex : public ShaderRecord {
@@ -77,9 +109,9 @@ public:
 	void					SetupShader(IDirect3DVertexShader9* CurrentVertexHandle);
 	void					DisposeShader();
 
-	ShaderRecordVertex* ShaderProg;
-	ShaderRecordVertex* ShaderProgE;
-	ShaderRecordVertex* ShaderProgI;
+	ShaderRecordVertex*		ShaderProg;
+	ShaderRecordVertex*		ShaderProgE;
+	ShaderRecordVertex*		ShaderProgI;
 	IDirect3DVertexShader9* ShaderHandleBackup;
 	char					ShaderName[40];
 };
@@ -89,10 +121,10 @@ public:
 	void					SetupShader(IDirect3DPixelShader9* CurrentPixelHandle);
 	void					DisposeShader();
 
-	ShaderRecordPixel* ShaderProg;
-	ShaderRecordPixel* ShaderProgE;
-	ShaderRecordPixel* ShaderProgI;
-	IDirect3DPixelShader9* ShaderHandleBackup;
+	ShaderRecordPixel*		ShaderProg;
+	ShaderRecordPixel*		ShaderProgE;
+	ShaderRecordPixel*		ShaderProgI;
+	IDirect3DPixelShader9*	ShaderHandleBackup;
 	char					ShaderName[40];
 };
 

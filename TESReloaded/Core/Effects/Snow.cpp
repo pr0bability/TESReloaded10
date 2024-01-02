@@ -4,7 +4,7 @@ void SnowEffect::UpdateConstants() {
 	// Snow fall
 	if (TheShaderManager->isSnow && Constants.SnowAnimator.switched == false) {
 		// it just started snowing
-		TheShaderManager->ShaderConst.Animators.PuddlesAnimator.Start(0.3, 0); // fade out any puddles if they exist
+		TheShaderManager->Effects.WetWorld->Constants.PuddlesAnimator.Start(0.3, 0); // fade out any puddles if they exist
 		Constants.SnowAnimator.switched = true;
 		Constants.SnowAnimator.Initialize(0);
 		Constants.SnowAnimator.Start(0.5, 1);

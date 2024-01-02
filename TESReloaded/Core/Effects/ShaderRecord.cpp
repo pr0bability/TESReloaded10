@@ -22,6 +22,7 @@ ShaderRecord::ShaderRecord() {
 }
 ShaderRecord::~ShaderRecord() {}
 
+
 /**
 * @param fileBin the name of the compiled shader file
 * @param fileHlsl the name of the hlsl source file for this shader
@@ -209,8 +210,8 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	}
 
 	auto timer = TimeLogger();
-	if (FloatShaderValuesCount) FloatShaderValues = new ShaderValue[FloatShaderValuesCount];
-	if (TextureShaderValuesCount) TextureShaderValues = new ShaderValue[TextureShaderValuesCount];
+	if (FloatShaderValuesCount) FloatShaderValues = new ShaderFloatValue[FloatShaderValuesCount];
+	if (TextureShaderValuesCount) TextureShaderValues = new ShaderTextureValue[TextureShaderValuesCount];
 
 	// Should be better but still crashes with NVHR -- TODO: Check how to fix it
 	//if (FloatShaderValuesCount) FloatShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(FloatShaderValuesCount * sizeof(ShaderValue));
@@ -226,15 +227,18 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		if (!memcmp(ConstantDesc.Name, "TESR_", 5)) {
 			switch (ConstantDesc.RegisterSet) {
 			case D3DXRS_FLOAT4:
-				SetConstantTableValue(ConstantDesc.Name, FloatIndex);
+				FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
+				FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
 				FloatShaderValues[FloatIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 				FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.RegisterCount;
 				FloatIndex++;
 				break;
 			case D3DXRS_SAMPLER:
-				TextureShaderValues[TextureIndex].Texture = TheTextureManager->LoadTexture(ShaderSource, ConstantDesc.Type, ConstantDesc.Name, ConstantDesc.RegisterIndex, &HasRenderedBuffer, &HasDepthBuffer);
+				TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
+				TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type, ConstantDesc.Name, &HasRenderedBuffer, &HasDepthBuffer);
 				TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 				TextureShaderValues[TextureIndex].RegisterCount = 1;
+				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, TextureIndex);
 				TextureIndex++;
 				break;
 			default:
@@ -247,14 +251,60 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	timer.LogTime("ShaderRecord::createCT Done");
 }
 
-/*
-Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
-*/
-void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 
+// extract info about texture from the shader source code
+void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32 Index) {
+	std::string Source = std::string((const char*)ShaderSource->GetBufferPointer());
+
+	size_t SamplerPos = Source.find(("register ( s" + std::to_string(Index) + " )"));
+	if (SamplerPos == std::string::npos) {
+		Logger::Log("[ERROR] %s  cannot be binded", Name);
+		return;
+	}
+	if (Type >= TextureRecord::TextureRecordType::PlanarBuffer && Type <= TextureRecord::TextureRecordType::CubeBuffer) {
+		//Only these samplers are bindable to an arbitrary texture
+		size_t StartTexture = Source.find("<", SamplerPos + 1);
+		size_t EndTexture = Source.find(">", SamplerPos + 1);
+		if (StartTexture == std::string::npos || EndTexture == std::string::npos) {
+			Logger::Log("[ERROR] %s cannot be binded", Name);
+			return;
+		}
+		std::string TextureString = Source.substr(StartTexture + 1, EndTexture - StartTexture - 1);
+		GetTexturePath(TextureString);
+		Logger::Log("texture path: %s", TexturePath);
+	}
+	size_t StartStatePos = Source.find("{", SamplerPos);
+	size_t EndStatePos = Source.find("}", SamplerPos);
+	if (EndStatePos == std::string::npos || StartStatePos == std::string::npos) {
+		Logger::Log("[ERROR] %s cannot be binded", Name);
+		return;
+	}
+	SamplerString = Source.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);
+}
+
+
+void ShaderTextureValue::GetTexturePath(std::string& resourceSubstring) {
+	std::string PathS;
+	if (resourceSubstring.find("ResourceName") != std::string::npos) {
+		size_t StartPath = resourceSubstring.find("\"");
+		size_t EndPath = resourceSubstring.rfind("\"");
+		PathS = resourceSubstring.substr(StartPath + 1, EndPath - 1 - StartPath);
+		PathS.insert(0, "Data\\Textures\\");  
+	}
+	else {
+		Logger::Log("[ERROR] Cannot parse bindable texture");
+	}
+	TexturePath = PathS;
+}
+
+
+/*
+* Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
+*/
+void ShaderFloatValue::GetValueFromConstantTable() {
 	for (auto const& imap : TheShaderManager->ConstantsTable) {
 		if (!strcmp(imap.first, Name)) {
-			FloatShaderValues[Index].Value = TheShaderManager->ConstantsTable.at(imap.first);
+			Value = TheShaderManager->ConstantsTable.at(imap.first);
 			return;
 		}
 	}
@@ -262,7 +312,7 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 	Logger::Log("Custom constant found: %s", Name);
 	D3DXVECTOR4 v; v.x = v.y = v.z = v.w = 0.0f;
 	TheShaderManager->CustomConst[Name] = v;
-	FloatShaderValues[Index].Value = &TheShaderManager->CustomConst[Name];
+	Value = &TheShaderManager->CustomConst[Name];
 }
 
 
@@ -270,22 +320,31 @@ void ShaderProgram::SetConstantTableValue(LPCSTR Name, UInt32 Index) {
 * Sets the Constant Table for the shader
 */
 void ShaderRecord::SetCT() {
-	ShaderValue* Value;
 
 	if (HasRenderedBuffer) TheRenderManager->device->StretchRect(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface, NULL, TheTextureManager->RenderedSurface, NULL, D3DTEXF_NONE);
 	if (HasDepthBuffer) TheRenderManager->ResolveDepthBuffer();
+	
 	// binds textures
+	ShaderTextureValue* Sampler;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
-		Value = &TextureShaderValues[c];
-		if (Value->Texture->Texture) TheRenderManager->renderState->SetTexture(Value->RegisterIndex, Value->Texture->Texture);
-		for (int i = 1; i < SamplerStatesMax; i++) {
-			TheRenderManager->SetSamplerState(Value->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Value->Texture->SamplerStates[i]);
+		Sampler = &TextureShaderValues[c];
+		if (!Sampler->Texture) Sampler->Texture = TheTextureManager->LoadTexture(Sampler);
+	
+		if (Sampler->Texture->Texture != nullptr) {
+			TheRenderManager->renderState->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
+			for (int i = 1; i < SamplerStatesMax; i++) {
+				TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
+			}
 		}
 	}
+
 	// update constants
+	ShaderFloatValue* Constant;
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
-		Value = &FloatShaderValues[c];
-		SetShaderConstantF(Value->RegisterIndex, Value->Value, Value->RegisterCount); // TODO: for matrices, rows and columns are inverted because of the way this works.
+		Constant = &FloatShaderValues[c];
+		if (Constant->Value == nullptr) Constant->GetValueFromConstantTable();
+
+		SetShaderConstantF(Constant->RegisterIndex, Constant->Value, Constant->RegisterCount); // TODO: for matrices, rows and columns are inverted because of the way this works.
 	}
 }
 
@@ -327,6 +386,7 @@ void ShaderRecordPixel::SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Va
 	TheRenderManager->device->SetPixelShaderConstantF(RegisterIndex, (const float*)Value, RegisterCount);
 
 }
+
 
 /*
 * Class that wraps an effect shader, in order to load it/render it/set constants.
@@ -464,8 +524,8 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 		if ((ConstantDesc.Class == D3DXPC_VECTOR || ConstantDesc.Class == D3DXPC_MATRIX_ROWS) && !memcmp(ConstantDesc.Name, "TESR_", 5)) FloatShaderValuesCount += 1;
 		if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE && !memcmp(ConstantDesc.Name, "TESR_", 5)) TextureShaderValuesCount += 1;
 	}
-	FloatShaderValues = new ShaderValue[FloatShaderValuesCount];
-	TextureShaderValues = new ShaderValue[TextureShaderValuesCount];
+	FloatShaderValues = new ShaderFloatValue[FloatShaderValuesCount];
+	TextureShaderValues = new ShaderTextureValue[TextureShaderValuesCount];
 
 	Logger::Debug("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
 
@@ -476,16 +536,19 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 			switch (ConstantDesc.Class) {
 			case D3DXPC_VECTOR:
 			case D3DXPC_MATRIX_ROWS:
-				SetConstantTableValue(ConstantDesc.Name, FloatIndex);
+				FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
+				FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
 				FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
 				FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
 				FloatIndex++;
 				break;
 			case D3DXPC_OBJECT:
 				if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE) {
-					TextureShaderValues[TextureIndex].Texture = TheTextureManager->LoadTexture(ShaderSource, ConstantDesc.Type, ConstantDesc.Name, TextureIndex, NULL, NULL);
+					TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
+					TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type, ConstantDesc.Name, NULL, NULL);
 					TextureShaderValues[TextureIndex].RegisterIndex = TextureIndex;
 					TextureShaderValues[TextureIndex].RegisterCount = 1;
+					TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, TextureIndex);
 					TextureIndex++;
 				}
 				break;
@@ -500,26 +563,34 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 *Sets the Effect Shader constants table and texture registers.
 */
 void EffectRecord::SetCT() {
-	ShaderValue* Value;
 	if (!Enabled || Effect == nullptr) return;
+
+	ShaderTextureValue* Sampler;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
-		Value = &TextureShaderValues[c];
+		Sampler = &TextureShaderValues[c];
+
+		if (!Sampler->Texture) Sampler->Texture = TheTextureManager->LoadTexture(Sampler);
 		try {
-			if (Value->Texture->Texture) TheRenderManager->device->SetTexture(Value->RegisterIndex, Value->Texture->Texture);
-			for (int i = 1; i < SamplerStatesMax; i++) {
-				TheRenderManager->SetSamplerState(Value->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Value->Texture->SamplerStates[i]);
+			if (Sampler->Texture->Texture != nullptr) {
+				TheRenderManager->device->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
+				for (int i = 1; i < SamplerStatesMax; i++) {
+					TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
+				}
 			}
 		}
 		catch (const std::exception& e) {
-			Logger::Log("[ERRROR] Couldnt' bind texture %i to effect %s : %s", c, Path, e.what());
+			Logger::Log("[ERROR] Couldnt' bind texture %i to effect %s : %s", c, Path, e.what());
 		}
 	}
+
+	ShaderFloatValue* Constant;
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
-		Value = &FloatShaderValues[c];
-		if (Value->RegisterCount == 1)
-			Effect->SetVector((D3DXHANDLE)Value->RegisterIndex, Value->Value);
+		Constant = &FloatShaderValues[c];
+		if (Constant->Value == nullptr)  Constant->GetValueFromConstantTable();
+		if (Constant->RegisterCount == 1)
+			Effect->SetVector((D3DXHANDLE)Constant->RegisterIndex, Constant->Value);
 		else
-			Effect->SetMatrix((D3DXHANDLE)Value->RegisterIndex, (D3DXMATRIX*)Value->Value);
+			Effect->SetMatrix((D3DXHANDLE)Constant->RegisterIndex, (D3DXMATRIX*)Constant->Value);
 	}
 }
 

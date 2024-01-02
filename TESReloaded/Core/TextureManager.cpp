@@ -1,97 +1,5 @@
-#include <string>
-#include <regex>
 #include <algorithm>
 
-#define WordWaterHeightMapBuffer "TESR_WaterHeightMapBuffer"
-#define WordWaterReflectionMapBuffer "TESR_WaterReflectionMapBuffer"
-
-TextureRecord::TextureRecord() {
-
-	Texture = NULL;
-	SamplerStates[0] = 0; //This isn't used. Just to simplify  the matching between index and meaning
-	SamplerStates[D3DSAMP_ADDRESSU] = D3DTADDRESS_WRAP;
-	SamplerStates[D3DSAMP_ADDRESSV] = D3DTADDRESS_WRAP;
-	SamplerStates[D3DSAMP_ADDRESSW] = D3DTADDRESS_WRAP;
-	SamplerStates[D3DSAMP_BORDERCOLOR] = 0;
-	SamplerStates[D3DSAMP_MAGFILTER] = D3DTEXF_POINT;
-	SamplerStates[D3DSAMP_MINFILTER] = D3DTEXF_POINT;
-	SamplerStates[D3DSAMP_MIPFILTER] = D3DTEXF_NONE;
-	SamplerStates[D3DSAMP_MIPMAPLODBIAS] = 0;
-	SamplerStates[D3DSAMP_MAXMIPLEVEL] = 0;
-	SamplerStates[D3DSAMP_MAXANISOTROPY] = 1;
-	SamplerStates[D3DSAMP_SRGBTEXTURE] = 0;
-
-}
-
-bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
-	IDirect3DTexture9* Tex = NULL;
-	IDirect3DVolumeTexture9* TexV = NULL;
-	IDirect3DCubeTexture9* TexC = NULL;
-
-	// assigning shadow cube maps
-	for (int i = 0; i < ShadowCubeMapsMax; i++) {
-		if (Type == ShadowCubeMapBuffer0 + i) {
-			Texture = TheTextureManager->ShadowCubeMapTexture[i];
-			return true;
-		}
-	}
-
-	// other buffers
-	switch (Type) {
-		case PlanarBuffer:
-			D3DXCreateTextureFromFileA(TheRenderManager->device, Name, &Tex);
-			if (Tex == NULL) return false;
-			Texture = Tex;
-			break;
-		case VolumeBuffer:
-			D3DXCreateVolumeTextureFromFileA(TheRenderManager->device, Name, &TexV);
-			if (TexV == NULL) return false;
-			Texture = TexV;
-			break;
-		case CubeBuffer:
-			D3DXCreateCubeTextureFromFileA(TheRenderManager->device, Name, &TexC);
-			if (TexC == NULL) return false;
-			Texture = TexC;
-			break;
-		case SourceBuffer:
-			Texture = TheTextureManager->SourceTexture;
-			break;
-		case RenderedBuffer:
-			Texture = TheTextureManager->RenderedTexture;
-			break;
-		case DepthBuffer:
-			Texture = TheTextureManager->DepthTexture;
-			break;
-		case NormalsBuffer:
-			Texture = TheTextureManager->NormalsTexture;
-			break;
-		case AvgLumaBuffer:
-			Texture = TheTextureManager->AvgLumaTexture;
-			break;
-		case ShadowMapBufferNear:
-			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapNear];
-			break;
-		case ShadowMapBufferMiddle:
-			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapMiddle];
-			break;
-		case ShadowMapBufferFar:
-			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapFar];
-			break;
-		case ShadowMapBufferLod:
-			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapLod];
-			break;
-		case OrthoMapBuffer:
-			Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapOrtho];
-			break;
-		case PointShadowBuffer:
-			Texture = TheTextureManager->ShadowPassTexture;
-			break;
-        default:
-            return false; //Texture is invalid or not assigned here.
-	}
-	return true;
-
-}
 
 void TextureManager::Initialize() {
 
@@ -156,147 +64,73 @@ void TextureManager::InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9*
 /*
 * Binds texture buffers to a given register name
 */
-TextureRecord* TextureManager::LoadTexture(ID3DXBuffer* ShaderSourceBuffer, D3DXPARAMETER_TYPE ConstantType, LPCSTR ConstantName, UINT ConstantIndex, bool* HasRenderedBuffer, bool* HasDepthBuffer) {
+TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 	auto timer = TimeLogger();
 
-	TextureRecord::TextureRecordType Type = TextureRecord::TextureRecordType::None;
-	std::string Source = std::string((const char*) ShaderSourceBuffer->GetBufferPointer());
-	std::string TexturePath;
-	Type = (ConstantType >= D3DXPT_SAMPLER && ConstantType <= D3DXPT_SAMPLER2D) ? TextureRecord::TextureRecordType::PlanarBuffer : Type;
-	Type = ConstantType == D3DXPT_SAMPLER3D ? TextureRecord::TextureRecordType::VolumeBuffer : Type;
-	Type = ConstantType == D3DXPT_SAMPLERCUBE ? TextureRecord::TextureRecordType::CubeBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_SourceBuffer") ? TextureRecord::TextureRecordType::SourceBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_RenderedBuffer") ? TextureRecord::TextureRecordType::RenderedBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_DepthBuffer") ? TextureRecord::TextureRecordType::DepthBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_NormalsBuffer") ? TextureRecord::TextureRecordType::NormalsBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_AvgLumaBuffer") ? TextureRecord::TextureRecordType::AvgLumaBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferNear") ? TextureRecord::TextureRecordType::ShadowMapBufferNear : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferMiddle") ? TextureRecord::TextureRecordType::ShadowMapBufferMiddle : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferFar") ? TextureRecord::TextureRecordType::ShadowMapBufferFar : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowMapBufferLod") ? TextureRecord::TextureRecordType::ShadowMapBufferLod : Type;
-	Type = !strcmp(ConstantName, "TESR_PointShadowBuffer") ? TextureRecord::TextureRecordType::PointShadowBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_OrthoMapBuffer") ? TextureRecord::TextureRecordType::OrthoMapBuffer : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer0") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer0 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer1") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer1 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer2") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer2 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer3") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer3 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer4") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer4 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer5") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer5 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer6") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer6 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer7") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer7 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer8") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer8 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer9") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer9 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer10") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer10 : Type;
-	Type = !strcmp(ConstantName, "TESR_ShadowCubeMapBuffer11") ? TextureRecord::TextureRecordType::ShadowCubeMapBuffer11 : Type;
+	Logger::Log("Loading texture %s (type:%i) (path: %s)", Constant->Name, Constant->Type, Constant->TexturePath);
 
-	Type = !strcmp(ConstantName, WordWaterHeightMapBuffer) ? TextureRecord::TextureRecordType::WaterHeightMapBuffer : Type;
-	Type = !strcmp(ConstantName, WordWaterReflectionMapBuffer) ? TextureRecord::TextureRecordType::WaterReflectionMapBuffer : Type;
+	std::string TexturePath = Constant->TexturePath;
+	TextureRecord::TextureRecordType Type = Constant->Type;
 
-	if (HasRenderedBuffer && !*HasRenderedBuffer) *HasRenderedBuffer = (Type == TextureRecord::TextureRecordType::RenderedBuffer);
-	if (HasDepthBuffer && !*HasDepthBuffer) *HasDepthBuffer = (Type == TextureRecord::TextureRecordType::DepthBuffer);
-	if (Type) {
-		size_t SamplerPos = Source.find(("register ( s" + std::to_string(ConstantIndex) + " )"));
-		if(SamplerPos == std::string::npos) {
-			Logger::Log("[ERROR] %s  cannot be binded", ConstantName);
-			return nullptr;
-		}
-		if(Type >= TextureRecord::TextureRecordType::PlanarBuffer && Type <= TextureRecord::TextureRecordType::CubeBuffer){
-			//Only these samplers are bindable to an arbitrary texture
-			size_t StartTexture = Source.find("<", SamplerPos +1);
-			size_t EndTexture = Source.find(">", SamplerPos +1);
-			if(StartTexture == std::string::npos || EndTexture == std::string::npos) {
-				Logger::Log("[ERROR] %s cannot be binded", ConstantName);
-				return nullptr;
-			}
-			std::string TextureString = Source.substr(StartTexture +1, EndTexture - StartTexture - 1);
-			TexturePath = GetFilenameForTexture(TextureString);
-		}
-		size_t StartStatePos = Source.find("{", SamplerPos);
-		size_t EndStatePos = Source.find("}", SamplerPos);
-		if(EndStatePos == std::string::npos || StartStatePos == std::string::npos) {
-			Logger::Log("[ERROR] %s cannot be binded", ConstantName);
-			return nullptr;
-		}
-		std::string SamplerString = Source.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);
-//		Logger::Log("%s \n", SamplerString.c_str());
-		TextureRecord* NewTextureRecord = new TextureRecord();
-        if(Type >= TextureRecord::TextureRecordType::WaterHeightMapBuffer){ /*Texture assigned after init*/
-            if(Type == TextureRecord::TextureRecordType::WaterHeightMapBuffer){
-                NewTextureRecord->Texture = WaterHeightMapB; 
-                WaterHeightMapTextures.push_back(NewTextureRecord);
-            }
-            else if(Type == TextureRecord::TextureRecordType::WaterReflectionMapBuffer){
-                NewTextureRecord->Texture = WaterReflectionMapB; 
-                WaterHeightMapTextures.push_back(NewTextureRecord);
-            }
-            Logger::Log("Game Texture %s Attached", ConstantName);
+	if (!Type) {
+		Logger::Log("[ERROR] Sampler %s doesn't have a valid type", Constant->Name);
+		return nullptr;
+	}
+	
+	TextureRecord* NewTextureRecord = new TextureRecord();
+    if(Type >= TextureRecord::TextureRecordType::WaterHeightMapBuffer){ /*Texture assigned after init*/
+        if(Type == TextureRecord::TextureRecordType::WaterHeightMapBuffer){
+            NewTextureRecord->Texture = WaterHeightMapB; 
+            WaterHeightMapTextures.push_back(NewTextureRecord);
         }
-		else if(Type >= TextureRecord::TextureRecordType::PlanarBuffer && Type <= TextureRecord::TextureRecordType::CubeBuffer){ //Cache only non game textures
-			IDirect3DBaseTexture9* cached = GetCachedTexture(TexturePath);
-			if(!cached) {
-				if (NewTextureRecord->LoadTexture(Type, TexturePath.c_str())) {
-					if (NewTextureRecord->Texture){
-						Logger::Log("Texture loaded: %s", TexturePath.c_str());
-						Textures[TexturePath] = NewTextureRecord->Texture;
-					}
-				}
-				else {
-					Logger::Log("ERROR: Cannot load texture %s", TexturePath.c_str());
+        else if(Type == TextureRecord::TextureRecordType::WaterReflectionMapBuffer){
+            NewTextureRecord->Texture = WaterReflectionMapB; 
+            WaterHeightMapTextures.push_back(NewTextureRecord);
+		}
+		else {
+			Logger::Log("Game Texture %s Not recognized", Constant->Name);
+			delete NewTextureRecord;
+			return nullptr;
+		}
+        Logger::Log("Game Texture %s Attached", Constant->Name);
+    }
+	else if(Type >= TextureRecord::TextureRecordType::PlanarBuffer && Type <= TextureRecord::TextureRecordType::CubeBuffer){ //Cache only non game textures
+		IDirect3DBaseTexture9* cached = GetCachedTexture(TexturePath);
+		if(!cached) {
+			if (NewTextureRecord->LoadTexture(Type, TexturePath.c_str())) {
+				if (NewTextureRecord->Texture){
+					Logger::Log("Texture loaded: %s", TexturePath.c_str());
+					Textures[TexturePath] = NewTextureRecord->Texture;
 				}
 			}
 			else {
-				NewTextureRecord->Texture = cached;
-				Logger::Log("Texture linked: %s", TexturePath.c_str());
+				Logger::Log("ERROR: Cannot load texture %s", TexturePath.c_str());
 			}
 		}
 		else {
-			if (NewTextureRecord->LoadTexture(Type, nullptr)) {
-				Logger::Log("Game Texture %s Binded", ConstantName);
-			}
-			else {
-                Logger::Log("ERROR: Cannot bind texture %s", ConstantName);
-            }
+			NewTextureRecord->Texture = cached;
+			Logger::Log("Texture linked: %s", TexturePath.c_str());
 		}
-		GetSamplerStates(SamplerString, NewTextureRecord);
-
-		timer.LogTime("TextureManager::LoadTexture");
-
-		return NewTextureRecord;
+	}
+	else {
+		if (NewTextureRecord->LoadTexture(Type, nullptr)) {
+			Logger::Log("Game Texture %s Binded", Constant->Name);
+		}
+		else {
+            Logger::Log("ERROR: Cannot bind texture %s", Constant->Name);
+        }
 	}
 
-	Logger::Log("[ERROR] Sampler %s doesn't have a valid type", ConstantName);
-	return nullptr;
+	GetSamplerStates(Constant->SamplerString, NewTextureRecord);
+	timer.LogTime("TextureManager::LoadTexture");
+
+	return NewTextureRecord;
 }
 
 IDirect3DBaseTexture9* TextureManager::GetCachedTexture(std::string& pathS){
     TextureList::iterator t = Textures.find(pathS);
     if (t == Textures.end()) return nullptr;
     return t->second;
-}
-
-std::string ltrim(const std::string& s) {
-	return std::regex_replace(s, std::regex("^\\s+"), "");
-}
-std::string rtrim(const std::string& s) {
-	return std::regex_replace(s, std::regex("\\s+$"), "");
-}
-
-std::string trim(const std::string& s ) {
-	return ltrim(rtrim(s));
-}
-
-std::string TextureManager::GetFilenameForTexture(std::string& resourceSubstring){
-	std::string PathS;
-	if (resourceSubstring.find("ResourceName") != std::string::npos) {
-		size_t StartPath = resourceSubstring.find("\"");
-		size_t EndPath = resourceSubstring.rfind("\"");
-		PathS = trim(resourceSubstring.substr(StartPath + 1, EndPath - 1 - StartPath));
-		PathS.insert(0, "Data\\Textures\\");
-	}
-	else{
-		Logger::Log("[ERROR] Cannot parse bindable texture");
-	}
-	return PathS;
 }
 
 
@@ -399,4 +233,19 @@ void TextureManager::SetWaterReflectionMap(IDirect3DBaseTexture9* WaterReflectio
 	for (WaterMapList::iterator it = TheTextureManager->WaterReflectionMapTextures.begin(); it != TheTextureManager->WaterReflectionMapTextures.end(); it++){
 		 (*it)->Texture = WaterReflectionMap;
 	}
+}
+
+std::string TextureManager::ltrim(const std::string& s)
+{
+	return std::regex_replace(s, std::regex("^\\s+"), "");
+}
+
+std::string TextureManager::rtrim(const std::string& s)
+{
+	return std::regex_replace(s, std::regex("\\s+$"), "");
+}
+
+std::string TextureManager::trim(const std::string& s)
+{
+	return ltrim(rtrim(s));
 }

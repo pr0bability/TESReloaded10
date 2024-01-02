@@ -201,6 +201,7 @@
     <ClInclude Include="..\TESReloaded\Core\ShaderManager.h" />
     <ClInclude Include="..\TESReloaded\Core\ShadowManager.h" />
     <ClInclude Include="..\TESReloaded\Core\TextureManager.h" />
+    <ClInclude Include="..\TESReloaded\Core\TextureRecord.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\Logger.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\PluginVersion.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\SafeWrite.h" />
@@ -234,6 +235,7 @@
     <ClCompile Include="..\TESReloaded\Core\ShaderManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\ShadowManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\TextureManager.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\TextureRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Base\Logger.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Base\PluginVersion.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Base\SafeWrite.cpp" />
