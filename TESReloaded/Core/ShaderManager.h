@@ -92,10 +92,6 @@ struct ShaderConstants {
 		D3DXVECTOR4		CloudData;
 	};
 
-	struct AnimatorsStruct {
-		Animator			PuddlesAnimator;
-	};
-
 	D3DXVECTOR4				ReciprocalResolution;
 	D3DXVECTOR4				SunDir;
 	D3DXVECTOR4				SunPosition;
@@ -119,7 +115,6 @@ struct ShaderConstants {
 	float					fogStart;
 	float					fogEnd;
 	float					fogPower;
-	AnimatorsStruct			Animators;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
 	WaterStruct				Water;

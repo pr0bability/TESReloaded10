@@ -21,11 +21,14 @@ class MenuInterfaceManager; extern MenuInterfaceManager*	InterfaceManager;
 class QueuedModelLoader;	extern QueuedModelLoader*		ModelLoader;
 class ShadowSceneNode;		extern ShadowSceneNode*			SceneNode;
 
+#include <string>
+#include <regex>
 #include "SettingManager.h"
 #include "CommandManager.h"
-#include "TextureManager.h"
+#include "TextureRecord.h"
 #include "Effects/ShaderRecord.h"
 #include "ShaderManager.h"
+#include "TextureManager.h"
 #include "RenderManager.h"
 #include "FrameRateManager.h"
 #include "GameEventManager.h"

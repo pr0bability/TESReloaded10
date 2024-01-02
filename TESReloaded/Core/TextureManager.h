@@ -1,49 +1,4 @@
 #pragma once
-#define SamplerStatesMax 12
-#define ShadowCubeMapsMax 12
-#define TrackedLightsMax 12
-
-class TextureRecord {
-public:
-	TextureRecord();
-	
-	enum TextureRecordType {
-		None,
-		PlanarBuffer,
-		VolumeBuffer,
-		CubeBuffer,
-		SourceBuffer,
-		RenderedBuffer,
-		DepthBuffer,
-		NormalsBuffer,
-		AvgLumaBuffer,
-		ShadowMapBufferNear,
-		ShadowMapBufferMiddle,
-		ShadowMapBufferFar,
-		ShadowMapBufferLod,
-		OrthoMapBuffer,
-		ShadowCubeMapBuffer0,
-		ShadowCubeMapBuffer1,
-		ShadowCubeMapBuffer2,
-		ShadowCubeMapBuffer3,
-		ShadowCubeMapBuffer4,
-		ShadowCubeMapBuffer5,
-		ShadowCubeMapBuffer6,
-		ShadowCubeMapBuffer7,
-		ShadowCubeMapBuffer8,
-		ShadowCubeMapBuffer9,
-		ShadowCubeMapBuffer10,
-		ShadowCubeMapBuffer11,
-		PointShadowBuffer,
-		WaterHeightMapBuffer, /*Textures assigned after init*/
-        WaterReflectionMapBuffer,
-	};
-
-	bool					LoadTexture(TextureRecordType Type, const char* Filename);
-
-	IDirect3DBaseTexture9*	Texture;
-	DWORD					SamplerStates[SamplerStatesMax];
-};
 
 typedef std::map<std::string, IDirect3DBaseTexture9*> TextureList;
 typedef std::vector<TextureRecord*> WaterMapList;
@@ -51,13 +6,12 @@ typedef std::vector<TextureRecord*> WaterMapList;
 class TextureManager { // Never disposed
 public:
 	static void				Initialize();
-	static void					InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT format);
+	static void				InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT format);
 
-	TextureRecord*			LoadTexture(ID3DXBuffer* ShaderSource, D3DXPARAMETER_TYPE ConstantType, LPCSTR ConstantName, UINT RegisterIndex, bool* HasRenderedBuffer, bool* HasDepthBuffer);
+	TextureRecord*			LoadTexture(ShaderTextureValue* Constant);
 	void 					GetSamplerStates(std::string& samplerStateSubstring, TextureRecord* textureRecord );
 	void					SetWaterHeightMap(IDirect3DBaseTexture9* WaterHeightMap);
     void                    SetWaterReflectionMap(IDirect3DBaseTexture9* WaterReflectionMap);
-	std::string				GetFilenameForTexture(std::string&  resourceSubstring);
     IDirect3DBaseTexture9* 	GetCachedTexture(std::string& pathS);
 
 	IDirect3DTexture9*		SourceTexture;
@@ -88,4 +42,7 @@ public:
     IDirect3DBaseTexture9*  WaterHeightMapB;
     IDirect3DBaseTexture9*  WaterReflectionMapB;
 
+	std::string				ltrim(const std::string& s);
+	std::string				rtrim(const std::string& s);
+	std::string				trim(const std::string& s);
 };

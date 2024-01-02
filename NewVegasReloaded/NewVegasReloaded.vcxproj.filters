@@ -266,6 +266,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\PointShadows2.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\TextureRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -444,6 +447,9 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\WetWorld.cpp">
       <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\TextureRecord.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

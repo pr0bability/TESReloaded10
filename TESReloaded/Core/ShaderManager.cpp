@@ -57,7 +57,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->IsMenuSwitch = false;
 
 	//setup map of constant names
-	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &TheShaderManager->ShaderConst.HDR.ToneMapping;
+	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.AOData;
+	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
 	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
 	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
@@ -143,8 +144,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
 	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
 	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
-	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.AOData;
-	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->Effects.BloodLens->Constants.Params;
 	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->Effects.BloodLens->Constants.BloodColor;
 	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->Effects.BloomLegacy->Constants.Data;
@@ -152,6 +151,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
+	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &TheShaderManager->ShaderConst.HDR.ToneMapping;
 	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->Effects.Cinema->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->Effects.Cinema->Constants.Settings;
 	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->Effects.Coloring->Constants.ColorCurve;
