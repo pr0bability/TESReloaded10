@@ -25,6 +25,7 @@
 #include "Effects/SunShadows.h"
 #include "Effects/PointShadows.h"
 #include "Effects/PointShadows2.h"
+#include "Effects/Pretonemapper.h"
 #include "Effects/ShadowsInteriors.h"
 #include "Effects/SnowAccumulation.h"
 #include "Effects/Snow.h"
@@ -173,7 +174,7 @@ public:
 		LowHFEffect*			LowHF;
 		MotionBlurEffect*		MotionBlur;
 		NormalsEffect*			Normals;
-		EffectRecord*			PreTonemapper;
+		PretonemapperEffect*	PreTonemapper;
 		RainEffect*				Rain;
 		SharpeningEffect*		Sharpening;
 		SpecularEffect*			Specular;

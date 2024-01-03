@@ -133,6 +133,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Normals.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\PointShadows.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\PointShadows2.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Pretonemapper.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Rain.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />

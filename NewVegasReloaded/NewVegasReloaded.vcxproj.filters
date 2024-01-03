@@ -269,6 +269,9 @@
     <ClInclude Include="..\TESReloaded\Core\TextureRecord.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Pretonemapper.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
