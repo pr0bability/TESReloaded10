@@ -35,7 +35,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
 	TheShaderManager->EffectsNames["MotionBlur"] = (EffectRecord**)&TheShaderManager->Effects.MotionBlur;
 	TheShaderManager->EffectsNames["Normals"] = (EffectRecord**)&TheShaderManager->Effects.Normals;
-	TheShaderManager->EffectsNames["PreTonemapper"] = (EffectRecord**)&TheShaderManager->Effects.PreTonemapper;
+	TheShaderManager->EffectsNames["Pretonemapper"] = (EffectRecord**)&TheShaderManager->Effects.Pretonemapper;
 	TheShaderManager->EffectsNames["Precipitations"] = (EffectRecord**)&TheShaderManager->Effects.Rain;
 	TheShaderManager->EffectsNames["Sharpening"] = (EffectRecord**)&TheShaderManager->Effects.Sharpening;
 	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
@@ -626,8 +626,8 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapBrightness", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapMidpoint", isExterior, transitionCurve);
 			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapShoulder", isExterior, transitionCurve);
-			
-			if (ShaderConst.HDR.HDRData.x == 1.0 || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
+
+			if (ShaderConst.HDR.HDRData.x == 1.0 || TheSettingManager->GetMenuShaderEnabled("Pretonemapper")) {
 				float hdrMax = max(1.0, ShaderConst.HDR.BloomData.w * 100.0);
 				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.35);
 				float shoulder = max(0.0, (min(1.0, ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0
@@ -652,6 +652,7 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Sky.SunsetColor.w = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
 			ShaderConst.HDR.PointLightMult = 1.0;
 		}
+
 
 		if (Effects.ImageAdjust->Enabled) Effects.ImageAdjust->UpdateConstants();
 		if (Effects.Lens->Enabled) Effects.Lens->UpdateConstants();
@@ -1057,7 +1058,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	
 	// For AMD devices without DXVK, replace vanilla tonemapping replacement with an Effect
 	if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) && TheSettingManager->GetMenuShaderEnabled("Tonemapping"))
-		Effects.PreTonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+		Effects.Pretonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }

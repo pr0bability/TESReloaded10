@@ -67,7 +67,7 @@ void TextureManager::InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9*
 TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 	auto timer = TimeLogger();
 
-	Logger::Log("Loading texture %s (type:%i) (path: %s)", Constant->Name, Constant->Type, Constant->TexturePath);
+	//Logger::Log("Loading texture %s (type:%i) (path: %s)", Constant->Name, Constant->Type, Constant->TexturePath);
 
 	std::string TexturePath = Constant->TexturePath;
 	TextureRecord::TextureRecordType Type = Constant->Type;
