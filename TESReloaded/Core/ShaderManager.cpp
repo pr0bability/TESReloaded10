@@ -1,5 +1,11 @@
 #define RESZ_CODE 0x7FA05000
 
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
+}
+
+#define pows(a, b)          (pow(abs(a), b) * sgn(a)) // no more pow/abs warning!
+
 /**
 * Initializes the Shader Manager Singleton.
 * The Shader Manager creates and holds onto the Effects activated in the Settings Manager, and sets the constants.
@@ -176,12 +182,11 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->Effects.Specular->Constants.EffectStrength;
 	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->Effects.SnowAccumulation->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &TheShaderManager->Effects.SnowAccumulation->Constants.Color;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogLow"] = &TheShaderManager->ShaderConst.VolumetricFog.LowFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogHigh"] = &TheShaderManager->ShaderConst.VolumetricFog.GeneralFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogSimple"] = &TheShaderManager->ShaderConst.VolumetricFog.SimpleFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogBlend"] = &TheShaderManager->ShaderConst.VolumetricFog.Blend;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &TheShaderManager->ShaderConst.VolumetricFog.Height;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->ShaderConst.VolumetricFog.Data;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogLow"] = &TheShaderManager->Effects.VolumetricFog->Constants.LowFog;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogHigh"] = &TheShaderManager->Effects.VolumetricFog->Constants.GeneralFog;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogSimple"] = &TheShaderManager->Effects.VolumetricFog->Constants.SimpleFog;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogBlend"] = &TheShaderManager->Effects.VolumetricFog->Constants.Blend;
+	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &TheShaderManager->Effects.VolumetricFog->Constants.Height;
 	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->Effects.VolumetricFog->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->Effects.WaterLens->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->Effects.WetWorld->Constants.Coeffs;
@@ -587,31 +592,6 @@ void ShaderManager::UpdateConstants() {
 
 		if (Effects.Sharpening->Enabled) Effects.Sharpening->UpdateConstants();
 
-		if (Effects.VolumetricFog->Enabled) {
-			ShaderConst.VolumetricFog.LowFog.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SunPower");
-			ShaderConst.VolumetricFog.LowFog.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "LowFogDensity");
-			ShaderConst.VolumetricFog.LowFog.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "LowFogFalloff");
-			ShaderConst.VolumetricFog.LowFog.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "LowFogDist");
-			ShaderConst.VolumetricFog.Blend.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "LowFogBlend");
-			ShaderConst.VolumetricFog.Height.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "LowFogHeight");
-			ShaderConst.VolumetricFog.GeneralFog.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogDensity");
-			ShaderConst.VolumetricFog.GeneralFog.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogFalloff");
-			ShaderConst.VolumetricFog.GeneralFog.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogDist");
-			ShaderConst.VolumetricFog.GeneralFog.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogSkyColor");
-			ShaderConst.VolumetricFog.Height.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogHeight");
-			ShaderConst.VolumetricFog.Blend.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogBlend");
-			ShaderConst.VolumetricFog.Blend.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "HeightFogRolloff");
-			ShaderConst.VolumetricFog.SimpleFog.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogExtinction");
-			ShaderConst.VolumetricFog.SimpleFog.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogInscattering");
-			ShaderConst.VolumetricFog.SimpleFog.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogNight");
-			ShaderConst.VolumetricFog.Height.z = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogHeight");
-			ShaderConst.VolumetricFog.SimpleFog.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogSkyColor");
-			ShaderConst.VolumetricFog.Blend.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "SimpleFogBlend");
-			if (!isExterior) ShaderConst.VolumetricFog.Height.w = 0.0f;
-			else ShaderConst.VolumetricFog.Height.w = 1.0f;
-			
-		}
-		
 		if (Effects.VolumetricFog->Enabled) Effects.VolumetricFog->UpdateConstants();
 		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
 		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
