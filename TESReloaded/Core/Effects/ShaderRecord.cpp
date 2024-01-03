@@ -91,7 +91,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	}
 	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
 		// load tonemapping shaders, with different names between New vegas and Oblivion
-		if (!TheSettingManager->GetMenuShaderEnabled("HDR")) return NULL;
+		if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) || !TheSettingManager->GetMenuShaderEnabled("Tonemapping")) return NULL;
 	}
 	else if (!memcmp(Name, "PAR", 3)) {
 		if (!TheSettingManager->GetMenuShaderEnabled("POM")) return NULL;
@@ -271,7 +271,7 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 		}
 		std::string TextureString = Source.substr(StartTexture + 1, EndTexture - StartTexture - 1);
 		GetTexturePath(TextureString);
-		Logger::Log("texture path: %s", TexturePath);
+		//Logger::Log("texture path: %s", TexturePath);
 	}
 	size_t StartStatePos = Source.find("{", SamplerPos);
 	size_t EndStatePos = Source.find("}", SamplerPos);
