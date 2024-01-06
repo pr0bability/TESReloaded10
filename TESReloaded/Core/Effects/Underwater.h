@@ -10,5 +10,7 @@ public:
 	};
 	UnderwaterStruct	Constants;
 
-	void	UpdateConstants();
+	void	UpdateConstants() {};
+	void	RegisterConstants() {};
+	void	UpdateSettings() {};
 }; 

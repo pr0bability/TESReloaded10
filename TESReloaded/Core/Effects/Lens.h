@@ -11,4 +11,7 @@ public:
 	LensStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

@@ -23,3 +23,9 @@ void LowHFEffect::UpdateConstants() {
 			Constants.Data.x = Constants.FatigueCoeff * TheSettingManager->GetSettingF("Shaders.LowHF.Main", "LumaMultiplier");
 	}
 }
+
+void LowHFEffect::UpdateSettings() {}
+
+void LowHFEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &Constants.Data;
+}

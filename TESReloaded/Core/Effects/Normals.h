@@ -10,5 +10,8 @@ public:
 	};
 	NormalsStruct	Constants;
 
-	void	UpdateConstants();
+	void	UpdateConstants() {};
+	void	UpdateSettings() {};
+	void	RegisterConstants();
+
 };

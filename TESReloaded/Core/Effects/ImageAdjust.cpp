@@ -18,3 +18,12 @@ void ImageAdjustEffect::UpdateConstants() {
 	Constants.LightColor.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "LightColorB", isExterior, transitionCurve);
 
 }
+
+void ImageAdjustEffect::UpdateSettings(){}
+
+void ImageAdjustEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &Constants.DarkColor;
+	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &Constants.LightColor;
+
+}

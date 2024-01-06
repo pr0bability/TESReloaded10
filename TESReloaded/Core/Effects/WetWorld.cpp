@@ -1,14 +1,6 @@
 #include "WetWorld.h"
 
 void WetWorldEffect::UpdateConstants() {
-	if (TheSettingManager->SettingsChanged) {
-		Constants.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
-		Constants.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
-		Constants.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
-		Constants.Coeffs.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
-		Constants.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
-	}
-
 	// Rain fall & puddles
 	if (TheShaderManager->isRainy && Constants.PuddlesAnimator.switched == false) {
 		// it just started raining
@@ -25,4 +17,17 @@ void WetWorldEffect::UpdateConstants() {
 	Constants.Data.z = Constants.PuddlesAnimator.GetValue();
 
 	if (Constants.Data.x || Constants.Data.z) TheShaderManager->orthoRequired = true; // mark ortho map calculation as necessary
+}
+
+void WetWorldEffect::UpdateSettings() {
+	Constants.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
+	Constants.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
+	Constants.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");
+	Constants.Coeffs.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleSpecularMultiplier");
+	Constants.Data.w = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Amount");
+}
+
+void WetWorldEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &Constants.Coeffs;
+	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &Constants.Data;
 }

@@ -18,4 +18,6 @@ public:
 	WetWorldStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
 };

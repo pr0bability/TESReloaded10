@@ -17,12 +17,18 @@ void SnowAccumulationEffect::UpdateConstants() {
 	Constants.Data.w = Constants.SnowAccumulationAnimator.GetValue();
 	if (Constants.Data.w) TheShaderManager->orthoRequired = true; // mark ortho map calculation as necessary
 
-	if (TheSettingManager->SettingsChanged) {
-		Constants.Data.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
-		Constants.Data.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
-		Constants.Data.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
-		Constants.Color.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorR");
-		Constants.Color.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorG");
-		Constants.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
-	}
+}
+
+void SnowAccumulationEffect::UpdateSettings(){
+	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
+	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
+	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
+	Constants.Color.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorR");
+	Constants.Color.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorG");
+	Constants.Color.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SnowColorB");
+}
+
+void SnowAccumulationEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &Constants.Color;
 }

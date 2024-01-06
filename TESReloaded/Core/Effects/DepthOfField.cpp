@@ -32,3 +32,10 @@ void DepthOfFieldEffect::UpdateConstants() {
 	}
 
 }
+
+void DepthOfFieldEffect::UpdateSettings() {}
+
+void DepthOfFieldEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &Constants.Blur;
+	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &Constants.Data;
+}

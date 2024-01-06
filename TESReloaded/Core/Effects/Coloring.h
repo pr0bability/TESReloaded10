@@ -13,6 +13,8 @@ public:
 	};
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
 
 	ColoringStruct	Constants;
 };

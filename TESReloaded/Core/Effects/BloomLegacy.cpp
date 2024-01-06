@@ -12,3 +12,11 @@ void BloomLegacyEffect::UpdateConstants() {
 	Constants.Values.z = TheSettingManager->GetSettingF(sectionName, "BloomSaturation");
 	Constants.Values.w = TheSettingManager->GetSettingF(sectionName, "OriginalSaturation");
 }
+
+void BloomLegacyEffect::UpdateSettings() {
+}
+
+void BloomLegacyEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_BloomData"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &Constants.Values;
+}

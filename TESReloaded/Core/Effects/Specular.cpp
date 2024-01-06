@@ -17,3 +17,10 @@ void SpecularEffect::UpdateConstants() {
 	Constants.EffectStrength.w = std::lerp(TheSettingManager->GetSettingF(ext, "SkyTintSaturation"), TheSettingManager->GetSettingF(rain, "SkyTintSaturation"), rainyPercent);
 
 }
+
+void SpecularEffect::UpdateSettings() {}
+
+void SpecularEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &Constants.EffectStrength;
+}

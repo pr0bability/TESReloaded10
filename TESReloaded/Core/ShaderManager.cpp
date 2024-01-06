@@ -63,20 +63,12 @@ void ShaderManager::Initialize() {
 	TheShaderManager->IsMenuSwitch = false;
 
 	//setup map of constant names
-	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.AOData;
-	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &TheShaderManager->Effects.AmbientOcclusion->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
 	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
 	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
 	TheShaderManager->ConstantsTable["TESR_SkinData"] = &TheShaderManager->ShaderConst.Skin.SkinData;
 	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &TheShaderManager->ShaderConst.Skin.SkinColor;
-	TheShaderManager->ConstantsTable["TESR_ShadowData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ShadowScreenSpaceData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.ScreenSpaceData;
 	TheShaderManager->ConstantsTable["TESR_ShadowRadius"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius;
-	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.OrthoData;
-	TheShaderManager->ConstantsTable["TESR_RainData"] = &TheShaderManager->Effects.Rain->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_RainAspect"] = &TheShaderManager->Effects.Rain->Constants.Aspect;
-	TheShaderManager->ConstantsTable["TESR_SnowData"] = &TheShaderManager->Effects.Snow->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_WorldTransform"] = (D3DXVECTOR4*)&TheRenderManager->worldMatrix;
 	TheShaderManager->ConstantsTable["TESR_ViewTransform"] = (D3DXVECTOR4*)&TheRenderManager->viewMatrix;
 	TheShaderManager->ConstantsTable["TESR_ProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->projMatrix;
@@ -131,7 +123,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunTiming"] = &TheShaderManager->ShaderConst.SunTiming;
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
 	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
-	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = &TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowFade;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
@@ -150,48 +141,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
 	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
 	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
-	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &TheShaderManager->Effects.BloodLens->Constants.Params;
-	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &TheShaderManager->Effects.BloodLens->Constants.BloodColor;
-	TheShaderManager->ConstantsTable["TESR_BloomData"] = &TheShaderManager->Effects.BloomLegacy->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &TheShaderManager->Effects.BloomLegacy->Constants.Values;
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
 	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &TheShaderManager->ShaderConst.HDR.ToneMapping;
-	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &TheShaderManager->Effects.Cinema->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &TheShaderManager->Effects.Cinema->Constants.Settings;
-	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &TheShaderManager->Effects.Coloring->Constants.ColorCurve;
-	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &TheShaderManager->Effects.Coloring->Constants.EffectGamma;
-	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &TheShaderManager->Effects.Coloring->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &TheShaderManager->Effects.Coloring->Constants.Values;
-	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &TheShaderManager->Effects.DepthOfField->Constants.Blur;
-	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &TheShaderManager->Effects.DepthOfField->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &TheShaderManager->Effects.Exposure->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &TheShaderManager->Effects.GodRays->Constants.Ray;
-	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &TheShaderManager->Effects.GodRays->Constants.RayColor;
-	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &TheShaderManager->Effects.GodRays->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &TheShaderManager->Effects.ImageAdjust->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.DarkColor;
-	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &TheShaderManager->Effects.ImageAdjust->Constants.LightColor;
-	TheShaderManager->ConstantsTable["TESR_LensData"] = &TheShaderManager->Effects.Lens->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &TheShaderManager->Effects.LowHF->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &TheShaderManager->Effects.MotionBlur->Constants.BlurParams;
-	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &TheShaderManager->Effects.MotionBlur->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &TheShaderManager->Effects.Sharpening->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &TheShaderManager->Effects.Specular->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &TheShaderManager->Effects.Specular->Constants.EffectStrength;
-	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &TheShaderManager->Effects.SnowAccumulation->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &TheShaderManager->Effects.SnowAccumulation->Constants.Color;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogLow"] = &TheShaderManager->Effects.VolumetricFog->Constants.LowFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogHigh"] = &TheShaderManager->Effects.VolumetricFog->Constants.GeneralFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogSimple"] = &TheShaderManager->Effects.VolumetricFog->Constants.SimpleFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogBlend"] = &TheShaderManager->Effects.VolumetricFog->Constants.Blend;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &TheShaderManager->Effects.VolumetricFog->Constants.Height;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &TheShaderManager->Effects.VolumetricFog->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &TheShaderManager->Effects.WaterLens->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &TheShaderManager->Effects.WetWorld->Constants.Coeffs;
-	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &TheShaderManager->Effects.WetWorld->Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_NormalsData"] = &TheShaderManager->Effects.Normals->Constants.Data;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -228,7 +181,9 @@ void ShaderManager::CreateEffects() {
 
 	// create effect records for effects shaders based on name
 	for (EffectsList::iterator v = TheShaderManager->EffectsNames.begin(); v != TheShaderManager->EffectsNames.end(); v++) {
-		*v->second = CreateEffect(v->first.c_str());
+		EffectRecord* Effect = CreateEffect(v->first.c_str());
+		Effect->RegisterConstants();
+		*v->second = Effect;
 	}
 
 	/*TODO*/
@@ -371,6 +326,14 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunAmount.x = isDayTime; 
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 	if (TheSettingManager->SettingsChanged) {
+
+		// update settings
+		for (EffectsList::iterator v = EffectsNames.begin(); v != EffectsNames.end(); v++) {
+			EffectRecord* Effect = *v->second;
+			if (Effect->Enabled) Effect->UpdateSettings();
+		}
+
+
 		// sky settings are used in several shaders whether the shader is active or not
 		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
 		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
@@ -500,18 +463,8 @@ void ShaderManager::UpdateConstants() {
 		}
 	}
 
-	if (Effects.WaterLens->Enabled) Effects.WaterLens->UpdateConstants();
-			
-	if (isExterior) {
-		if (Effects.Rain->Enabled) Effects.Rain->UpdateConstants();
-		if (Effects.WetWorld->Enabled) Effects.WetWorld->UpdateConstants();
-		if (Effects.Snow->Enabled) Effects.Snow->UpdateConstants();
-		if (Effects.SnowAccumulation->Enabled) Effects.SnowAccumulation->UpdateConstants();
-	}
-
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
-		Effects.Normals->UpdateConstants();
 
 		if (TheSettingManager->GetMenuShaderEnabled("Grass")) {
 			ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
@@ -566,7 +519,6 @@ void ShaderManager::UpdateConstants() {
 			}
 		}
 
-
 		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
 			ShaderConst.POM.ParallaxData.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");
 			ShaderConst.POM.ParallaxData.y = TheSettingManager->GetSettingF("Shaders.POM.Main", "MinSamples");
@@ -590,20 +542,11 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Skin.SkinColor.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffBlue");
 		}
 
-		if (Effects.Sharpening->Enabled) Effects.Sharpening->UpdateConstants();
-
-		if (Effects.VolumetricFog->Enabled) Effects.VolumetricFog->UpdateConstants();
-		if (Effects.Cinema->Enabled) Effects.Cinema->UpdateConstants();
-		if (Effects.AmbientOcclusion->Enabled) Effects.AmbientOcclusion->UpdateConstants();
-		if (Effects.BloomLegacy->Enabled) Effects.BloomLegacy->UpdateConstants();
-
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
 		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
 		ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
 		ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
 	}
-
-	Effects.ShadowsExteriors->UpdateConstants();
 
 	if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
 		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping") || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
@@ -653,19 +596,13 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.HDR.PointLightMult = 1.0;
 		}
 
-
-		if (Effects.ImageAdjust->Enabled) Effects.ImageAdjust->UpdateConstants();
-		if (Effects.Lens->Enabled) Effects.Lens->UpdateConstants();
 	}
 
-	if (Effects.GodRays->Enabled) Effects.GodRays->UpdateConstants();
-	if (Effects.Coloring->Enabled) Effects.Coloring->UpdateConstants();
-	if (Effects.BloodLens->Enabled) Effects.BloodLens->UpdateConstants();
-	if (Effects.LowHF->Enabled) Effects.LowHF->UpdateConstants();
-	if (Effects.DepthOfField->Enabled) Effects.DepthOfField->UpdateConstants();
-	if (Effects.MotionBlur->Enabled) Effects.MotionBlur->UpdateConstants();
-	if (Effects.Exposure->Enabled) Effects.Exposure->UpdateConstants();
-	if (Effects.Specular->Enabled) Effects.Specular->UpdateConstants();
+	// update Constants
+	for (EffectsList::iterator v = EffectsNames.begin(); v != EffectsNames.end(); v++) {
+		EffectRecord* Effect = *v->second;
+		if (Effect->Enabled) Effect->UpdateConstants();
+	}
 
 	TheSettingManager->SettingsChanged = false;
 	timer.LogTime("ShaderManager::UpdateConstants");

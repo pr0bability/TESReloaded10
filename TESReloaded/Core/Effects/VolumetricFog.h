@@ -16,4 +16,6 @@ public:
 	VolumetricFogStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
 };

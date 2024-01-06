@@ -7,8 +7,10 @@ public:
 
 	struct PretonemapperStruct {
 	};
+	PretonemapperStruct	Constants;
 
 	void	UpdateConstants() {};
+	void	RegisterConstants() {};
+	void	UpdateSettings() {};
 
-	PretonemapperStruct	Constants;
 };

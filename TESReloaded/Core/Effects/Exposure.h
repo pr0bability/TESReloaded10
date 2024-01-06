@@ -11,4 +11,7 @@ public:
 	ExposureStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

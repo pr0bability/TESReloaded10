@@ -13,4 +13,7 @@ public:
 	ImageAdjustStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };
