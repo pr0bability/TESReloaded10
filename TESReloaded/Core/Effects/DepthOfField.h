@@ -13,4 +13,7 @@ public:
 	DepthOfFieldStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

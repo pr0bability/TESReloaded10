@@ -25,3 +25,23 @@ void GodRaysEffect::UpdateConstants() {
 	}
 
 }
+
+void GodRaysEffect::UpdateSettings(){
+	Constants.Ray.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayIntensity");
+	Constants.Ray.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayLength");
+	Constants.Ray.z = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayDensity");
+	Constants.Ray.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "RayVisibility");
+	Constants.RayColor.x = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayR");
+	Constants.RayColor.y = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayG");
+	Constants.RayColor.z = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "RayB");
+	Constants.RayColor.w = TheSettingManager->GetSettingF("Shaders.GodRays.Coloring", "Saturate");
+	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "LightShaftPasses");
+	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "Luminance");
+	Constants.Data.w = TheSettingManager->GetSettingF("Shaders.GodRays.Main", "TimeEnabled");
+}
+
+void GodRaysEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &Constants.Ray;
+	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &Constants.RayColor;
+	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &Constants.Data;
+}

@@ -13,4 +13,7 @@ public:
 	GodRaysStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

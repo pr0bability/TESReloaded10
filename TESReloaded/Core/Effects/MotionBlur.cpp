@@ -33,3 +33,10 @@ void MotionBlurEffect::UpdateConstants() {
 	Constants.BlurParams.y = TheSettingManager->GetSettingF(sectionName, "BlurScale");
 	Constants.BlurParams.z = TheSettingManager->GetSettingF(sectionName, "BlurOffsetMax");
 }
+
+void MotionBlurEffect::UpdateSettings() {}
+
+void MotionBlurEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &Constants.BlurParams;
+	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &Constants.Data;
+}

@@ -1,11 +1,6 @@
 #include "WaterLens.h"
 
 void WaterLensEffect::UpdateConstants() {
-	if (TheSettingManager->SettingsChanged) {
-		Constants.Data.x = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
-		Constants.Data.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
-		Constants.Data.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
-	}
 
 	if (TheShaderManager->isUnderwater && Constants.WaterLensAnimator.switched == false) {
 		Constants.WaterLensAnimator.switched = true;
@@ -18,4 +13,14 @@ void WaterLensEffect::UpdateConstants() {
 	}
 
 	Constants.Data.w = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Amount") * Constants.WaterLensAnimator.GetValue();
+}
+
+void WaterLensEffect::UpdateSettings(){
+	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
+	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
+	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
+}
+
+void WaterLensEffect::RegisterConstants(){
+	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &Constants.Data;
 }

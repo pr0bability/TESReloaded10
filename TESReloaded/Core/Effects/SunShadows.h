@@ -8,8 +8,11 @@ public:
 
 	struct SunShadowStruct {
 	};
+	SunShadowStruct	Constants;
 
 	void	UpdateConstants() {};
 
-	SunShadowStruct	Constants;
+	void	RegisterConstants() {};
+	void	UpdateSettings() {};
+
 };

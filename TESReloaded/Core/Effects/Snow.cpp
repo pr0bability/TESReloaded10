@@ -17,5 +17,12 @@ void SnowEffect::UpdateConstants() {
 	Constants.Data.x = Constants.SnowAnimator.GetValue();
 
 	if (Constants.Data.x) TheShaderManager->orthoRequired = true; // mark ortho map calculation as necessary
-	if (TheSettingManager->SettingsChanged) Constants.Data.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
+}
+
+void SnowEffect::UpdateSettings() {
+	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.Snow.Main", "Speed");
+}
+
+void SnowEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_SnowData"] = &Constants.Data;
 }

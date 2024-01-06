@@ -12,4 +12,7 @@ public:
 	SpecularStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

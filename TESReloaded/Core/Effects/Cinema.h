@@ -11,6 +11,9 @@ public:
 	};
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 
 	CinemaStruct	Constants;
 };

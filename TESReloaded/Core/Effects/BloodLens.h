@@ -13,8 +13,10 @@ public:
 		D3DXVECTOR4		Time;
 		float			Percent;
 	};
+	BloodLensStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
 
-	BloodLensStruct	Constants;
 };

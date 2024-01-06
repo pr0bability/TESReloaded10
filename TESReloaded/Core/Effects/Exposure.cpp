@@ -14,3 +14,8 @@ void ExposureEffect::UpdateConstants() {
 	}
 }
 
+void ExposureEffect::UpdateSettings(){}
+
+void ExposureEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_ExposureData"] = &Constants.Data;
+}

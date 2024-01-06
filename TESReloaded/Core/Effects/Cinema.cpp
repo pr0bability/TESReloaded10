@@ -16,13 +16,18 @@ void CinemaEffect::UpdateConstants() {
 		Constants.Data.x = aspectRatio;
 	}
 
-	if (TheSettingManager->SettingsChanged) {
-		Constants.Data.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
-		Constants.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
-		Constants.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
-		Constants.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
-		Constants.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
-		Constants.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
-	}
+}
 
+void CinemaEffect::UpdateSettings() {
+	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteRadius");
+	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "VignetteDarkness");
+	Constants.Data.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "OverlayStrength");
+	Constants.Settings.y = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "FilmGrainAmount");
+	Constants.Settings.z = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "ChromaticAberration");
+	Constants.Settings.w = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "LetterBoxDepth");
+}
+
+void CinemaEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &Constants.Settings;
 }

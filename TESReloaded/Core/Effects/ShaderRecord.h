@@ -136,6 +136,8 @@ public:
 	virtual void			SetCT();
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable);
 	virtual void			UpdateConstants();
+	virtual void			UpdateSettings() {};
+	virtual void			RegisterConstants() {};
 	bool					SwitchEffect();
 	void					Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer);
 	void					DisposeEffect();

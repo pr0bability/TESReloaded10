@@ -1,10 +1,15 @@
 #include "AmbientOcclusion.h"
 
 void AmbientOcclusionEffect::UpdateConstants() {
-	const char* sectionName = NULL;
+}
 
-	sectionName = "Shaders.AmbientOcclusion.Exteriors";
-	if (!TheShaderManager->isExterior) sectionName = "Shaders.AmbientOcclusion.Interiors";
+void AmbientOcclusionEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionAOData"] = &Constants.AOData;
+	TheShaderManager->ConstantsTable["TESR_AmbientOcclusionData"] = &Constants.Data;
+}
+
+void AmbientOcclusionEffect::UpdateSettings() {
+	const char* sectionName = TheShaderManager->isExterior?"Shaders.AmbientOcclusion.Exteriors":"Shaders.AmbientOcclusion.Interiors";
 
 	Constants.Enabled = TheSettingManager->GetSettingI(sectionName, "Enabled");
 	if (Constants.Enabled) {
@@ -17,4 +22,5 @@ void AmbientOcclusionEffect::UpdateConstants() {
 		Constants.Data.z = TheSettingManager->GetSettingF(sectionName, "BlurDropThreshold");
 		Constants.Data.w = TheSettingManager->GetSettingF(sectionName, "BlurRadiusMultiplier");
 	}
+
 }

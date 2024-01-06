@@ -10,4 +10,7 @@ public:
 	PointShadows2Struct	Constants;
 
 	void	UpdateConstants() {};
+	void	RegisterConstants() {};
+	void	UpdateSettings() {};
+
 };

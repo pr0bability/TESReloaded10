@@ -24,3 +24,14 @@ void ColoringEffect::UpdateConstants() {
 		Constants.EffectGamma.w = scs->EffectGammaB;
 	}
 }
+
+void ColoringEffect::UpdateSettings() {
+
+}
+
+void ColoringEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &Constants.ColorCurve;
+	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &Constants.EffectGamma;
+	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &Constants.Values;
+}

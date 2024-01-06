@@ -16,4 +16,7 @@ public:
 	SnowAccumulationStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

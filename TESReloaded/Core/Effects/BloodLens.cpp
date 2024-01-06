@@ -20,10 +20,16 @@ void BloodLensEffect::UpdateConstants() {
 			Constants.Percent = 0.0f;
 	}
 
-	if (TheSettingManager->SettingsChanged) {
-		Constants.Params.w = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Intensity") * Constants.Percent;
-		Constants.BloodColor.x = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorR");
-		Constants.BloodColor.y = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorG");
-		Constants.BloodColor.z = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorB");
-	}
+}
+
+void BloodLensEffect::UpdateSettings() {
+	Constants.Params.w = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Intensity") * Constants.Percent;
+	Constants.BloodColor.x = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorR");
+	Constants.BloodColor.y = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorG");
+	Constants.BloodColor.z = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorB");
+}
+
+void BloodLensEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &Constants.Params;
+	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &Constants.BloodColor;
 }

@@ -11,4 +11,7 @@ public:
 	SharpeningStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

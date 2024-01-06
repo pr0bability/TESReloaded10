@@ -16,4 +16,7 @@ public:
 	RainStruct	Constants;
 
 	void	UpdateConstants();
+	void	RegisterConstants();
+	void	UpdateSettings();
+
 };

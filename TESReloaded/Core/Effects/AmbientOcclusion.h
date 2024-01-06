@@ -10,8 +10,9 @@ public:
 		D3DXVECTOR4		AOData;
 		D3DXVECTOR4		Data;
 	};
+	AmbientOcclusionStruct	Constants;
 
 	void	UpdateConstants();
-
-	AmbientOcclusionStruct	Constants;
+	void	RegisterConstants();
+	void	UpdateSettings();
 };

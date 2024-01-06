@@ -39,10 +39,17 @@ void ShadowsExteriorEffect::UpdateConstants() {
 		Constants.ShadowFade.w = TheSettingManager->SettingsShadows.Interiors.DrawDistance; //furthest distance for point lights shadows
 	}
 
-	if (TheSettingManager->SettingsChanged) {
-		Constants.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Enabled;
-		Constants.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
-		Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
-		//Constants.ScreenSpaceData.z = 0;
-	}
+}
+
+void ShadowsExteriorEffect::UpdateSettings() {
+	Constants.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Enabled;
+	Constants.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
+	Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
+}
+
+void ShadowsExteriorEffect::RegisterConstants() {
+	TheShaderManager->ConstantsTable["TESR_ShadowData"] = &Constants.Data;
+	TheShaderManager->ConstantsTable["TESR_ShadowScreenSpaceData"] = &Constants.ScreenSpaceData;
+	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &Constants.OrthoData;
+	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = &Constants.ShadowFade;
 }
