@@ -63,12 +63,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->IsMenuSwitch = false;
 
 	//setup map of constant names
-	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
-	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
-	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
-	TheShaderManager->ConstantsTable["TESR_SkinData"] = &TheShaderManager->ShaderConst.Skin.SkinData;
-	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &TheShaderManager->ShaderConst.Skin.SkinColor;
-	TheShaderManager->ConstantsTable["TESR_ShadowRadius"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius;
 	TheShaderManager->ConstantsTable["TESR_WorldTransform"] = (D3DXVECTOR4*)&TheRenderManager->worldMatrix;
 	TheShaderManager->ConstantsTable["TESR_ViewTransform"] = (D3DXVECTOR4*)&TheRenderManager->viewMatrix;
 	TheShaderManager->ConstantsTable["TESR_ProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->projMatrix;
@@ -76,6 +70,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_WorldViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->WorldViewProjMatrix;
 	TheShaderManager->ConstantsTable["TESR_InvViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->InvViewProjMatrix;
 	TheShaderManager->ConstantsTable["TESR_ViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->ViewProjMatrix;
+	TheShaderManager->ConstantsTable["TESR_ShadowRadius"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius;
+	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapBlend"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend;
 	TheShaderManager->ConstantsTable["TESR_ShadowWorldTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld;
 	TheShaderManager->ConstantsTable["TESR_ShadowViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowViewProj;
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight;
@@ -84,6 +80,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformFar"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[2];
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformLod"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[3];
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformOrtho"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4];
+	TheShaderManager->ConstantsTable["TESR_OcclusionWorldViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj;
 	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapLightPosition"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition;
 	TheShaderManager->ConstantsTable["TESR_ViewSpaceLightDir"] = &TheShaderManager->ShaderConst.ViewSpaceLightDir;
 	TheShaderManager->ConstantsTable["TESR_ScreenSpaceLightDir"] = &TheShaderManager->ShaderConst.ScreenSpaceLightDir;
@@ -111,19 +108,24 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_LightPosition9"] = &TheShaderManager->LightPosition[9];
 	TheShaderManager->ConstantsTable["TESR_LightPosition10"] = &TheShaderManager->LightPosition[10];
 	TheShaderManager->ConstantsTable["TESR_LightPosition11"] = &TheShaderManager->LightPosition[11];
-	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapBlend"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend;
-	TheShaderManager->ConstantsTable["TESR_OcclusionWorldViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj;
 	TheShaderManager->ConstantsTable["TESR_ReciprocalResolution"] = &TheShaderManager->ShaderConst.ReciprocalResolution;
 	TheShaderManager->ConstantsTable["TESR_CameraForward"] = &TheRenderManager->CameraForward;
 	TheShaderManager->ConstantsTable["TESR_DepthConstants"] = &TheRenderManager->DepthConstants;
 	TheShaderManager->ConstantsTable["TESR_CameraData"] = &TheRenderManager->CameraData;
 	TheShaderManager->ConstantsTable["TESR_CameraPosition"] = &TheRenderManager->CameraPosition;
-	TheShaderManager->ConstantsTable["TESR_SunPosition"] = &TheShaderManager->ShaderConst.SunPosition;
 	TheShaderManager->ConstantsTable["TESR_SunDirection"] = &TheShaderManager->ShaderConst.SunDir;
+	TheShaderManager->ConstantsTable["TESR_SunPosition"] = &TheShaderManager->ShaderConst.SunPosition;
 	TheShaderManager->ConstantsTable["TESR_SunTiming"] = &TheShaderManager->ShaderConst.SunTiming;
 	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
-	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
 	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
+	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
+	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
+	TheShaderManager->ConstantsTable["TESR_FogColor"] = &TheShaderManager->ShaderConst.fogColor;
+	TheShaderManager->ConstantsTable["TESR_SunColor"] = &TheShaderManager->ShaderConst.sunColor;
+	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
+	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
+	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
+	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
 	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
 	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
 	TheShaderManager->ConstantsTable["TESR_WaterVolume"] = &TheShaderManager->ShaderConst.Water.waterVolume;
@@ -131,16 +133,14 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_WaterDeepColor"] = &TheShaderManager->ShaderConst.Water.deepColor;
 	TheShaderManager->ConstantsTable["TESR_WaterShallowColor"] = &TheShaderManager->ShaderConst.Water.shallowColor;
 	TheShaderManager->ConstantsTable["TESR_WaterShorelineParams"] = &TheShaderManager->ShaderConst.Water.shorelineParams;
-	TheShaderManager->ConstantsTable["TESR_FogColor"] = &TheShaderManager->ShaderConst.fogColor;
-	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
-	TheShaderManager->ConstantsTable["TESR_SunColor"] = &TheShaderManager->ShaderConst.sunColor;
-	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
+	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
+	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
+	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
+	TheShaderManager->ConstantsTable["TESR_SkinData"] = &TheShaderManager->ShaderConst.Skin.SkinData;
+	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &TheShaderManager->ShaderConst.Skin.SkinColor;
 	TheShaderManager->ConstantsTable["TESR_SkyData"] = &TheShaderManager->ShaderConst.Sky.SkyData;
 	TheShaderManager->ConstantsTable["TESR_CloudData"] = &TheShaderManager->ShaderConst.Sky.CloudData;
-	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
-	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
-	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
-	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
+	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
 	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
 	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
 	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
@@ -328,11 +328,9 @@ void ShaderManager::UpdateConstants() {
 	if (TheSettingManager->SettingsChanged) {
 
 		// update settings
-		for (EffectsList::iterator v = EffectsNames.begin(); v != EffectsNames.end(); v++) {
-			EffectRecord* Effect = *v->second;
-			if (Effect->Enabled) Effect->UpdateSettings();
+		for (const auto [Name, effect] : EffectsNames) {
+			(*effect)->UpdateSettings();
 		}
-
 
 		// sky settings are used in several shaders whether the shader is active or not
 		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
@@ -599,9 +597,8 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	// update Constants
-	for (EffectsList::iterator v = EffectsNames.begin(); v != EffectsNames.end(); v++) {
-		EffectRecord* Effect = *v->second;
-		if (Effect->Enabled) Effect->UpdateConstants();
+	for (const auto [Name, effect] : EffectsNames) {
+		if ((*effect)->Enabled) (*effect)->UpdateConstants();
 	}
 
 	TheSettingManager->SettingsChanged = false;
@@ -862,6 +859,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
 	if (!memcmp(Name, "PointShadows", 13)) return new PointShadowsEffect();
 	if (!memcmp(Name, "PointShadows2", 14)) return new PointShadows2Effect();
+	if (!memcmp(Name, "Pretonemapper", 14)) return new PretonemapperEffect();
 	if (!memcmp(Name, "ShadowsInteriors", 17)) return new ShadowsInteriorsEffect();
 	if (!memcmp(Name, "SnowAccumulation", 17)) return new SnowAccumulationEffect();
 	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();

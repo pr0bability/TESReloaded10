@@ -16,4 +16,8 @@ public:
 	void	RegisterConstants();
 	void	UpdateSettings();
 
+	float dayMult;
+	float nightMult;
+	bool sunGlareEnabled;
+	float rayVisibility
 };
