@@ -133,6 +133,9 @@ public:
 
 	void* operator new(size_t i) { return _mm_malloc(i, 16); }
 
+	int GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader);
+	int GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader);
+
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
 	void					CreateEffects();
 	void					InitializeConstants();
