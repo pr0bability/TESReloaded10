@@ -19,5 +19,5 @@ public:
 	float dayMult;
 	float nightMult;
 	bool sunGlareEnabled;
-	float rayVisibility
+	float rayVisibility;
 };
