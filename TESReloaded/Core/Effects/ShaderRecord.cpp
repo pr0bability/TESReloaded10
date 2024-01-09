@@ -654,3 +654,9 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 
 void EffectRecord::UpdateConstants() {
 }
+
+
+bool ShaderCollection::SwitchShader() {
+	Enabled = !TheSettingManager->GetMenuShaderEnabled(Name);
+	TheSettingManager->SetMenuShaderEnabled(Name, Enabled);
+}

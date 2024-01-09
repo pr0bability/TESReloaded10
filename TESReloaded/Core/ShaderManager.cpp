@@ -55,6 +55,15 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["WaterLens"] = (EffectRecord**)&TheShaderManager->Effects.WaterLens;
 	TheShaderManager->EffectsNames["WetWorld"] = (EffectRecord**)&TheShaderManager->Effects.WetWorld;
 
+	TheShaderManager->ShaderNames["Tonemapping"] = &TheShaderManager->Shaders.Tonemapping;
+	TheShaderManager->ShaderNames["POM"] = &TheShaderManager->Shaders.POM;
+	TheShaderManager->ShaderNames["Water"] = &TheShaderManager->Shaders.Water;
+	TheShaderManager->ShaderNames["Sky"] = &TheShaderManager->Shaders.Sky;
+	TheShaderManager->ShaderNames["Skin"] = &TheShaderManager->Shaders.Skin;
+	TheShaderManager->ShaderNames["Grass"] = &TheShaderManager->Shaders.Grass;
+	TheShaderManager->ShaderNames["Terrain"] = &TheShaderManager->Shaders.Terrain;
+	TheShaderManager->ShaderNames["ExtraShaders"] = &TheShaderManager->Shaders.ExtraShaders;
+
 	// Initialize all effects
 	TheShaderManager->CreateEffects();
 
@@ -188,6 +197,11 @@ void ShaderManager::CreateEffects() {
 		EffectRecord* Effect = CreateEffect(v->first.c_str());
 		Effect->RegisterConstants();
 		*v->second = Effect;
+	}
+
+	for (ShaderList::iterator v = TheShaderManager->ShaderNames.begin(); v != TheShaderManager->ShaderNames.end(); v++) {
+		ShaderCollection* Collection = CreateCollection(v->first.c_str());
+		*v->second = Collection;
 	}
 
 	/*TODO*/
@@ -719,6 +733,22 @@ bool ShaderManager::CreateShader(const char* Name) {
 	return success;
 }
 
+
+ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
+
+	if (!memcmp(Name, "WATER", 5)) return Shaders.Water;
+	if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
+	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
+	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
+	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;
+	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
+	if (strstr(TerrainShaders, Name)) return Shaders.Terrain;
+	if (strstr(BloodShaders, Name)) return Shaders.Blood;
+
+	return Shaders.ExtraShaders;
+}
+
+
 /*
 * Load generic Vertex Shaders as well as the ones for interiors and exteriors if the exist. Returns false if generic one isn't found (as other ones are optional)
 */
@@ -992,6 +1022,11 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 	//		}
 	//		break;
 	//}
+}
+
+
+ShaderCollection* ShaderManager::CreateCollection(const char* Name) {
+	return new ShaderCollection(Name);
 }
 
 /*
