@@ -7,7 +7,7 @@ void BinkManager::Initialize() {
 	TheBinkManager->VertexDefinition[1] = { 0, (4 * sizeof(float)), D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0 };
 	TheBinkManager->VertexDefinition[2] = D3DDECL_END();
 	TheRenderManager->device->CreateVertexDeclaration(TheBinkManager->VertexDefinition, &TheBinkManager->VertexShaderDeclaration);
-	TheBinkManager->Pixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("Bink.pso", NULL);
+	TheBinkManager->Pixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("Bink.pso", "Bink\\");
 	TheBinkManager->Bink = NULL;
 	TheBinkManager->Textures = { NULL };
 

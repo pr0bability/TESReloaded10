@@ -95,8 +95,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformOrtho"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4];
 	TheShaderManager->ConstantsTable["TESR_OcclusionWorldViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj;
 	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapLightPosition"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition;
-	TheShaderManager->ConstantsTable["TESR_ViewSpaceLightDir"] = &TheShaderManager->ShaderConst.ViewSpaceLightDir;
-	TheShaderManager->ConstantsTable["TESR_ScreenSpaceLightDir"] = &TheShaderManager->ShaderConst.ScreenSpaceLightDir;
 	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition0"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0];
 	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition1"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1];
 	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition2"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2];
@@ -121,6 +119,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_LightPosition9"] = &TheShaderManager->LightPosition[9];
 	TheShaderManager->ConstantsTable["TESR_LightPosition10"] = &TheShaderManager->LightPosition[10];
 	TheShaderManager->ConstantsTable["TESR_LightPosition11"] = &TheShaderManager->LightPosition[11];
+	TheShaderManager->ConstantsTable["TESR_ViewSpaceLightDir"] = &TheShaderManager->ShaderConst.ViewSpaceLightDir;
+	TheShaderManager->ConstantsTable["TESR_ScreenSpaceLightDir"] = &TheShaderManager->ShaderConst.ScreenSpaceLightDir;
 	TheShaderManager->ConstantsTable["TESR_ReciprocalResolution"] = &TheShaderManager->ShaderConst.ReciprocalResolution;
 	TheShaderManager->ConstantsTable["TESR_CameraForward"] = &TheRenderManager->CameraForward;
 	TheShaderManager->ConstantsTable["TESR_DepthConstants"] = &TheRenderManager->DepthConstants;
@@ -755,14 +755,26 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
 	NiD3DVertexShaderEx* VertexShader = (NiD3DVertexShaderEx*)Shader;
-	
+	ShaderCollection* Collection = GetShaderCollection(VertexShader->ShaderName);
+
+	// if AMD and no DXVK, disable glitchy Tonemapping shader replacements
+	if (Collection == Shaders.Tonemapping && (TheRenderManager->RESZ && !TheRenderManager->DXVK)) return false;
+
+	if (!Collection->Enabled) return false;
+
 	// Load generic, interior and exterior shaders
 	VertexShader->ShaderProg  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, NULL);
 	VertexShader->ShaderProgE = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Exteriors\\");
 	VertexShader->ShaderProgI = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Interiors\\");
 
-	return VertexShader->ShaderProg != nullptr;
+	if (VertexShader->ShaderProg != nullptr || VertexShader->ShaderProgE != nullptr || VertexShader->ShaderProgI != nullptr) {
+		Collection->VertexShaderList.push_back(VertexShader);
+		Logger::Log("Loaded %s Vertex Shader %s", Collection->Name, VertexShader->ShaderName);
+	}
+
+	return Collection->Enabled;
 }
+
 
 /*
 * Load generic Pixel Shaders as well as the ones for interiors and exteriors if the exist. Returns false if generic one isn't found (as other ones are optional)
@@ -770,13 +782,25 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)Shader;
+	ShaderCollection* Collection = GetShaderCollection(PixelShader->ShaderName);
+
+	// if AMD and no DXVK, disable glitchy Tonemapping shader replacements
+	if (Collection == Shaders.Tonemapping && (TheRenderManager->RESZ && !TheRenderManager->DXVK)) return false;
+
+	if (!Collection->Enabled) return false;
 
 	PixelShader->ShaderProg  = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, NULL);
 	PixelShader->ShaderProgE = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Exteriors\\");
 	PixelShader->ShaderProgI = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Interiors\\");
 
-	return PixelShader->ShaderProg != nullptr;
+	if (PixelShader->ShaderProg != nullptr || PixelShader->ShaderProgE != nullptr || PixelShader->ShaderProgI != nullptr) {
+		Collection->PixelShaderList.push_back(PixelShader);
+		Logger::Log("Loaded %s Pixel Shader %s", Collection->Name, PixelShader->ShaderName);
+	}
+
+	return Collection->Enabled;
 }
+
 
 void ShaderManager::DisposeShader(const char* Name) {
 
