@@ -35,6 +35,7 @@
 #include "Effects/WetWorld.h"
 
 #include "Effects/Water.h"
+#include "Effects/Tonemapping.h"
 
 
 struct ShaderConstants {
@@ -52,14 +53,6 @@ struct ShaderConstants {
 		D3DXMATRIX		OcclusionWorldViewProj;
 	};
 
-	struct HDRStruct {
-		D3DXVECTOR4		ToneMapping;
-		D3DXVECTOR4		BloomData;
-		D3DXVECTOR4		SkyData;
-		D3DXVECTOR4		HDRData;
-		D3DXVECTOR4		LotteData;
-		float			PointLightMult;
-	};
 	struct GrassStruct {
 		D3DXVECTOR4		Scale;
 	};
@@ -105,7 +98,6 @@ struct ShaderConstants {
 	float					fogPower;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
-	HDRStruct				HDR;
 	GrassStruct				Grass;
 	POMStruct				POM;
 	TerrainStruct			Terrain;
@@ -127,9 +119,8 @@ public:
 
 	void* operator new(size_t i) { return _mm_malloc(i, 16); }
 
-	int GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader);
-	int GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader);
-
+	int						GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader);
+	int						GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader);
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
 	void					CreateEffects();
 	void					InitializeConstants();
@@ -193,7 +184,7 @@ public:
 
 	struct ShadersStruct{
 		WaterShaders*			Water;
-		ShaderCollection*		Tonemapping;
+		TonemappingShaders*		Tonemapping;
 		ShaderCollection*		POM;
 		ShaderCollection*		Blood;
 		ShaderCollection*		Sky;
