@@ -53,7 +53,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ShaderNames["POM"] = &TheShaderManager->Shaders.POM;
 	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
 	TheShaderManager->ShaderNames["Sky"] = (ShaderCollection**)&TheShaderManager->Shaders.Sky;
-	TheShaderManager->ShaderNames["Skin"] = &TheShaderManager->Shaders.Skin;
+	TheShaderManager->ShaderNames["Skin"] = (ShaderCollection**)&TheShaderManager->Shaders.Skin;
 	TheShaderManager->ShaderNames["Grass"] = &TheShaderManager->Shaders.Grass;
 	TheShaderManager->ShaderNames["Terrain"] = &TheShaderManager->Shaders.Terrain;
 	TheShaderManager->ShaderNames["ExtraShaders"] = &TheShaderManager->Shaders.ExtraShaders;
@@ -136,8 +136,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
 	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
 	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
-	TheShaderManager->ConstantsTable["TESR_SkinData"] = &TheShaderManager->ShaderConst.Skin.SkinData;
-	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &TheShaderManager->ShaderConst.Skin.SkinColor;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -446,16 +444,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.Terrain.Data.y = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "DistantNoise");
 			ShaderConst.Terrain.Data.z = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "NearSpecular");
 			ShaderConst.Terrain.Data.w = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "MiddleSpecular");
-		}
-
-		if (TheSettingManager->GetMenuShaderEnabled("Skin")) {
-			ShaderConst.Skin.SkinData.x = TheSettingManager->GetSettingF("Shaders.Skin.Main", "Attenuation");
-			ShaderConst.Skin.SkinData.y = TheSettingManager->GetSettingF("Shaders.Skin.Main", "SpecularPower");
-			ShaderConst.Skin.SkinData.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "MaterialThickness");
-			ShaderConst.Skin.SkinData.w = TheSettingManager->GetSettingF("Shaders.Skin.Main", "RimScalar");
-			ShaderConst.Skin.SkinColor.x = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffRed");
-			ShaderConst.Skin.SkinColor.y = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffGreen");
-			ShaderConst.Skin.SkinColor.z = TheSettingManager->GetSettingF("Shaders.Skin.Main", "CoeffBlue");
 		}
 
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
@@ -922,6 +910,7 @@ ShaderCollection* ShaderManager::CreateCollection(const char* Name) {
 	if (!memcmp(Name, "Water", 6)) return new WaterShaders();
 	if (!memcmp(Name, "Tonemapping", 12)) return new TonemappingShaders();
 	if (!memcmp(Name, "Sky", 3)) return new SkyShaders();
+	if (!memcmp(Name, "Skin", 4)) return new SkinShaders();
 
 	return new ShaderCollection(Name);
 }
