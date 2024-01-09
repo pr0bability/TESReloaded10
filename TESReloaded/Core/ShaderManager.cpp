@@ -57,7 +57,7 @@ void ShaderManager::Initialize() {
 
 	TheShaderManager->ShaderNames["Tonemapping"] = &TheShaderManager->Shaders.Tonemapping;
 	TheShaderManager->ShaderNames["POM"] = &TheShaderManager->Shaders.POM;
-	TheShaderManager->ShaderNames["Water"] = &TheShaderManager->Shaders.Water;
+	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
 	TheShaderManager->ShaderNames["Sky"] = &TheShaderManager->Shaders.Sky;
 	TheShaderManager->ShaderNames["Skin"] = &TheShaderManager->Shaders.Skin;
 	TheShaderManager->ShaderNames["Grass"] = &TheShaderManager->Shaders.Grass;
@@ -139,13 +139,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
 	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
 	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
-	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &TheShaderManager->ShaderConst.Water.waterCoefficients;
-	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &TheShaderManager->ShaderConst.Water.waveParams;
-	TheShaderManager->ConstantsTable["TESR_WaterVolume"] = &TheShaderManager->ShaderConst.Water.waterVolume;
-	TheShaderManager->ConstantsTable["TESR_WaterSettings"] = &TheShaderManager->ShaderConst.Water.waterSettings;
-	TheShaderManager->ConstantsTable["TESR_WaterDeepColor"] = &TheShaderManager->ShaderConst.Water.deepColor;
-	TheShaderManager->ConstantsTable["TESR_WaterShallowColor"] = &TheShaderManager->ShaderConst.Water.shallowColor;
-	TheShaderManager->ConstantsTable["TESR_WaterShorelineParams"] = &TheShaderManager->ShaderConst.Water.shorelineParams;
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
 	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
 	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
@@ -199,8 +192,10 @@ void ShaderManager::CreateEffects() {
 		*v->second = Effect;
 	}
 
+	// create shader collections
 	for (ShaderList::iterator v = TheShaderManager->ShaderNames.begin(); v != TheShaderManager->ShaderNames.end(); v++) {
 		ShaderCollection* Collection = CreateCollection(v->first.c_str());
+		Collection->RegisterConstants();
 		*v->second = Collection;
 	}
 
@@ -320,10 +315,6 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.GameTime.z = (float)TheFrameRateManager->Time;
 	ShaderConst.GameTime.w = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 
-	// get water height based on player position
-	ShaderConst.Water.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);
-	ShaderConst.Water.waterSettings.z = isUnderwater;
-
 	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
@@ -343,11 +334,14 @@ void ShaderManager::UpdateConstants() {
 	isDayTime = smoothStep(0, 1, isDayTime); // smooth daytime progression
 	ShaderConst.SunAmount.x = isDayTime; 
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
-	if (TheSettingManager->SettingsChanged) {
 
+	if (TheSettingManager->SettingsChanged) {
 		// update settings
 		for (const auto [Name, effect] : EffectsNames) {
 			(*effect)->UpdateSettings();
+		}
+		for (const auto [Name, shader] : ShaderNames) {
+			(*shader)->UpdateSettings();
 		}
 
 		// sky settings are used in several shaders whether the shader is active or not
@@ -425,59 +419,6 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.fogDistance.y = ShaderConst.fogData.y;
 	ShaderConst.fogDistance.z = 1.0f;
 	ShaderConst.fogDistance.w = ShaderConst.sunGlare;
-
-	//if (weatherPercent == 1.0f) ShaderConst.pWeather = currentWeather;
-
-	if (TheSettingManager->GetMenuShaderEnabled("Water") || Effects.Underwater->Enabled) {
-		RGBA* rgba = NULL;
-		SettingsWaterStruct* sws = NULL;
-		TESWaterForm* currentWater = currentCell->GetWaterForm();
-			
-		sectionName = "Shaders.Water.Default";
-		if (currentWater) {
-			UInt32 WaterType = currentWater->GetWaterType();
-			if (WaterType == TESWaterForm::WaterType::kWaterType_Blood)
-				sectionName = "Shaders.Water.Blood";
-			else if (WaterType == TESWaterForm::WaterType::kWaterType_Lava)
-				sectionName = "Shaders.Water.Lava";
-
-			// world space specific settings. TODO Reimplement with Toml
-			//else if (!(sws = TheSettingManager->GetSettingsWater(currentCell->GetEditorName())) && currentWorldSpace)
-			//	sws = TheSettingManager->GetSettingsWater(currentWorldSpace->GetEditorName());
-
-			rgba = currentWater->GetDeepColor();
-			ShaderConst.Water.deepColor.x = rgba->r / 255.0f;
-			ShaderConst.Water.deepColor.y = rgba->g / 255.0f;
-			ShaderConst.Water.deepColor.z = rgba->b / 255.0f;
-			ShaderConst.Water.deepColor.w = rgba->a / 255.0f;
-			rgba = currentWater->GetShallowColor();
-			ShaderConst.Water.shallowColor.x = rgba->r / 255.0f;
-			ShaderConst.Water.shallowColor.y = rgba->g / 255.0f;
-			ShaderConst.Water.shallowColor.z = rgba->b / 255.0f;
-			ShaderConst.Water.shallowColor.w = rgba->a / 255.0f;
-		}
-
-		if (TheSettingManager->SettingsChanged) {
-			ShaderConst.Water.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
-			ShaderConst.Water.waterCoefficients.y = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_G");
-			ShaderConst.Water.waterCoefficients.z = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_B");
-			ShaderConst.Water.waterCoefficients.w = TheSettingManager->GetSettingF(sectionName, "inScattCoeff");
-
-			ShaderConst.Water.waveParams.x = TheSettingManager->GetSettingF(sectionName, "choppiness");
-			ShaderConst.Water.waveParams.y = TheSettingManager->GetSettingF(sectionName, "waveWidth");
-			ShaderConst.Water.waveParams.z = TheSettingManager->GetSettingF(sectionName, "waveSpeed");
-			ShaderConst.Water.waveParams.w = TheSettingManager->GetSettingF(sectionName, "reflectivity");
-
-			ShaderConst.Water.waterSettings.y = TheSettingManager->GetSettingF(sectionName, "depthDarkness");
-
-			ShaderConst.Water.waterVolume.x = TheSettingManager->GetSettingF(sectionName, "causticsStrength") * ShaderConst.sunGlare;
-			ShaderConst.Water.waterVolume.y = TheSettingManager->GetSettingF(sectionName, "shoreFactor");
-			ShaderConst.Water.waterVolume.z = TheSettingManager->GetSettingF(sectionName, "turbidity");
-			ShaderConst.Water.waterVolume.w = TheSettingManager->GetSettingF(sectionName, "causticsStrengthS");
-
-			ShaderConst.Water.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
-		}
-	}
 
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
@@ -615,9 +556,15 @@ void ShaderManager::UpdateConstants() {
 	}
 
 	// update Constants
+	for (const auto [Name, shader] : ShaderNames) {
+		if ((*shader)->Enabled) (*shader)->UpdateConstants();
+	}
 	for (const auto [Name, effect] : EffectsNames) {
 		if ((*effect)->Enabled) (*effect)->UpdateConstants();
 	}
+
+	// Underwater effect uses constants from the water shader
+	if (Effects.Underwater->Enabled && !Shaders.Water->Enabled) Shaders.Water->UpdateConstants();
 
 	TheSettingManager->SettingsChanged = false;
 	timer.LogTime("ShaderManager::UpdateConstants");
@@ -1062,6 +1009,8 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 
 
 ShaderCollection* ShaderManager::CreateCollection(const char* Name) {
+	if (!memcmp(Name, "Water", 6)) return new WaterShaders();
+
 	return new ShaderCollection(Name);
 }
 

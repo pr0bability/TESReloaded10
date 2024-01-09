@@ -34,6 +34,8 @@
 #include "Effects/WaterLens.h"
 #include "Effects/WetWorld.h"
 
+#include "Effects/Water.h"
+
 
 struct ShaderConstants {
 	
@@ -49,15 +51,7 @@ struct ShaderConstants {
 	struct OcclusionMapStruct {
 		D3DXMATRIX		OcclusionWorldViewProj;
 	};
-	struct WaterStruct {
-		D3DXVECTOR4		waterCoefficients;
-		D3DXVECTOR4		waveParams;
-		D3DXVECTOR4		waterVolume;
-		D3DXVECTOR4		waterSettings;
-		D3DXVECTOR4		deepColor;
-		D3DXVECTOR4		shallowColor;
-		D3DXVECTOR4		shorelineParams;
-	};
+
 	struct HDRStruct {
 		D3DXVECTOR4		ToneMapping;
 		D3DXVECTOR4		BloomData;
@@ -111,7 +105,6 @@ struct ShaderConstants {
 	float					fogPower;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
-	WaterStruct				Water;
 	HDRStruct				HDR;
 	GrassStruct				Grass;
 	POMStruct				POM;
@@ -199,7 +192,7 @@ public:
 	};
 
 	struct ShadersStruct{
-		ShaderCollection*		Water;
+		WaterShaders*			Water;
 		ShaderCollection*		Tonemapping;
 		ShaderCollection*		POM;
 		ShaderCollection*		Blood;

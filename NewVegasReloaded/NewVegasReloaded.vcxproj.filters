@@ -272,6 +272,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Pretonemapper.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Water.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -453,6 +456,9 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\TextureRecord.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\Water.cpp">
+      <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
