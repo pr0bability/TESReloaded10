@@ -81,47 +81,8 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	char ShaderProfile[7];
 	char FileName[MAX_PATH];
 	char FileNameBinary[MAX_PATH];
-
+	
 	strcpy(FileName, ShadersPath);
-	if (!memcmp(Name, "WATER", 5)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("Water")) return NULL;
-	}
-	else if (!memcmp(Name, "GRASS", 5)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("Grass")) return NULL;
-	}
-	else if (!memcmp(Name, "HDR", 3) || !memcmp(Name, "ISHDR", 5)) {
-		// load tonemapping shaders, with different names between New vegas and Oblivion
-		if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) || !TheSettingManager->GetMenuShaderEnabled("Tonemapping")) return NULL;
-	}
-	else if (!memcmp(Name, "PAR", 3)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("POM")) return NULL;
-	}
-	else if (!memcmp(Name, "SKIN", 4)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("Skin")) return NULL;
-	}
-	else if (!memcmp(Name, "SKY", 3)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("Sky")) return NULL;
-	}
-	else if (strstr(TerrainShaders, Name)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("Terrain")) return NULL;
-	}
-	else if (strstr(BloodShaders, Name)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("Blood")) return NULL;
-	}
-	else if (!memcmp(Name, "NIGHTEYE", 8)) {
-		if (!TheSettingManager->GetMenuShaderEnabled("NightEye")) return NULL;
-	}
-	else if (!memcmp(Name, "Shadow", 6)) {
-		strcat(FileName, "Shadows\\");
-	}
-	else if (!memcmp(Name, "Occlusion", 9)) {
-		strcat(FileName, "Occlusion\\");
-	}
-	else if (!memcmp(Name, "Bink", 4)) {
-		strcat(FileName, "Bink\\");
-	}
-	else if (!TheSettingManager->SettingsMain.Shaders.Extra) return NULL;
-
 	if (SubPath) strcat(FileName, SubPath);
 	strcat(FileName, Name);
 	strcpy(FileNameBinary, FileName);
