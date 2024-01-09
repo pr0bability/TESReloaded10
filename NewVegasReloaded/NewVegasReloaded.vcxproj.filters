@@ -275,6 +275,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Water.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Tonemapping.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -458,6 +461,9 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Water.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\Tonemapping.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>

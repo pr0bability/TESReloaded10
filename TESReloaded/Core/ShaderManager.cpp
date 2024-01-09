@@ -4,12 +4,6 @@
 #define ShadowLightVertexShaders ((NiD3DVertexShader**)0x011FDE5C)
 #define ShadowLightPixelShaders ((NiD3DPixelShader**)0x011FDB08)
 
-template <typename T> int sgn(T val) {
-	return (T(0) < val) - (val < T(0));
-}
-
-#define pows(a, b)          (pow(abs(a), b) * sgn(a)) // no more pow/abs warning!
-
 /**
 * Initializes the Shader Manager Singleton.
 * The Shader Manager creates and holds onto the Effects activated in the Settings Manager, and sets the constants.
@@ -55,7 +49,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["WaterLens"] = (EffectRecord**)&TheShaderManager->Effects.WaterLens;
 	TheShaderManager->EffectsNames["WetWorld"] = (EffectRecord**)&TheShaderManager->Effects.WetWorld;
 
-	TheShaderManager->ShaderNames["Tonemapping"] = &TheShaderManager->Shaders.Tonemapping;
+	TheShaderManager->ShaderNames["Tonemapping"] = (ShaderCollection**)&TheShaderManager->Shaders.Tonemapping;
 	TheShaderManager->ShaderNames["POM"] = &TheShaderManager->Shaders.POM;
 	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
 	TheShaderManager->ShaderNames["Sky"] = &TheShaderManager->Shaders.Sky;
@@ -147,10 +141,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SkyData"] = &TheShaderManager->ShaderConst.Sky.SkyData;
 	TheShaderManager->ConstantsTable["TESR_CloudData"] = &TheShaderManager->ShaderConst.Sky.CloudData;
 	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
-	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &TheShaderManager->ShaderConst.HDR.BloomData;
-	TheShaderManager->ConstantsTable["TESR_HDRData"] = &TheShaderManager->ShaderConst.HDR.HDRData;
-	TheShaderManager->ConstantsTable["TESR_LotteData"] = &TheShaderManager->ShaderConst.HDR.LotteData;
-	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &TheShaderManager->ShaderConst.HDR.ToneMapping;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -206,6 +196,7 @@ void ShaderManager::CreateEffects() {
 	timer.LogTime("ShaderManager::CreateEffects");
 }
 
+
 void ShaderManager::LoadEffects() {
 
 	auto timer = TimeLogger();
@@ -221,7 +212,6 @@ void ShaderManager::LoadEffects() {
 
 	timer.LogTime("ShaderManager::LoadEffects");
 }
-
 
 
 void ShaderManager::InitializeConstants() {
@@ -505,55 +495,6 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
 	}
 
-	if (TheSettingManager->SettingsChanged || isDayTimeChanged) {
-		if (TheSettingManager->GetMenuShaderEnabled("Tonemapping") || TheSettingManager->GetMenuShaderEnabled("PreTonemapper")) {
-			ShaderConst.HDR.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "PointLightMultiplier", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "HighlightSaturation", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "WeatherContrast", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "ToneMappingColor", isExterior, transitionCurve);
-			ShaderConst.HDR.ToneMapping.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Linearization", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "BloomStrength", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "BloomExponent", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "WeatherModifier", isExterior, transitionCurve);
-			ShaderConst.HDR.BloomData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapWhitePoint", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemappingMode", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Exposure", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Saturation", isExterior, transitionCurve);
-			ShaderConst.HDR.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Gamma", isExterior, transitionCurve);
-			ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", isExterior, transitionCurve);
-
-			ShaderConst.HDR.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapContrast", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapBrightness", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapMidpoint", isExterior, transitionCurve);
-			ShaderConst.HDR.LotteData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapShoulder", isExterior, transitionCurve);
-
-			if (ShaderConst.HDR.HDRData.x == 1.0 || TheSettingManager->GetMenuShaderEnabled("Pretonemapper")) {
-				float hdrMax = max(1.0, ShaderConst.HDR.BloomData.w * 100.0);
-				float contrast = max(0.01, ShaderConst.HDR.LotteData.x * 1.35);
-				float shoulder = max(0.0, (min(1.0, ShaderConst.HDR.LotteData.w * 0.993))); // Shoulder should not! exceed 1.0
-				float midIn = max(0.01, ShaderConst.HDR.LotteData.z * 0.18);
-				float midOut = max(0.01, (ShaderConst.HDR.LotteData.y * 0.18) / shoulder);
-				float colToneB = -((-pows(midIn, contrast) + (midOut * (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) -
-					pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut)) /
-					(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut)) /
-					(pows(midIn, contrast * shoulder) * midOut));
-
-				float colToneC = (pows(hdrMax, contrast * shoulder) * pows(midIn, contrast) - pows(hdrMax, contrast) * pows(midIn, contrast * shoulder) * midOut) /
-					(pows(hdrMax, contrast * shoulder) * midOut - pows(midIn, contrast * shoulder) * midOut);
-
-				ShaderConst.HDR.LotteData.x = contrast;
-				ShaderConst.HDR.LotteData.w = shoulder;
-				ShaderConst.HDR.LotteData.z = colToneB;
-				ShaderConst.HDR.LotteData.y = colToneC;
-			}
-		}
-		else {
-
-			ShaderConst.Sky.SunsetColor.w = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
-			ShaderConst.HDR.PointLightMult = 1.0;
-		}
-
-	}
 
 	// update Constants
 	for (const auto [Name, shader] : ShaderNames) {
@@ -1010,6 +951,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 
 ShaderCollection* ShaderManager::CreateCollection(const char* Name) {
 	if (!memcmp(Name, "Water", 6)) return new WaterShaders();
+	if (!memcmp(Name, "Tonemapping", 12)) return new TonemappingShaders();
 
 	return new ShaderCollection(Name);
 }
