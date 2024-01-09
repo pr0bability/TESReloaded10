@@ -52,7 +52,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ShaderNames["Tonemapping"] = (ShaderCollection**)&TheShaderManager->Shaders.Tonemapping;
 	TheShaderManager->ShaderNames["POM"] = &TheShaderManager->Shaders.POM;
 	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
-	TheShaderManager->ShaderNames["Sky"] = &TheShaderManager->Shaders.Sky;
+	TheShaderManager->ShaderNames["Sky"] = (ShaderCollection**)&TheShaderManager->Shaders.Sky;
 	TheShaderManager->ShaderNames["Skin"] = &TheShaderManager->Shaders.Skin;
 	TheShaderManager->ShaderNames["Grass"] = &TheShaderManager->Shaders.Grass;
 	TheShaderManager->ShaderNames["Terrain"] = &TheShaderManager->Shaders.Terrain;
@@ -138,9 +138,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
 	TheShaderManager->ConstantsTable["TESR_SkinData"] = &TheShaderManager->ShaderConst.Skin.SkinData;
 	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &TheShaderManager->ShaderConst.Skin.SkinColor;
-	TheShaderManager->ConstantsTable["TESR_SkyData"] = &TheShaderManager->ShaderConst.Sky.SkyData;
-	TheShaderManager->ConstantsTable["TESR_CloudData"] = &TheShaderManager->ShaderConst.Sky.CloudData;
-	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &TheShaderManager->ShaderConst.Sky.SunsetColor;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -337,34 +334,6 @@ void ShaderManager::UpdateConstants() {
 		// sky settings are used in several shaders whether the shader is active or not
 		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
 		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
-
-		ShaderConst.Sky.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
-		ShaderConst.Sky.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
-		ShaderConst.Sky.SkyData.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
-		ShaderConst.Sky.SkyData.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarStrength");
-
-		ShaderConst.Sky.CloudData.x = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "UseNormals");
-		ShaderConst.Sky.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "SphericalNormals");
-		ShaderConst.Sky.CloudData.z = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
-		ShaderConst.Sky.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
-
-		// only add sunset color boost in exteriors
-		if (isExterior) {
-			ShaderConst.Sky.SunsetColor.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetR");
-			ShaderConst.Sky.SunsetColor.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetG");
-			ShaderConst.Sky.SunsetColor.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetB");
-
-			// TODO : fix sun culling for sun replacing?
-			//if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
-			//	if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
-			//	else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
-			//}
-		}
-		else {
-			ShaderConst.Sky.SunsetColor.x = 0;
-			ShaderConst.Sky.SunsetColor.y = 0;
-			ShaderConst.Sky.SunsetColor.z = 0;
-		}
 	}
 
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
@@ -952,6 +921,7 @@ EffectRecord* ShaderManager::CreateEffect(const char* Name) {
 ShaderCollection* ShaderManager::CreateCollection(const char* Name) {
 	if (!memcmp(Name, "Water", 6)) return new WaterShaders();
 	if (!memcmp(Name, "Tonemapping", 12)) return new TonemappingShaders();
+	if (!memcmp(Name, "Sky", 3)) return new SkyShaders();
 
 	return new ShaderCollection(Name);
 }

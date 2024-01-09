@@ -36,6 +36,7 @@
 
 #include "Effects/Water.h"
 #include "Effects/Tonemapping.h"
+#include "Effects/Sky.h"
 
 
 struct ShaderConstants {
@@ -65,12 +66,6 @@ struct ShaderConstants {
 	struct SkinStruct {
 		D3DXVECTOR4		SkinData;
 		D3DXVECTOR4		SkinColor;
-	};
-	
-	struct SkyStruct {
-		D3DXVECTOR4		SkyData;
-		D3DXVECTOR4		SunsetColor;
-		D3DXVECTOR4		CloudData;
 	};
 
 	D3DXVECTOR4				ReciprocalResolution;
@@ -102,7 +97,6 @@ struct ShaderConstants {
 	POMStruct				POM;
 	TerrainStruct			Terrain;
 	SkinStruct				Skin;
-	SkyStruct				Sky;
 	D3DXVECTOR4				DebugVar;
 };
 
@@ -187,7 +181,7 @@ public:
 		TonemappingShaders*		Tonemapping;
 		ShaderCollection*		POM;
 		ShaderCollection*		Blood;
-		ShaderCollection*		Sky;
+		SkyShaders*				Sky;
 		ShaderCollection*		Skin;
 		ShaderCollection*		Grass;
 		ShaderCollection*		Terrain;
