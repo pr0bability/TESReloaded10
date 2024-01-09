@@ -624,116 +624,6 @@ void ShaderManager::UpdateConstants() {
 }
 
 
-int ShaderManager::GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader) {
-
-	//BSShader** Shaders = (BSShader**)0x011F9548;
-	//NiD3DVertexShader** ShadowLightVertexShaders = (NiD3DVertexShader**)0x011FDE5C;
-	int Size = 0;
-
-	if (!strcmp(Name, "Water")) {
-		*Shader = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-	else if (!strcmp(Name, "WaterHeightMap")) {
-		*Shader = WaterVertexShaders;
-		Size = sizeof(WaterVertexShaders) / 4;
-	}
-	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
-		*Shader = ShadowLightVertexShaders;
-		Size = 103;
-	}
-	else if (!strcmp(Name, "POM")) {
-		*Shader = ((ParallaxShader*)BSVertexShaders[kShaderDefinition_ParallaxShader])->pVertexShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-
-	return Size;
-}
-
-int ShaderManager::GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader) {
-
-	//BSShader** Shaders = (BSShader**)0x011F9548;
-	//NiD3DPixelShader** ShadowLightPixelShaders = (NiD3DPixelShader**)0x011FDB08;
-	int Size = 0;
-
-	if (!strcmp(Name, "Water")) {
-		*Shader = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-	else if (!strcmp(Name, "WaterHeightMap")) {
-		*Shader = WaterPixelShaders;
-		Size = sizeof(WaterPixelShaders) / 4;
-	}
-	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
-		*Shader = ShadowLightPixelShaders;
-		Size = 160;
-	}
-	else if (!strcmp(Name, "POM")) {
-		*Shader = ((ParallaxShader*)BSPixelShaders[kShaderDefinition_ParallaxShader])->pPixelShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-	return Size;
-
-}
-
-
-bool ShaderManager::CreateShader(const char* Name) {
-	
-
-	NiD3DVertexShader** VertexShaderList = NULL;
-	NiD3DPixelShader** PixelShaderList = NULL;
-	int WaterVertexShadersSize = sizeof(WaterVertexShaders) / 4;
-	int WaterPixelShadersSize = sizeof(WaterPixelShaders) / 4;
-	int Size = 0;
-	bool success = true;
-
-	if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
-		VertexShaderList = ShadowLightVertexShaders;
-		Size = 103;
-		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i] && strstr(TerrainShaders, ((NiD3DVertexShaderEx*)VertexShaderList[i])->ShaderName))
-				success = LoadShader(VertexShaderList[i]) && success;
-		
-		PixelShaderList = ShadowLightPixelShaders;
-		Size = 160;
-		for (int i = 0; i < Size; i++)
-			if (PixelShaderList[i] && strstr(TerrainShaders, ((NiD3DPixelShaderEx*)PixelShaderList[i])->ShaderName))
-				success = LoadShader(PixelShaderList[i]) && success;
-	}
-	else if (!strcmp(Name, "Water")) {
-		VertexShaderList = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
-		Size = sizeof(PixelShaderList) / 4;
-		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
-		
-		PixelShaderList = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
-		Size = sizeof(PixelShaderList) / 4;
-		for (int i = 0; i < Size; i++)
-			if (PixelShaderList[i]) success = LoadShader(PixelShaderList[i]) && success;
-
-		// Water Height map
-		VertexShaderList = WaterVertexShaders;
-		Size = sizeof(WaterVertexShaders) / 4;
-		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
-
-		PixelShaderList = WaterPixelShaders;
-		Size = sizeof(WaterPixelShaders) / 4;
-		for (int i = 0; i < Size; i++) if (PixelShaderList[i])
-			success = LoadShader(PixelShaderList[i]) && success;
-	}
-
-	if (!success) {
-		char Message[256] = "Error: Could not load shader ";
-		strcat(Message, Name);
-		InterfaceManager->ShowMessage(Message);
-		Logger::Log(Message);
-	}
-
-	return success;
-}
-
-
 ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 
 	if (!memcmp(Name, "WATER", 5)) return Shaders.Water;
@@ -802,6 +692,128 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 }
 
 
+/*
+* Gets the pointer to the vertex shader list and size by name
+*/
+int ShaderManager::GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader) {
+
+	//BSShader** Shaders = (BSShader**)0x011F9548;
+	//NiD3DVertexShader** ShadowLightVertexShaders = (NiD3DVertexShader**)0x011FDE5C;
+	int Size = 0;
+
+	if (!strcmp(Name, "Water")) {
+		*Shader = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+	else if (!strcmp(Name, "WaterHeightMap")) {
+		*Shader = WaterVertexShaders;
+		Size = sizeof(WaterVertexShaders) / 4;
+	}
+	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
+		*Shader = ShadowLightVertexShaders;
+		Size = 103;
+	}
+	else if (!strcmp(Name, "POM")) {
+		*Shader = ((ParallaxShader*)BSVertexShaders[kShaderDefinition_ParallaxShader])->pVertexShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+
+	return Size;
+}
+
+
+/*
+* Gets the pointer to the pixel shader list and size by name
+*/
+int ShaderManager::GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader) {
+
+	//BSShader** Shaders = (BSShader**)0x011F9548;
+	//NiD3DPixelShader** ShadowLightPixelShaders = (NiD3DPixelShader**)0x011FDB08;
+	int Size = 0;
+
+	if (!strcmp(Name, "Water")) {
+		*Shader = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+	else if (!strcmp(Name, "WaterHeightMap")) {
+		*Shader = WaterPixelShaders;
+		Size = sizeof(WaterPixelShaders) / 4;
+	}
+	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
+		*Shader = ShadowLightPixelShaders;
+		Size = 160;
+	}
+	else if (!strcmp(Name, "POM")) {
+		*Shader = ((ParallaxShader*)BSPixelShaders[kShaderDefinition_ParallaxShader])->pPixelShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+	return Size;
+
+}
+
+
+/*
+* Creates shaders after game has started? Seems broken
+*/
+bool ShaderManager::CreateShader(const char* Name) {
+
+	NiD3DVertexShader** VertexShaderList = NULL;
+	NiD3DPixelShader** PixelShaderList = NULL;
+	int WaterVertexShadersSize = sizeof(WaterVertexShaders) / 4;
+	int WaterPixelShadersSize = sizeof(WaterPixelShaders) / 4;
+	int Size = 0;
+	bool success = true;
+
+	if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
+		VertexShaderList = ShadowLightVertexShaders;
+		Size = 103;
+		for (int i = 0; i < Size; i++)
+			if (VertexShaderList[i] && strstr(TerrainShaders, ((NiD3DVertexShaderEx*)VertexShaderList[i])->ShaderName))
+				success = LoadShader(VertexShaderList[i]) && success;
+
+		PixelShaderList = ShadowLightPixelShaders;
+		Size = 160;
+		for (int i = 0; i < Size; i++)
+			if (PixelShaderList[i] && strstr(TerrainShaders, ((NiD3DPixelShaderEx*)PixelShaderList[i])->ShaderName))
+				success = LoadShader(PixelShaderList[i]) && success;
+	}
+	else if (!strcmp(Name, "Water")) {
+		VertexShaderList = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
+		Size = sizeof(PixelShaderList) / 4;
+		for (int i = 0; i < Size; i++)
+			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
+
+		PixelShaderList = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
+		Size = sizeof(PixelShaderList) / 4;
+		for (int i = 0; i < Size; i++)
+			if (PixelShaderList[i]) success = LoadShader(PixelShaderList[i]) && success;
+
+		// Water Height map
+		VertexShaderList = WaterVertexShaders;
+		Size = sizeof(WaterVertexShaders) / 4;
+		for (int i = 0; i < Size; i++)
+			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
+
+		PixelShaderList = WaterPixelShaders;
+		Size = sizeof(WaterPixelShaders) / 4;
+		for (int i = 0; i < Size; i++) if (PixelShaderList[i])
+			success = LoadShader(PixelShaderList[i]) && success;
+	}
+
+	if (!success) {
+		char Message[256] = "Error: Could not load shader ";
+		strcat(Message, Name);
+		InterfaceManager->ShowMessage(Message);
+		Logger::Log(Message);
+	}
+
+	return success;
+}
+
+
+/*
+* Removes loaded shaders. TODO: move this to ShaderCollection
+*/
 void ShaderManager::DisposeShader(const char* Name) {
 
 	NiD3DVertexShader** Vertex = NULL;
