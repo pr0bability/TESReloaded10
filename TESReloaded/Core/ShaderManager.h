@@ -123,6 +123,7 @@ struct ShaderConstants {
 
 
 typedef std::map<std::string, EffectRecord**> EffectsList;
+typedef std::map<std::string, ShaderCollection**> ShaderList;
 typedef std::map<std::string, D3DXVECTOR4> CustomConstants;
 
 struct		FrameVS { float x, y, z, u, v; };
@@ -146,6 +147,8 @@ public:
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
 	void					DisposeShader(const char* Name);
 	EffectRecord*			CreateEffect(const char* Name);
+	ShaderCollection*		CreateCollection(const char* Name);
+	ShaderCollection*		GetShaderCollection(const char* Name);
 	void					LoadEffects();
 	void					DisposeEffect(EffectRecord** Effect);  // unused?
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
@@ -195,8 +198,22 @@ public:
 		EffectsList				ExtraEffects;
 	};
 
+	struct ShadersStruct{
+		ShaderCollection*		Water;
+		ShaderCollection*		Tonemapping;
+		ShaderCollection*		POM;
+		ShaderCollection*		Blood;
+		ShaderCollection*		Sky;
+		ShaderCollection*		Skin;
+		ShaderCollection*		Grass;
+		ShaderCollection*		Terrain;
+		ShaderCollection*		ExtraShaders;
+	};
+
 	EffectsStruct			Effects;
+	ShadersStruct			Shaders;
 	EffectsList				EffectsNames;
+	ShaderList				ShaderNames;
 	ShaderConstants			ShaderConst;
 	CustomConstants			CustomConst;
 	std::map<const char*, D3DXVECTOR4*>	ConstantsTable;
