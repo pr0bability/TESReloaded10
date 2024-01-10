@@ -126,6 +126,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\DepthOfField.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Exposure.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\GodRays.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Grass.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ImageAdjust.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Lens.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\LowHF.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\DepthOfField.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Exposure.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\GodRays.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Grass.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ImageAdjust.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Lens.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\LowHF.cpp" />

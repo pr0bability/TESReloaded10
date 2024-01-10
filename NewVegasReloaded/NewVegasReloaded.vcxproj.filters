@@ -284,6 +284,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Skin.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\Grass.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
     <ClInclude Include="..\TESReloaded\Core\Effects\Terrain.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
@@ -479,6 +482,9 @@
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Skin.cpp">
+      <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\Grass.cpp">
       <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Terrain.cpp">
