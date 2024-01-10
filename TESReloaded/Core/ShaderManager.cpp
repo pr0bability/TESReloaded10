@@ -50,13 +50,13 @@ void ShaderManager::Initialize() {
 	TheShaderManager->EffectsNames["WetWorld"] = (EffectRecord**)&TheShaderManager->Effects.WetWorld;
 
 	TheShaderManager->ShaderNames["Tonemapping"] = (ShaderCollection**)&TheShaderManager->Shaders.Tonemapping;
-	TheShaderManager->ShaderNames["POM"] = &TheShaderManager->Shaders.POM;
+	TheShaderManager->ShaderNames["POM"] = (ShaderCollection**)&TheShaderManager->Shaders.POM;
 	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
 	TheShaderManager->ShaderNames["Sky"] = (ShaderCollection**)&TheShaderManager->Shaders.Sky;
 	TheShaderManager->ShaderNames["Skin"] = (ShaderCollection**)&TheShaderManager->Shaders.Skin;
-	TheShaderManager->ShaderNames["ExtraShaders"] = &TheShaderManager->Shaders.ExtraShaders;
 	TheShaderManager->ShaderNames["Grass"] = (ShaderCollection**)&TheShaderManager->Shaders.Grass;
 	TheShaderManager->ShaderNames["Terrain"] = (ShaderCollection**)&TheShaderManager->Shaders.Terrain;
+	TheShaderManager->ShaderNames["ExtraShaders"] = (ShaderCollection**)&TheShaderManager->Shaders.ExtraShaders;
 
 	// Initialize all effects
 	TheShaderManager->CreateEffects();
@@ -133,7 +133,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
 	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
 	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
-	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -377,13 +376,6 @@ void ShaderManager::UpdateConstants() {
 
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
-
-
-		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
-			ShaderConst.POM.ParallaxData.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");
-			ShaderConst.POM.ParallaxData.y = TheSettingManager->GetSettingF("Shaders.POM.Main", "MinSamples");
-			ShaderConst.POM.ParallaxData.z = TheSettingManager->GetSettingF("Shaders.POM.Main", "MaxSamples");
-		}
 
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
 		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");

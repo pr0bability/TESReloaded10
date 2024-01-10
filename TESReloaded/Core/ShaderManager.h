@@ -38,6 +38,7 @@
 #include "Effects/Tonemapping.h"
 #include "Effects/Sky.h"
 #include "Effects/Skin.h"
+#include "Effects/POM.h"
 #include "Effects/Terrain.h"
 #include "Effects/Grass.h"
 
@@ -57,9 +58,6 @@ struct ShaderConstants {
 		D3DXMATRIX		OcclusionWorldViewProj;
 	};
 
-	struct POMStruct {
-		D3DXVECTOR4		ParallaxData;
-	};
 	D3DXVECTOR4				ReciprocalResolution;
 	D3DXVECTOR4				SunDir;
 	D3DXVECTOR4				SunPosition;
@@ -85,7 +83,6 @@ struct ShaderConstants {
 	float					fogPower;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
-	POMStruct				POM;
 	D3DXVECTOR4				DebugVar;
 };
 
@@ -168,7 +165,7 @@ public:
 	struct ShadersStruct{
 		WaterShaders*			Water;
 		TonemappingShaders*		Tonemapping;
-		ShaderCollection*		POM;
+		POMShaders*				POM;
 		ShaderCollection*		Blood;
 		SkyShaders*				Sky;
 		SkinShaders*			Skin;
