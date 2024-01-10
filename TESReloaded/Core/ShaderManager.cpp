@@ -55,6 +55,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ShaderNames["Sky"] = (ShaderCollection**)&TheShaderManager->Shaders.Sky;
 	TheShaderManager->ShaderNames["Skin"] = (ShaderCollection**)&TheShaderManager->Shaders.Skin;
 	TheShaderManager->ShaderNames["ExtraShaders"] = &TheShaderManager->Shaders.ExtraShaders;
+	TheShaderManager->ShaderNames["Grass"] = (ShaderCollection**)&TheShaderManager->Shaders.Grass;
 	TheShaderManager->ShaderNames["Terrain"] = (ShaderCollection**)&TheShaderManager->Shaders.Terrain;
 
 	// Initialize all effects
@@ -133,7 +134,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
 	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
-	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -378,58 +378,6 @@ void ShaderManager::UpdateConstants() {
 	if (TheSettingManager->SettingsChanged) {
 		// Static constants that will only change when settings are edited
 
-		if (TheSettingManager->GetMenuShaderEnabled("Grass")) {
-			ShaderConst.Grass.Scale.x = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleX");
-			ShaderConst.Grass.Scale.y = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleY");
-			ShaderConst.Grass.Scale.z = TheSettingManager->GetSettingF("Shaders.Grass.Main", "ScaleZ");
-
-			switch (TheSettingManager->GetSettingI("Shaders.Grass.Main", "GrassDensity")) {
-			case 1:
-				*Pointers::Settings::MinGrassSize = 240;
-				*Pointers::Settings::TexturePctThreshold = 0.3f;
-				break;
-			case 2:
-				*Pointers::Settings::MinGrassSize = 240;
-				*Pointers::Settings::TexturePctThreshold = 0.2f;
-				break;
-			case 3:
-				*Pointers::Settings::MinGrassSize = 120;
-				*Pointers::Settings::TexturePctThreshold = 0.3f;
-				break;
-			case 4:
-				*Pointers::Settings::MinGrassSize = 120;
-				*Pointers::Settings::TexturePctThreshold = 0.2f;
-				break;
-			case 5:
-				*Pointers::Settings::MinGrassSize = 80;
-				*Pointers::Settings::TexturePctThreshold = 0.3f;
-				break;
-			case 6:
-				*Pointers::Settings::MinGrassSize = 80;
-				*Pointers::Settings::TexturePctThreshold = 0.2f;
-				break;
-			case 7:
-				*Pointers::Settings::MinGrassSize = 20;
-				*Pointers::Settings::TexturePctThreshold = 0.3f;
-				break;
-			case 8:
-				*Pointers::Settings::MinGrassSize = 20;
-				*Pointers::Settings::TexturePctThreshold = 0.2f;
-				break;
-			default:
-				break;
-			}
-
-			float minDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MinDistance");
-			if (minDistance) *Pointers::Settings::GrassStartFadeDistance = minDistance;
-			float maxDistance = TheSettingManager->GetSettingF("Shaders.Grass.Main", "MaxDistance");
-			if (maxDistance) *Pointers::Settings::GrassEndDistance = maxDistance;
-
-			if (TheSettingManager->GetSettingI("Shaders.Grass.Main", "WindEnabled")) {
-				*Pointers::Settings::GrassWindMagnitudeMax = *Pointers::ShaderParams::GrassWindMagnitudeMax = TheSettingManager->GetSettingF("Shaders.Grass.Main", "WindCoefficient") * ShaderConst.windSpeed;
-				*Pointers::Settings::GrassWindMagnitudeMin = *Pointers::ShaderParams::GrassWindMagnitudeMin = *Pointers::Settings::GrassWindMagnitudeMax * 0.5f;
-			}
-		}
 
 		if (TheSettingManager->GetMenuShaderEnabled("POM")) {
 			ShaderConst.POM.ParallaxData.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");

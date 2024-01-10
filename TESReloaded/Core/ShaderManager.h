@@ -39,6 +39,7 @@
 #include "Effects/Sky.h"
 #include "Effects/Skin.h"
 #include "Effects/Terrain.h"
+#include "Effects/Grass.h"
 
 
 struct ShaderConstants {
@@ -56,9 +57,6 @@ struct ShaderConstants {
 		D3DXMATRIX		OcclusionWorldViewProj;
 	};
 
-	struct GrassStruct {
-		D3DXVECTOR4		Scale;
-	};
 	struct POMStruct {
 		D3DXVECTOR4		ParallaxData;
 	};
@@ -87,7 +85,6 @@ struct ShaderConstants {
 	float					fogPower;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
-	GrassStruct				Grass;
 	POMStruct				POM;
 	D3DXVECTOR4				DebugVar;
 };
@@ -175,7 +172,7 @@ public:
 		ShaderCollection*		Blood;
 		SkyShaders*				Sky;
 		SkinShaders*			Skin;
-		ShaderCollection*		Grass;
+		GrassShaders*			Grass;
 		TerrainShaders*			Terrain;
 		ShaderCollection*		ExtraShaders;
 	};
