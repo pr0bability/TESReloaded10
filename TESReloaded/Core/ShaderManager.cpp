@@ -54,9 +54,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
 	TheShaderManager->ShaderNames["Sky"] = (ShaderCollection**)&TheShaderManager->Shaders.Sky;
 	TheShaderManager->ShaderNames["Skin"] = (ShaderCollection**)&TheShaderManager->Shaders.Skin;
-	TheShaderManager->ShaderNames["Grass"] = &TheShaderManager->Shaders.Grass;
-	TheShaderManager->ShaderNames["Terrain"] = &TheShaderManager->Shaders.Terrain;
 	TheShaderManager->ShaderNames["ExtraShaders"] = &TheShaderManager->Shaders.ExtraShaders;
+	TheShaderManager->ShaderNames["Terrain"] = (ShaderCollection**)&TheShaderManager->Shaders.Terrain;
 
 	// Initialize all effects
 	TheShaderManager->CreateEffects();
@@ -135,7 +134,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
 	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &TheShaderManager->ShaderConst.POM.ParallaxData;
 	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &TheShaderManager->ShaderConst.Grass.Scale;
-	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &TheShaderManager->ShaderConst.Terrain.Data;
 	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
 
 	// load actual effect files and initialize constant tables
@@ -439,13 +437,6 @@ void ShaderManager::UpdateConstants() {
 			ShaderConst.POM.ParallaxData.z = TheSettingManager->GetSettingF("Shaders.POM.Main", "MaxSamples");
 		}
 
-		if (TheSettingManager->GetMenuShaderEnabled("Terrain")) {
-			ShaderConst.Terrain.Data.x = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "DistantSpecular");
-			ShaderConst.Terrain.Data.y = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "DistantNoise");
-			ShaderConst.Terrain.Data.z = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "NearSpecular");
-			ShaderConst.Terrain.Data.w = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "MiddleSpecular");
-		}
-
 		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
 		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
 		ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
@@ -477,7 +468,7 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
 	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
-	if (strstr(TerrainShaders, Name)) return Shaders.Terrain;
+	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
 
 	return Shaders.ExtraShaders;
@@ -613,13 +604,13 @@ bool ShaderManager::CreateShader(const char* Name) {
 		VertexShaderList = ShadowLightVertexShaders;
 		Size = 103;
 		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i] && strstr(TerrainShaders, ((NiD3DVertexShaderEx*)VertexShaderList[i])->ShaderName))
+			if (VertexShaderList[i] && strstr(TerrainShadersNames, ((NiD3DVertexShaderEx*)VertexShaderList[i])->ShaderName))
 				success = LoadShader(VertexShaderList[i]) && success;
 
 		PixelShaderList = ShadowLightPixelShaders;
 		Size = 160;
 		for (int i = 0; i < Size; i++)
-			if (PixelShaderList[i] && strstr(TerrainShaders, ((NiD3DPixelShaderEx*)PixelShaderList[i])->ShaderName))
+			if (PixelShaderList[i] && strstr(TerrainShadersNames, ((NiD3DPixelShaderEx*)PixelShaderList[i])->ShaderName))
 				success = LoadShader(PixelShaderList[i]) && success;
 	}
 	else if (!strcmp(Name, "Water")) {
@@ -670,23 +661,23 @@ void ShaderManager::DisposeShader(const char* Name) {
 	if (!strcmp(Name, "Terrain")) {
 		Upperbound = GetVertexShaders(Name, &Vertex);
 		for (int i = 0; i < Upperbound; i++)
-			if (Vertex[i] && strstr(TerrainShaders, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName)) 
+			if (Vertex[i] && strstr(TerrainShadersNames, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName))
 				((NiD3DVertexShaderEx*)Vertex[i])->DisposeShader();
 
 		Upperbound = GetPixelShaders(Name, &Pixel);
 		for (int i = 0; i < Upperbound; i++)
-			if (Pixel[i] && strstr(TerrainShaders, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName)) 
+			if (Pixel[i] && strstr(TerrainShadersNames, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName))
 				((NiD3DPixelShaderEx*)Pixel[i])->DisposeShader();
 	}
 	else if (!strcmp(Name, "ExtraShaders")) {
 		Upperbound = GetVertexShaders(Name, &Vertex);
 		for (int i = 0; i < Upperbound; i++)
-			if (Vertex[i] && !strstr(TerrainShaders, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName)) 
+			if (Vertex[i] && !strstr(TerrainShadersNames, ((NiD3DVertexShaderEx*)Vertex[i])->ShaderName))
 				((NiD3DVertexShaderEx*)Vertex[i])->DisposeShader();
 
 		Upperbound = GetPixelShaders(Name, &Pixel);
 		for (int i = 0; i < Upperbound; i++)
-			if (Pixel[i] && !strstr(TerrainShaders, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName)) 
+			if (Pixel[i] && !strstr(TerrainShadersNames, ((NiD3DPixelShaderEx*)Pixel[i])->ShaderName))
 				((NiD3DPixelShaderEx*)Pixel[i])->DisposeShader();
 	}
 	else {

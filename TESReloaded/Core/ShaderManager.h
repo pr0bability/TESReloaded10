@@ -38,6 +38,7 @@
 #include "Effects/Tonemapping.h"
 #include "Effects/Sky.h"
 #include "Effects/Skin.h"
+#include "Effects/Terrain.h"
 
 
 struct ShaderConstants {
@@ -61,10 +62,6 @@ struct ShaderConstants {
 	struct POMStruct {
 		D3DXVECTOR4		ParallaxData;
 	};
-	struct TerrainStruct {
-		D3DXVECTOR4		Data;
-	};
-
 	D3DXVECTOR4				ReciprocalResolution;
 	D3DXVECTOR4				SunDir;
 	D3DXVECTOR4				SunPosition;
@@ -92,7 +89,6 @@ struct ShaderConstants {
 	OcclusionMapStruct		OcclusionMap;
 	GrassStruct				Grass;
 	POMStruct				POM;
-	TerrainStruct			Terrain;
 	D3DXVECTOR4				DebugVar;
 };
 
@@ -180,7 +176,7 @@ public:
 		SkyShaders*				Sky;
 		SkinShaders*			Skin;
 		ShaderCollection*		Grass;
-		ShaderCollection*		Terrain;
+		TerrainShaders*			Terrain;
 		ShaderCollection*		ExtraShaders;
 	};
 

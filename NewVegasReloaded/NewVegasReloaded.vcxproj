@@ -145,6 +145,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\SnowAccumulation.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Specular.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\SunShadows.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Terrain.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Tonemapping.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Underwater.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\VolumetricFog.h" />
@@ -179,6 +180,7 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\Snow.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\SnowAccumulation.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Specular.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\Effects\Terrain.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Tonemapping.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Underwater.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\VolumetricFog.cpp" />
