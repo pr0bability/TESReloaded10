@@ -124,6 +124,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Coloring.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Debug.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\DepthOfField.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\Effects.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Exposure.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\GodRays.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Grass.h" />
