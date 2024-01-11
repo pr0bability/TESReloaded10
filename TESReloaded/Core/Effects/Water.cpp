@@ -1,13 +1,13 @@
 #include "Water.h"
 
 void WaterShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_WaterCoefficients"] = &Constants.waterCoefficients;
-	TheShaderManager->ConstantsTable["TESR_WaveParams"] = &Constants.waveParams;
-	TheShaderManager->ConstantsTable["TESR_WaterVolume"] = &Constants.waterVolume;
-	TheShaderManager->ConstantsTable["TESR_WaterSettings"] = &Constants.waterSettings;
-	TheShaderManager->ConstantsTable["TESR_WaterDeepColor"] = &Constants.deepColor;
-	TheShaderManager->ConstantsTable["TESR_WaterShallowColor"] = &Constants.shallowColor;
-	TheShaderManager->ConstantsTable["TESR_WaterShorelineParams"] = &Constants.shorelineParams;
+	TheShaderManager->RegisterConstant("TESR_WaterCoefficients", &Constants.waterCoefficients);
+	TheShaderManager->RegisterConstant("TESR_WaveParams", &Constants.waveParams);
+	TheShaderManager->RegisterConstant("TESR_WaterVolume", &Constants.waterVolume);
+	TheShaderManager->RegisterConstant("TESR_WaterSettings", &Constants.waterSettings);
+	TheShaderManager->RegisterConstant("TESR_WaterDeepColor", &Constants.deepColor);
+	TheShaderManager->RegisterConstant("TESR_WaterShallowColor", &Constants.shallowColor);
+	TheShaderManager->RegisterConstant("TESR_WaterShorelineParams", &Constants.shorelineParams);
 }
 
 
@@ -15,7 +15,7 @@ void WaterShaders::UpdateConstants() {
 
 	// get water height based on player position
 	Constants.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);
-	Constants.waterSettings.z = TheShaderManager->isUnderwater;
+	Constants.waterSettings.z = TheShaderManager->GameState.isUnderwater;
 
 	TESWaterForm* currentWater = Player->parentCell->GetWaterForm();
 	RGBA* rgba = NULL;

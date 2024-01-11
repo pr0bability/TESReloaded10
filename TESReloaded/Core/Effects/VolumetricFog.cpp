@@ -2,9 +2,9 @@
 
 void VolumetricFogEffect::UpdateConstants() {
 
-	Constants.Data.z = TheShaderManager->isExterior ? TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount") : TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "AmountInterior");
+	Constants.Data.z = TheShaderManager->GameState.isExterior ? TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount") : TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "AmountInterior");
 
-	if (!TheShaderManager->isExterior) Constants.Height.w = 0.0f;
+	if (!TheShaderManager->GameState.isExterior) Constants.Height.w = 0.0f;
 	else Constants.Height.w = 1.0f;
 
 }
@@ -37,10 +37,10 @@ void VolumetricFogEffect::UpdateSettings(){
 }
 
 void VolumetricFogEffect::RegisterConstants(){
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogLow"] = &Constants.LowFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogHigh"] = &Constants.GeneralFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogSimple"] = &Constants.SimpleFog;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogBlend"] = &Constants.Blend;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogHeight"] = &Constants.Height;
-	TheShaderManager->ConstantsTable["TESR_VolumetricFogData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_VolumetricFogLow", &Constants.LowFog);
+	TheShaderManager->RegisterConstant("TESR_VolumetricFogHigh", &Constants.GeneralFog);
+	TheShaderManager->RegisterConstant("TESR_VolumetricFogSimple", &Constants.SimpleFog);
+	TheShaderManager->RegisterConstant("TESR_VolumetricFogBlend", &Constants.Blend);
+	TheShaderManager->RegisterConstant("TESR_VolumetricFogHeight", &Constants.Height);
+	TheShaderManager->RegisterConstant("TESR_VolumetricFogData", &Constants.Data);
 }

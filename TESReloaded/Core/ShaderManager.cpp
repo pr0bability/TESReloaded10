@@ -242,27 +242,27 @@ void ShaderManager::UpdateConstants() {
 	if (Effects.Debug->Enabled) avglumaRequired = true;
 
 	// context variables
-	PipBoyIsOn = InterfaceManager->getIsMenuOpen();
-	VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
-	OverlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
+	GameState.PipBoyIsOn = InterfaceManager->getIsMenuOpen();
+	GameState.VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
+	GameState.OverlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
 		InterfaceManager->IsActive(Menu::kMenuType_LockPick) ||
 		InterfaceManager->IsActive(Menu::kMenuType_Surgery) ||
 		InterfaceManager->IsActive(Menu::kMenuType_SlotMachine) ||
 		InterfaceManager->IsActive(Menu::kMenuType_Blackjack) ||
 		InterfaceManager->IsActive(Menu::kMenuType_Roulette) ||
 		InterfaceManager->IsActive(Menu::kMenuType_Caravan);
-	isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
-	isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
+	GameState.isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
+	GameState.isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
 
 	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
-	isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
-	isCellChanged = currentCell != PreviousCell;
+	GameState.isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
+	GameState.isCellChanged = currentCell != PreviousCell;
 	PreviousCell = currentCell;
-	if (isCellChanged) TheSettingManager->SettingsChanged = true; // force update constants during cell transition
+	if (GameState.isCellChanged) TheSettingManager->SettingsChanged = true; // force update constants during cell transition
 
-	isUnderwater = Tes->sky->GetIsUnderWater();
-	isRainy = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Rainy : false;
-	isSnow = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Snow : false;
+	GameState.isUnderwater = Tes->sky->GetIsUnderWater();
+	GameState.isRainy = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Rainy : false;
+	GameState.isSnow = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Snow : false;
 
 	TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
 	float GameHour = fmod(GameTimeGlobals->GameHour->data, 24); // make sure the hours values are less than 24
@@ -275,7 +275,7 @@ void ShaderManager::UpdateConstants() {
 	// calculating sun amount for shaders (currently not used by any shaders)
 	float sunRise = step(SunriseStart, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSet = step(SunsetEnd, SunsetStart, GameHour);  // 1 before sunset to 0 at night
-	isDayTime = sunRise * sunSet;
+	GameState.isDayTime = sunRise * sunSet;
 
 	ShaderConst.SunTiming.x = WorldSky->GetSunriseColorBegin();
 	ShaderConst.SunTiming.y = SunriseEnd;
@@ -288,9 +288,9 @@ void ShaderManager::UpdateConstants() {
 	float newDayLight = sunRiseLight * sunSetLight;
 	float transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
-	isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
-	if (newDayLight == dayLight) isDayTimeChanged = false;
-	dayLight = newDayLight;
+	GameState.isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
+	if (newDayLight == GameState.dayLight) GameState.isDayTimeChanged = false;
+	GameState.dayLight = newDayLight;
 
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
 	ShaderConst.GameTime.y = GameHour; //time in hours
@@ -302,7 +302,7 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
-	if (isExterior && isDayTime) ShaderConst.SunDir = ShaderConst.SunPosition;
+	if (GameState.isExterior && GameState.isDayTime) ShaderConst.SunDir = ShaderConst.SunPosition;
 
 	// expose the light vector in view space for screen space lighting
 	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);
@@ -313,8 +313,8 @@ void ShaderManager::UpdateConstants() {
 
 	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5f;
 
-	isDayTime = smoothStep(0, 1, isDayTime); // smooth daytime progression
-	ShaderConst.SunAmount.x = isDayTime; 
+	GameState.isDayTime = smoothStep(0, 1, GameState.isDayTime); // smooth daytime progression
+	ShaderConst.SunAmount.x = GameState.isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 
 	if (TheSettingManager->SettingsChanged) {
@@ -679,7 +679,7 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
-		float drawDistance = TheShaderManager->isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[TheShadowManager->ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
+		float drawDistance = TheShaderManager->GameState.isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[TheShadowManager->ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
 		if ((inFront > 0 || Distance < radius) && (Distance + radius) < drawDistance) {
 			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
 		}
@@ -895,15 +895,15 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
 
 	// render a shadow pass for point lights
-	if ((isExterior && Effects.ShadowsExteriors->Enabled) || (!isExterior && Effects.ShadowsInteriors->Enabled)) {
+	if ((GameState.isExterior && Effects.ShadowsExteriors->Enabled) || (!GameState.isExterior && Effects.ShadowsInteriors->Enabled)) {
 		// separate lights in 2 batches
 		RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.PointShadows, true);
 		if (TheShadowManager->PointLightsNum > 6) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.PointShadows2, false);
-		if (isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
+		if (GameState.isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
 	}
 
 	if (!Player->parentCell) return;
-	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+	if (GameState.OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	Device->SetRenderTarget(0, RenderTarget);
 
@@ -911,22 +911,22 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	if (isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	if (GameState.isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
-	if (isUnderwater) {
+	if (GameState.isUnderwater) {
 		// underwater only effects
 		Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	} else {
-		if (isExterior) {
+		if (GameState.isExterior) {
 			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 			if (Effects.WetWorld->Constants.Data.z > 0.0f) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 			if (Effects.SnowAccumulation->Constants.Data.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		}
 
-		if (!PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+		if (!GameState.PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 	
@@ -944,7 +944,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
 	if (!Player->parentCell) return;
-	if (OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+	if (GameState.OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	auto timer = TimeLogger();
 
@@ -966,7 +966,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	if (!isUnderwater && isExterior) {
+	if (!GameState.isUnderwater && GameState.isExterior) {
 		if (Effects.Rain->Constants.Data.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 		if (Effects.Snow->Constants.Data.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	}
@@ -990,7 +990,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	if (Effects.BloodLens->Constants.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (Effects.WaterLens->Constants.Data.w > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	if (Effects.LowHF->Constants.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (!isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	if (!GameState.isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing

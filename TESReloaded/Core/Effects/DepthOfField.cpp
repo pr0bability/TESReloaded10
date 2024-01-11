@@ -13,10 +13,10 @@ void DepthOfFieldEffect::UpdateConstants() {
 	bool dofActive = TheSettingManager->GetSettingI(sectionName, "Enabled");
 
 	// disable based on settings/context
-	if ((Mode == 1 && (TheShaderManager->isDialog || TheShaderManager->isPersuasion)) ||
-		(Mode == 2 && (!TheShaderManager->isDialog)) ||
-		(Mode == 3 && (!TheShaderManager->isPersuasion)) ||
-		(Mode == 4 && (!TheShaderManager->isDialog || !TheShaderManager->isPersuasion))) dofActive = false;
+	if ((Mode == 1 && (TheShaderManager->GameState.isDialog || TheShaderManager->GameState.isPersuasion)) ||
+		(Mode == 2 && (!TheShaderManager->GameState.isDialog)) ||
+		(Mode == 3 && (!TheShaderManager->GameState.isPersuasion)) ||
+		(Mode == 4 && (!TheShaderManager->GameState.isDialog || !TheShaderManager->GameState.isPersuasion))) dofActive = false;
 
 	Constants.Enabled = dofActive;
 
@@ -36,6 +36,6 @@ void DepthOfFieldEffect::UpdateConstants() {
 void DepthOfFieldEffect::UpdateSettings() {}
 
 void DepthOfFieldEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_DepthOfFieldBlur"] = &Constants.Blur;
-	TheShaderManager->ConstantsTable["TESR_DepthOfFieldData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_DepthOfFieldBlur", &Constants.Blur);
+	TheShaderManager->RegisterConstant("TESR_DepthOfFieldData", &Constants.Data);
 }

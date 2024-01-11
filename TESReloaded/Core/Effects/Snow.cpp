@@ -2,14 +2,14 @@
 
 void SnowEffect::UpdateConstants() {
 	// Snow fall
-	if (TheShaderManager->isSnow && Constants.SnowAnimator.switched == false) {
+	if (TheShaderManager->GameState.isSnow && Constants.SnowAnimator.switched == false) {
 		// it just started snowing
 		TheShaderManager->Effects.WetWorld->Constants.PuddlesAnimator.Start(0.3, 0); // fade out any puddles if they exist
 		Constants.SnowAnimator.switched = true;
 		Constants.SnowAnimator.Initialize(0);
 		Constants.SnowAnimator.Start(0.5, 1);
 	}
-	else if (!TheShaderManager->isSnow && Constants.SnowAnimator.switched) {
+	else if (!TheShaderManager->GameState.isSnow && Constants.SnowAnimator.switched) {
 		// it just stopped snowing
 		Constants.SnowAnimator.switched = false;
 		Constants.SnowAnimator.Start(0.2, 0);
@@ -24,5 +24,5 @@ void SnowEffect::UpdateSettings() {
 }
 
 void SnowEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_SnowData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_SnowData", &Constants.Data);
 }

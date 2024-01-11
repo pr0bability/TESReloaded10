@@ -37,6 +37,6 @@ void MotionBlurEffect::UpdateConstants() {
 void MotionBlurEffect::UpdateSettings() {}
 
 void MotionBlurEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_MotionBlurParams"] = &Constants.BlurParams;
-	TheShaderManager->ConstantsTable["TESR_MotionBlurData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_MotionBlurParams", &Constants.BlurParams);
+	TheShaderManager->RegisterConstant("TESR_MotionBlurData", &Constants.Data);
 }

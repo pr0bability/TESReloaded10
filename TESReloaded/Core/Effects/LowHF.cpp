@@ -27,5 +27,5 @@ void LowHFEffect::UpdateConstants() {
 void LowHFEffect::UpdateSettings() {}
 
 void LowHFEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_LowHFData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_LowHFData", &Constants.Data);
 }

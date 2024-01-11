@@ -8,25 +8,20 @@ template <typename T> int sgn(T val) {
 
 
 void TonemappingShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_HDRBloomData"] = &Constants.BloomData;
-	TheShaderManager->ConstantsTable["TESR_HDRData"] = &Constants.HDRData;
-	TheShaderManager->ConstantsTable["TESR_LotteData"] = &Constants.LotteData;
-	TheShaderManager->ConstantsTable["TESR_ToneMapping"] = &Constants.ToneMapping;
+	TheShaderManager->RegisterConstant("TESR_HDRBloomData", &Constants.BloomData);
+	TheShaderManager->RegisterConstant("TESR_HDRData", &Constants.HDRData);
+	TheShaderManager->RegisterConstant("TESR_LotteData", &Constants.LotteData);
+	TheShaderManager->RegisterConstant("TESR_ToneMapping", &Constants.ToneMapping);
 }
 
 
 void TonemappingShaders::UpdateConstants() {
-	bool isExterior = TheShaderManager->isExterior;
-	float transitionCurve = TheShaderManager->transitionCurve;
+	bool isExterior = TheShaderManager->GameState.isExterior;
+	float transitionCurve = TheShaderManager->GameState.transitionCurve;
 
-	if (TheSettingManager->SettingsChanged || TheShaderManager->isDayTimeChanged) {
-		if (!Enabled) {
-			TheShaderManager->ShaderConst.Sky.SunsetColor.w = 1.0; // set sky multiplier to 1 if HDR disabled as it is used by the Sky shaders
-			Constants.PointLightMult = 1.0;
-			return;
-		}
-
-		Constants.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "PointLightMultiplier", isExterior, transitionCurve);
+	if (TheSettingManager->SettingsChanged || TheShaderManager->GameState.isDayTimeChanged) {
+		// Point light multiplier disabled for now
+		//Constants.PointLightMult = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "PointLightMultiplier", isExterior, transitionCurve);
 		Constants.ToneMapping.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "HighlightSaturation", isExterior, transitionCurve);
 		Constants.ToneMapping.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "WeatherContrast", isExterior, transitionCurve);
 		Constants.ToneMapping.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "ToneMappingColor", isExterior, transitionCurve);
@@ -39,7 +34,6 @@ void TonemappingShaders::UpdateConstants() {
 		Constants.HDRData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Exposure", isExterior, transitionCurve);
 		Constants.HDRData.z = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Saturation", isExterior, transitionCurve);
 		Constants.HDRData.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "Gamma", isExterior, transitionCurve);
-		TheShaderManager->ShaderConst.Sky.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", isExterior, transitionCurve);
 
 		Constants.LotteData.x = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapContrast", isExterior, transitionCurve);
 		Constants.LotteData.y = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "TonemapBrightness", isExterior, transitionCurve);

@@ -1,7 +1,7 @@
 #include "POM.h"
 
 void POMShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_ParallaxData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_ParallaxData", &Constants.Data);
 }
 
 void POMShaders::UpdateSettings() {

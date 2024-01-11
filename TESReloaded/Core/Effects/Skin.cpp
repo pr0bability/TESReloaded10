@@ -1,8 +1,8 @@
 #include "Skin.h"
 
 void SkinShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_SkinData"] = &Constants.SkinData;
-	TheShaderManager->ConstantsTable["TESR_SkinColor"] = &Constants.SkinColor;
+	TheShaderManager->RegisterConstant("TESR_SkinData", &Constants.SkinData);
+	TheShaderManager->RegisterConstant("TESR_SkinColor", &Constants.SkinColor);
 }
 
 void SkinShaders::UpdateConstants() {}

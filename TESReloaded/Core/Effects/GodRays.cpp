@@ -1,7 +1,7 @@
 #include "GodRays.h"
 
 void GodRaysEffect::UpdateConstants() {
-	Constants.Data.z = std::lerp(nightMult, dayMult, TheShaderManager->transitionCurve);
+	Constants.Data.z = std::lerp(nightMult, dayMult, TheShaderManager->GameState.transitionCurve);
 
 	if (sunGlareEnabled) {
 		Constants.Ray.w = rayVisibility * TheShaderManager->ShaderConst.sunGlare;
@@ -27,7 +27,7 @@ void GodRaysEffect::UpdateSettings(){
 }
 
 void GodRaysEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_GodRaysRay"] = &Constants.Ray;
-	TheShaderManager->ConstantsTable["TESR_GodRaysRayColor"] = &Constants.RayColor;
-	TheShaderManager->ConstantsTable["TESR_GodRaysData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_GodRaysRay", &Constants.Ray);
+	TheShaderManager->RegisterConstant("TESR_GodRaysRayColor", &Constants.RayColor);
+	TheShaderManager->RegisterConstant("TESR_GodRaysData", &Constants.Data);
 }

@@ -3,13 +3,13 @@
 void ShadowsExteriorEffect::UpdateConstants() {
 
 	Constants.ShadowFade.x = 0; // Fade 1.0 == no shadows
-	if (TheShaderManager->isExterior) {
-		Constants.ShadowFade.x = TheShaderManager->smoothStep(0.3, 0, abs(TheShaderManager->dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
+	if (TheShaderManager->GameState.isExterior) {
+		Constants.ShadowFade.x = TheShaderManager->smoothStep(0.3, 0, abs(TheShaderManager->GameState.dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
 
 		TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
 		float DaysPassed = GameTimeGlobals->GameDaysPassed ? GameTimeGlobals->GameDaysPassed->data : 1.0f;
 
-		if(!TheShaderManager->isDayTime) {
+		if(!TheShaderManager->GameState.isDayTime) {
 			// at night time, fade based on moonphase
 			// moonphase goes from 0 to 8
 			float MoonPhase = (fmod(DaysPassed, 8 * Tes->sky->firstClimate->phaseLength & 0x3F)) / (Tes->sky->firstClimate->phaseLength & 0x3F);
@@ -23,9 +23,9 @@ void ShadowsExteriorEffect::UpdateConstants() {
 			Constants.ShadowFade.x = std::lerp(MoonVisibility, (float)1.0, Constants.ShadowFade.x);
 		}
 
-		if (TheShaderManager->isDayTimeChanged) {
+		if (TheShaderManager->GameState.isDayTimeChanged) {
 			// pass the enabled/disabled property of the pointlight shadows to the shadowfade constant
-			const char* PointLightsSettingName = (TheShaderManager->isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
+			const char* PointLightsSettingName = (TheShaderManager->GameState.isDayTime > 0.5) ? "UsePointShadowsDay" : "UsePointShadowsNight";
 			bool usePointLights = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", PointLightsSettingName);
 			Constants.ShadowFade.z = usePointLights;
 		}
@@ -48,8 +48,8 @@ void ShadowsExteriorEffect::UpdateSettings() {
 }
 
 void ShadowsExteriorEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_ShadowData"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ShadowScreenSpaceData"] = &Constants.ScreenSpaceData;
-	TheShaderManager->ConstantsTable["TESR_OrthoData"] = &Constants.OrthoData;
-	TheShaderManager->ConstantsTable["TESR_ShadowFade"] = &Constants.ShadowFade;
+	TheShaderManager->RegisterConstant("TESR_ShadowData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_ShadowScreenSpaceData", &Constants.ScreenSpaceData);
+	TheShaderManager->RegisterConstant("TESR_OrthoData", &Constants.OrthoData);
+	TheShaderManager->RegisterConstant("TESR_ShadowFade", &Constants.ShadowFade);
 }

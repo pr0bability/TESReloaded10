@@ -2,10 +2,10 @@
 
 void WaterLensEffect::UpdateConstants() {
 
-	if (TheShaderManager->isUnderwater && Constants.WaterLensAnimator.switched == false) {
+	if (TheShaderManager->GameState.isUnderwater && Constants.WaterLensAnimator.switched == false) {
 		Constants.WaterLensAnimator.switched = true;
 		Constants.WaterLensAnimator.Start(0.0, 0);
-	}else if (!TheShaderManager->isUnderwater && Constants.WaterLensAnimator.switched == true) {
+	}else if (!TheShaderManager->GameState.isUnderwater && Constants.WaterLensAnimator.switched == true) {
 		Constants.WaterLensAnimator.switched = false;
 		// start the waterlens effect and animate it fading
 		 Constants.WaterLensAnimator.Initialize(1);
@@ -22,5 +22,5 @@ void WaterLensEffect::UpdateSettings(){
 }
 
 void WaterLensEffect::RegisterConstants(){
-	TheShaderManager->ConstantsTable["TESR_WaterLensData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_WaterLensData", &Constants.Data);
 }

@@ -2,18 +2,18 @@
 
 void WetWorldEffect::UpdateConstants() {
 	// Rain fall & puddles
-	if (TheShaderManager->isRainy && Constants.PuddlesAnimator.switched == false) {
+	if (TheShaderManager->GameState.isRainy && Constants.PuddlesAnimator.switched == false) {
 		// it just started raining
 		Constants.PuddlesAnimator.switched = true;
 		Constants.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase"), 1);
 	}
-	else if (!TheShaderManager->isRainy && Constants.PuddlesAnimator.switched) {
+	else if (!TheShaderManager->GameState.isRainy && Constants.PuddlesAnimator.switched) {
 		// it just stopped raining
 		Constants.PuddlesAnimator.switched = false;
 		Constants.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease"), 0);
 	}
 	Constants.Data.x = TheShaderManager->Effects.Rain->Constants.RainAnimator.GetValue();
-	Constants.Data.y = TheShaderManager->isRainy;
+	Constants.Data.y = TheShaderManager->GameState.isRainy;
 	Constants.Data.z = Constants.PuddlesAnimator.GetValue();
 
 	if (Constants.Data.x || Constants.Data.z) TheShaderManager->orthoRequired = true; // mark ortho map calculation as necessary
@@ -28,6 +28,6 @@ void WetWorldEffect::UpdateSettings() {
 }
 
 void WetWorldEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_WetWorldCoeffs"] = &Constants.Coeffs;
-	TheShaderManager->ConstantsTable["TESR_WetWorldData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_WetWorldCoeffs", &Constants.Coeffs);
+	TheShaderManager->RegisterConstant("TESR_WetWorldData", &Constants.Data);
 }

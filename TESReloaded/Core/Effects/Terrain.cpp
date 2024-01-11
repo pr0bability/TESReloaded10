@@ -1,7 +1,7 @@
 #include "Terrain.h"
 
 void TerrainShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_TerrainData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_TerrainData", &Constants.Data);
 }
 
 

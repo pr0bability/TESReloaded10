@@ -1,7 +1,7 @@
 #include "BloodLens.h"
 
 void BloodLensEffect::UpdateConstants() {
-	if (TheShaderManager->isUnderwater) {
+	if (TheShaderManager->GameState.isUnderwater) {
 		Constants.Percent = 0.0f;
 	}
 
@@ -30,6 +30,6 @@ void BloodLensEffect::UpdateSettings() {
 }
 
 void BloodLensEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_BloodLensParams"] = &Constants.Params;
-	TheShaderManager->ConstantsTable["TESR_BloodLensColor"] = &Constants.BloodColor;
+	TheShaderManager->RegisterConstant("TESR_BloodLensParams", &Constants.Params);
+	TheShaderManager->RegisterConstant("TESR_BloodLensColor", &Constants.BloodColor);
 }
