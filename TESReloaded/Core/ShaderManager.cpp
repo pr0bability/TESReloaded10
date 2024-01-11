@@ -14,129 +14,125 @@ void ShaderManager::Initialize() {
 
 	Logger::Log("Starting the shaders manager...");
 	TheShaderManager = new ShaderManager();
-
 	TheShaderManager->FrameVertex = NULL;
-
-	// initializing the list of effect names
-	TheShaderManager->EffectsNames["AvgLuma"] = (EffectRecord**)&TheShaderManager->Effects.AvgLuma;
-	TheShaderManager->EffectsNames["AmbientOcclusion"] = (EffectRecord**)&TheShaderManager->Effects.AmbientOcclusion;
-	TheShaderManager->EffectsNames["BloodLens"] = (EffectRecord**)&TheShaderManager->Effects.BloodLens;
-	TheShaderManager->EffectsNames["BloomLegacy"] = (EffectRecord**)&TheShaderManager->Effects.BloomLegacy;
-	TheShaderManager->EffectsNames["Coloring"] = (EffectRecord**)&TheShaderManager->Effects.Coloring;
-	TheShaderManager->EffectsNames["Cinema"] = (EffectRecord**)&TheShaderManager->Effects.Cinema;
-	TheShaderManager->EffectsNames["DepthOfField"] = (EffectRecord**)&TheShaderManager->Effects.DepthOfField;
-	TheShaderManager->EffectsNames["Debug"] = (EffectRecord**)&TheShaderManager->Effects.Debug;
-	TheShaderManager->EffectsNames["Exposure"] = (EffectRecord**)&TheShaderManager->Effects.Exposure;
-	TheShaderManager->EffectsNames["GodRays"] = (EffectRecord**)&TheShaderManager->Effects.GodRays;
-	TheShaderManager->EffectsNames["ImageAdjust"] = (EffectRecord**)&TheShaderManager->Effects.ImageAdjust;
-	TheShaderManager->EffectsNames["Lens"] = (EffectRecord**)&TheShaderManager->Effects.Lens;
-	TheShaderManager->EffectsNames["LowHF"] = (EffectRecord**)&TheShaderManager->Effects.LowHF;
-	TheShaderManager->EffectsNames["MotionBlur"] = (EffectRecord**)&TheShaderManager->Effects.MotionBlur;
-	TheShaderManager->EffectsNames["Normals"] = (EffectRecord**)&TheShaderManager->Effects.Normals;
-	TheShaderManager->EffectsNames["Pretonemapper"] = (EffectRecord**)&TheShaderManager->Effects.Pretonemapper;
-	TheShaderManager->EffectsNames["Precipitations"] = (EffectRecord**)&TheShaderManager->Effects.Rain;
-	TheShaderManager->EffectsNames["Sharpening"] = (EffectRecord**)&TheShaderManager->Effects.Sharpening;
-	TheShaderManager->EffectsNames["ShadowsExteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsExteriors;
-	TheShaderManager->EffectsNames["ShadowsInteriors"] = (EffectRecord**)&TheShaderManager->Effects.ShadowsInteriors;
-	TheShaderManager->EffectsNames["PointShadows"] = (EffectRecord**)&TheShaderManager->Effects.PointShadows;
-	TheShaderManager->EffectsNames["PointShadows2"] = (EffectRecord**)&TheShaderManager->Effects.PointShadows2;
-	TheShaderManager->EffectsNames["SunShadows"] = (EffectRecord**)&TheShaderManager->Effects.SunShadows;
-	TheShaderManager->EffectsNames["Specular"] = (EffectRecord**)&TheShaderManager->Effects.Specular;
-	TheShaderManager->EffectsNames["Snow"] = (EffectRecord**)&TheShaderManager->Effects.Snow;
-	TheShaderManager->EffectsNames["SnowAccumulation"] = (EffectRecord**)&TheShaderManager->Effects.SnowAccumulation;
-	TheShaderManager->EffectsNames["Underwater"] = (EffectRecord**)&TheShaderManager->Effects.Underwater;
-	TheShaderManager->EffectsNames["VolumetricFog"] = (EffectRecord**)&TheShaderManager->Effects.VolumetricFog;
-	TheShaderManager->EffectsNames["WaterLens"] = (EffectRecord**)&TheShaderManager->Effects.WaterLens;
-	TheShaderManager->EffectsNames["WetWorld"] = (EffectRecord**)&TheShaderManager->Effects.WetWorld;
-
-	TheShaderManager->ShaderNames["Tonemapping"] = (ShaderCollection**)&TheShaderManager->Shaders.Tonemapping;
-	TheShaderManager->ShaderNames["POM"] = (ShaderCollection**)&TheShaderManager->Shaders.POM;
-	TheShaderManager->ShaderNames["Water"] = (ShaderCollection**)&TheShaderManager->Shaders.Water;
-	TheShaderManager->ShaderNames["Sky"] = (ShaderCollection**)&TheShaderManager->Shaders.Sky;
-	TheShaderManager->ShaderNames["Skin"] = (ShaderCollection**)&TheShaderManager->Shaders.Skin;
-	TheShaderManager->ShaderNames["Grass"] = (ShaderCollection**)&TheShaderManager->Shaders.Grass;
-	TheShaderManager->ShaderNames["Terrain"] = (ShaderCollection**)&TheShaderManager->Shaders.Terrain;
-	TheShaderManager->ShaderNames["ExtraShaders"] = (ShaderCollection**)&TheShaderManager->Shaders.ExtraShaders;
-
-	// Initialize all effects
-	TheShaderManager->CreateEffects();
 
 	memset(TheShaderManager->WaterVertexShaders, NULL, sizeof(WaterVertexShaders));
 	memset(TheShaderManager->WaterPixelShaders, NULL, sizeof(WaterPixelShaders));
-	TheShaderManager->InitializeConstants();
+
 	TheShaderManager->CreateFrameVertex(TheRenderManager->width, TheRenderManager->height, &TheShaderManager->FrameVertex);
 
 	TheShaderManager->PreviousCell = nullptr;
 	TheShaderManager->IsMenuSwitch = false;
 
-	//setup map of constant names
-	TheShaderManager->ConstantsTable["TESR_WorldTransform"] = (D3DXVECTOR4*)&TheRenderManager->worldMatrix;
-	TheShaderManager->ConstantsTable["TESR_ViewTransform"] = (D3DXVECTOR4*)&TheRenderManager->viewMatrix;
-	TheShaderManager->ConstantsTable["TESR_ProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->projMatrix;
-	TheShaderManager->ConstantsTable["TESR_InvProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->InvProjMatrix;
-	TheShaderManager->ConstantsTable["TESR_WorldViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->WorldViewProjMatrix;
-	TheShaderManager->ConstantsTable["TESR_InvViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->InvViewProjMatrix;
-	TheShaderManager->ConstantsTable["TESR_ViewProjectionTransform"] = (D3DXVECTOR4*)&TheRenderManager->ViewProjMatrix;
-	TheShaderManager->ConstantsTable["TESR_ShadowRadius"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius;
-	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapBlend"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend;
-	TheShaderManager->ConstantsTable["TESR_ShadowWorldTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld;
-	TheShaderManager->ConstantsTable["TESR_ShadowViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowViewProj;
-	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight;
-	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformNear"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[0];
-	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformMiddle"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[1];
-	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformFar"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[2];
-	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformLod"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[3];
-	TheShaderManager->ConstantsTable["TESR_ShadowCameraToLightTransformOrtho"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4];
-	TheShaderManager->ConstantsTable["TESR_OcclusionWorldViewProjTransform"] = (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj;
-	TheShaderManager->ConstantsTable["TESR_ShadowCubeMapLightPosition"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition;
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition0"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition1"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition2"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition3"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[3];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition4"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[4];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition5"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[5];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition6"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[6];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition7"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[7];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition8"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[8];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition9"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[9];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition10"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[10];
-	TheShaderManager->ConstantsTable["TESR_ShadowLightPosition11"] = &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[11];
-	TheShaderManager->ConstantsTable["TESR_LightPosition0"] = &TheShaderManager->LightPosition[0];
-	TheShaderManager->ConstantsTable["TESR_LightPosition1"] = &TheShaderManager->LightPosition[1];
-	TheShaderManager->ConstantsTable["TESR_LightPosition2"] = &TheShaderManager->LightPosition[2];
-	TheShaderManager->ConstantsTable["TESR_LightPosition3"] = &TheShaderManager->LightPosition[3];
-	TheShaderManager->ConstantsTable["TESR_LightPosition4"] = &TheShaderManager->LightPosition[4];
-	TheShaderManager->ConstantsTable["TESR_LightPosition5"] = &TheShaderManager->LightPosition[5];
-	TheShaderManager->ConstantsTable["TESR_LightPosition6"] = &TheShaderManager->LightPosition[6];
-	TheShaderManager->ConstantsTable["TESR_LightPosition7"] = &TheShaderManager->LightPosition[7];
-	TheShaderManager->ConstantsTable["TESR_LightPosition8"] = &TheShaderManager->LightPosition[8];
-	TheShaderManager->ConstantsTable["TESR_LightPosition9"] = &TheShaderManager->LightPosition[9];
-	TheShaderManager->ConstantsTable["TESR_LightPosition10"] = &TheShaderManager->LightPosition[10];
-	TheShaderManager->ConstantsTable["TESR_LightPosition11"] = &TheShaderManager->LightPosition[11];
-	TheShaderManager->ConstantsTable["TESR_ViewSpaceLightDir"] = &TheShaderManager->ShaderConst.ViewSpaceLightDir;
-	TheShaderManager->ConstantsTable["TESR_ScreenSpaceLightDir"] = &TheShaderManager->ShaderConst.ScreenSpaceLightDir;
-	TheShaderManager->ConstantsTable["TESR_ReciprocalResolution"] = &TheShaderManager->ShaderConst.ReciprocalResolution;
-	TheShaderManager->ConstantsTable["TESR_CameraForward"] = &TheRenderManager->CameraForward;
-	TheShaderManager->ConstantsTable["TESR_DepthConstants"] = &TheRenderManager->DepthConstants;
-	TheShaderManager->ConstantsTable["TESR_CameraData"] = &TheRenderManager->CameraData;
-	TheShaderManager->ConstantsTable["TESR_CameraPosition"] = &TheRenderManager->CameraPosition;
-	TheShaderManager->ConstantsTable["TESR_SunDirection"] = &TheShaderManager->ShaderConst.SunDir;
-	TheShaderManager->ConstantsTable["TESR_SunPosition"] = &TheShaderManager->ShaderConst.SunPosition;
-	TheShaderManager->ConstantsTable["TESR_SunTiming"] = &TheShaderManager->ShaderConst.SunTiming;
-	TheShaderManager->ConstantsTable["TESR_SunAmount"] = &TheShaderManager->ShaderConst.SunAmount;
-	TheShaderManager->ConstantsTable["TESR_GameTime"] = &TheShaderManager->ShaderConst.GameTime;
-	TheShaderManager->ConstantsTable["TESR_FogData"] = &TheShaderManager->ShaderConst.fogData;
-	TheShaderManager->ConstantsTable["TESR_FogDistance"] = &TheShaderManager->ShaderConst.fogDistance;
-	TheShaderManager->ConstantsTable["TESR_FogColor"] = &TheShaderManager->ShaderConst.fogColor;
-	TheShaderManager->ConstantsTable["TESR_SunColor"] = &TheShaderManager->ShaderConst.sunColor;
-	TheShaderManager->ConstantsTable["TESR_SunAmbient"] = &TheShaderManager->ShaderConst.sunAmbient;
-	TheShaderManager->ConstantsTable["TESR_SkyColor"] = &TheShaderManager->ShaderConst.skyColor;
-	TheShaderManager->ConstantsTable["TESR_SkyLowColor"] = &TheShaderManager->ShaderConst.skyLowColor;
-	TheShaderManager->ConstantsTable["TESR_HorizonColor"] = &TheShaderManager->ShaderConst.horizonColor;
-	TheShaderManager->ConstantsTable["TESR_DebugVar"] = &TheShaderManager->ShaderConst.DebugVar;
+	// initializing the list of effect names
+	TheShaderManager->RegisterEffect<AvgLumaEffect>(&TheShaderManager->Effects.AvgLuma);
+	TheShaderManager->RegisterEffect<AmbientOcclusionEffect>(&TheShaderManager->Effects.AmbientOcclusion);
+	TheShaderManager->RegisterEffect<BloodLensEffect>(&TheShaderManager->Effects.BloodLens);
+	TheShaderManager->RegisterEffect<BloomLegacyEffect>(&TheShaderManager->Effects.BloomLegacy);
+	TheShaderManager->RegisterEffect<ColoringEffect>(&TheShaderManager->Effects.Coloring);
+	TheShaderManager->RegisterEffect<CinemaEffect>(&TheShaderManager->Effects.Cinema);
+	TheShaderManager->RegisterEffect<DepthOfFieldEffect>(&TheShaderManager->Effects.DepthOfField);
+	TheShaderManager->RegisterEffect<DebugEffect>(&TheShaderManager->Effects.Debug);
+	TheShaderManager->RegisterEffect<ExposureEffect>(&TheShaderManager->Effects.Exposure);
+	TheShaderManager->RegisterEffect<GodRaysEffect>(&TheShaderManager->Effects.GodRays);
+	TheShaderManager->RegisterEffect<ImageAdjustEffect>(&TheShaderManager->Effects.ImageAdjust);
+	TheShaderManager->RegisterEffect<LensEffect>(&TheShaderManager->Effects.Lens);
+	TheShaderManager->RegisterEffect<LowHFEffect>(&TheShaderManager->Effects.LowHF);
+	TheShaderManager->RegisterEffect<MotionBlurEffect>(&TheShaderManager->Effects.MotionBlur);
+	TheShaderManager->RegisterEffect<NormalsEffect>(&TheShaderManager->Effects.Normals);
+	TheShaderManager->RegisterEffect<PretonemapperEffect>(&TheShaderManager->Effects.Pretonemapper);
+	TheShaderManager->RegisterEffect<RainEffect>(&TheShaderManager->Effects.Rain);
+	TheShaderManager->RegisterEffect<SharpeningEffect>(&TheShaderManager->Effects.Sharpening);
+	TheShaderManager->RegisterEffect<ShadowsExteriorEffect>(&TheShaderManager->Effects.ShadowsExteriors);
+	TheShaderManager->RegisterEffect<ShadowsInteriorsEffect>(&TheShaderManager->Effects.ShadowsInteriors);
+	TheShaderManager->RegisterEffect<PointShadowsEffect>(&TheShaderManager->Effects.PointShadows);
+	TheShaderManager->RegisterEffect<PointShadows2Effect>(&TheShaderManager->Effects.PointShadows2);
+	TheShaderManager->RegisterEffect<SunShadowsEffect>(&TheShaderManager->Effects.SunShadows);
+	TheShaderManager->RegisterEffect<SpecularEffect>(&TheShaderManager->Effects.Specular);
+	TheShaderManager->RegisterEffect<SnowEffect>(&TheShaderManager->Effects.Snow);
+	TheShaderManager->RegisterEffect<SnowAccumulationEffect>(&TheShaderManager->Effects.SnowAccumulation);
+	TheShaderManager->RegisterEffect<UnderwaterEffect>(&TheShaderManager->Effects.Underwater);
+	TheShaderManager->RegisterEffect<VolumetricFogEffect>(&TheShaderManager->Effects.VolumetricFog);
+	TheShaderManager->RegisterEffect<WaterLensEffect>(&TheShaderManager->Effects.WaterLens);
+	TheShaderManager->RegisterEffect<WetWorldEffect>(&TheShaderManager->Effects.WetWorld);
 
-	// load actual effect files and initialize constant tables
-	TheShaderManager->LoadEffects();
+	TheShaderManager->RegisterShaderCollection<TonemappingShaders>(&TheShaderManager->Shaders.Tonemapping);
+	TheShaderManager->RegisterShaderCollection<POMShaders>(&TheShaderManager->Shaders.POM);
+	TheShaderManager->RegisterShaderCollection<WaterShaders>(&TheShaderManager->Shaders.Water);
+	TheShaderManager->RegisterShaderCollection<SkyShaders>(&TheShaderManager->Shaders.Sky);
+	TheShaderManager->RegisterShaderCollection<SkinShaders>(&TheShaderManager->Shaders.Skin);
+	TheShaderManager->RegisterShaderCollection<GrassShaders>(&TheShaderManager->Shaders.Grass);
+	TheShaderManager->RegisterShaderCollection<TerrainShaders>(&TheShaderManager->Shaders.Terrain);
+	
+	TheShaderManager->Shaders.ExtraShaders = new ShaderCollection("ExtraShaders");
+	TheShaderManager->ShaderNames["ExtraShaders"] = &TheShaderManager->Shaders.ExtraShaders;
+
+	//setup map of constant names
+	TheShaderManager->RegisterConstant("TESR_WorldTransform", (D3DXVECTOR4*)&TheRenderManager->worldMatrix);
+	TheShaderManager->RegisterConstant("TESR_ViewTransform", (D3DXVECTOR4*)&TheRenderManager->viewMatrix);
+	TheShaderManager->RegisterConstant("TESR_ProjectionTransform", (D3DXVECTOR4*)&TheRenderManager->projMatrix);
+	TheShaderManager->RegisterConstant("TESR_InvProjectionTransform",  (D3DXVECTOR4*)&TheRenderManager->InvProjMatrix);
+	TheShaderManager->RegisterConstant("TESR_WorldViewProjectionTransform",  (D3DXVECTOR4*)&TheRenderManager->WorldViewProjMatrix);
+	TheShaderManager->RegisterConstant("TESR_InvViewProjectionTransform", (D3DXVECTOR4*)&TheRenderManager->InvViewProjMatrix);
+	TheShaderManager->RegisterConstant("TESR_ViewProjectionTransform", (D3DXVECTOR4*)&TheRenderManager->ViewProjMatrix);
+	TheShaderManager->RegisterConstant("TESR_ShadowRadius", &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius);
+	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapBlend", &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend);
+	TheShaderManager->RegisterConstant("TESR_ShadowWorldTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld);
+	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowViewProj);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[0]);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[1]);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[2]);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[3]);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4]);
+	TheShaderManager->RegisterConstant("TESR_OcclusionWorldViewProjTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj);
+	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition0", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition1", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition2", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition3", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[3]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition4", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[4]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition5", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[5]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition6", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[6]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition7", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[7]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition8", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[8]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition9", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[9]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition10", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[10]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition11", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[11]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition0", &TheShaderManager->LightPosition[0]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition1", &TheShaderManager->LightPosition[1]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition2", &TheShaderManager->LightPosition[2]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition3", &TheShaderManager->LightPosition[3]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition4", &TheShaderManager->LightPosition[4]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition5", &TheShaderManager->LightPosition[5]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition6", &TheShaderManager->LightPosition[6]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition7", &TheShaderManager->LightPosition[7]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition8", &TheShaderManager->LightPosition[8]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition9", &TheShaderManager->LightPosition[9]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition10", &TheShaderManager->LightPosition[10]);
+	TheShaderManager->RegisterConstant("TESR_LightPosition11", &TheShaderManager->LightPosition[11]);
+	TheShaderManager->RegisterConstant("TESR_ViewSpaceLightDir", &TheShaderManager->ShaderConst.ViewSpaceLightDir);
+	TheShaderManager->RegisterConstant("TESR_ScreenSpaceLightDir", &TheShaderManager->ShaderConst.ScreenSpaceLightDir);
+	TheShaderManager->RegisterConstant("TESR_ReciprocalResolution", &TheShaderManager->ShaderConst.ReciprocalResolution);
+	TheShaderManager->RegisterConstant("TESR_CameraForward", &TheRenderManager->CameraForward);
+	TheShaderManager->RegisterConstant("TESR_DepthConstants", &TheRenderManager->DepthConstants);
+	TheShaderManager->RegisterConstant("TESR_CameraData", &TheRenderManager->CameraData);
+	TheShaderManager->RegisterConstant("TESR_CameraPosition", &TheRenderManager->CameraPosition);
+	TheShaderManager->RegisterConstant("TESR_SunDirection", &TheShaderManager->ShaderConst.SunDir);
+	TheShaderManager->RegisterConstant("TESR_SunPosition", &TheShaderManager->ShaderConst.SunPosition);
+	TheShaderManager->RegisterConstant("TESR_SunTiming", &TheShaderManager->ShaderConst.SunTiming);
+	TheShaderManager->RegisterConstant("TESR_SunAmount", &TheShaderManager->ShaderConst.SunAmount);
+	TheShaderManager->RegisterConstant("TESR_GameTime", &TheShaderManager->ShaderConst.GameTime);
+	TheShaderManager->RegisterConstant("TESR_FogData", &TheShaderManager->ShaderConst.fogData);
+	TheShaderManager->RegisterConstant("TESR_FogDistance", &TheShaderManager->ShaderConst.fogDistance);
+	TheShaderManager->RegisterConstant("TESR_FogColor", &TheShaderManager->ShaderConst.fogColor);
+	TheShaderManager->RegisterConstant("TESR_SunColor", &TheShaderManager->ShaderConst.sunColor);
+	TheShaderManager->RegisterConstant("TESR_SunAmbient", &TheShaderManager->ShaderConst.sunAmbient);
+	TheShaderManager->RegisterConstant("TESR_SkyColor", &TheShaderManager->ShaderConst.skyColor);
+	TheShaderManager->RegisterConstant("TESR_SkyLowColor", &TheShaderManager->ShaderConst.skyLowColor);
+	TheShaderManager->RegisterConstant("TESR_HorizonColor", &TheShaderManager->ShaderConst.horizonColor);
+
+	TheShaderManager->InitializeConstants();
 
 	timer.LogTime("ShaderManager::Initialize");
 }
@@ -160,49 +156,39 @@ void ShaderManager::CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVert
 
 }
 
+
 /*
-* Initializes the Effect Record for each effect activated in the settings.
+* Initializes and register an effect and its constants
 */
-void ShaderManager::CreateEffects() {
+template <typename T> void ShaderManager::RegisterEffect(T** Pointer)
+{
+	T* effect = new T();
+	*Pointer = effect;
 
-	auto timer = TimeLogger();
+	//Logger::Log("Registering effect %i %s", (int)EffectsNames.size(), effect->Name);
+	//if (!effect->Name) return;
 
-	// create effect records for effects shaders based on name
-	for (EffectsList::iterator v = TheShaderManager->EffectsNames.begin(); v != TheShaderManager->EffectsNames.end(); v++) {
-		EffectRecord* Effect = CreateEffect(v->first.c_str());
-		Effect->RegisterConstants();
-		*v->second = Effect;
-	}
-
-	// create shader collections
-	for (ShaderList::iterator v = TheShaderManager->ShaderNames.begin(); v != TheShaderManager->ShaderNames.end(); v++) {
-		ShaderCollection* Collection = CreateCollection(v->first.c_str());
-		Collection->RegisterConstants();
-		*v->second = Collection;
-	}
-
-	/*TODO*/
-	//CreateEffect(EffectRecord::EffectRecordType::Extra);
-	//if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
-
-	timer.LogTime("ShaderManager::CreateEffects");
+	EffectsNames[effect->Name] = (EffectRecord**)Pointer;
+	effect->RegisterConstants();
+	effect->LoadEffect();
 }
 
 
-void ShaderManager::LoadEffects() {
+template <typename T> void ShaderManager::RegisterShaderCollection(T** Pointer)
+{
+	T* collection = new T();
+	*Pointer = collection;
 
-	auto timer = TimeLogger();
+	//if (!collection->Name) return;
+	
+	ShaderNames[collection->Name] = (ShaderCollection**)Pointer;
+	collection->RegisterConstants();
+}
 
-	// load effects from the effects list
-	for (const auto [Name, effect] : TheShaderManager->EffectsNames) {
-		(*effect)->LoadEffect();
-	}
 
-	/*TODO*/
-	//CreateEffect(EffectRecord::EffectRecordType::Extra);
-	//if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
-
-	timer.LogTime("ShaderManager::LoadEffects");
+void ShaderManager::RegisterConstant(const char* Name, D3DXVECTOR4* FloatValue)
+{
+	ConstantsTable[Name] = FloatValue;
 }
 
 
@@ -317,20 +303,6 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunAmount.x = GameState.isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 
-	if (TheSettingManager->SettingsChanged) {
-		// update settings
-		for (const auto [Name, effect] : EffectsNames) {
-			(*effect)->UpdateSettings();
-		}
-		for (const auto [Name, shader] : ShaderNames) {
-			(*shader)->UpdateSettings();
-		}
-
-		// sky settings are used in several shaders whether the shader is active or not
-		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
-		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
-	}
-
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
 	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
 	ShaderConst.sunColor.z = WorldSky->sunDirectional.b;
@@ -373,16 +345,20 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.fogDistance.y = ShaderConst.fogData.y;
 	ShaderConst.fogDistance.z = 1.0f;
 	ShaderConst.fogDistance.w = ShaderConst.sunGlare;
-
+	
 	if (TheSettingManager->SettingsChanged) {
-		// Static constants that will only change when settings are edited
+		// update settings
+		for (const auto [Name, effect] : EffectsNames) {
+			(*effect)->UpdateSettings();
+		}
+		for (const auto [Name, shader] : ShaderNames) {
+			(*shader)->UpdateSettings();
+		}
 
-		ShaderConst.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
-		ShaderConst.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
-		ShaderConst.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
-		ShaderConst.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
+		// sky settings are used in several shaders whether the shader is active or not
+		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
+		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
 	}
-
 
 	// update Constants
 	for (const auto [Name, shader] : ShaderNames) {
@@ -760,91 +736,6 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 }
 
-
-
-/*
-* Loads an Effect Shader from the corresponding fx file based on the Effect Record effect Type.
-*/
-EffectRecord* ShaderManager::CreateEffect(const char* Name) {
-
-	if (!memcmp(Name, "AvgLuma", 8)) return new AvgLumaEffect();
-	if (!memcmp(Name, "AmbientOcclusion", 17)) return new AmbientOcclusionEffect();
-	if (!memcmp(Name, "ShadowsExteriors", 17)) return new ShadowsExteriorEffect();
-	if (!memcmp(Name, "BloodLens", 10)) return new BloodLensEffect();
-	if (!memcmp(Name, "BloomLegacy", 12)) return new BloomLegacyEffect();
-	if (!memcmp(Name, "Cinema", 7)) return new CinemaEffect();
-	if (!memcmp(Name, "DepthOfField", 13)) return new DepthOfFieldEffect();
-	if (!memcmp(Name, "Exposure", 9)) return new ExposureEffect();
-	if (!memcmp(Name, "Debug", 6)) return new DebugEffect();
-	if (!memcmp(Name, "GodRays", 8)) return new GodRaysEffect();
-	if (!memcmp(Name, "ImageAdjust", 12)) return new ImageAdjustEffect();
-	if (!memcmp(Name, "Lens", 5)) return new LensEffect();
-	if (!memcmp(Name, "LowHF", 6)) return new LowHFEffect();
-	if (!memcmp(Name, "Normals", 8)) return new NormalsEffect();
-	if (!memcmp(Name, "MotionBlur", 11)) return new MotionBlurEffect();
-	if (!memcmp(Name, "Precipitations", 15)) return new RainEffect();
-	if (!memcmp(Name, "Sharpening", 11)) return new SharpeningEffect();
-	if (!memcmp(Name, "Specular", 9)) return new SpecularEffect();
-	if (!memcmp(Name, "SunShadows", 11)) return new SunShadowsEffect();
-	if (!memcmp(Name, "PointShadows", 13)) return new PointShadowsEffect();
-	if (!memcmp(Name, "PointShadows2", 14)) return new PointShadows2Effect();
-	if (!memcmp(Name, "Pretonemapper", 14)) return new PretonemapperEffect();
-	if (!memcmp(Name, "ShadowsInteriors", 17)) return new ShadowsInteriorsEffect();
-	if (!memcmp(Name, "SnowAccumulation", 17)) return new SnowAccumulationEffect();
-	if (!memcmp(Name, "Snow", 5)) return new SnowEffect();
-	if (!memcmp(Name, "Underwater", 11)) return new UnderwaterEffect();
-	if (!memcmp(Name, "VolumetricFog", 14)) return new VolumetricFogEffect();
-	if (!memcmp(Name, "WaterLens", 10)) return new WaterLensEffect();
-	if (!memcmp(Name, "WetWorld", 9)) return new WetWorldEffect();
-
-	return new EffectRecord(Name);
-
-
-	// TODO: simplify and streamline extra shaders creation
-	//SettingsMainStruct* SettingsMain = &TheSettingManager->SettingsMain;
-	//	case EffectRecord::EffectRecordType::Extra:
-	//		WIN32_FIND_DATAA File;
-	//		HANDLE H;
-	//		char* cFileName = NULL;
-	//		EffectRecord* ExtraEffect = NULL;
-
-	//		if (SettingsMain->Develop.CompileEffects)
-	//			strcat(Filename, "Extra\\*.hlsl");
-	//		else
-	//			strcat(Filename, "Extra\\*.fx");
-	//		H = FindFirstFileA((LPCSTR)Filename, &File);
-	//		if (H != INVALID_HANDLE_VALUE) {
-	//			cFileName = (char*)File.cFileName;
-	//			if (SettingsMain->Develop.CompileEffects) File.cFileName[strlen(cFileName) - 5] = '\0';
-	//			strcpy(Filename, EffectsPath);
-	//			strcat(Filename, "Extra\\");
-	//			strcat(Filename, cFileName);
-	//			ExtraEffect = EffectRecord::LoadEffect(Filename);
-	//			if (ExtraEffect) ExtraEffects[std::string(cFileName).substr(0, strlen(cFileName) - 3)] = ExtraEffect;
-	//			while (FindNextFileA(H, &File)) {
-	//				cFileName = (char*)File.cFileName;
-	//				if (SettingsMain->Develop.CompileEffects) File.cFileName[strlen(cFileName) - 5] = '\0';
-	//				strcpy(Filename, EffectsPath);
-	//				strcat(Filename, "Extra\\");
-	//				strcat(Filename, cFileName);
-	//				ExtraEffect = EffectRecord::LoadEffect(Filename);
-	//				if (ExtraEffect) ExtraEffects[std::string(cFileName).substr(0, strlen(cFileName) - 3)] = ExtraEffect;
-	//			}
-	//			FindClose(H);
-	//		}
-	//		break;
-	//}
-}
-
-
-ShaderCollection* ShaderManager::CreateCollection(const char* Name) {
-	if (!memcmp(Name, "Water", 6)) return new WaterShaders();
-	if (!memcmp(Name, "Tonemapping", 12)) return new TonemappingShaders();
-	if (!memcmp(Name, "Sky", 3)) return new SkyShaders();
-	if (!memcmp(Name, "Skin", 4)) return new SkinShaders();
-
-	return new ShaderCollection(Name);
-}
 
 /*
 * Deletes an Effect based on the Effect Record effect type. 
