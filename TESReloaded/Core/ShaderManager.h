@@ -60,6 +60,9 @@ public:
 
 	void* operator new(size_t i) { return _mm_malloc(i, 16); }
 
+	template <typename T> void RegisterEffect(T** Pointer);
+	template <typename T> void RegisterShaderCollection(T** Pointer);
+	void					RegisterConstant(const char* Name, D3DXVECTOR4* FloatValue);
 	int						GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader);
 	int						GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader);
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
