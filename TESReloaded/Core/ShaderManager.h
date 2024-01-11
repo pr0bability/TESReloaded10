@@ -45,7 +45,6 @@ struct ShaderConstants {
 	float					fogPower;
 	ShadowMapStruct			ShadowMap;
 	OcclusionMapStruct		OcclusionMap;
-	D3DXVECTOR4				DebugVar;
 };
 
 

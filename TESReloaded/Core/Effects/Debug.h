@@ -6,6 +6,7 @@ public:
 	DebugEffect() : EffectRecord("Debug") {};
 
 	struct DebugStruct {
+		D3DXVECTOR4				DebugVar;
 	};
 	DebugStruct	Constants;
 
