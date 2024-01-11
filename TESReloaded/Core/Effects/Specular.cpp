@@ -21,6 +21,6 @@ void SpecularEffect::UpdateConstants() {
 void SpecularEffect::UpdateSettings() {}
 
 void SpecularEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_SpecularData"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SpecularEffects"] = &Constants.EffectStrength;
+	TheShaderManager->RegisterConstant("TESR_SpecularData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_SpecularEffects", &Constants.EffectStrength);
 }

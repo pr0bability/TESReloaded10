@@ -1,7 +1,7 @@
 #include "Grass.h"
 
 void GrassShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_GrassScale"] = &Constants.Scale;
+	TheShaderManager->RegisterConstant("TESR_GrassScale", &Constants.Scale);
 }
 
 void GrassShaders::UpdateSettings() {

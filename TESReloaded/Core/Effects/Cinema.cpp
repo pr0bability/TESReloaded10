@@ -8,10 +8,10 @@ void CinemaEffect::UpdateConstants() {
 		float aspectRatio = TheSettingManager->GetSettingF("Shaders.Cinema.Main", "AspectRatio");
 
 		// disable based on settings/context
-		if ((Mode == 1 && (TheShaderManager->isDialog || TheShaderManager->isPersuasion)) ||
-			(Mode == 2 && (!TheShaderManager->isDialog)) ||
-			(Mode == 3 && (!TheShaderManager->isPersuasion)) ||
-			(Mode == 4 && (!TheShaderManager->isDialog && !TheShaderManager->isPersuasion))) aspectRatio = 1.0f;
+		if ((Mode == 1 && (TheShaderManager->GameState.isDialog || TheShaderManager->GameState.isPersuasion)) ||
+			(Mode == 2 && (!TheShaderManager->GameState.isDialog)) ||
+			(Mode == 3 && (!TheShaderManager->GameState.isPersuasion)) ||
+			(Mode == 4 && (!TheShaderManager->GameState.isDialog && !TheShaderManager->GameState.isPersuasion))) aspectRatio = 1.0f;
 
 		Constants.Data.x = aspectRatio;
 	}
@@ -28,6 +28,6 @@ void CinemaEffect::UpdateSettings() {
 }
 
 void CinemaEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_CinemaData"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_CinemaSettings"] = &Constants.Settings;
+	TheShaderManager->RegisterConstant("TESR_CinemaData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_CinemaSettings", &Constants.Settings);
 }

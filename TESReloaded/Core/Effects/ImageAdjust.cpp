@@ -1,10 +1,10 @@
 #include "ImageAdjust.h"
 
 void ImageAdjustEffect::UpdateConstants() {
-	bool isExterior = TheShaderManager->isExterior;
-	float transitionCurve = TheShaderManager->transitionCurve;
+	bool isExterior = TheShaderManager->GameState.isExterior;
+	float transitionCurve = TheShaderManager->GameState.transitionCurve;
 
-	if (TheSettingManager->SettingsChanged || TheShaderManager->isDayTimeChanged) {
+	if (TheSettingManager->SettingsChanged || TheShaderManager->GameState.isDayTimeChanged) {
 		Constants.Data.x = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Brightness", isExterior, transitionCurve);
 		Constants.Data.y = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Contrast", isExterior, transitionCurve);
 		Constants.Data.z = TheSettingManager->GetSettingTransition("Shaders.ImageAdjust", "Saturation", isExterior, transitionCurve);
@@ -23,8 +23,8 @@ void ImageAdjustEffect::UpdateConstants() {
 void ImageAdjustEffect::UpdateSettings(){}
 
 void ImageAdjustEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_ImageAdjustData"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_DarkAdjustColor"] = &Constants.DarkColor;
-	TheShaderManager->ConstantsTable["TESR_LightAdjustColor"] = &Constants.LightColor;
+	TheShaderManager->RegisterConstant("TESR_ImageAdjustData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_DarkAdjustColor", &Constants.DarkColor);
+	TheShaderManager->RegisterConstant("TESR_LightAdjustColor", &Constants.LightColor);
 
 }

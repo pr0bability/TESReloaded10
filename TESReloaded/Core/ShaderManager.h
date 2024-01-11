@@ -135,10 +135,28 @@ public:
 		ShaderCollection*		ExtraShaders;
 	};
 
+	struct GameStateStruct {
+		float					isDayTime;
+		bool					isDayTimeChanged;
+		float					transitionCurve;
+		float					dayLight;
+		bool					isExterior;
+		bool					isUnderwater;
+		bool					isDialog;
+		bool					isPersuasion;
+		bool					isCellChanged;
+		bool					VATSIsOn;
+		bool					PipBoyIsOn;
+		bool					OverlayIsOn;
+		bool					isRainy;
+		bool					isSnow;
+	};
+
 	EffectsStruct			Effects;
 	ShadersStruct			Shaders;
 	EffectsList				EffectsNames;
 	ShaderList				ShaderNames;
+	GameStateStruct			GameState;
 	ShaderConstants			ShaderConst;
 	CustomConstants			CustomConst;
 	std::map<const char*, D3DXVECTOR4*>	ConstantsTable;
@@ -149,20 +167,6 @@ public:
     bool                    IsMenuSwitch;
     bool                    orthoRequired;
     bool                    avglumaRequired;
-	float					isDayTime;
-	bool					isDayTimeChanged;
-	float					transitionCurve;
-	float					dayLight;
-	bool					isExterior;
-	bool					isUnderwater;
-	bool					isDialog;
-	bool					isPersuasion;
-	bool					isCellChanged;
-	bool					VATSIsOn;
-	bool					PipBoyIsOn;
-	bool					isRainy;
-	bool					isSnow;
-	bool					OverlayIsOn;
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];
 };

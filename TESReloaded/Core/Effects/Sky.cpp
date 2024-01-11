@@ -1,12 +1,19 @@
 #include "Sky.h"
 
 void SkyShaders::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_SkyData"] = &Constants.SkyData;
-	TheShaderManager->ConstantsTable["TESR_CloudData"] = &Constants.CloudData;
-	TheShaderManager->ConstantsTable["TESR_SunsetColor"] = &Constants.SunsetColor;
+	TheShaderManager->RegisterConstant("TESR_SkyData", &Constants.SkyData);
+	TheShaderManager->RegisterConstant("TESR_CloudData", &Constants.CloudData);
+	TheShaderManager->RegisterConstant("TESR_SunsetColor", &Constants.SunsetColor);
 }
 
-void SkyShaders::UpdateConstants() {}
+void SkyShaders::UpdateConstants() {
+	if (TheShaderManager->Shaders.Tonemapping->Enabled && (TheSettingManager->SettingsChanged || TheShaderManager->GameState.isDayTimeChanged)) {
+		Constants.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", TheShaderManager->GameState.isExterior, TheShaderManager->GameState.transitionCurve);
+	}
+	else {
+		TheShaderManager->Shaders.Sky->Constants.SunsetColor.w = 1.0;
+	}
+}
 
 void SkyShaders::UpdateSettings() {
 
@@ -21,7 +28,7 @@ void SkyShaders::UpdateSettings() {
 	Constants.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
 
 	// only add sunset color boost in exteriors
-	if (TheShaderManager->isExterior) {
+	if (TheShaderManager->GameState.isExterior) {
 		Constants.SunsetColor.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetR");
 		Constants.SunsetColor.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetG");
 		Constants.SunsetColor.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetB");

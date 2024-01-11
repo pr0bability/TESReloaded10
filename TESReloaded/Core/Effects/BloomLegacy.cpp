@@ -2,7 +2,7 @@
 
 void BloomLegacyEffect::UpdateConstants() {
 	const char* sectionName = "Shaders.BloomLegacy.Exteriors";
-	if (!TheShaderManager->isExterior) sectionName = "Shaders.BloomLegacy.Interiors";
+	if (!TheShaderManager->GameState.isExterior) sectionName = "Shaders.BloomLegacy.Interiors";
 
 	Constants.Data.x = TheSettingManager->GetSettingF(sectionName, "Luminance");
 	Constants.Data.y = TheSettingManager->GetSettingF(sectionName, "MiddleGray");
@@ -17,6 +17,6 @@ void BloomLegacyEffect::UpdateSettings() {
 }
 
 void BloomLegacyEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_BloomData"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_BloomValues"] = &Constants.Values;
+	TheShaderManager->RegisterConstant("TESR_BloomData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_BloomValues", &Constants.Values);
 }

@@ -10,5 +10,5 @@ void SharpeningEffect::UpdateSettings(){
 }
 
 void SharpeningEffect::RegisterConstants(){
-	TheShaderManager->ConstantsTable["TESR_SharpeningData"] = &Constants.Data;
+	TheShaderManager->RegisterConstant("TESR_SharpeningData", &Constants.Data);
 }

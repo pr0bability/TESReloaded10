@@ -3,12 +3,12 @@
 void SnowAccumulationEffect::UpdateConstants() {
 
 	// Snow Accumulation
-	if (TheShaderManager->isSnow && !Constants.SnowAccumulationAnimator.switched) {
+	if (TheShaderManager->GameState.isSnow && !Constants.SnowAccumulationAnimator.switched) {
 		// it just started snowing
 		Constants.SnowAccumulationAnimator.switched = true;
 		Constants.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Increase"), 1);
 	}
-	else if (!TheShaderManager->isSnow && Constants.SnowAccumulationAnimator.switched) {
+	else if (!TheShaderManager->GameState.isSnow && Constants.SnowAccumulationAnimator.switched) {
 		// it just stopped snowing
 		Constants.SnowAccumulationAnimator.switched = false;
 		Constants.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Decrease"), 0);
@@ -29,6 +29,6 @@ void SnowAccumulationEffect::UpdateSettings(){
 }
 
 void SnowAccumulationEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_SnowAccumulationParams"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_SnowAccumulationColor"] = &Constants.Color;
+	TheShaderManager->RegisterConstant("TESR_SnowAccumulationParams", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_SnowAccumulationColor", &Constants.Color);
 }

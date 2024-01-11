@@ -2,7 +2,7 @@
 
 void ColoringEffect::UpdateConstants() {
 	SettingsColoringStruct* scs = TheSettingManager->GetSettingsColoring(Player->parentCell->GetEditorName());
-	if (!scs && TheShaderManager->isExterior) scs = TheSettingManager->GetSettingsColoring(Player->GetWorldSpace()->GetEditorName());
+	if (!scs && TheShaderManager->GameState.isExterior) scs = TheSettingManager->GetSettingsColoring(Player->GetWorldSpace()->GetEditorName());
 	if (!scs) scs = TheSettingManager->GetSettingsColoring("Default");
 
 	Constants.Data.x = scs->Strength;
@@ -26,8 +26,8 @@ void ColoringEffect::UpdateConstants() {
 void ColoringEffect::UpdateSettings() {}
 
 void ColoringEffect::RegisterConstants() {
-	TheShaderManager->ConstantsTable["TESR_ColoringColorCurve"] = &Constants.ColorCurve;
-	TheShaderManager->ConstantsTable["TESR_ColoringEffectGamma"] = &Constants.EffectGamma;
-	TheShaderManager->ConstantsTable["TESR_ColoringData"] = &Constants.Data;
-	TheShaderManager->ConstantsTable["TESR_ColoringValues"] = &Constants.Values;
+	TheShaderManager->RegisterConstant("TESR_ColoringColorCurve", &Constants.ColorCurve);
+	TheShaderManager->RegisterConstant("TESR_ColoringEffectGamma", &Constants.EffectGamma);
+	TheShaderManager->RegisterConstant("TESR_ColoringData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_ColoringValues", &Constants.Values);
 }

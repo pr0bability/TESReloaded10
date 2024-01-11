@@ -9,7 +9,7 @@ void AmbientOcclusionEffect::RegisterConstants() {
 }
 
 void AmbientOcclusionEffect::UpdateSettings() {
-	const char* sectionName = TheShaderManager->isExterior?"Shaders.AmbientOcclusion.Exteriors":"Shaders.AmbientOcclusion.Interiors";
+	const char* sectionName = TheShaderManager->GameState.isExterior?"Shaders.AmbientOcclusion.Exteriors":"Shaders.AmbientOcclusion.Interiors";
 
 	Constants.Enabled = TheSettingManager->GetSettingI(sectionName, "Enabled");
 	if (Constants.Enabled) {
