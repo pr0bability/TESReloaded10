@@ -39,3 +39,7 @@ void DepthOfFieldEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_DepthOfFieldBlur", &Constants.Blur);
 	TheShaderManager->RegisterConstant("TESR_DepthOfFieldData", &Constants.Data);
 }
+
+bool DepthOfFieldEffect::ShouldRender() {
+	return Constants.Enabled; 
+};

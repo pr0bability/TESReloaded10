@@ -24,3 +24,7 @@ void WaterLensEffect::UpdateSettings(){
 void WaterLensEffect::RegisterConstants(){
 	TheShaderManager->RegisterConstant("TESR_WaterLensData", &Constants.Data);
 }
+
+bool WaterLensEffect::ShouldRender() {
+	return Constants.Data.w > 0.0f; 
+};

@@ -17,3 +17,8 @@ void LensEffect::UpdateSettings(){
 void LensEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_LensData", &Constants.Data);
 }
+
+bool LensEffect::ShouldRender() 
+{
+	return !TheShaderManager->GameState.isUnderwater; 
+};

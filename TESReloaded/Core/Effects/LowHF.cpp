@@ -29,3 +29,7 @@ void LowHFEffect::UpdateSettings() {}
 void LowHFEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_LowHFData", &Constants.Data);
 }
+
+bool LowHFEffect::ShouldRender() {
+	return Constants.Data.x; 
+};

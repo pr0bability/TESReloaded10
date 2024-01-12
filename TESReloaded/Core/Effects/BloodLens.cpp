@@ -33,3 +33,7 @@ void BloodLensEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_BloodLensParams", &Constants.Params);
 	TheShaderManager->RegisterConstant("TESR_BloodLensColor", &Constants.BloodColor);
 }
+
+bool BloodLensEffect::ShouldRender() {
+	return Constants.Percent > 0.0f; 
+};

@@ -31,3 +31,7 @@ void WetWorldEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_WetWorldCoeffs", &Constants.Coeffs);
 	TheShaderManager->RegisterConstant("TESR_WetWorldData", &Constants.Data);
 }
+
+bool WetWorldEffect::ShouldRender() { 
+	return TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater; 
+};

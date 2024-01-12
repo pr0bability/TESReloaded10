@@ -40,3 +40,8 @@ void MotionBlurEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_MotionBlurParams", &Constants.BlurParams);
 	TheShaderManager->RegisterConstant("TESR_MotionBlurData", &Constants.Data);
 }
+
+bool MotionBlurEffect::ShouldRender()
+{
+	return Constants.Data.x || Constants.Data.y; 
+};

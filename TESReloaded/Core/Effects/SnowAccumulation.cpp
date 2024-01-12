@@ -32,3 +32,7 @@ void SnowAccumulationEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_SnowAccumulationParams", &Constants.Data);
 	TheShaderManager->RegisterConstant("TESR_SnowAccumulationColor", &Constants.Color);
 }
+
+bool SnowAccumulationEffect::ShouldRender() { 
+	return Constants.Data.w > 0.0f && TheShaderManager->GameState.isExterior; 
+}

@@ -44,3 +44,9 @@ void VolumetricFogEffect::RegisterConstants(){
 	TheShaderManager->RegisterConstant("TESR_VolumetricFogHeight", &Constants.Height);
 	TheShaderManager->RegisterConstant("TESR_VolumetricFogData", &Constants.Data);
 }
+
+
+bool VolumetricFogEffect::ShouldRender() 
+{
+	return !TheShaderManager->GameState.PipBoyIsOn; 
+};
