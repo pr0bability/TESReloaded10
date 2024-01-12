@@ -199,7 +199,7 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 				TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type, ConstantDesc.Name, &HasRenderedBuffer, &HasDepthBuffer);
 				TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 				TextureShaderValues[TextureIndex].RegisterCount = 1;
-				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, TextureIndex);
+				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, ConstantDesc.RegisterIndex);
 				TextureIndex++;
 				break;
 			default:
