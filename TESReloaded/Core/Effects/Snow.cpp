@@ -26,3 +26,9 @@ void SnowEffect::UpdateSettings() {
 void SnowEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_SnowData", &Constants.Data);
 }
+
+bool SnowEffect::ShouldRender() {
+	return Constants.Data.x > 0.0f &&
+		TheShaderManager->GameState.isExterior &&
+		!TheShaderManager->GameState.isUnderwater;
+};

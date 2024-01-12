@@ -13,4 +13,5 @@ public:
 	void	UpdateConstants() {};
 	void	RegisterConstants() {};
 	void	UpdateSettings() {};
+	bool	ShouldRender();
 }; 

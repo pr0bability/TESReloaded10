@@ -24,3 +24,7 @@ void SpecularEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_SpecularData", &Constants.Data);
 	TheShaderManager->RegisterConstant("TESR_SpecularEffects", &Constants.EffectStrength);
 }
+
+bool SpecularEffect::ShouldRender() { 
+	return TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater; 
+};

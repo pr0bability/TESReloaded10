@@ -29,3 +29,9 @@ void RainEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_RainData", &Constants.Data);
 	TheShaderManager->RegisterConstant("TESR_RainAspect", &Constants.Aspect);
 }
+
+bool RainEffect::ShouldRender() {
+	return Constants.Data.x > 0.0f &&
+		TheShaderManager->GameState.isExterior &&
+		!TheShaderManager->GameState.isUnderwater;
+};

@@ -239,8 +239,10 @@ void ShaderManager::UpdateConstants() {
 		InterfaceManager->IsActive(Menu::kMenuType_Caravan);
 	GameState.isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
 	GameState.isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
-
+	
+	if (GameState.OverlayIsOn) return;
 	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
+	
 	GameState.isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
 	GameState.isCellChanged = currentCell != PreviousCell;
 	PreviousCell = currentCell;
@@ -771,6 +773,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	TheRenderManager->SetupSceneCamera();
 
 	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
+	if (!Player->parentCell) return;
+	if (GameState.OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
 
 	auto timer = TimeLogger();
 
@@ -793,36 +797,27 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 		if (GameState.isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
 	}
 
-	if (!Player->parentCell) return;
-	if (GameState.OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
-
 	Device->SetRenderTarget(0, RenderTarget);
 
 	// copy the source render target to both the rendered and source textures (rendered gets updated after every pass, source once per effect)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	if (GameState.isExterior) Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	else Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+	if (GameState.isExterior) 
+		Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	else 
+		Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-
-	if (GameState.isUnderwater) {
-		// underwater only effects
-		Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	} else {
-		if (GameState.isExterior) {
-			Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-			if (Effects.WetWorld->Constants.Data.z > 0.0f) Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-			if (Effects.SnowAccumulation->Constants.Data.w > 0.0f) Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-		}
-
-		if (!GameState.PipBoyIsOn) Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	}
+	Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 	
 	// For AMD devices without DXVK, replace vanilla tonemapping replacement with an Effect
-	if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) && TheSettingManager->GetMenuShaderEnabled("Tonemapping"))
+	if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) && Shaders.Tonemapping->Enabled)
 		Effects.Pretonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
@@ -857,11 +852,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	if (!GameState.isUnderwater && GameState.isExterior) {
-		if (Effects.Rain->Constants.Data.x > 0.0f) Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-		if (Effects.Snow->Constants.Data.x > 0.0f) Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	}
-
+	Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 	Effects.BloomLegacy->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// calculate average luma for use by shaders
@@ -874,14 +866,14 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// screenspace coloring/blurring effects get rendered last
 	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (Effects.DepthOfField->Constants.Enabled) Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	if (Effects.MotionBlur->Constants.Data.x || Effects.MotionBlur->Constants.Data.y) Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// lens effects
-	if (Effects.BloodLens->Constants.Percent > 0.0f) Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (Effects.WaterLens->Constants.Data.w > 0.0f) Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (Effects.LowHF->Constants.Data.x) Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	if (!GameState.isUnderwater) Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
@@ -917,13 +909,20 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		bool setting = effect->SwitchEffect();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
 	}
-	catch (const std::exception& e){
+	catch (const std::exception&){
 		// shaders
 		Logger::Log("Toggling Shader %s", Name);
-		bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
-		DisposeShader(Name);
-		if (enable) CreateShader(Name);
-		TheSettingManager->SetMenuShaderEnabled(Name, enable);
+		try {
+			ShaderCollection* shader = *ShaderNames.at(Name);
+			bool setting = shader->SwitchShader();
+			TheSettingManager->SetMenuShaderEnabled(Name, setting);
+		}
+		catch (const std::exception&) {}
+
+		//bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
+		//DisposeShader(Name);
+		//if (enable) CreateShader(Name);
+		//TheSettingManager->SetMenuShaderEnabled(Name, enable);
 	}
 
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch

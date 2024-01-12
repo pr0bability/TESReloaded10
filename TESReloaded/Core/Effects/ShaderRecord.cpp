@@ -583,7 +583,7 @@ bool EffectRecord::SwitchEffect() {
 */
 void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer) {
 
-	if (!Enabled || Effect == nullptr) return; // skip rendering of disabled effects
+	if (!Enabled || Effect == nullptr || !ShouldRender()) return; // skip rendering of disabled effects
 
 	auto timer = TimeLogger();
 	if (SourceBuffer) Device->StretchRect(RenderTarget, NULL, SourceBuffer, NULL, D3DTEXF_NONE);
@@ -613,11 +613,11 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 }
 
 
-void EffectRecord::UpdateConstants() {
-}
-
-
 bool ShaderCollection::SwitchShader() {
 	Enabled = !TheSettingManager->GetMenuShaderEnabled(Name);
 	TheSettingManager->SetMenuShaderEnabled(Name, Enabled);
+
+	// TODO: handle unloading/reloading of shaders here
+
+	return Enabled;
 }
