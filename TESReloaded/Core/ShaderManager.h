@@ -66,7 +66,6 @@ public:
 	int						GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader);
 	int						GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader);
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
-	void					CreateEffects();
 	void					InitializeConstants();
 	void					UpdateConstants();
 	void					GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]);
@@ -74,10 +73,8 @@ public:
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
 	void					DisposeShader(const char* Name);
-	EffectRecord*			CreateEffect(const char* Name);
 	ShaderCollection*		CreateCollection(const char* Name);
 	ShaderCollection*		GetShaderCollection(const char* Name);
-	void					LoadEffects();
 	void					DisposeEffect(EffectRecord** Effect);  // unused?
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
 	void					RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget);
