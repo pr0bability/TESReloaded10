@@ -38,3 +38,4 @@
 #include "Effects/POM.h"
 #include "Effects/Terrain.h"
 #include "Effects/Grass.h"
+#include "Effects/ExtraShaders.h"

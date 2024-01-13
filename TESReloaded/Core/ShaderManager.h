@@ -135,7 +135,7 @@ public:
 		SkinShaders*			Skin;
 		GrassShaders*			Grass;
 		TerrainShaders*			Terrain;
-		ShaderCollection*		ExtraShaders;
+		ExtraShaders*			ExtraShaders;
 	};
 
 	struct GameStateStruct {
