@@ -14,7 +14,7 @@ public:
 	virtual void			RegisterConstants() {};
 
 	bool					SwitchShader();
-	bool					DisposeShaders();
+	void					DisposeShaders();
 	bool 					IsLoaded();
 	bool					Enabled;
 

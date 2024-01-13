@@ -114,6 +114,7 @@ public:
 	ShaderRecordVertex*		ShaderProgI;
 	IDirect3DVertexShader9* ShaderHandleBackup;
 	char					ShaderName[40];
+	bool					Enabled;
 };
 
 class NiD3DPixelShaderEx : public NiD3DPixelShader {
@@ -126,4 +127,5 @@ public:
 	ShaderRecordPixel*		ShaderProgI;
 	IDirect3DPixelShader9*	ShaderHandleBackup;
 	char					ShaderName[40];
+	bool					Enabled;
 };
