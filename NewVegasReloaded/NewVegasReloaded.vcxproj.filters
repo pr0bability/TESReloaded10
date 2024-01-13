@@ -173,9 +173,6 @@
     <ClInclude Include="..\TESReloaded\Core\BinkManager.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h">
-      <Filter>Core\Effects</Filter>
-    </ClInclude>
     <ClInclude Include="..\TESReloaded\Core\Effects\AmbientOcclusion.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
@@ -296,6 +293,9 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\Effects.h">
       <Filter>Core\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\ShaderRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -393,9 +393,6 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Render.cpp">
       <Filter>Core\Hooks\NewVegas</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp">
-      <Filter>Core\Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\AmbientOcclusion.cpp">
       <Filter>Core\Effects</Filter>
@@ -498,6 +495,9 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\Terrain.cpp">
       <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\ShaderRecord.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
