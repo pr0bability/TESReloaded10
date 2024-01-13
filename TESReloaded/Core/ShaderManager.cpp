@@ -272,7 +272,7 @@ void ShaderManager::UpdateConstants() {
 	float sunRiseLight = step(SunriseStart - 1.0f, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
 	float sunSetLight = step(SunsetEnd + 1.0f, SunsetStart, GameHour);  // 1 before sunset to 0 at night
 	float newDayLight = sunRiseLight * sunSetLight;
-	float transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
+	GameState.transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
 	GameState.isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
 	if (newDayLight == GameState.dayLight) GameState.isDayTimeChanged = false;
