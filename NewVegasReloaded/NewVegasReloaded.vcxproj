@@ -138,7 +138,6 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\POM.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Pretonemapper.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Rain.h" />
-    <ClInclude Include="..\TESReloaded\Core\Effects\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsExterior.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ShadowsInteriors.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Sharpening.h" />
@@ -176,7 +175,6 @@
     <ClCompile Include="..\TESReloaded\Core\Effects\Normals.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\POM.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Rain.cpp" />
-    <ClCompile Include="..\TESReloaded\Core\Effects\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsExterior.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\ShadowsInteriors.cpp" />
     <ClCompile Include="..\TESReloaded\Core\Effects\Sharpening.cpp" />
@@ -215,6 +213,7 @@
     <ClInclude Include="..\TESReloaded\Core\RenderManager.h" />
     <ClInclude Include="..\TESReloaded\Core\SettingManager.h" />
     <ClInclude Include="..\TESReloaded\Core\ShaderManager.h" />
+    <ClInclude Include="..\TESReloaded\Core\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\ShadowManager.h" />
     <ClInclude Include="..\TESReloaded\Core\TextureManager.h" />
     <ClInclude Include="..\TESReloaded\Core\TextureRecord.h" />
@@ -249,6 +248,7 @@
     <ClCompile Include="..\TESReloaded\Core\RenderManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\SettingManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\ShaderManager.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\ShadowManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\TextureManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\TextureRecord.cpp" />
