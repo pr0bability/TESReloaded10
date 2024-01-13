@@ -4,12 +4,13 @@
 EffectRecord::EffectRecord(const char* effectName) {
 
 	Name = effectName;
-	Path = new std::string(effectName);
 
 	char FileName[MAX_PATH];
 	strcpy(FileName, EffectsPath);
 	strcat(FileName, Name);
 	strcat(FileName, ".fx");
+	Path = new std::string(FileName);
+
 	strcat(FileName, ".hlsl");
 	SourcePath = new std::string(FileName);
 
