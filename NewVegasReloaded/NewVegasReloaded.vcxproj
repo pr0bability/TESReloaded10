@@ -110,11 +110,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\TESReloaded\Core\EffectRecord.cpp" />
     <ClInclude Include="..\TESReloaded\Core\BinkManager.h" />
     <ClInclude Include="..\TESReloaded\Core\CameraManager.h" />
     <ClInclude Include="..\TESReloaded\Core\CommandManager.h" />
     <ClInclude Include="..\TESReloaded\Core\Device\Device.h" />
     <ClInclude Include="..\TESReloaded\Core\Device\Hook.h" />
+    <ClInclude Include="..\TESReloaded\Core\EffectRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\AmbientOcclusion.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Animator.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\AvgLuma.h" />
@@ -212,6 +214,7 @@
     <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Shadows.h" />
     <ClInclude Include="..\TESReloaded\Core\RenderManager.h" />
     <ClInclude Include="..\TESReloaded\Core\SettingManager.h" />
+    <ClInclude Include="..\TESReloaded\Core\ShaderCollection.h" />
     <ClInclude Include="..\TESReloaded\Core\ShaderManager.h" />
     <ClInclude Include="..\TESReloaded\Core\ShaderRecord.h" />
     <ClInclude Include="..\TESReloaded\Core\ShadowManager.h" />
@@ -247,6 +250,7 @@
     <ClCompile Include="..\TESReloaded\Core\GameMenuManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\RenderManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\SettingManager.cpp" />
+    <ClCompile Include="..\TESReloaded\Core\ShaderCollection.cpp" />
     <ClCompile Include="..\TESReloaded\Core\ShaderManager.cpp" />
     <ClCompile Include="..\TESReloaded\Core\ShaderRecord.cpp" />
     <ClCompile Include="..\TESReloaded\Core\ShadowManager.cpp" />

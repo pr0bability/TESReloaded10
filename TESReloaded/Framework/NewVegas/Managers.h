@@ -26,7 +26,6 @@ class ShadowSceneNode;		extern ShadowSceneNode*			SceneNode;
 #include "SettingManager.h"
 #include "CommandManager.h"
 #include "TextureRecord.h"
-#include "ShaderRecord.h"
 #include "ShaderManager.h"
 #include "TextureManager.h"
 #include "RenderManager.h"
