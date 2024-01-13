@@ -398,23 +398,23 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
 	NiD3DVertexShaderEx* VertexShader = (NiD3DVertexShaderEx*)Shader;
 	ShaderCollection* Collection = GetShaderCollection(VertexShader->ShaderName);
+	bool enabled = Collection->Enabled;
 
 	// if AMD and no DXVK, disable glitchy Tonemapping shader replacements
 	if (Collection == Shaders.Tonemapping && (TheRenderManager->RESZ && !TheRenderManager->DXVK)) return false;
-
-	if (!Collection->Enabled) return false;
 
 	// Load generic, interior and exterior shaders
 	VertexShader->ShaderProg  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, NULL);
 	VertexShader->ShaderProgE = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Exteriors\\");
 	VertexShader->ShaderProgI = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Interiors\\");
+	VertexShader->Enabled = enabled;
 
 	if (VertexShader->ShaderProg != nullptr || VertexShader->ShaderProgE != nullptr || VertexShader->ShaderProgI != nullptr) {
 		Collection->VertexShaderList.push_back(VertexShader);
 		Logger::Log("Loaded %s Vertex Shader %s", Collection->Name, VertexShader->ShaderName);
 	}
 
-	return Collection->Enabled;
+	return enabled;
 }
 
 
@@ -426,140 +426,21 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)Shader;
 	ShaderCollection* Collection = GetShaderCollection(PixelShader->ShaderName);
 
+	bool enabled = Collection->Enabled;
 	// if AMD and no DXVK, disable glitchy Tonemapping shader replacements
 	if (Collection == Shaders.Tonemapping && (TheRenderManager->RESZ && !TheRenderManager->DXVK)) return false;
-
-	if (!Collection->Enabled) return false;
 
 	PixelShader->ShaderProg  = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, NULL);
 	PixelShader->ShaderProgE = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Exteriors\\");
 	PixelShader->ShaderProgI = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Interiors\\");
+	PixelShader->Enabled = enabled;
 
 	if (PixelShader->ShaderProg != nullptr || PixelShader->ShaderProgE != nullptr || PixelShader->ShaderProgI != nullptr) {
 		Collection->PixelShaderList.push_back(PixelShader);
 		Logger::Log("Loaded %s Pixel Shader %s", Collection->Name, PixelShader->ShaderName);
 	}
 
-	return Collection->Enabled;
-}
-
-
-/*
-* Gets the pointer to the vertex shader list and size by name
-*/
-int ShaderManager::GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader) {
-
-	//BSShader** Shaders = (BSShader**)0x011F9548;
-	//NiD3DVertexShader** ShadowLightVertexShaders = (NiD3DVertexShader**)0x011FDE5C;
-	int Size = 0;
-
-	if (!strcmp(Name, "Water")) {
-		*Shader = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-	else if (!strcmp(Name, "WaterHeightMap")) {
-		*Shader = WaterVertexShaders;
-		Size = sizeof(WaterVertexShaders) / 4;
-	}
-	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
-		*Shader = ShadowLightVertexShaders;
-		Size = 103;
-	}
-	else if (!strcmp(Name, "POM")) {
-		*Shader = ((ParallaxShader*)BSVertexShaders[kShaderDefinition_ParallaxShader])->pVertexShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-
-	return Size;
-}
-
-
-/*
-* Gets the pointer to the pixel shader list and size by name
-*/
-int ShaderManager::GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader) {
-
-	//BSShader** Shaders = (BSShader**)0x011F9548;
-	//NiD3DPixelShader** ShadowLightPixelShaders = (NiD3DPixelShader**)0x011FDB08;
-	int Size = 0;
-
-	if (!strcmp(Name, "Water")) {
-		*Shader = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-	else if (!strcmp(Name, "WaterHeightMap")) {
-		*Shader = WaterPixelShaders;
-		Size = sizeof(WaterPixelShaders) / 4;
-	}
-	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
-		*Shader = ShadowLightPixelShaders;
-		Size = 160;
-	}
-	else if (!strcmp(Name, "POM")) {
-		*Shader = ((ParallaxShader*)BSPixelShaders[kShaderDefinition_ParallaxShader])->pPixelShaders;
-		Size = sizeof(*Shader) / 4;
-	}
-	return Size;
-
-}
-
-
-/*
-* Creates shaders after game has started? Seems broken
-*/
-bool ShaderManager::CreateShader(const char* Name) {
-
-	NiD3DVertexShader** VertexShaderList = NULL;
-	NiD3DPixelShader** PixelShaderList = NULL;
-	int WaterVertexShadersSize = sizeof(WaterVertexShaders) / 4;
-	int WaterPixelShadersSize = sizeof(WaterPixelShaders) / 4;
-	int Size = 0;
-	bool success = true;
-
-	if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
-		VertexShaderList = ShadowLightVertexShaders;
-		Size = 103;
-		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i] && strstr(TerrainShadersNames, ((NiD3DVertexShaderEx*)VertexShaderList[i])->ShaderName))
-				success = LoadShader(VertexShaderList[i]) && success;
-
-		PixelShaderList = ShadowLightPixelShaders;
-		Size = 160;
-		for (int i = 0; i < Size; i++)
-			if (PixelShaderList[i] && strstr(TerrainShadersNames, ((NiD3DPixelShaderEx*)PixelShaderList[i])->ShaderName))
-				success = LoadShader(PixelShaderList[i]) && success;
-	}
-	else if (!strcmp(Name, "Water")) {
-		VertexShaderList = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
-		Size = sizeof(PixelShaderList) / 4;
-		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
-
-		PixelShaderList = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
-		Size = sizeof(PixelShaderList) / 4;
-		for (int i = 0; i < Size; i++)
-			if (PixelShaderList[i]) success = LoadShader(PixelShaderList[i]) && success;
-
-		// Water Height map
-		VertexShaderList = WaterVertexShaders;
-		Size = sizeof(WaterVertexShaders) / 4;
-		for (int i = 0; i < Size; i++)
-			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
-
-		PixelShaderList = WaterPixelShaders;
-		Size = sizeof(WaterPixelShaders) / 4;
-		for (int i = 0; i < Size; i++) if (PixelShaderList[i])
-			success = LoadShader(PixelShaderList[i]) && success;
-	}
-
-	if (!success) {
-		char Message[256] = "Error: Could not load shader ";
-		strcat(Message, Name);
-		InterfaceManager->ShowMessage(Message);
-		Logger::Log(Message);
-	}
-
-	return success;
+	return enabled;
 }
 
 
@@ -906,30 +787,33 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		EffectRecord* effect = *EffectsNames.at(Name);
 		bool setting = effect->SwitchEffect();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
-	}
-	catch (const std::exception&){
-		// shaders
-		Logger::Log("Toggling Shader %s", Name);
-		try {
-			ShaderCollection* shader = *ShaderNames.at(Name);
-			bool setting = shader->SwitchShader();
-			TheSettingManager->SetMenuShaderEnabled(Name, setting);
-		}
-		catch (const std::exception&) {}
 
-		//bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
-		//DisposeShader(Name);
-		//if (enable) CreateShader(Name);
-		//TheSettingManager->SetMenuShaderEnabled(Name, enable);
+		IsMenuSwitch = false;
+		return;
 	}
+	catch (const std::exception&) {}
+
+	// shaders
+	try {
+		ShaderCollection* shader = *ShaderNames.at(Name);
+		bool setting = shader->SwitchShader();
+		TheSettingManager->SetMenuShaderEnabled(Name, setting);
+	
+		IsMenuSwitch = false;
+	}
+	catch (const std::exception&) {}
+
+	//bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
+	//DisposeShader(Name);
+	//if (enable) CreateShader(Name);
+	//TheSettingManager->SetMenuShaderEnabled(Name, enable);
+
 
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
 	//	EffectsSettings->Extra = !EffectsSettings->Extra;
 	//	DisposeEffect(EffectRecord::EffectRecordType::Extra);
 	//	if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
 	//}
-
-	IsMenuSwitch = false;
 }
 
 void ShaderManager::SetCustomConstant(const char* Name, D3DXVECTOR4 Value) {

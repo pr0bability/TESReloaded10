@@ -404,6 +404,11 @@ void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget){
 
 void NiD3DVertexShaderEx::SetupShader(IDirect3DVertexShader9* CurrentVertexHandle) {
 
+	if (!Enabled) {
+		ShaderHandle = ShaderHandleBackup;
+		return;
+	}
+
 	if (ShaderProgE && Player->GetWorldSpace()) {
 		ShaderHandle = ShaderProgE->ShaderHandle;
 		if (CurrentVertexHandle != ShaderHandle) ShaderProgE->SetCT();
@@ -432,6 +437,11 @@ void NiD3DVertexShaderEx::DisposeShader() {
 
 void NiD3DPixelShaderEx::SetupShader(IDirect3DPixelShader9* CurrentPixelHandle) {
 	
+	if (!Enabled) {
+		ShaderHandle = ShaderHandleBackup;
+		return;
+	}
+
 	if (ShaderProgE && Player->GetWorldSpace()) {
 		ShaderHandle = ShaderProgE->ShaderHandle;
 		if (CurrentPixelHandle != ShaderHandle) ShaderProgE->SetCT();
@@ -447,7 +457,6 @@ void NiD3DPixelShaderEx::SetupShader(IDirect3DPixelShader9* CurrentPixelHandle) 
 	else {
 		ShaderHandle = ShaderHandleBackup;
 	}
-
 }
 
 void NiD3DPixelShaderEx::DisposeShader() {
