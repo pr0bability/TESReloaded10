@@ -21,8 +21,6 @@ class MenuInterfaceManager; extern MenuInterfaceManager*	InterfaceManager;
 class QueuedModelLoader;	extern QueuedModelLoader*		ModelLoader;
 class ShadowSceneNode;		extern ShadowSceneNode*			SceneNode;
 
-#include <string>
-#include <regex>
 #include "SettingManager.h"
 #include "CommandManager.h"
 #include "TextureRecord.h"

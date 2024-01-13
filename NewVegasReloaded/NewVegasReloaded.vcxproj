@@ -224,6 +224,7 @@
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\PluginVersion.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\SafeWrite.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\Types.h" />
+    <ClInclude Include="..\TESReloaded\Framework\Common\Base\Utils.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Bink\bink.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Bink\radbase.h" />
     <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.h" />
