@@ -2,6 +2,10 @@
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
 
 #include "Effects/Animator.h"
+#include "ShaderRecord.h"
+#include "EffectRecord.h"
+#include "ShaderCollection.h"
+#include "Effects/Animator.h"
 #include "Effects/Effects.h"
 
 struct ShaderConstants {
