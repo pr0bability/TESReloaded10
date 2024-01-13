@@ -200,6 +200,11 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 				TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 				TextureShaderValues[TextureIndex].RegisterCount = 1;
 				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, ConstantDesc.RegisterIndex);
+
+				// preload textures loaded from disk
+				if (TextureShaderValues[TextureIndex].Type && TextureShaderValues[TextureIndex].Type <= TextureRecord::TextureRecordType::CubeBuffer) {
+					TheTextureManager->LoadTexture(&TextureShaderValues[TextureIndex]);
+				}
 				TextureIndex++;
 				break;
 			default:
@@ -289,7 +294,7 @@ void ShaderRecord::SetCT() {
 	ShaderTextureValue* Sampler;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Sampler = &TextureShaderValues[c];
-		if (!Sampler->Texture) Sampler->Texture = TheTextureManager->LoadTexture(Sampler);
+		if (!Sampler->Texture) TheTextureManager->LoadTexture(Sampler);
 	
 		if (Sampler->Texture->Texture != nullptr) {
 			TheRenderManager->renderState->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
@@ -530,7 +535,7 @@ void EffectRecord::SetCT() {
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Sampler = &TextureShaderValues[c];
 
-		if (!Sampler->Texture) Sampler->Texture = TheTextureManager->LoadTexture(Sampler);
+		if (!Sampler->Texture) TheTextureManager->LoadTexture(Sampler);
 		try {
 			if (Sampler->Texture->Texture != nullptr) {
 				TheRenderManager->device->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);

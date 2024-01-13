@@ -124,6 +124,7 @@ TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 	GetSamplerStates(Constant->SamplerString, NewTextureRecord);
 	timer.LogTime("TextureManager::LoadTexture");
 
+	Constant->Texture = NewTextureRecord;
 	return NewTextureRecord;
 }
 
