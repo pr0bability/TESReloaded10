@@ -404,7 +404,7 @@ void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget){
 
 void NiD3DVertexShaderEx::SetupShader(IDirect3DVertexShader9* CurrentVertexHandle) {
 
-	if (!Enabled) {
+	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
 		ShaderHandle = ShaderHandleBackup;
 		return;
 	}
@@ -437,7 +437,7 @@ void NiD3DVertexShaderEx::DisposeShader() {
 
 void NiD3DPixelShaderEx::SetupShader(IDirect3DPixelShader9* CurrentPixelHandle) {
 	
-	if (!Enabled) {
+	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
 		ShaderHandle = ShaderHandleBackup;
 		return;
 	}
