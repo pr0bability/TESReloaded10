@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <CommCtrl.h>
 #include <string>
+#include <regex>
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -25,6 +26,7 @@
 #include "../Common/Base/Types.h"
 #include "../Common/Base/SafeWrite.h"
 #include "../Common/Base/PluginVersion.h"
+#include "../Common//Base/Utils.h"
 #include "Plugin.h"
 #include "GameNi.h"
 #include "GameHavok.h"

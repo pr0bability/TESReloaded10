@@ -302,6 +302,9 @@
     <ClInclude Include="..\TESReloaded\Core\ShaderCollection.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Framework\Common\Base\Utils.h">
+      <Filter>Framework\Common\Base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
