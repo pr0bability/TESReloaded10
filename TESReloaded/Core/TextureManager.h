@@ -35,7 +35,7 @@ public:
 	IDirect3DCubeTexture9*	ShadowCubeMapTexture[ShadowCubeMapsMax];
 	IDirect3DSurface9*		ShadowCubeMapSurface[ShadowCubeMapsMax][6];
 	IDirect3DSurface9*		ShadowCubeMapDepthSurface;
-	TextureList				Textures;
+	TextureList				TextureCache;
     WaterMapList         	WaterHeightMapTextures;
     WaterMapList         	WaterReflectionMapTextures;
 

@@ -100,7 +100,7 @@ TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 			if (NewTextureRecord->LoadTexture(Type, TexturePath.c_str())) {
 				if (NewTextureRecord->Texture){
 					Logger::Log("Texture loaded: %s", TexturePath.c_str());
-					Textures[TexturePath] = NewTextureRecord->Texture;
+					TextureCache[TexturePath] = NewTextureRecord->Texture;
 				}
 			}
 			else {
@@ -129,8 +129,8 @@ TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 }
 
 IDirect3DBaseTexture9* TextureManager::GetCachedTexture(std::string& pathS){
-    TextureList::iterator t = Textures.find(pathS);
-    if (t == Textures.end()) return nullptr;
+    TextureList::iterator t = TextureCache.find(pathS);
+    if (t == TextureCache.end()) return nullptr;
     return t->second;
 }
 
