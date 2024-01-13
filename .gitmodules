@@ -2,6 +2,3 @@
 	path = TESReloaded/lib/toml11
 	url = https://github.com/ToruNiina/toml11.git
 	ignore = dirty
-[submodule "TESReloaded/lib/tomlplusplus"]
-	path = TESReloaded/lib/tomlplusplus
-	url = https://github.com/marzer/tomlplusplus.git
