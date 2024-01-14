@@ -128,6 +128,7 @@
     <ClInclude Include="..\TESReloaded\Core\Effects\DepthOfField.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Effects.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Exposure.h" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\ExtraShaders.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\GodRays.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\Grass.h" />
     <ClInclude Include="..\TESReloaded\Core\Effects\ImageAdjust.h" />
@@ -260,6 +261,7 @@
     <ClCompile Include="..\TESReloaded\Framework\Common\Base\Logger.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Base\PluginVersion.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Base\SafeWrite.cpp" />
+    <ClCompile Include="..\TESReloaded\Framework\Common\Base\Utils.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\disasm.cpp" />
     <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\modules.cpp" />

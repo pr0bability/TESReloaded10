@@ -1,15 +1,14 @@
 #pragma once
 
 typedef std::map<std::string, IDirect3DBaseTexture9*> TextureList;
+typedef std::map<std::string, IDirect3DBaseTexture9**> TexturePointersList;
 typedef std::vector<TextureRecord*> WaterMapList;
 
 class TextureManager { // Never disposed
 public:
 	static void				Initialize();
-	static void				InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT format);
-
+	void					InitTexture(const char* Name, IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT format);
 	TextureRecord*			LoadTexture(ShaderTextureValue* Constant);
-	void 					GetSamplerStates(std::string& samplerStateSubstring, TextureRecord* textureRecord );
 	void					SetWaterHeightMap(IDirect3DBaseTexture9* WaterHeightMap);
     void                    SetWaterReflectionMap(IDirect3DBaseTexture9* WaterReflectionMap);
     IDirect3DBaseTexture9* 	GetCachedTexture(std::string& pathS);
@@ -36,6 +35,7 @@ public:
 	IDirect3DSurface9*		ShadowCubeMapSurface[ShadowCubeMapsMax][6];
 	IDirect3DSurface9*		ShadowCubeMapDepthSurface;
 	TextureList				TextureCache;
+	TexturePointersList		TextureNames;
     WaterMapList         	WaterHeightMapTextures;
     WaterMapList         	WaterReflectionMapTextures;
 

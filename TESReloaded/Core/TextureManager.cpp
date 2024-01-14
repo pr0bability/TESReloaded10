@@ -17,22 +17,35 @@ void TextureManager::Initialize() {
 	UINT ShadowCubeMapSize = ShadowsInteriors->ShadowCubeMapSize;
 	
 	// create textures used by NVR and bind them to surfaces
-	InitTexture(&TheTextureManager->SourceTexture, &TheTextureManager->SourceSurface, Width, Height, D3DFMT_A16B16G16R16F);
-	InitTexture(&TheTextureManager->RenderedTexture, &TheTextureManager->RenderedSurface, Width, Height, D3DFMT_A16B16G16R16F);
-	InitTexture(&TheTextureManager->ShadowPassTexture, &TheTextureManager->ShadowPassSurface, Width, Height, D3DFMT_A8R8G8B8);
-	InitTexture(&TheTextureManager->NormalsTexture, &TheTextureManager->NormalsSurface, Width, Height, D3DFMT_A16B16G16R16F);
-	InitTexture(&TheTextureManager->AvgLumaTexture, &TheTextureManager->AvgLumaSurface, 1, 1, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_SourceBuffer", &TheTextureManager->SourceTexture, &TheTextureManager->SourceSurface, Width, Height, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_RenderedBuffer", &TheTextureManager->RenderedTexture, &TheTextureManager->RenderedSurface, Width, Height, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &TheTextureManager->ShadowPassTexture, &TheTextureManager->ShadowPassSurface, Width, Height, D3DFMT_A8R8G8B8);
+	TheTextureManager->InitTexture("TESR_NormalsBuffer", &TheTextureManager->NormalsTexture, &TheTextureManager->NormalsSurface, Width, Height, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_AvgLumaBuffer", &TheTextureManager->AvgLumaTexture, &TheTextureManager->AvgLumaSurface, 1, 1, D3DFMT_A16B16G16R16F);
 	//InitTexture(&TheTextureManager->BloomTexture, &TheTextureManager->BloomSurface, Width, Height, D3DFMT_A8R8G8B8);
 
 	TheTextureManager->DepthTexture = NULL;
 	TheTextureManager->DepthSurface = NULL;
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_DEPTHSTENCIL, (D3DFORMAT)MAKEFOURCC('I', 'N', 'T', 'Z'), D3DPOOL_DEFAULT, &TheTextureManager->DepthTexture, NULL);
+	
+	TheTextureManager->TextureNames[WordWaterHeightMapBuffer] = &TheTextureManager->WaterHeightMapB;
+	TheTextureManager->TextureNames[WordWaterReflectionMapBuffer] = &TheTextureManager->WaterReflectionMapB;
+	TheTextureManager->TextureNames["TESR_DepthBuffer"] = (IDirect3DBaseTexture9**)&TheTextureManager->DepthTexture;
+
+
+	std::vector<const char*>ShadowBufferNames = {
+		"TESR_ShadowMapBufferNear",
+		"TESR_ShadowMapBufferMiddle",
+		"TESR_ShadowMapBufferFar",
+		"TESR_ShadowMapBufferLod",
+		"TESR_OrthoMapBuffer",
+	};
 
 	for (int i = 0; i <= ShadowManager::ShadowMapTypeEnum::MapOrtho; i++) {
 		// create one texture per Exterior ShadowMap type
 		float multiple = i == ShadowManager::ShadowMapTypeEnum::MapLod ? 2.0f : 1.0f; // double the size of lod map only
 		ShadowMapSize = ShadowsExteriors->ShadowMapResolution * multiple;
-		InitTexture(&TheTextureManager->ShadowMapTexture[i], &TheTextureManager->ShadowMapSurface[i], ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
+		TheTextureManager->InitTexture(ShadowBufferNames[i], &TheTextureManager->ShadowMapTexture[i], &TheTextureManager->ShadowMapSurface[i], ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
 		Device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &TheTextureManager->ShadowMapDepthSurface[i], NULL);
 
 		// create textures to perform the blur
@@ -42,6 +55,8 @@ void TextureManager::Initialize() {
 		for (int j = 0; j < 6; j++) {
 			TheTextureManager->ShadowCubeMapTexture[i]->GetCubeMapSurface((D3DCUBEMAP_FACES)j, 0, &TheTextureManager->ShadowCubeMapSurface[i][j]);
 		}
+		std::string textureName = "TESR_ShadowCubeMapBuffer" + std::to_string(i);
+		TheTextureManager->TextureNames[textureName] = (IDirect3DBaseTexture9**)&TheTextureManager->ShadowCubeMapTexture[i];
 	}
 
 	Device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &TheTextureManager->ShadowCubeMapDepthSurface, NULL);
@@ -51,7 +66,7 @@ void TextureManager::Initialize() {
 /*
 * Creates a texture of the given size and format and binds a surface to it, so it can be used as render target.
 */
-void TextureManager::InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT Format) {
+void TextureManager::InitTexture(const char* Name, IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT Format) {
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	*Texture = NULL;
 	*Surface = NULL;
@@ -59,6 +74,7 @@ void TextureManager::InitTexture(IDirect3DTexture9** Texture, IDirect3DSurface9*
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, Format, D3DPOOL_DEFAULT, Texture, NULL);
 	// set the surface level to the texture.
 	(*Texture)->GetSurfaceLevel(0, Surface);
+	TextureNames[Name] = (IDirect3DBaseTexture9**)Texture;
 }
 
 /*
@@ -78,30 +94,14 @@ TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 	}
 	
 	TextureRecord* NewTextureRecord = new TextureRecord();
-    if(Type >= TextureRecord::TextureRecordType::WaterHeightMapBuffer){ /*Texture assigned after init*/
-        if(Type == TextureRecord::TextureRecordType::WaterHeightMapBuffer){
-            NewTextureRecord->Texture = WaterHeightMapB; 
-            WaterHeightMapTextures.push_back(NewTextureRecord);
-        }
-        else if(Type == TextureRecord::TextureRecordType::WaterReflectionMapBuffer){
-            NewTextureRecord->Texture = WaterReflectionMapB; 
-            WaterHeightMapTextures.push_back(NewTextureRecord);
-		}
-		else {
-			Logger::Log("Game Texture %s Not recognized", Constant->Name);
-			delete NewTextureRecord;
-			return nullptr;
-		}
-        Logger::Log("Game Texture %s Attached", Constant->Name);
-    }
-	else if(Type >= TextureRecord::TextureRecordType::PlanarBuffer && Type <= TextureRecord::TextureRecordType::CubeBuffer){ //Cache only non game textures
+
+	if (Constant->TexturePath != "") { //Cache only non game textures
 		IDirect3DBaseTexture9* cached = GetCachedTexture(TexturePath);
 		if(!cached) {
-			if (NewTextureRecord->LoadTexture(Type, TexturePath.c_str())) {
-				if (NewTextureRecord->Texture){
-					Logger::Log("Texture loaded: %s", TexturePath.c_str());
-					TextureCache[TexturePath] = NewTextureRecord->Texture;
-				}
+			NewTextureRecord->LoadTexture(Type, TexturePath.c_str());
+			if (NewTextureRecord->Texture){
+				Logger::Log("Texture loaded: %s", TexturePath.c_str());
+				TextureCache[TexturePath] = NewTextureRecord->Texture;
 			}
 			else {
 				Logger::Log("ERROR: Cannot load texture %s", TexturePath.c_str());
@@ -113,7 +113,7 @@ TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
 		}
 	}
 	else {
-		if (NewTextureRecord->LoadTexture(Type, nullptr)) {
+		if (NewTextureRecord->BindTexture(Constant->Name)) {
 			Logger::Log("Game Texture %s Binded", Constant->Name);
 		}
 		else {
@@ -121,7 +121,8 @@ TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
         }
 	}
 
-	GetSamplerStates(Constant->SamplerString, NewTextureRecord);
+	NewTextureRecord->GetSamplerStates(trim(Constant->SamplerString));
+
 	timer.LogTime("TextureManager::LoadTexture");
 
 	Constant->Texture = NewTextureRecord;
@@ -134,89 +135,6 @@ IDirect3DBaseTexture9* TextureManager::GetCachedTexture(std::string& pathS){
     return t->second;
 }
 
-
-void TextureManager::GetSamplerStates(std::string& samplerStateSubstring, TextureRecord* textureRecord ) {
-	std::string WordSamplerType[SamplerStatesMax];
-	std::string WordTextureAddress[6];
-	std::string WordTextureFilterType[4];
-	std::string WordSRGBType[2];
-	WordSamplerType[0] = "";
-	WordSamplerType[D3DSAMP_ADDRESSU] = "ADDRESSU";
-	WordSamplerType[D3DSAMP_ADDRESSV] = "ADDRESSV";
-	WordSamplerType[D3DSAMP_ADDRESSW] = "ADDRESSW";
-	WordSamplerType[D3DSAMP_BORDERCOLOR] = "BORDERCOLOR";
-	WordSamplerType[D3DSAMP_MAGFILTER] = "MAGFILTER";
-	WordSamplerType[D3DSAMP_MINFILTER] = "MINFILTER";
-	WordSamplerType[D3DSAMP_MIPFILTER] = "MIPFILTER";
-	WordSamplerType[D3DSAMP_MIPMAPLODBIAS] = "MIPMAPLODBIAS";
-	WordSamplerType[D3DSAMP_MAXMIPLEVEL] = "MAXMIPLEVEL";
-	WordSamplerType[D3DSAMP_MAXANISOTROPY] = "MAXANISOTROPY";
-	WordSamplerType[D3DSAMP_SRGBTEXTURE] = "SRGBTEXTURE";
-    WordSamplerType[D3DSAMP_ELEMENTINDEX] = "";
-    WordSamplerType[D3DSAMP_DMAPOFFSET] = "";
-	WordTextureAddress[0] = "";
-	WordTextureAddress[D3DTADDRESS_WRAP] = "WRAP";
-	WordTextureAddress[D3DTADDRESS_MIRROR] = "MIRROR";
-	WordTextureAddress[D3DTADDRESS_CLAMP] = "CLAMP";
-	WordTextureAddress[D3DTADDRESS_BORDER] = "BORDER";
-	WordTextureAddress[D3DTADDRESS_MIRRORONCE] = "MIRRORONCE";
-	WordTextureFilterType[D3DTEXF_NONE] = "NONE";
-	WordTextureFilterType[D3DTEXF_POINT] = "POINT";
-	WordTextureFilterType[D3DTEXF_LINEAR] = "LINEAR";
-	WordTextureFilterType[D3DTEXF_ANISOTROPIC] = "ANISOTROPIC";
-	WordSRGBType[0] = "FALSE";
-	WordSRGBType[1] = "TRUE";
-
-	std::stringstream samplerSettings = std::stringstream(trim(samplerStateSubstring));
-	std::string setting;
-	while (std::getline(samplerSettings, setting, ';')) {
-		size_t newlinePos = setting.find("\n");
-		if (newlinePos != std::string::npos) setting.erase(newlinePos, 1);
-		std::string opt = trim(setting.substr(0, setting.find("=") - 1));
-		std::string val = trim(setting.substr(setting.find("=") + 1, setting.length()));
-        std::transform(opt.begin(), opt.end(),opt.begin(), ::toupper);
-        std::transform(val.begin(), val.end(),val.begin(), ::toupper);
-	//	Logger::Log("%s : %s", opt.c_str(), val.c_str());
-		size_t optIdx = 0;
-		for (size_t i = 1; i < 12; i++) {
-			if (opt == WordSamplerType[i]) {
-				optIdx = i;
-				break;
-			}
-		}
-		if (optIdx >= D3DSAMP_ADDRESSU && optIdx <= D3DSAMP_ADDRESSW) {
-			for (size_t i = 1; i < 6; i++) {
-				if (val == WordTextureAddress[i]) {
-					textureRecord->SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = i;
-					break;
-				}
-			}
-		}
-		else if (optIdx >= D3DSAMP_MAGFILTER && optIdx <= D3DSAMP_MIPFILTER) {
-			for (size_t i = 0; i < 4; i++) {
-				if (val == WordTextureFilterType[i]) {
-					textureRecord->SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = i;
-					break;
-				}
-			}
-		}
-		else if (optIdx == D3DSAMP_SRGBTEXTURE) {
-			for (size_t i = 0; i < 2; i++) {
-				if (val == WordSRGBType[i]) {
-					textureRecord->SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = i;
-					break;
-				}
-			}
-		}
-		else if(optIdx == D3DSAMP_BORDERCOLOR){
-            float va = std::stof(val);
-			textureRecord->SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = *((DWORD*)&va);
-        }
-		else if(optIdx == D3DSAMP_MAXANISOTROPY){
-			textureRecord->SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = std::stoi(val);
-        }
-	}
-}
 
 void TextureManager::SetWaterHeightMap(IDirect3DBaseTexture9* WaterHeightMap) {
     if (WaterHeightMapB == WaterHeightMap) return;
