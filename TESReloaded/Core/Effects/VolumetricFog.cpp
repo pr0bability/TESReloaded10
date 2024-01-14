@@ -2,14 +2,21 @@
 
 void VolumetricFogEffect::UpdateConstants() {
 
-	Constants.Data.z = TheShaderManager->GameState.isExterior ? TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount") : TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "AmountInterior");
-
-	if (!TheShaderManager->GameState.isExterior) Constants.Height.w = 0.0f;
-	else Constants.Height.w = 1.0f;
+	if (TheShaderManager->GameState.isExterior) {
+		Constants.Height.w = 1.0f;
+		Constants.Data.z = Amount;
+	}
+	else {
+		Constants.Height.w = 0.0f;
+		Constants.Data.z = AmountInteriors;
+	}
 
 }
 
 void VolumetricFogEffect::UpdateSettings(){
+	Amount = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Amount");
+	AmountInteriors = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "AmountInterior");
+
 	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "Exponent");
 	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "ColorCoeff");
 	Constants.Data.w = TheSettingManager->GetSettingF("Shaders.VolumetricFog.Main", "MaxDistance");
