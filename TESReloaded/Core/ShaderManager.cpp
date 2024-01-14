@@ -168,6 +168,7 @@ template <typename T> void ShaderManager::RegisterEffect(T** Pointer)
 
 	EffectsNames[effect->Name] = (EffectRecord**)Pointer;
 	effect->RegisterConstants();
+	effect->RegisterTextures();
 	effect->LoadEffect();
 }
 
@@ -788,14 +789,14 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->SetFVF(FrameFVF);
 
 	// render post process normals for use by shaders
-	RenderEffectToRT(TheTextureManager->NormalsSurface, Effects.Normals, false);
+	RenderEffectToRT(Effects.Normals->Textures.NormalsSurface, Effects.Normals, false);
 
 	// render a shadow pass for point lights
 	if ((GameState.isExterior && Effects.ShadowsExteriors->Enabled) || (!GameState.isExterior && Effects.ShadowsInteriors->Enabled)) {
 		// separate lights in 2 batches
-		RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.PointShadows, true);
-		if (TheShadowManager->PointLightsNum > 6) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.PointShadows2, false);
-		if (GameState.isExterior) RenderEffectToRT(TheTextureManager->ShadowPassSurface, Effects.SunShadows, false);
+		RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.PointShadows, true);
+		if (TheShadowManager->PointLightsNum > 6) RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.PointShadows2, false);
+		if (GameState.isExterior) RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.SunShadows, false);
 	}
 
 	Device->SetRenderTarget(0, RenderTarget);
@@ -859,7 +860,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
-		RenderEffectToRT(TheTextureManager->AvgLumaSurface, Effects.AvgLuma, NULL);
+		RenderEffectToRT(Effects.AvgLuma->Textures.AvgLumaSurface, Effects.AvgLuma, NULL);
 		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
 	}
 

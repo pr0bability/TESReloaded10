@@ -12,6 +12,7 @@ public:
 	virtual void			UpdateConstants() {};
 	virtual void			UpdateSettings() {};
 	virtual void			RegisterConstants() {};
+	virtual void			RegisterTextures() {};
 
 	bool					SwitchShader();
 	void					DisposeShaders();

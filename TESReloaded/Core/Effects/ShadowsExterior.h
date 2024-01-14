@@ -3,7 +3,7 @@
 class ShadowsExteriorEffect : public EffectRecord
 {
 public:
-	ShadowsExteriorEffect() : EffectRecord("ShadowsExteriors") { Logger::Log("new shadows exterior effect"); };
+	ShadowsExteriorEffect() : EffectRecord("ShadowsExteriors") {};
 
 	struct ShadowStruct {
 		D3DXVECTOR4		Data;
@@ -13,8 +13,15 @@ public:
 	};
 	ShadowStruct	Constants;
 
+	struct ShadowTextures {
+		IDirect3DTexture9* ShadowPassTexture;
+		IDirect3DSurface9* ShadowPassSurface;
+	};
+	ShadowTextures	Textures;
+
 	void	UpdateConstants();
-	void	RegisterConstants();
 	void	UpdateSettings();
+	void	RegisterConstants();
+	void	RegisterTextures();
 
 };

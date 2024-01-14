@@ -10,8 +10,14 @@ public:
 	};
 	NormalsStruct	Constants;
 
+	struct NormalTextures {
+		IDirect3DTexture9* NormalsTexture;
+		IDirect3DSurface9* NormalsSurface;
+	};
+	NormalTextures	Textures;
+
 	void	UpdateConstants() {};
 	void	UpdateSettings() {};
 	void	RegisterConstants();
-
+	void	RegisterTextures();
 };
