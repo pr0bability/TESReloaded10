@@ -606,9 +606,7 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 	RenderAccums();
 }
 
-
-void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
-	
+void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
 	if (Lights[LightIndex] == NULL) return; // No light at current index
 	if (!TheTextureManager->ShadowCubeMapDepthSurface) {
 		Logger::Log("ShadowCubemapDepth missing for light %i", LightIndex);
@@ -624,13 +622,16 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 	float MinRadius = ShadowsInteriors->Forms.MinRadius;
 	NiPoint3* LightPos = NULL;
 	D3DXMATRIX View, Proj;
-	D3DXVECTOR3 Eye, At, Up, CameraDirection;;
+	D3DXVECTOR3 Eye, At, Up, CameraDirection;
 
 	Device->SetDepthStencilSurface(TheTextureManager->ShadowCubeMapDepthSurface);
 
-	LightPos = &Lights[LightIndex]->m_worldTransform.pos;
-	Radius = Lights[LightIndex]->Spec.r * ShadowsInteriors->LightRadiusMult;
-	if (Lights[LightIndex]->CanCarry) Radius = 256.0f;
+	NiPointLight* pNiLight = Lights[LightIndex]->sourceLight;
+
+	LightPos = &pNiLight->m_worldTransform.pos;
+	Radius = pNiLight->Spec.r * ShadowsInteriors->LightRadiusMult;
+	if (pNiLight->CanCarry)
+		Radius = 256.0f;
 	Eye.x = LightPos->x - TheRenderManager->CameraPosition.x;
 	Eye.y = LightPos->y - TheRenderManager->CameraPosition.y;
 	Eye.z = LightPos->z - TheRenderManager->CameraPosition.z;
@@ -677,24 +678,35 @@ void ShadowManager::RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, S
 			break;
 		}
 		At += CameraDirection;
-		
-		TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
-		TESObjectREFR* Ref = NULL;
-		while (Entry) {
-			Ref = GetRef(Entry->item, &ShadowsInteriors->Forms, &ShadowsInteriors->ExcludedForms);
-			if (Ref) {
-				// Detect if the object is in front of the light in the direction of the current face
-				// TODO: improve to base on frustum
-				NiNode* RefNode = Ref->GetNode();
-				D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
-				D3DXVECTOR3 ObjectToLight = ObjectPos - Eye;
 
-				D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
-				float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
+		// Since this is pure geometry, getting reference data will be difficult (read: slow)
+		auto iter = Lights[LightIndex]->kGeometryList.start;
+		while (iter) {
+			NiGeometry* geo = iter->data;
+			iter = iter->next;
+			if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
+				continue;
 
-				if (inFront && RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, MinRadius);
+			NiShadeProperty* pShaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+			NiMaterialProperty* pMatProp = static_cast<NiMaterialProperty*>(geo->GetProperty(NiProperty::kType_Material));
+
+			if (pMatProp->fAlpha < 0.05)
+				continue;
+
+			// check data for rigged geometry
+			if (geo->skinInstance && geo->skinInstance->SkinPartition && geo->skinInstance->SkinPartition->Partitions) {
+				if (!geo->skinInstance->SkinPartition->Partitions[0].BuffData) 
+					continue; // discard objects without buffer data
+				skinnedGeoAccum.push(geo);
 			}
-			Entry = Entry->next;
+			else if (pShaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
+				speedTreeAccum.push(geo);
+			}
+			else {
+				if (!geo->geomData->BuffData) 
+					continue; // discard objects without buffer data
+				geometryAccum.push(geo);
+			}
 		}
 		
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
@@ -780,7 +792,7 @@ void ShadowManager::RenderShadowMaps() {
 	CurrentPixel = ShadowMapPixel;
 
 	// track point lights for interiors and exteriors
-	NiPointLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
+	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
 	NiPointLight* Lights[TrackedLightsMax] = { NULL };
 	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
 

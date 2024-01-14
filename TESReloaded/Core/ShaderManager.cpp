@@ -630,13 +630,13 @@ void ShaderManager::DisposeShader(const char* Name) {
 }
 
 
-void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]) {
+void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[]) {
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
 	//Logger::Log(" ==== Getting lights ====");
 	auto timer = TimeLogger();
 
 	// create a map of all nearby valid lights and sort them per distance to player
-	std::map<int, NiPointLight*> SceneLights;
+	std::map<int, ShadowSceneLight*> SceneLights;
 	NiTList<ShadowSceneLight>::Entry* Entry = SceneNode->lights.start;
 
 	while (Entry) {
@@ -658,9 +658,9 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
-		float drawDistance = TheShaderManager->GameState.isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[TheShadowManager->ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
+		float drawDistance = 8000;//TheShaderManager->GameState.isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[TheShadowManager->ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
 		if ((inFront > 0 || Distance < radius) && (Distance + radius) < drawDistance) {
-			SceneLights[(int)(Distance * 10000)] = Light; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
+			SceneLights[(int)(Distance * 10000)] = Entry->data; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
 		}
 
 		Entry = Entry->next;
@@ -680,10 +680,10 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 	D3DXVECTOR4 Empty = D3DXVECTOR4(0, 0, 0, 0);
 
-	std::map<int, NiPointLight*>::iterator v = SceneLights.begin();
+	std::map<int, ShadowSceneLight*>::iterator v = SceneLights.begin();
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
 		if (v != SceneLights.end()) {
-			NiPointLight* Light = v->second;
+			NiPointLight* Light = v->second->sourceLight;
 			if (!Light || Light->EffectType != NiDynamicEffect::EffectTypes::POINT_LIGHT) {
 				v++;
 				continue;
@@ -705,7 +705,7 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 			if (CastShadow && ShadowIndex < ShadowCubeMapsMax) {
 				// add found light to list of lights that cast shadows
-				ShadowLightsList[ShadowIndex] = Light;
+				ShadowLightsList[ShadowIndex] = v->second;
 				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = LightPos;
 				ShadowIndex++;
 				TheShadowManager->PointLightsNum++; // Constant to track number of shadow casting lights are present

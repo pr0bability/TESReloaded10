@@ -34,7 +34,7 @@ public:
 	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
 	void					RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir);
 	void					RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType);
-	void					RenderShadowCubeMap(NiPointLight** Lights, int LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors);
+	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors);
 	void					RenderShadowMaps();
 	//void					GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]);
 	void					CalculateBlend(NiPointLight** Lights, int LightIndex);
