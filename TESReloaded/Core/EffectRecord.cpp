@@ -106,15 +106,16 @@ cleanup:
 	return success;
 }
 
+
 /**
 * Loads an effect shader by name (The post process effects stored in the Effects folder)
 * @param Name the name for the effect
 * @returns an EffectRecord describing the effect shader.
 */
-
 bool EffectRecord::IsLoaded() {
 	return Effect != nullptr;
 }
+
 
 /**
 Creates the Constant Table for the Effect Record.
@@ -140,7 +141,7 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	FloatShaderValues = new ShaderFloatValue[FloatShaderValuesCount];
 	TextureShaderValues = new ShaderTextureValue[TextureShaderValuesCount];
 
-	Logger::Debug("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
+	//Logger::Debug("CreateCT: Effect has %i constants", ConstantTableDesc.Parameters);
 
 	for (UINT c = 0; c < ConstantTableDesc.Parameters; c++) {
 		Handle = Effect->GetParameter(NULL, c);
@@ -158,17 +159,12 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 			break;
 		case D3DXPC_OBJECT:
 			if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE) {
-
-				Logger::Log("Found effect texture %s", ConstantDesc.Name);
 				TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
 				TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type);
 				TextureShaderValues[TextureIndex].RegisterIndex = TextureIndex;
 				TextureShaderValues[TextureIndex].RegisterCount = 1;
 				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, TextureIndex);
-
-				// preload textures loaded from disk
-				if (TextureShaderValues[TextureIndex].TexturePath != "")
-					TheTextureManager->LoadTexture(&TextureShaderValues[TextureIndex]);
+				TextureShaderValues[TextureIndex].GetTextureRecord();
 
 				TextureIndex++;
 			}
@@ -188,18 +184,14 @@ void EffectRecord::SetCT() {
 	ShaderTextureValue* Sampler;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Sampler = &TextureShaderValues[c];
+		if (!Sampler->Texture->Texture) 
+			Sampler->Texture->BindTexture(Sampler->Name);
 
-		if (!Sampler->Texture) TheTextureManager->LoadTexture(Sampler);
-		try {
-			if (Sampler->Texture->Texture != nullptr) {
-				TheRenderManager->device->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
-				for (int i = 1; i < SamplerStatesMax; i++) {
-					TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
-				}
+		if (Sampler->Texture->Texture != nullptr) {
+			TheRenderManager->device->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
+			for (int i = 1; i < SamplerStatesMax; i++) {
+				TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
 			}
-		}
-		catch (const std::exception& e) {
-			Logger::Log("[ERROR] Couldnt' bind texture %i to effect %s : %s", c, Path, e.what());
 		}
 	}
 
@@ -236,6 +228,7 @@ bool EffectRecord::SwitchEffect() {
 	}
 	return Enabled;
 }
+
 
 /**
 * Renders the given effect shader.

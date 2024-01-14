@@ -197,21 +197,16 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 			FloatIndex++;
 			break;
 		case D3DXRS_SAMPLER:
-			Logger::Log("Found shader texture %s", ConstantDesc.Name);
-
 			TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
 			TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type);
 			TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
 			TextureShaderValues[TextureIndex].RegisterCount = 1;
 			TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, ConstantDesc.RegisterIndex);
+			TextureShaderValues[TextureIndex].GetTextureRecord();
 
 			// mark this shader as needing to render depth/a buffer of the scene before the object can be rendered
 			if (!memcmp(ConstantDesc.Name, "TESR_DepthBuffer", 17)) HasDepthBuffer = true;
 			if (!memcmp(ConstantDesc.Name, "TESR_RenderedBuffer", 20)) HasRenderedBuffer = true;
-
-			// preload textures loaded from disk
-			if (TextureShaderValues[TextureIndex].TexturePath != "")
-				TheTextureManager->LoadTexture(&TextureShaderValues[TextureIndex]);
 	
 			TextureIndex++;
 			break;
@@ -237,14 +232,12 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 
 	size_t SamplerEnd = Source.find("\n", SamplerPos + 1);
 	std::string SamplerLine = Source.substr(SamplerPos, SamplerEnd - SamplerPos);
-	//Logger::Log("Sampler line: %s", SamplerLine.c_str());
 
 	//Only these samplers are bindable to an arbitrary texture
 	size_t StartTexture = SamplerLine.find("<");
 	size_t EndTexture = SamplerLine.rfind(">");
 	if (StartTexture != std::string::npos && EndTexture != std::string::npos) {
 		std::string TextureString = SamplerLine.substr(StartTexture + 1, EndTexture - StartTexture - 1);
-		//Logger::Log("texture string: %s", TextureString.c_str());
 
 		// find texture path
 		if (TextureString.find("ResourceName") != std::string::npos) {
@@ -254,9 +247,7 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 			PathS = TextureString.substr(StartPath + 1, EndPath - 1 - StartPath);
 			PathS.insert(0, "Data\\Textures\\");
 			TexturePath = PathS;
-			
-			Logger::Log("texture found path: %s", TexturePath.c_str());
-		}
+					}
 	}
 
 	size_t StartStatePos = SamplerLine.find("{");
@@ -268,6 +259,29 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 	SamplerString = SamplerLine.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);
 }
 
+
+/*
+* Gets a texture record with information from the Sampler and source
+*/
+void ShaderTextureValue::GetTextureRecord() {
+	auto timer = TimeLogger();
+
+	//Logger::Log("Loading texture %s (type:%i) (path: %s)", Name, Type, TexturePath);
+
+	if (!Type) {
+		Logger::Log("[ERROR] Sampler %s doesn't have a valid type", Name);
+		return;
+	}
+
+	Texture = new TextureRecord();
+
+	// preload file textures, game textures will get bind during constant table setting
+	if (TexturePath != "") Texture->Texture = TheTextureManager->GetFileTexture(TexturePath, Type);
+
+	Texture->GetSamplerStates(trim(SamplerString));
+
+	timer.LogTime("ShaderTextureValue::GetTextureRecord");
+}
 
 /*
 * Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
@@ -299,8 +313,9 @@ void ShaderRecord::SetCT() {
 	ShaderTextureValue* Sampler;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Sampler = &TextureShaderValues[c];
-		if (!Sampler->Texture) TheTextureManager->LoadTexture(Sampler);
-	
+		if (Sampler->Texture->Texture == nullptr) 
+			Sampler->Texture->BindTexture(Sampler->Name);
+
 		if (Sampler->Texture->Texture != nullptr) {
 			TheRenderManager->renderState->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
 			for (int i = 1; i < SamplerStatesMax; i++) {
