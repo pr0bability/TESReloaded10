@@ -16,6 +16,7 @@ TextureRecord::TextureRecord() {
 
 }
 
+
 /*
 * Detects which type the texture is based on DXParameter type or Name.
 * Optionally can pass a pointer for wether the shader requires rendering the RenderedBuffer or DepthBuffer so it sets the value if detected.
@@ -93,46 +94,12 @@ void TextureRecord::GetSamplerStates(std::string samplerStateSubstring) {
 
 }
 
-
-
-bool TextureRecord::BindTexture(const char* Name) {
-	for (auto const& imap : TheTextureManager->TextureNames) {
-		if (!strcmp(imap.first.c_str(), Name)) {
-			Texture = *(IDirect3DBaseTexture9**)(TheTextureManager->TextureNames.at(imap.first));
-			return true;
-		}
-	}
-	return false;
-}
-
-
 /*
-* Loads the actual texture file based on type/Name
+* Binds a game texture from the TextureManager
 */
-bool TextureRecord::LoadTexture(TextureRecordType Type, const char* TexturePath) {
-	IDirect3DTexture9* Tex = NULL;
-	IDirect3DVolumeTexture9* TexV = NULL;
-	IDirect3DCubeTexture9* TexC = NULL;
+bool TextureRecord::BindTexture(const char* Name) {
+	std::string textureName = Name;
+	Texture = TheTextureManager->GetTextureByName(textureName);
 
-	switch (Type) {
-	case PlanarBuffer:
-		D3DXCreateTextureFromFileA(TheRenderManager->device, TexturePath, &Tex);
-		if (Tex == NULL) return false;
-		Texture = Tex;
-		break;
-	case VolumeBuffer:
-		D3DXCreateVolumeTextureFromFileA(TheRenderManager->device, TexturePath, &TexV);
-		if (TexV == NULL) return false;
-		Texture = TexV;
-		break;
-	case CubeBuffer:
-		D3DXCreateCubeTextureFromFileA(TheRenderManager->device, TexturePath, &TexC);
-		if (TexC == NULL) return false;
-		Texture = TexC;
-		break;
-	default:
-		return false;
-	}
-
-	return true;
+	return Texture != nullptr;
 }

@@ -392,7 +392,8 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 
 
 /*
-* Load generic Vertex Shaders as well as the ones for interiors and exteriors if the exist. Returns false if generic one isn't found (as other ones are optional)
+* Load generic Vertex Shaders as well as the ones for interiors and exteriors if the exist. 
+* Returns false if generic one isn't found (as other ones are optional)
 */
 bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
@@ -419,7 +420,8 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 
 
 /*
-* Load generic Pixel Shaders as well as the ones for interiors and exteriors if the exist. Returns false if generic one isn't found (as other ones are optional)
+* Load generic Pixel Shaders as well as the ones for interiors and exteriors if the exist. 
+* Returns false if generic one isn't found (as other ones are optional)
 */
 bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
@@ -441,6 +443,126 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 	}
 
 	return enabled;
+}
+
+
+// used to reenable shaders after disposing. Probably useless now that they are not disposed, just toggled.
+/*
+* Gets the pointer to the vertex shader list and size by name
+*/
+int ShaderManager::GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader) {
+
+	//BSShader** Shaders = (BSShader**)0x011F9548;
+	//NiD3DVertexShader** ShadowLightVertexShaders = (NiD3DVertexShader**)0x011FDE5C;
+	int Size = 0;
+
+	if (!strcmp(Name, "Water")) {
+		*Shader = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+	else if (!strcmp(Name, "WaterHeightMap")) {
+		*Shader = WaterVertexShaders;
+		Size = sizeof(WaterVertexShaders) / 4;
+	}
+	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
+		*Shader = ShadowLightVertexShaders;
+		Size = 103;
+	}
+	else if (!strcmp(Name, "POM")) {
+		*Shader = ((ParallaxShader*)BSVertexShaders[kShaderDefinition_ParallaxShader])->pVertexShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+
+	return Size;
+}
+
+
+/*
+* Gets the pointer to the pixel shader list and size by name
+*/
+int ShaderManager::GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader) {
+
+	//BSShader** Shaders = (BSShader**)0x011F9548;
+	//NiD3DPixelShader** ShadowLightPixelShaders = (NiD3DPixelShader**)0x011FDB08;
+	int Size = 0;
+
+	if (!strcmp(Name, "Water")) {
+		*Shader = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+	else if (!strcmp(Name, "WaterHeightMap")) {
+		*Shader = WaterPixelShaders;
+		Size = sizeof(WaterPixelShaders) / 4;
+	}
+	else if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
+		*Shader = ShadowLightPixelShaders;
+		Size = 160;
+	}
+	else if (!strcmp(Name, "POM")) {
+		*Shader = ((ParallaxShader*)BSPixelShaders[kShaderDefinition_ParallaxShader])->pPixelShaders;
+		Size = sizeof(*Shader) / 4;
+	}
+	return Size;
+
+}
+
+
+/*
+* Creates shaders after game has started? Seems broken
+*/
+bool ShaderManager::CreateShader(const char* Name) {
+
+	NiD3DVertexShader** VertexShaderList = NULL;
+	NiD3DPixelShader** PixelShaderList = NULL;
+	int WaterVertexShadersSize = sizeof(WaterVertexShaders) / 4;
+	int WaterPixelShadersSize = sizeof(WaterPixelShaders) / 4;
+	int Size = 0;
+	bool success = true;
+
+	if (!strcmp(Name, "Terrain") || !strcmp(Name, "ExtraShaders")) {
+		VertexShaderList = ShadowLightVertexShaders;
+		Size = 103;
+		for (int i = 0; i < Size; i++)
+			if (VertexShaderList[i] && strstr(TerrainShadersNames, ((NiD3DVertexShaderEx*)VertexShaderList[i])->ShaderName))
+				success = LoadShader(VertexShaderList[i]) && success;
+
+		PixelShaderList = ShadowLightPixelShaders;
+		Size = 160;
+		for (int i = 0; i < Size; i++)
+			if (PixelShaderList[i] && strstr(TerrainShadersNames, ((NiD3DPixelShaderEx*)PixelShaderList[i])->ShaderName))
+				success = LoadShader(PixelShaderList[i]) && success;
+	}
+	else if (!strcmp(Name, "Water")) {
+		VertexShaderList = ((WaterShader*)BSVertexShaders[kShaderDefinition_WaterShader])->pVertexShaders;
+		Size = sizeof(PixelShaderList) / 4;
+		for (int i = 0; i < Size; i++)
+			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
+
+		PixelShaderList = ((WaterShader*)BSPixelShaders[kShaderDefinition_WaterShader])->pPixelShaders;
+		Size = sizeof(PixelShaderList) / 4;
+		for (int i = 0; i < Size; i++)
+			if (PixelShaderList[i]) success = LoadShader(PixelShaderList[i]) && success;
+
+		// Water Height map
+		VertexShaderList = WaterVertexShaders;
+		Size = sizeof(WaterVertexShaders) / 4;
+		for (int i = 0; i < Size; i++)
+			if (VertexShaderList[i]) success = LoadShader(VertexShaderList[i]) && success;
+
+		PixelShaderList = WaterPixelShaders;
+		Size = sizeof(WaterPixelShaders) / 4;
+		for (int i = 0; i < Size; i++) if (PixelShaderList[i])
+			success = LoadShader(PixelShaderList[i]) && success;
+	}
+
+	if (!success) {
+		char Message[256] = "Error: Could not load shader ";
+		strcat(Message, Name);
+		InterfaceManager->ShowMessage(Message);
+		Logger::Log(Message);
+	}
+
+	return success;
 }
 
 
@@ -617,24 +739,24 @@ void ShaderManager::GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLig
 
 }
 
-
-/*
-* Deletes an Effect based on the Effect Record effect type. 
-*/
-void ShaderManager::DisposeEffect(EffectRecord** Effect) {
-	*Effect = NULL;
-	delete* Effect;
-
-	//	case EffectRecord::EffectRecordType::Extra:
-	//		ExtraEffectsList::iterator v = ExtraEffects.begin();
-	//		while (v != ExtraEffects.end()) {
-	//			delete v->second;
-	//			v++;
-	//		}
-	//		ExtraEffects.clear();
-	//		break;
-	//}
-}
+//
+///*
+//* Deletes an Effect based on the Effect Record effect type. 
+//*/
+//void ShaderManager::DisposeEffect(EffectRecord** Effect) {
+//	*Effect = NULL;
+//	delete* Effect;
+//
+//	//	case EffectRecord::EffectRecordType::Extra:
+//	//		ExtraEffectsList::iterator v = ExtraEffects.begin();
+//	//		while (v != ExtraEffects.end()) {
+//	//			delete v->second;
+//	//			v++;
+//	//		}
+//	//		ExtraEffects.clear();
+//	//		break;
+//	//}
+//}
 
 /*
 * Renders a given effect to an arbitrary render target
@@ -841,7 +963,7 @@ D3DXVECTOR4 ShaderManager::lerp(D3DXVECTOR4 a, D3DXVECTOR4 b, float t) {
 }
 
 float ShaderManager::step(float a, float b, float t) {
-	return max(0, min(1, invLerp(a, b, t)));
+	return clamp(0, 1, invLerp(a, b, t));
 }
 
 float ShaderManager::invLerp(float a, float b, float t) {
@@ -853,6 +975,6 @@ float ShaderManager::clamp(float a, float b, float t) {
 }
 
 float ShaderManager::smoothStep(float a, float b, float t) {
-	t = clamp(0.0, 1.0, invLerp(a, b, t));
+	t = step(a, b, t);
 	return t * t * (3.0 - 2.0 * t);
 }

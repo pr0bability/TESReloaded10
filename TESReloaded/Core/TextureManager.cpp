@@ -32,7 +32,7 @@ void TextureManager::Initialize() {
 	TheTextureManager->TextureNames[WordWaterReflectionMapBuffer] = &TheTextureManager->WaterReflectionMapB;
 	TheTextureManager->TextureNames["TESR_DepthBuffer"] = (IDirect3DBaseTexture9**)&TheTextureManager->DepthTexture;
 
-
+	// initialize cascade shadowmaps
 	std::vector<const char*>ShadowBufferNames = {
 		"TESR_ShadowMapBufferNear",
 		"TESR_ShadowMapBufferMiddle",
@@ -40,16 +40,15 @@ void TextureManager::Initialize() {
 		"TESR_ShadowMapBufferLod",
 		"TESR_OrthoMapBuffer",
 	};
-
 	for (int i = 0; i <= ShadowManager::ShadowMapTypeEnum::MapOrtho; i++) {
 		// create one texture per Exterior ShadowMap type
 		float multiple = i == ShadowManager::ShadowMapTypeEnum::MapLod ? 2.0f : 1.0f; // double the size of lod map only
 		ShadowMapSize = ShadowsExteriors->ShadowMapResolution * multiple;
 		TheTextureManager->InitTexture(ShadowBufferNames[i], &TheTextureManager->ShadowMapTexture[i], &TheTextureManager->ShadowMapSurface[i], ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
 		Device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &TheTextureManager->ShadowMapDepthSurface[i], NULL);
-
-		// create textures to perform the blur
     }
+
+	// initialize point lights cubemaps
 	for (int i = 0; i < ShadowCubeMapsMax; i++) {
 		Device->CreateCubeTexture(ShadowCubeMapSize, 1, D3DUSAGE_RENDERTARGET, D3DFMT_R32F, D3DPOOL_DEFAULT, &TheTextureManager->ShadowCubeMapTexture[i], NULL);
 		for (int j = 0; j < 6; j++) {
@@ -58,8 +57,8 @@ void TextureManager::Initialize() {
 		std::string textureName = "TESR_ShadowCubeMapBuffer" + std::to_string(i);
 		TheTextureManager->TextureNames[textureName] = (IDirect3DBaseTexture9**)&TheTextureManager->ShadowCubeMapTexture[i];
 	}
-
 	Device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &TheTextureManager->ShadowCubeMapDepthSurface, NULL);
+	
 	timer.LogTime("TextureManager::Initialize");
 }
 
@@ -77,62 +76,58 @@ void TextureManager::InitTexture(const char* Name, IDirect3DTexture9** Texture, 
 	TextureNames[Name] = (IDirect3DBaseTexture9**)Texture;
 }
 
+
 /*
-* Binds texture buffers to a given register name
+* Gets a texture from the cache based on texture path
 */
-TextureRecord* TextureManager::LoadTexture(ShaderTextureValue* Constant) {
-	auto timer = TimeLogger();
-
-	//Logger::Log("Loading texture %s (type:%i) (path: %s)", Constant->Name, Constant->Type, Constant->TexturePath);
-
-	std::string TexturePath = Constant->TexturePath;
-	TextureRecord::TextureRecordType Type = Constant->Type;
-
-	if (!Type) {
-		Logger::Log("[ERROR] Sampler %s doesn't have a valid type", Constant->Name);
-		return nullptr;
-	}
-	
-	TextureRecord* NewTextureRecord = new TextureRecord();
-
-	if (Constant->TexturePath != "") { //Cache only non game textures
-		IDirect3DBaseTexture9* cached = GetCachedTexture(TexturePath);
-		if(!cached) {
-			NewTextureRecord->LoadTexture(Type, TexturePath.c_str());
-			if (NewTextureRecord->Texture){
-				Logger::Log("Texture loaded: %s", TexturePath.c_str());
-				TextureCache[TexturePath] = NewTextureRecord->Texture;
-			}
-			else {
-				Logger::Log("ERROR: Cannot load texture %s", TexturePath.c_str());
-			}
-		}
-		else {
-			NewTextureRecord->Texture = cached;
-			Logger::Log("Texture linked: %s", TexturePath.c_str());
-		}
-	}
-	else {
-		if (NewTextureRecord->BindTexture(Constant->Name)) {
-			Logger::Log("Game Texture %s Binded", Constant->Name);
-		}
-		else {
-            Logger::Log("ERROR: Cannot bind texture %s", Constant->Name);
-        }
-	}
-
-	NewTextureRecord->GetSamplerStates(trim(Constant->SamplerString));
-
-	timer.LogTime("TextureManager::LoadTexture");
-
-	Constant->Texture = NewTextureRecord;
-	return NewTextureRecord;
+IDirect3DBaseTexture9* TextureManager::GetCachedTexture(std::string& pathS) {
+	TextureList::iterator t = TextureCache.find(pathS);
+	if (t == TextureCache.end()) return nullptr;
+	return t->second;
 }
 
-IDirect3DBaseTexture9* TextureManager::GetCachedTexture(std::string& pathS){
-    TextureList::iterator t = TextureCache.find(pathS);
-    if (t == TextureCache.end()) return nullptr;
-    return t->second;
+
+/*
+* Gets a game dynamic texture by the sampler name
+*/
+IDirect3DBaseTexture9* TextureManager::GetTextureByName(std::string& Name) {
+	TexturePointersList::iterator t = TextureNames.find(Name);
+	if (t == TextureNames.end()) {
+		Logger::Log("[ERROR] Texture %s not found.", Name.c_str());
+		return nullptr;
+	}
+	return *(t->second);
+}
+
+
+/*
+* Loads the actual texture file or get it from cache based on type/Name
+*/
+IDirect3DBaseTexture9* TextureManager::GetFileTexture(std::string TexturePath, TextureRecord::TextureRecordType Type) {
+
+	IDirect3DBaseTexture9* Texture = GetCachedTexture(TexturePath);
+	if (Texture) return Texture;
+
+	switch (Type) {
+	case TextureRecord::TextureRecordType::PlanarBuffer:
+		D3DXCreateTextureFromFileA(TheRenderManager->device, TexturePath.data(), (IDirect3DTexture9**)&Texture);
+		break;
+	case TextureRecord::TextureRecordType::VolumeBuffer:
+		D3DXCreateVolumeTextureFromFileA(TheRenderManager->device, TexturePath.data(), (IDirect3DVolumeTexture9**)&Texture);
+		break;
+	case TextureRecord::TextureRecordType::CubeBuffer:
+		D3DXCreateCubeTextureFromFileA(TheRenderManager->device, TexturePath.data(), (IDirect3DCubeTexture9**)&Texture);
+		break;
+	default:
+		Logger::Log("[ERROR] : Invalid texture type %i for %s", Type, TexturePath);
+	}
+
+	if (!Texture) Logger::Log("[ERROR] : Couldn't load texture file %s", TexturePath);
+	else Logger::Log("Loaded texture file %s", TexturePath);
+
+	// add texture to cache
+	TextureCache[TexturePath] = Texture;
+	return Texture;
 }
 
 
@@ -144,6 +139,7 @@ void TextureManager::SetWaterHeightMap(IDirect3DBaseTexture9* WaterHeightMap) {
 		 (*it)->Texture = WaterHeightMap;
 	}
 }
+
 
 void TextureManager::SetWaterReflectionMap(IDirect3DBaseTexture9* WaterReflectionMap) {
     if (WaterReflectionMapB == WaterReflectionMap) return;

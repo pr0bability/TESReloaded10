@@ -43,6 +43,7 @@ public:
 	virtual ~ShaderTextureValue() {};
 
 	void				GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32 Index);
+	void				GetTextureRecord();
 
 	std::string			SamplerString;
 	std::string			TexturePath;

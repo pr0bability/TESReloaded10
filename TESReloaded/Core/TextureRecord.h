@@ -10,7 +10,9 @@ public:
 		VolumeBuffer,
 		CubeBuffer
 	};
+	static TextureRecord*		GetTextureRecord(const char* Name, std::string TexturePath);
 	static TextureRecordType	GetTextureType(UINT Type);
+
 	void						GetSamplerStates(std::string samplerStateSubstring);
 	bool						BindTexture(const char* Name);
 	bool						LoadTexture(TextureRecordType Type, const char* TexturePath);
