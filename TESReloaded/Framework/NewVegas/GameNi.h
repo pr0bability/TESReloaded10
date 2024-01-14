@@ -60,6 +60,7 @@ class BSResizableTriShape;
 class BSShaderTextureSet;
 class EffectShaderProperty;
 class BSRenderPass;
+class BSPortalGraph;
 
 class ShadowSceneLight;
 class AnimSequenceBase;
@@ -1727,6 +1728,20 @@ public:
 };
 assert(sizeof(NiAlphaProperty) == 0x01C);
 
+class NiMaterialProperty : public NiProperty {
+public:
+	SInt32		iIndex;
+	NiColor		spec;
+	NiColor		emit;
+	NiColor*	pExternalEmittance;
+	float		fShine;
+	float		fAlpha;
+	float		fEmitMult;
+	UInt32		uiRevID;
+	void*		pvRendererData;
+};
+assert(sizeof(NiMaterialProperty) == 0x04C);
+
 class NiShadeProperty : public NiProperty {
 public:
 	enum ShaderPropType : UInt32
@@ -1766,7 +1781,7 @@ public:
 	float			unkB0;			// B0
 	float			unkB4;			// B4
 	float			FadeAlpha;		// B8
-	UInt32			unkBC;			// BC
+	float			BoundRadius;	// BC
 	UInt32			unkC0;			// C0
 	UInt32			MultType;		// C4
 	UInt32			unkC8;			// C8
@@ -1812,35 +1827,47 @@ assert(sizeof(BSTreeNode) == 0xF8);
 class ShadowSceneLight : public NiRefObject {
 public:
 
-	UInt32					unk008;				// 008
-	float					flt00C[49];			// 00C
-	float					lightFade;
-	float					unk0D4;
-	float					unk0D8;
-	float					unk0DC;
-	NiTList<NiTriBasedGeom>	lgtList0E0;			// 0E0
-	UInt8					byte0EC;			// 0EC
-	UInt8					byte0ED;			// 0ED
-	UInt8					byte0EE[2];			// 0EE
-	UInt32					unk0F0;				// 0F0
-	UInt32					unk0F4;				// 0F4
-	NiPointLight*			sourceLight;		// 0F8
-	UInt32					unk0FC;				// 0FC
-	NiPoint3				fPosition;			// 100
-	UInt32					unk10C;				// 10C
-	UInt16					bIsEnabled;			// 110
-	UInt16					unk112;				// 112
-	UInt32					unk114;				// 114
-	UInt8					byte118;			// 118
-	UInt8					pad119[3];			// 119
-	float					flt11C;				// 11C
-	float					flt120;				// 120
-	UInt8					byte124;			// 124
-	UInt8					pad125[3];			// 125
-	UInt32					unk128[66];			// 128
-	UInt32					array230[4];		// 230 BSSimpleArray<NiNode>
-	void*					portalGraph;		// 240 BSPortalGraph*
-	UInt32					unk244[3];			// 244
+	UInt32					unk008;
+	float					fLuminance;
+	D3DXMATRIX				kViewProjMatrix;
+	D3DXMATRIX				kViewMatrix;
+	D3DXMATRIX				kProjMatrix;
+	float					fLODDimmer;
+	float					fFade;
+	float					fShadowFadeTime0D8;
+	float					fShadowFadeTime0DC;
+	NiTList<NiGeometry>		kGeometryList;
+	bool					bIsShadowCasting;
+	UInt8					byte0ED;
+	NiAVObject*				spObject0F0;
+	bool					bPointLight;
+	bool					bAmbientLight;
+	NiPointLight*			sourceLight;
+	bool					bDynamicLight;
+	NiPoint3				kPointPosition;
+	UInt32					spShadowRenderTarget;
+	UInt16					bIsEnabled;
+	NiAVObject*				spObject114;
+	bool					bUnk118;
+	float					fUnk11C;
+	float					fUnk120;
+	bool					bShowDebugTexture;
+	NiNode*					spShadowCasterNode;
+	UInt32					kList12C[3];
+	void*					pGeomListFence;
+	void*					spFenceObject;
+	NiCamera*				spShadowMapCamera;
+	NiFrustumPlanes			kFrustumPlanes;
+	float					fClipPlanes[24];
+	bool					bUnk208;
+	BSShaderAccumulator*	spShadowAccum;
+	UInt32					kMultiBoundRooms[4];	// BSSimpleArray<BSMultiBoundRoom*>
+	UInt32					kPortals[4];			// BSSimpleArray<BSPortal*>
+	UInt32					kProcessedNodes[4];		// BSSimpleArray<NiNode>
+	BSPortalGraph*			pPortalGraph;
+	UInt32					unk244;
+	UInt32					unk248;
+	UInt32					unk24C;
 };
 assert(sizeof(ShadowSceneLight) == 0x250);
 
