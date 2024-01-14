@@ -15,6 +15,9 @@ public:
 	};
 	VolumetricFogStruct	Constants;
 
+	float	Amount;
+	float	AmountInteriors;
+
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();
