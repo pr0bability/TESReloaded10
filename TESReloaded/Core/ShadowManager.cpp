@@ -756,7 +756,7 @@ void ShadowManager::RenderShadowMaps() {
 	Device->GetRenderTarget(0, &RenderSurface);
 	Device->GetViewport(&viewport);	
 
-	RenderState->SetRenderState(D3DRS_STENCILENABLE , 0 ,RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_STENCILENABLE , 1 ,RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_STENCILREF , 0 ,RenderStateArgs);
  	RenderState->SetRenderState(D3DRS_STENCILFUNC , 8 ,RenderStateArgs);
 
