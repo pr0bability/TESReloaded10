@@ -320,6 +320,79 @@ void ShaderRecord::SetCT() {
 }
 
 
+/*
+* Hook - Function to replace shader handles during pass initialisation. 
+*/
+void NiD3DVertexShaderEx::SetupShader(IDirect3DVertexShader9* CurrentVertexHandle) {
+
+	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
+		ShaderHandle = ShaderHandleBackup;
+		return;
+	}
+
+	if (ShaderProgE && Player->GetWorldSpace()) {
+		ShaderHandle = ShaderProgE->ShaderHandle;
+		if (CurrentVertexHandle != ShaderHandle) ShaderProgE->SetCT();
+	}
+	else if (ShaderProgI && !Player->GetWorldSpace()) {
+		ShaderHandle = ShaderProgI->ShaderHandle;
+		if (CurrentVertexHandle != ShaderHandle) ShaderProgI->SetCT();
+	}
+	else if (ShaderProg) {
+		ShaderHandle = ShaderProg->ShaderHandle;
+		if (CurrentVertexHandle != ShaderHandle) ShaderProg->SetCT();
+	}
+	else {
+		ShaderHandle = ShaderHandleBackup;
+	}
+
+}
+
+void NiD3DVertexShaderEx::DisposeShader() {
+
+	if (ShaderProgE) delete ShaderProgE; ShaderProgE = NULL;
+	if (ShaderProgI) delete ShaderProgI; ShaderProgI = NULL;
+	if (ShaderProg) delete ShaderProg; ShaderProg = NULL;
+
+}
+
+
+/*
+* Hook - Function to replace shader handles during pass initialisation.
+*/
+void NiD3DPixelShaderEx::SetupShader(IDirect3DPixelShader9* CurrentPixelHandle) {
+
+	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
+		ShaderHandle = ShaderHandleBackup;
+		return;
+	}
+
+	if (ShaderProgE && Player->GetWorldSpace()) {
+		ShaderHandle = ShaderProgE->ShaderHandle;
+		if (CurrentPixelHandle != ShaderHandle) ShaderProgE->SetCT();
+	}
+	else if (ShaderProgI && !Player->GetWorldSpace()) {
+		ShaderHandle = ShaderProgI->ShaderHandle;
+		if (CurrentPixelHandle != ShaderHandle) ShaderProgI->SetCT();
+	}
+	else if (ShaderProg) {
+		ShaderHandle = ShaderProg->ShaderHandle;
+		if (CurrentPixelHandle != ShaderHandle) ShaderProg->SetCT();
+	}
+	else {
+		ShaderHandle = ShaderHandleBackup;
+	}
+}
+
+
+void NiD3DPixelShaderEx::DisposeShader() {
+
+	if (ShaderProgE) delete ShaderProgE; ShaderProgE = NULL;
+	if (ShaderProgI) delete ShaderProgI; ShaderProgI = NULL;
+	if (ShaderProg) delete ShaderProg; ShaderProg = NULL;
+
+}
+
 ShaderRecordVertex::ShaderRecordVertex(const char* shaderName) {
 
 	Name = shaderName;
