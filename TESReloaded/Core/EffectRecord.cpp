@@ -76,6 +76,7 @@ bool EffectRecord::LoadEffect(bool alwaysCompile) {
 			Logger::Log("Effect compiled: %s", SourcePath->data());
 		}
 	}
+
 	load = D3DXCreateEffectFromFileA(TheRenderManager->device, Path->data(), NULL, NULL, NULL, NULL, &Effect, &Errors);
 	if (FAILED(load)) goto cleanup;
 
@@ -132,8 +133,9 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	for (UINT c = 0; c < ConstantTableDesc.Parameters; c++) {
 		Handle = Effect->GetParameter(NULL, c);
 		Effect->GetParameterDesc(Handle, &ConstantDesc);
-		if ((ConstantDesc.Class == D3DXPC_VECTOR || ConstantDesc.Class == D3DXPC_MATRIX_ROWS) && !memcmp(ConstantDesc.Name, "TESR_", 5)) FloatShaderValuesCount += 1;
-		if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE && !memcmp(ConstantDesc.Name, "TESR_", 5)) TextureShaderValuesCount += 1;
+		if (memcmp(ConstantDesc.Name, "TESR_", 5)) continue;
+		if ((ConstantDesc.Class == D3DXPC_VECTOR || ConstantDesc.Class == D3DXPC_MATRIX_ROWS)) FloatShaderValuesCount += 1;
+		if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE) TextureShaderValuesCount += 1;
 	}
 	FloatShaderValues = new ShaderFloatValue[FloatShaderValuesCount];
 	TextureShaderValues = new ShaderTextureValue[TextureShaderValuesCount];
@@ -143,27 +145,34 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	for (UINT c = 0; c < ConstantTableDesc.Parameters; c++) {
 		Handle = Effect->GetParameter(NULL, c);
 		Effect->GetParameterDesc(Handle, &ConstantDesc);
-		if (!memcmp(ConstantDesc.Name, "TESR_", 5)) {
-			switch (ConstantDesc.Class) {
-			case D3DXPC_VECTOR:
-			case D3DXPC_MATRIX_ROWS:
-				FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
-				FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
-				FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
-				FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
-				FloatIndex++;
-				break;
-			case D3DXPC_OBJECT:
-				if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE) {
-					TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
-					TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type, ConstantDesc.Name, NULL, NULL);
-					TextureShaderValues[TextureIndex].RegisterIndex = TextureIndex;
-					TextureShaderValues[TextureIndex].RegisterCount = 1;
-					TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, TextureIndex);
-					TextureIndex++;
-				}
-				break;
+		if (memcmp(ConstantDesc.Name, "TESR_", 5)) continue; // Only treat constants named with TESR prefix
+
+		switch (ConstantDesc.Class) {
+		case D3DXPC_VECTOR:
+		case D3DXPC_MATRIX_ROWS:
+			FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
+			FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
+			FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
+			FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
+			FloatIndex++;
+			break;
+		case D3DXPC_OBJECT:
+			if (ConstantDesc.Class == D3DXPC_OBJECT && ConstantDesc.Type >= D3DXPT_SAMPLER && ConstantDesc.Type <= D3DXPT_SAMPLERCUBE) {
+
+				Logger::Log("Found effect texture %s", ConstantDesc.Name);
+				TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
+				TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type);
+				TextureShaderValues[TextureIndex].RegisterIndex = TextureIndex;
+				TextureShaderValues[TextureIndex].RegisterCount = 1;
+				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, TextureIndex);
+
+				// preload textures loaded from disk
+				if (TextureShaderValues[TextureIndex].TexturePath != "")
+					TheTextureManager->LoadTexture(&TextureShaderValues[TextureIndex]);
+
+				TextureIndex++;
 			}
+			break;
 		}
 	}
 
@@ -257,7 +266,6 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 		Logger::Log("Error during rendering of effect %s: %s", Name, e.what());
 	}
 
-	char name[255] = "EffectRecord::Render ";
-	strcat(name, Path->c_str());
-	timer.LogTime(name);
+	std::string name = "EffectRecord::Render " + *Path;
+	timer.LogTime(name.c_str());
 }

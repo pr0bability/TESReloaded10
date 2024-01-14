@@ -20,40 +20,7 @@ TextureRecord::TextureRecord() {
 * Detects which type the texture is based on DXParameter type or Name.
 * Optionally can pass a pointer for wether the shader requires rendering the RenderedBuffer or DepthBuffer so it sets the value if detected.
 */
-TextureRecord::TextureRecordType TextureRecord::GetTextureType(UINT Type, const char* Name, bool* HasRenderedBuffer, bool* HasDepthBuffer) {
-
-	if (!strcmp(Name, "TESR_SourceBuffer")) return TextureRecordType::SourceBuffer;
-	if (!strcmp(Name, "TESR_RenderedBuffer")) {
-		if (HasRenderedBuffer) *HasRenderedBuffer = true;
-		return TextureRecordType::RenderedBuffer;
-	}
-	if (!strcmp(Name, "TESR_DepthBuffer")) {
-		if (HasDepthBuffer) *HasDepthBuffer = true;
-		return TextureRecordType::DepthBuffer;
-	}
-	if (!strcmp(Name, "TESR_NormalsBuffer")) return TextureRecordType::NormalsBuffer;
-	if (!strcmp(Name, "TESR_AvgLumaBuffer")) return TextureRecordType::AvgLumaBuffer;
-	if (!strcmp(Name, "TESR_ShadowMapBufferNear")) return TextureRecordType::ShadowMapBufferNear;
-	if (!strcmp(Name, "TESR_ShadowMapBufferMiddle")) return TextureRecordType::ShadowMapBufferMiddle;
-	if (!strcmp(Name, "TESR_ShadowMapBufferFar")) return TextureRecordType::ShadowMapBufferFar;
-	if (!strcmp(Name, "TESR_ShadowMapBufferLod")) return TextureRecordType::ShadowMapBufferLod;
-	if (!strcmp(Name, "TESR_PointShadowBuffer")) return TextureRecordType::PointShadowBuffer;
-	if (!strcmp(Name, "TESR_OrthoMapBuffer")) return TextureRecordType::OrthoMapBuffer;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer0")) return TextureRecordType::ShadowCubeMapBuffer0;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer1")) return TextureRecordType::ShadowCubeMapBuffer1;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer2")) return TextureRecordType::ShadowCubeMapBuffer2;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer3")) return TextureRecordType::ShadowCubeMapBuffer3;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer4")) return TextureRecordType::ShadowCubeMapBuffer4;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer5")) return TextureRecordType::ShadowCubeMapBuffer5;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer6")) return TextureRecordType::ShadowCubeMapBuffer6;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer7")) return TextureRecordType::ShadowCubeMapBuffer7;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer8")) return TextureRecordType::ShadowCubeMapBuffer8;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer9")) return TextureRecordType::ShadowCubeMapBuffer9;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer10")) return TextureRecordType::ShadowCubeMapBuffer10;
-	if (!strcmp(Name, "TESR_ShadowCubeMapBuffer11")) return TextureRecordType::ShadowCubeMapBuffer11;
-
-	if (!strcmp(Name, WordWaterHeightMapBuffer)) return TextureRecordType::WaterHeightMapBuffer;
-	if (!strcmp(Name, WordWaterReflectionMapBuffer)) return TextureRecordType::WaterReflectionMapBuffer;
+TextureRecord::TextureRecordType TextureRecord::GetTextureType(UINT Type) {
 
 	if (Type >= D3DXPT_SAMPLER && Type <= D3DXPT_SAMPLER2D) return TextureRecordType::PlanarBuffer;
 	if (Type == D3DXPT_SAMPLER3D) return TextureRecordType::VolumeBuffer;
@@ -62,75 +29,110 @@ TextureRecord::TextureRecordType TextureRecord::GetTextureType(UINT Type, const 
 	return TextureRecordType::None;
 }
 
+void TextureRecord::GetSamplerStates(std::string samplerStateSubstring) {
+	std::map<std::string, int> WordSamplerType;
+	WordSamplerType["ADDRESSU"] = D3DSAMP_ADDRESSU;
+	WordSamplerType["ADDRESSV"] = D3DSAMP_ADDRESSV;
+	WordSamplerType["ADDRESSW"] = D3DSAMP_ADDRESSW;
+	WordSamplerType["BORDERCOLOR"] = D3DSAMP_BORDERCOLOR;
+	WordSamplerType["MAGFILTER"] = D3DSAMP_MAGFILTER;
+	WordSamplerType["MINFILTER"] = D3DSAMP_MINFILTER;
+	WordSamplerType["MIPFILTER"] = D3DSAMP_MIPFILTER;
+	WordSamplerType["MIPMAPLODBIAS"] = D3DSAMP_MIPMAPLODBIAS;
+	WordSamplerType["MAXMIPLEVEL"] = D3DSAMP_MAXMIPLEVEL;
+	WordSamplerType["MAXANISOTROPY"] = D3DSAMP_MAXANISOTROPY;
+	WordSamplerType["SRGBTEXTURE"] = D3DSAMP_SRGBTEXTURE;
+
+	std::map<std::string, int> WordTextureAddress;
+	WordTextureAddress["WRAP"] = D3DTADDRESS_WRAP;
+	WordTextureAddress["MIRROR"] = D3DTADDRESS_MIRROR;
+	WordTextureAddress["CLAMP"] = D3DTADDRESS_CLAMP;
+	WordTextureAddress["BORDER"] = D3DTADDRESS_BORDER;
+	WordTextureAddress["MIRRORONCE"] = D3DTADDRESS_MIRRORONCE;
+
+	std::map<std::string, int> WordTextureFilterType;
+	WordTextureFilterType["NONE"] = D3DTEXF_NONE;
+	WordTextureFilterType["POINT"] = D3DTEXF_POINT;
+	WordTextureFilterType["LINEAR"] = D3DTEXF_LINEAR;
+	WordTextureFilterType["ANISOTROPIC"] = D3DTEXF_ANISOTROPIC;
+
+	std::map<std::string, int> WordSRGBType;
+	WordSRGBType["FALSE"] = 0;
+	WordSRGBType["TRUE"] = 1;
+
+	std::stringstream samplerSettings = std::stringstream(samplerStateSubstring);
+	std::string setting;
+	while (std::getline(samplerSettings, setting, ';')) {
+		size_t newlinePos = setting.find("\n");
+		if (newlinePos != std::string::npos) setting.erase(newlinePos, 1);
+		std::string opt = trim(setting.substr(0, setting.find("=") - 1));
+		std::string val = trim(setting.substr(setting.find("=") + 1, setting.length()));
+		std::transform(opt.begin(), opt.end(), opt.begin(), ::toupper);
+		std::transform(val.begin(), val.end(), val.begin(), ::toupper);
+		//	Logger::Log("%s : %s", opt.c_str(), val.c_str());
+
+		size_t optIdx = WordSamplerType[opt];
+		if (optIdx >= D3DSAMP_ADDRESSU && optIdx <= D3DSAMP_ADDRESSW)
+			SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = WordTextureAddress[val];
+
+		if (optIdx >= D3DSAMP_MAGFILTER && optIdx <= D3DSAMP_MIPFILTER)
+			SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = WordTextureFilterType[val];
+
+		if (optIdx == D3DSAMP_SRGBTEXTURE)
+			SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = WordSRGBType[val];
+
+		if (optIdx == D3DSAMP_BORDERCOLOR) {
+			float va = std::stof(val);
+			SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = *((DWORD*)&va);
+		}
+
+		if (optIdx == D3DSAMP_MAXANISOTROPY)
+			SamplerStates[(D3DSAMPLERSTATETYPE)optIdx] = std::stoi(val);
+
+	}
+
+}
+
+
+
+bool TextureRecord::BindTexture(const char* Name) {
+	for (auto const& imap : TheTextureManager->TextureNames) {
+		if (!strcmp(imap.first.c_str(), Name)) {
+			Texture = *(IDirect3DBaseTexture9**)(TheTextureManager->TextureNames.at(imap.first));
+			return true;
+		}
+	}
+	return false;
+}
+
+
 /*
 * Loads the actual texture file based on type/Name
 */
-bool TextureRecord::LoadTexture(TextureRecordType Type, const char* Name) {
+bool TextureRecord::LoadTexture(TextureRecordType Type, const char* TexturePath) {
 	IDirect3DTexture9* Tex = NULL;
 	IDirect3DVolumeTexture9* TexV = NULL;
 	IDirect3DCubeTexture9* TexC = NULL;
 
-	// assigning shadow cube maps
-	for (int i = 0; i < ShadowCubeMapsMax; i++) {
-		if (Type == ShadowCubeMapBuffer0 + i) {
-			Texture = TheTextureManager->ShadowCubeMapTexture[i];
-			return true;
-		}
-	}
-
-	// other buffers
 	switch (Type) {
 	case PlanarBuffer:
-		D3DXCreateTextureFromFileA(TheRenderManager->device, Name, &Tex);
+		D3DXCreateTextureFromFileA(TheRenderManager->device, TexturePath, &Tex);
 		if (Tex == NULL) return false;
 		Texture = Tex;
 		break;
 	case VolumeBuffer:
-		D3DXCreateVolumeTextureFromFileA(TheRenderManager->device, Name, &TexV);
+		D3DXCreateVolumeTextureFromFileA(TheRenderManager->device, TexturePath, &TexV);
 		if (TexV == NULL) return false;
 		Texture = TexV;
 		break;
 	case CubeBuffer:
-		D3DXCreateCubeTextureFromFileA(TheRenderManager->device, Name, &TexC);
+		D3DXCreateCubeTextureFromFileA(TheRenderManager->device, TexturePath, &TexC);
 		if (TexC == NULL) return false;
 		Texture = TexC;
 		break;
-	case SourceBuffer:
-		Texture = TheTextureManager->SourceTexture;
-		break;
-	case RenderedBuffer:
-		Texture = TheTextureManager->RenderedTexture;
-		break;
-	case DepthBuffer:
-		Texture = TheTextureManager->DepthTexture;
-		break;
-	case NormalsBuffer:
-		Texture = TheTextureManager->NormalsTexture;
-		break;
-	case AvgLumaBuffer:
-		Texture = TheTextureManager->AvgLumaTexture;
-		break;
-	case ShadowMapBufferNear:
-		Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapNear];
-		break;
-	case ShadowMapBufferMiddle:
-		Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapMiddle];
-		break;
-	case ShadowMapBufferFar:
-		Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapFar];
-		break;
-	case ShadowMapBufferLod:
-		Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapLod];
-		break;
-	case OrthoMapBuffer:
-		Texture = TheTextureManager->ShadowMapTexture[ShadowManager::ShadowMapTypeEnum::MapOrtho];
-		break;
-	case PointShadowBuffer:
-		Texture = TheTextureManager->ShadowPassTexture;
-		break;
 	default:
-		return false; //Texture is invalid or not assigned here.
+		return false;
 	}
-	return true;
 
+	return true;
 }

@@ -38,11 +38,11 @@ class ShaderTextureValue : public ShaderValue {
 public:
 	ShaderTextureValue() {
 		Texture = nullptr;
+		TexturePath = "";
 	};
 	virtual ~ShaderTextureValue() {};
 
 	void				GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32 Index);
-	void				GetTexturePath(std::string& resourceSubstring);
 
 	std::string			SamplerString;
 	std::string			TexturePath;

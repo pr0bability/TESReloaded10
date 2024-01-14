@@ -166,8 +166,9 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	for (UINT c = 0; c < ConstantTableDesc.Constants; c++) {
 		Handle = ConstantTable->GetConstant(NULL, c);
 		ConstantTable->GetConstantDesc(Handle, &ConstantDesc, &ConstantCount);
-		if (ConstantDesc.RegisterSet == D3DXRS_FLOAT4 && !memcmp(ConstantDesc.Name, "TESR_", 5)) FloatShaderValuesCount += 1;
-		if (ConstantDesc.RegisterSet == D3DXRS_SAMPLER && !memcmp(ConstantDesc.Name, "TESR_", 5)) TextureShaderValuesCount += 1;
+		if (memcmp(ConstantDesc.Name, "TESR_", 5)) continue; // Only treat constants named with TESR prefix
+		if (ConstantDesc.RegisterSet == D3DXRS_FLOAT4) FloatShaderValuesCount += 1;
+		if (ConstantDesc.RegisterSet == D3DXRS_SAMPLER) TextureShaderValuesCount += 1;
 	}
 
 	auto timer = TimeLogger();
@@ -185,32 +186,38 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	for (UINT c = 0; c < ConstantTableDesc.Constants; c++) {
 		Handle = ConstantTable->GetConstant(NULL, c);
 		ConstantTable->GetConstantDesc(Handle, &ConstantDesc, &ConstantCount);
-		if (!memcmp(ConstantDesc.Name, "TESR_", 5)) {
-			switch (ConstantDesc.RegisterSet) {
-			case D3DXRS_FLOAT4:
-				FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
-				FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
-				FloatShaderValues[FloatIndex].RegisterIndex = ConstantDesc.RegisterIndex;
-				FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.RegisterCount;
-				FloatIndex++;
-				break;
-			case D3DXRS_SAMPLER:
-				TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
-				TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type, ConstantDesc.Name, &HasRenderedBuffer, &HasDepthBuffer);
-				TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
-				TextureShaderValues[TextureIndex].RegisterCount = 1;
-				TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, ConstantDesc.RegisterIndex);
+		if (memcmp(ConstantDesc.Name, "TESR_", 5)) continue; // Only treat constants named with TESR prefix
 
-				// preload textures loaded from disk
-				if (TextureShaderValues[TextureIndex].Type && TextureShaderValues[TextureIndex].Type <= TextureRecord::TextureRecordType::CubeBuffer) {
-					TheTextureManager->LoadTexture(&TextureShaderValues[TextureIndex]);
-				}
-				TextureIndex++;
-				break;
-			default:
-				Logger::Log("Found unsupported constant type in shader constant table: %s : %s", ConstantDesc.Name, ConstantDesc.RegisterSet);
-				break;
-			}
+		switch (ConstantDesc.RegisterSet) {
+		case D3DXRS_FLOAT4:
+			FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
+			FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
+			FloatShaderValues[FloatIndex].RegisterIndex = ConstantDesc.RegisterIndex;
+			FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.RegisterCount;
+			FloatIndex++;
+			break;
+		case D3DXRS_SAMPLER:
+			Logger::Log("Found shader texture %s", ConstantDesc.Name);
+
+			TextureShaderValues[TextureIndex].Name = ConstantDesc.Name;
+			TextureShaderValues[TextureIndex].Type = TextureRecord::GetTextureType(ConstantDesc.Type);
+			TextureShaderValues[TextureIndex].RegisterIndex = ConstantDesc.RegisterIndex;
+			TextureShaderValues[TextureIndex].RegisterCount = 1;
+			TextureShaderValues[TextureIndex].GetSamplerStateString(ShaderSource, ConstantDesc.RegisterIndex);
+
+			// mark this shader as needing to render depth/a buffer of the scene before the object can be rendered
+			if (!memcmp(ConstantDesc.Name, "TESR_DepthBuffer", 17)) HasDepthBuffer = true;
+			if (!memcmp(ConstantDesc.Name, "TESR_RenderedBuffer", 20)) HasRenderedBuffer = true;
+
+			// preload textures loaded from disk
+			if (TextureShaderValues[TextureIndex].TexturePath != "")
+				TheTextureManager->LoadTexture(&TextureShaderValues[TextureIndex]);
+	
+			TextureIndex++;
+			break;
+		default:
+			Logger::Log("Found unsupported constant type in shader constant table: %s : %s", ConstantDesc.Name, ConstantDesc.RegisterSet);
+			break;
 		}
 	}
 
@@ -227,40 +234,38 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 		Logger::Log("[ERROR] %s  cannot be binded", Name);
 		return;
 	}
-	if (Type >= TextureRecord::TextureRecordType::PlanarBuffer && Type <= TextureRecord::TextureRecordType::CubeBuffer) {
-		//Only these samplers are bindable to an arbitrary texture
-		size_t StartTexture = Source.find("<", SamplerPos + 1);
-		size_t EndTexture = Source.find(">", SamplerPos + 1);
-		if (StartTexture == std::string::npos || EndTexture == std::string::npos) {
-			Logger::Log("[ERROR] %s cannot be binded", Name);
-			return;
+
+	size_t SamplerEnd = Source.find("\n", SamplerPos + 1);
+	std::string SamplerLine = Source.substr(SamplerPos, SamplerEnd - SamplerPos);
+	//Logger::Log("Sampler line: %s", SamplerLine.c_str());
+
+	//Only these samplers are bindable to an arbitrary texture
+	size_t StartTexture = SamplerLine.find("<");
+	size_t EndTexture = SamplerLine.rfind(">");
+	if (StartTexture != std::string::npos && EndTexture != std::string::npos) {
+		std::string TextureString = SamplerLine.substr(StartTexture + 1, EndTexture - StartTexture - 1);
+		//Logger::Log("texture string: %s", TextureString.c_str());
+
+		// find texture path
+		if (TextureString.find("ResourceName") != std::string::npos) {
+			size_t StartPath = TextureString.find("\"");
+			size_t EndPath = TextureString.rfind("\"");
+			std::string PathS;
+			PathS = TextureString.substr(StartPath + 1, EndPath - 1 - StartPath);
+			PathS.insert(0, "Data\\Textures\\");
+			TexturePath = PathS;
+			
+			Logger::Log("texture found path: %s", TexturePath.c_str());
 		}
-		std::string TextureString = Source.substr(StartTexture + 1, EndTexture - StartTexture - 1);
-		GetTexturePath(TextureString);
-		//Logger::Log("texture path: %s", TexturePath);
 	}
-	size_t StartStatePos = Source.find("{", SamplerPos);
-	size_t EndStatePos = Source.find("}", SamplerPos);
+
+	size_t StartStatePos = SamplerLine.find("{");
+	size_t EndStatePos = SamplerLine.rfind("}");
 	if (EndStatePos == std::string::npos || StartStatePos == std::string::npos) {
 		Logger::Log("[ERROR] %s cannot be binded", Name);
 		return;
 	}
-	SamplerString = Source.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);
-}
-
-
-void ShaderTextureValue::GetTexturePath(std::string& resourceSubstring) {
-	std::string PathS;
-	if (resourceSubstring.find("ResourceName") != std::string::npos) {
-		size_t StartPath = resourceSubstring.find("\"");
-		size_t EndPath = resourceSubstring.rfind("\"");
-		PathS = resourceSubstring.substr(StartPath + 1, EndPath - 1 - StartPath);
-		PathS.insert(0, "Data\\Textures\\");  
-	}
-	else {
-		Logger::Log("[ERROR] Cannot parse bindable texture");
-	}
-	TexturePath = PathS;
+	SamplerString = SamplerLine.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);
 }
 
 
