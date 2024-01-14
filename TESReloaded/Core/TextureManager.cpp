@@ -19,18 +19,12 @@ void TextureManager::Initialize() {
 	// create textures used by NVR and bind them to surfaces
 	TheTextureManager->InitTexture("TESR_SourceBuffer", &TheTextureManager->SourceTexture, &TheTextureManager->SourceSurface, Width, Height, D3DFMT_A16B16G16R16F);
 	TheTextureManager->InitTexture("TESR_RenderedBuffer", &TheTextureManager->RenderedTexture, &TheTextureManager->RenderedSurface, Width, Height, D3DFMT_A16B16G16R16F);
-	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &TheTextureManager->ShadowPassTexture, &TheTextureManager->ShadowPassSurface, Width, Height, D3DFMT_A8R8G8B8);
-	TheTextureManager->InitTexture("TESR_NormalsBuffer", &TheTextureManager->NormalsTexture, &TheTextureManager->NormalsSurface, Width, Height, D3DFMT_A16B16G16R16F);
-	TheTextureManager->InitTexture("TESR_AvgLumaBuffer", &TheTextureManager->AvgLumaTexture, &TheTextureManager->AvgLumaSurface, 1, 1, D3DFMT_A16B16G16R16F);
-	//InitTexture(&TheTextureManager->BloomTexture, &TheTextureManager->BloomSurface, Width, Height, D3DFMT_A8R8G8B8);
 
-	TheTextureManager->DepthTexture = NULL;
-	TheTextureManager->DepthSurface = NULL;
 	Device->CreateTexture(Width, Height, 1, D3DUSAGE_DEPTHSTENCIL, (D3DFORMAT)MAKEFOURCC('I', 'N', 'T', 'Z'), D3DPOOL_DEFAULT, &TheTextureManager->DepthTexture, NULL);
-	
+	TheTextureManager->TextureNames["TESR_DepthBuffer"] = (IDirect3DBaseTexture9**)&TheTextureManager->DepthTexture;
+
 	TheTextureManager->TextureNames[WordWaterHeightMapBuffer] = &TheTextureManager->WaterHeightMapB;
 	TheTextureManager->TextureNames[WordWaterReflectionMapBuffer] = &TheTextureManager->WaterReflectionMapB;
-	TheTextureManager->TextureNames["TESR_DepthBuffer"] = (IDirect3DBaseTexture9**)&TheTextureManager->DepthTexture;
 
 	// initialize cascade shadowmaps
 	std::vector<const char*>ShadowBufferNames = {
@@ -66,11 +60,13 @@ void TextureManager::Initialize() {
 * Creates a texture of the given size and format and binds a surface to it, so it can be used as render target.
 */
 void TextureManager::InitTexture(const char* Name, IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT Format) {
+	Logger::Log("Registering Texture %s", Name);
 	IDirect3DDevice9* Device = TheRenderManager->device;
-	*Texture = NULL;
-	*Surface = NULL;
 	// create a texture to receive the surface contents
-	Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, Format, D3DPOOL_DEFAULT, Texture, NULL);
+	HRESULT create = Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, Format, D3DPOOL_DEFAULT, Texture, NULL);
+
+	if (FAILED(create)) Logger::Log("[ERROR] : Failed to init texture %s", Name);
+
 	// set the surface level to the texture.
 	(*Texture)->GetSurfaceLevel(0, Surface);
 	TextureNames[Name] = (IDirect3DBaseTexture9**)Texture;

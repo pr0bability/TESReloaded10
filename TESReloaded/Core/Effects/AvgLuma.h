@@ -7,8 +7,14 @@ public:
 
 	struct AvgLumaStruct {
 	};
+	AvgLumaStruct	Constants;
+
+	struct AvgLumaTextures {
+		IDirect3DTexture9* AvgLumaTexture;
+		IDirect3DSurface9* AvgLumaSurface;
+	};
+	AvgLumaTextures	Textures;
 
 	void	UpdateConstants() {};
-
-	AvgLumaStruct	Constants;
+	void	RegisterTextures();
 };
