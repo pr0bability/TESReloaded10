@@ -18,8 +18,6 @@ public:
 	IDirect3DSurface9*		SourceSurface;
 	IDirect3DTexture9* 		RenderedTexture;
 	IDirect3DSurface9*		RenderedSurface;
-	IDirect3DTexture9* 		ShadowPassTexture;
-	IDirect3DSurface9*		ShadowPassSurface;
 	IDirect3DTexture9* 		BloomTexture;
 	IDirect3DSurface9*		BloomSurface;
 	IDirect3DTexture9*		DepthTexture;

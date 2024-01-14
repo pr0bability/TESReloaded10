@@ -38,7 +38,7 @@ static float step(float a, float b, float t) {
 	return clamp(0, 1, invLerp(a, b, t));
 }
 
-static inline float smoothStep(float a, float b, float t) {
+static float smoothStep(float a, float b, float t) {
 	float t2 = step(a, b, t);
 	return t2 * t2 * (3.0 - 2.0 * t2);
 }

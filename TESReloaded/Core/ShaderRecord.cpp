@@ -64,6 +64,20 @@ bool ShaderProgram::ShouldCompileShader(const char* fileBin, const char* fileHls
 	return false;
 }
 
+
+void reportError(HRESULT result) {
+	if (result == E_ABORT) Logger::Log("Operation aborted");
+	if (result == E_ACCESSDENIED) Logger::Log("Access Denied");
+	if (result == E_FAIL) Logger::Log("Operation Failed");
+	if (result == E_HANDLE) Logger::Log("Handle invalid");
+	if (result == E_INVALIDARG) Logger::Log("Argument invalid");
+	if (result == E_NOINTERFACE) Logger::Log("Interface invalid");
+	if (result == E_NOTIMPL) Logger::Log("Not implemented");
+	if (result == E_OUTOFMEMORY) Logger::Log("Out of memory");
+	if (result == E_POINTER) Logger::Log("Invalid pointer");
+	if (result == E_UNEXPECTED) Logger::Log("Unexpected fail");
+}
+
 /*
 Loads the shader by name from a given subfolder (optionally). Shader will be compiled if needed.
 @returns the ShaderRecord for this shader.
@@ -116,26 +130,45 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 				Function = Shader->GetBufferPointer();
 				FileBinary.read((char*)Function, Size);
 				FileBinary.close();
-				D3DXGetShaderConstantTable((const DWORD*)Function, &ConstantTable);
+				//D3DXGetShaderConstantTable((const DWORD*)Function, &ConstantTable);
 			}
 			else {
 				Logger::Log("ERROR: Shader %s not found. Try to enable the CompileShader option to recompile the shaders.", FileNameBinary);
 			}
 		}
 
-		timer.LogTime("ShaderRecord::LoadShader");
+		HRESULT get = D3DXGetShaderConstantTable((const DWORD*)Function, &ConstantTable);
 
-		if (Shader) {
-			if (ShaderProfile[0] == 'v') {
-				ShaderProg = new ShaderRecordVertex(Name);
-				TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
+		if (FAILED(get)) {
+			Logger::Log("Encountered an issue getting constant table for %s", Name);
+			reportError(get);
+		}
+		else {
+			D3DXCONSTANTTABLE_DESC ConstantTableDesc;
+			get = ConstantTable->GetDesc(&ConstantTableDesc);
+			reportError(get);
+
+			if (FAILED(get)) {
+				Logger::Log("Issues getting constants descriptions for %s", Name);
 			}
 			else {
-				ShaderProg = new ShaderRecordPixel(Name);
-				TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
+				//Logger::Log("Compile time: Shader %s - %s has %i constants", Name, ConstantTableDesc.Creator, ConstantTableDesc.Constants);
+
+				timer.LogTime("ShaderRecord::LoadShader");
+
+				if (Shader) {
+					if (ShaderProfile[0] == 'v') {
+						ShaderProg = new ShaderRecordVertex(Name);
+						TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
+					}
+					else {
+						ShaderProg = new ShaderRecordPixel(Name);
+						TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
+					}
+					ShaderProg->CreateCT(ShaderSource, ConstantTable);
+					Logger::Log("Shader loaded: %s", FileNameBinary);
+				}
 			}
-			ShaderProg->CreateCT(ShaderSource, ConstantTable);
-			Logger::Log("Shader loaded: %s", FileNameBinary);
 		}
 	}
 	else {
@@ -162,7 +195,13 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	UInt32 FloatIndex = 0;
 	UInt32 TextureIndex = 0;
 
-	ConstantTable->GetDesc(&ConstantTableDesc);
+	HRESULT get = ConstantTable->GetDesc(&ConstantTableDesc);
+	if (FAILED(get)) Logger::Log("CreateCT : failed to get constants desc");
+	reportError(get);
+
+	//Logger::Log("CreateCT: Shader %s has %i constants", Name, ConstantTableDesc.Constants);
+	//Logger::Log("%s", (const char*)ShaderSource->GetBufferPointer());
+
 	for (UINT c = 0; c < ConstantTableDesc.Constants; c++) {
 		Handle = ConstantTable->GetConstant(NULL, c);
 		ConstantTable->GetConstantDesc(Handle, &ConstantDesc, &ConstantCount);
@@ -180,8 +219,6 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 	//if (TextureShaderValuesCount) TextureShaderValues = (ShaderValue*)Pointers::Functions::FormMemoryAlloc(TextureShaderValuesCount * sizeof(ShaderValue));
 
 	timer.LogTime("ShaderRecord::createCT Malloc");
-
-	//Logger::Log("CreateCT: Shader has %i constants", ConstantTableDesc.Constants);
 
 	for (UINT c = 0; c < ConstantTableDesc.Constants; c++) {
 		Handle = ConstantTable->GetConstant(NULL, c);
