@@ -947,34 +947,3 @@ void ShaderManager::SetExtraEffectEnabled(const char* Name, bool Value) {
 	//EffectsList::iterator v = Effects.ExtraEffects.find(std::string(Name));
 	//if (v != Effects.ExtraEffects.end()) v->second->Enabled = Value;
 }
-
-float ShaderManager::lerp(float a, float b, float t) {
-	return std::lerp(a, b, t);
-}
-
-D3DXVECTOR4 ShaderManager::lerp(D3DXVECTOR4 a, D3DXVECTOR4 b, float t) {
-	D3DXVECTOR4 result;
-	result.x = std::lerp(a.x, b.x, t);
-	result.y = std::lerp(a.y, b.y, t);
-	result.z = std::lerp(a.z, b.z, t);
-	result.w = std::lerp(a.w, b.w, t);
-
-	return result;
-}
-
-float ShaderManager::step(float a, float b, float t) {
-	return clamp(0, 1, invLerp(a, b, t));
-}
-
-float ShaderManager::invLerp(float a, float b, float t) {
-	return(t - a) / (b - a);
-}
-
-float ShaderManager::clamp(float a, float b, float t) {
-	return min(max(a, t), b);
-}
-
-float ShaderManager::smoothStep(float a, float b, float t) {
-	t = step(a, b, t);
-	return t * t * (3.0 - 2.0 * t);
-}

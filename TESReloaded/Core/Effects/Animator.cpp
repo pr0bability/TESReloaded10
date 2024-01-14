@@ -53,6 +53,6 @@ float Animator::GetValue() {
 	}
 
 	running = true;
-	currenttime = ShaderManager::invLerp(startTime, endTime, currenttime);
-	return ShaderManager::lerp(startValue, endValue, currenttime);
+	currenttime = invLerp(startTime, endTime, currenttime);
+	return std::lerp(startValue, endValue, currenttime);
 };
