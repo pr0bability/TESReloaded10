@@ -275,8 +275,7 @@ void ShaderManager::UpdateConstants() {
 	float newDayLight = sunRiseLight * sunSetLight;
 	GameState.transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
-	GameState.isDayTimeChanged = true;  // will fire settings update during sunset/sunrise transitions
-	if (newDayLight == GameState.dayLight) GameState.isDayTimeChanged = false;
+	GameState.isDayTimeChanged = (newDayLight != GameState.dayLight);  // allow effects to fire settings update during sunset/sunrise transitions
 	GameState.dayLight = newDayLight;
 
 	ShaderConst.GameTime.x = TimeGlobals::GetGameTime(); //time in milliseconds
@@ -289,7 +288,7 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
-	if (GameState.isExterior && GameState.isDayTime) ShaderConst.SunDir = ShaderConst.SunPosition;
+	if (GameState.isExterior && GameState.isDayTime > 0.5) ShaderConst.SunDir = ShaderConst.SunPosition;
 
 	// expose the light vector in view space for screen space lighting
 	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);
