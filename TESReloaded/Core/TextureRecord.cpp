@@ -101,8 +101,5 @@ bool TextureRecord::BindTexture(const char* Name) {
 	std::string textureName = Name;
 	Texture = TheTextureManager->GetTextureByName(textureName);
 
-	if (Texture) Logger::Log("Texture %s Succesfully bound", Name);
-	else Logger::Log("[ERROR] : Could not bind texture %s", Name);
-
 	return Texture != nullptr;
 }
