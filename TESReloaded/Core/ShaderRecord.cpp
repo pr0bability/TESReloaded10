@@ -137,7 +137,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 			}
 		}
 
-		HRESULT get = D3DXGetShaderConstantTable((const DWORD*)Function, &ConstantTable);
+		HRESULT get = D3DXGetShaderConstantTableEx((const DWORD*)Function, D3DXCONSTTABLE_LARGEADDRESSAWARE, &ConstantTable);
 
 		if (FAILED(get)) {
 			Logger::Log("Encountered an issue getting constant table for %s", Name);
