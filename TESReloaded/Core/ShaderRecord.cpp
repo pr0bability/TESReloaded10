@@ -154,8 +154,6 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 			else {
 				//Logger::Log("Compile time: Shader %s - %s has %i constants", Name, ConstantTableDesc.Creator, ConstantTableDesc.Constants);
 
-				timer.LogTime("ShaderRecord::LoadShader");
-
 				if (Shader) {
 					if (ShaderProfile[0] == 'v') {
 						ShaderProg = new ShaderRecordVertex(Name);
@@ -166,7 +164,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 						TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
 					}
 					ShaderProg->CreateCT(ShaderSource, ConstantTable);
-					Logger::Log("Shader loaded: %s", FileNameBinary);
+					//Logger::Log("Shader loaded: %s", FileNameBinary);
 				}
 			}
 		}
@@ -174,6 +172,8 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	else {
 		if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 	}
+
+	timer.LogTime("ShaderRecord::LoadShader");
 
 	if (ShaderSource) ShaderSource->Release();
 	if (Shader) Shader->Release();
@@ -350,8 +350,12 @@ void ShaderRecord::SetCT() {
 	ShaderTextureValue* Sampler;
 	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
 		Sampler = &TextureShaderValues[c];
-		if (Sampler->Texture->Texture == nullptr) 
+		if (Sampler->Texture->Texture == nullptr) {
 			Sampler->Texture->BindTexture(Sampler->Name);
+
+			if (Sampler->Texture->Texture) Logger::Log("%s : Texture %s Succesfully bound", Name, Sampler->Name);
+			else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
+		}
 
 		if (Sampler->Texture->Texture != nullptr) {
 			TheRenderManager->renderState->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
