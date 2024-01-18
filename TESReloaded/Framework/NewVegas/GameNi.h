@@ -1768,6 +1768,12 @@ public:
 		kProp_DistantTree = 0x18,
 	};
 
+	enum ExtraFlags {
+		kSmooth		 = 1 << 0, // always set by default, doesn't do anything
+		kFirstPerson = 1 << 1, // marks player's view model geometry
+		kThirdPerson = 1 << 2, // marks player's world model geometry
+	};
+
 	UInt16			flags;		// 018
 	UInt8			pad01A[2];	// 01A
 	ShaderPropType	type;		// 01C

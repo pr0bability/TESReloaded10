@@ -183,7 +183,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 		geo = static_cast<NiGeometry*>(NiObject);
 		if (!geo->shader) return; // skip Geometry without a shader
 
-		NiShadeProperty* pShaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+		NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
 
 #if defined(OBLIVION)
 		if (geo->m_pcName && !memcmp(geo->m_pcName, "Torch", 5)) return; // No torch geo, it is too near the light and a bad square is rendered.
@@ -193,7 +193,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 			if (!geo->skinInstance->SkinPartition->Partitions[0].BuffData) return; // discard objects without buffer data
 			skinnedGeoAccum.push(geo);
 		}
-		else if (pShaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
+		else if (shaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
 			speedTreeAccum.push(geo);
 		}
 		else {
@@ -210,7 +210,6 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
 	std::stack<NiAVObject*> containers;
 	NiAVObject* child;
-	NiGeometry* geo;
 	NiAVObject* object;
 	NiNode* Node;
 
@@ -224,7 +223,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
     		Node = object ? object->IsNiNode() : nullptr;
     		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
 
-		for (int i = 0; i < Node->m_children.numObjs; i++) {
+		for (int i = 0; i < Node->m_children.end; i++) {
 			try {
 				child = Node->m_children.data[i];
 				if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
@@ -687,10 +686,18 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 			if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
 				continue;
 
-			NiShadeProperty* pShaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
-			NiMaterialProperty* pMatProp = static_cast<NiMaterialProperty*>(geo->GetProperty(NiProperty::kType_Material));
+			NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+			NiMaterialProperty* matProp = static_cast<NiMaterialProperty*>(geo->GetProperty(NiProperty::kType_Material));
 
-			if (pMatProp->fAlpha < 0.05)
+			if (!shaderProp)
+				continue;
+
+			bool isFirstPerson = (shaderProp->flags & NiShadeProperty::kFirstPerson) != 0;
+			bool isThirdPerson = (shaderProp->flags & NiShadeProperty::kThirdPerson) != 0;
+
+			// Skip objects if they are barely visible. 
+			// Also skip viewmodel due to issues, and render player's model only in 3rd person
+			if ((matProp && matProp->fAlpha < 0.05f) || isFirstPerson || !Player->isThirdPerson && isThirdPerson)
 				continue;
 
 			// check data for rigged geometry
@@ -699,7 +706,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 					continue; // discard objects without buffer data
 				skinnedGeoAccum.push(geo);
 			}
-			else if (pShaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
+			else if (shaderProp->type == NiShadeProperty::kProp_SpeedTreeLeaf) {
 				speedTreeAccum.push(geo);
 			}
 			else {
@@ -730,6 +737,46 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 	timer.LogTime("RenderShadowCubeMap");	
 }
 
+
+static void FlagShaderPropertyRecurse(NiAVObject* apObject, UInt32 auiFlags, bool abSet) {
+	if (!apObject)
+		return;
+
+	if (apObject->IsGeometry()) {
+		NiGeometry* pGeometry = static_cast<NiGeometry*>(apObject);
+		NiShadeProperty* shaderProperty = static_cast<NiShadeProperty*>(pGeometry->GetProperty(NiProperty::kType_Shade));
+		if (shaderProperty) {
+			if (abSet)
+				shaderProperty->flags |= auiFlags;
+			else
+				shaderProperty->flags &= ~auiFlags;
+		}
+
+	}
+	else if (apObject->IsNiNode()) {
+		NiNode* pNiNode = static_cast<NiNode*>(apObject);
+		for (UInt32 i = 0; i < pNiNode->m_children.end; i++) {
+			FlagShaderPropertyRecurse(pNiNode->m_children.data[i], auiFlags, abSet);
+		}
+	}
+}
+
+static SInt32 frames = -1;
+static void FlagPlayerGeometry() {
+	frames++;
+
+	// Run this function every 50 frames, or on launch
+	if (frames > 50 || frames == -1) {
+		if (Player->firstPersonNiNode)
+			FlagShaderPropertyRecurse(Player->firstPersonNiNode, NiShadeProperty::kFirstPerson, true);
+
+		NiNode* node = Player->GetNode();
+		if (node)
+			FlagShaderPropertyRecurse(node, NiShadeProperty::kThirdPerson, true);
+
+		frames = 0;
+	}
+}
 
 
 //static 	NiDX9RenderState::NiRenderStateSetting* RenderStateSettings = nullptr;
@@ -782,6 +829,10 @@ void ShadowManager::RenderShadowMaps() {
 
 	ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
 	NiNode* PlayerNode = Player->GetNode();
+
+	// Flag player geometry so we can control if it should be rendered in shadow cubemaps
+	FlagPlayerGeometry();
+	
 	D3DXVECTOR3 At;
 
 	At.x = PlayerNode->m_worldTransform.pos.x - TheRenderManager->CameraPosition.x;
