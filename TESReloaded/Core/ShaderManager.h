@@ -66,16 +66,12 @@ public:
 	template <typename T> void RegisterEffect(T** Pointer);
 	template <typename T> void RegisterShaderCollection(T** Pointer);
 	void					RegisterConstant(const char* Name, D3DXVECTOR4* FloatValue);
-	int						GetVertexShaders(const char* Name, NiD3DVertexShader*** Shader);
-	int						GetPixelShaders(const char* Name, NiD3DPixelShader*** Shader);
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
 	void					InitializeConstants();
 	void					UpdateConstants();
-	void					GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[]);
-	bool					CreateShader(const char* Name);
+	void					GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]);
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
-	void					DisposeShader(const char* Name);
 	ShaderCollection*		CreateCollection(const char* Name);
 	ShaderCollection*		GetShaderCollection(const char* Name);
 	void					DisposeEffect(EffectRecord** Effect);  // unused?
