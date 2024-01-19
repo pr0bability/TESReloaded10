@@ -72,41 +72,55 @@ void ShadowManager::GetCascadeDepths() {
 	TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius.w = ShadowsExteriors->ShadowMapRadius[MapLod];
 }
 
+
+void ShadowManager::GetPlane(D3DXPLANE* plane, float a, float b, float c, float d) {
+	D3DXPLANE newPlane = D3DXPLANE(a, b, c, d);
+	D3DXPlaneNormalize(plane, &newPlane);
+}
+
 /**
 * Generates the Frustrum planes from a matrix
 */
 void ShadowManager::SetFrustum(ShadowMapTypeEnum ShadowMapType, D3DMATRIX* Matrix) {
 
-	ShadowMapFrustum[ShadowMapType][PlaneNear].a = Matrix->_13;
-	ShadowMapFrustum[ShadowMapType][PlaneNear].b = Matrix->_23;
-	ShadowMapFrustum[ShadowMapType][PlaneNear].c = Matrix->_33;
-	ShadowMapFrustum[ShadowMapType][PlaneNear].d = Matrix->_43;
-	ShadowMapFrustum[ShadowMapType][PlaneFar].a = Matrix->_14 - Matrix->_13;
-	ShadowMapFrustum[ShadowMapType][PlaneFar].b = Matrix->_24 - Matrix->_23;
-	ShadowMapFrustum[ShadowMapType][PlaneFar].c = Matrix->_34 - Matrix->_33;
-	ShadowMapFrustum[ShadowMapType][PlaneFar].d = Matrix->_44 - Matrix->_43;
-	ShadowMapFrustum[ShadowMapType][PlaneLeft].a = Matrix->_14 + Matrix->_11;
-	ShadowMapFrustum[ShadowMapType][PlaneLeft].b = Matrix->_24 + Matrix->_21;
-	ShadowMapFrustum[ShadowMapType][PlaneLeft].c = Matrix->_34 + Matrix->_31;
-	ShadowMapFrustum[ShadowMapType][PlaneLeft].d = Matrix->_44 + Matrix->_41;
-	ShadowMapFrustum[ShadowMapType][PlaneRight].a = Matrix->_14 - Matrix->_11;
-	ShadowMapFrustum[ShadowMapType][PlaneRight].b = Matrix->_24 - Matrix->_21;
-	ShadowMapFrustum[ShadowMapType][PlaneRight].c = Matrix->_34 - Matrix->_31;
-	ShadowMapFrustum[ShadowMapType][PlaneRight].d = Matrix->_44 - Matrix->_41;
-	ShadowMapFrustum[ShadowMapType][PlaneTop].a = Matrix->_14 - Matrix->_12;
-	ShadowMapFrustum[ShadowMapType][PlaneTop].b = Matrix->_24 - Matrix->_22;
-	ShadowMapFrustum[ShadowMapType][PlaneTop].c = Matrix->_34 - Matrix->_32;
-	ShadowMapFrustum[ShadowMapType][PlaneTop].d = Matrix->_44 - Matrix->_42;
-	ShadowMapFrustum[ShadowMapType][PlaneBottom].a = Matrix->_14 + Matrix->_12;
-	ShadowMapFrustum[ShadowMapType][PlaneBottom].b = Matrix->_24 + Matrix->_22;
-	ShadowMapFrustum[ShadowMapType][PlaneBottom].c = Matrix->_34 + Matrix->_32;
-	ShadowMapFrustum[ShadowMapType][PlaneBottom].d = Matrix->_44 + Matrix->_42;
-	for (int i = 0; i < 6; ++i) {
-		D3DXPLANE Plane(ShadowMapFrustum[ShadowMapType][i]);
-		D3DXPlaneNormalize(&ShadowMapFrustum[ShadowMapType][i], &Plane);
-	}
-
+	GetPlane(&ShadowMapFrustum[ShadowMapType][PlaneNear], 
+		Matrix->_13, 
+		Matrix->_23, 
+		Matrix->_33, 
+		Matrix->_43
+	);
+	GetPlane(&ShadowMapFrustum[ShadowMapType][PlaneFar],
+		Matrix->_14 - Matrix->_13,
+		Matrix->_24 - Matrix->_23,
+		Matrix->_34 - Matrix->_33,
+		Matrix->_44 - Matrix->_43
+	);
+	GetPlane(&ShadowMapFrustum[ShadowMapType][PlaneLeft],
+		Matrix->_14 + Matrix->_11,
+		Matrix->_24 + Matrix->_21,
+		Matrix->_34 + Matrix->_31,
+		Matrix->_44 + Matrix->_41
+	);
+	GetPlane(&ShadowMapFrustum[ShadowMapType][PlaneRight],
+		Matrix->_14 - Matrix->_11,
+		Matrix->_24 - Matrix->_21,
+		Matrix->_34 - Matrix->_31,
+		Matrix->_44 - Matrix->_41
+	);
+	GetPlane(&ShadowMapFrustum[ShadowMapType][PlaneTop],
+		Matrix->_14 - Matrix->_12,
+		Matrix->_24 - Matrix->_22,
+		Matrix->_34 - Matrix->_32,
+		Matrix->_44 - Matrix->_42
+	);
+	GetPlane(&ShadowMapFrustum[ShadowMapType][PlaneBottom],
+		Matrix->_14 + Matrix->_12,
+		Matrix->_24 + Matrix->_22,
+		Matrix->_34 + Matrix->_32,
+		Matrix->_44 + Matrix->_42
+	);
 }
+
 
 /*
 * Checks wether the given node is in the frustrum using its radius for the current type of Shadow map.

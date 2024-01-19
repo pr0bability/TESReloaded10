@@ -24,6 +24,8 @@ public:
 
 	void					SetFrustum(ShadowMapTypeEnum ShadowMapType, D3DMATRIX* Matrix);
 	bool					InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node);
+	void					GetPlane(D3DXPLANE* plane, float a, float b, float c, float d);
+
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, SettingsShadowStruct::FormsStruct* Forms, SettingsShadowStruct::ExcludedFormsList* ExcludedForms);
 	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
 	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject);
