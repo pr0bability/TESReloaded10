@@ -225,68 +225,7 @@ struct SettingsMainStruct {
 	DevelopStruct				Develop;
 };
 
-struct SettingsShadowStruct {
-	typedef std::vector<UInt32> ExcludedFormsList;
-
-	struct FormsStruct {
-		bool				Activators;
-		bool				Actors;
-		bool				Apparatus;
-		bool				Books;
-		bool				Containers;
-		bool				Doors;
-		bool				Furniture;
-		bool				Misc;
-		bool				Statics;
-		bool				Terrain;
-		bool				Trees;
-		bool				Lod;
-		float				MinRadius;
-	};
-
-	struct ExteriorsStruct {
-		bool				Enabled;
-        bool                BlurShadowMaps;
-		FormsStruct			Forms[5];
-		bool				AlphaEnabled[5];
-		int					Quality;
-		int					ShadowMapResolution;
-		float				ShadowRadius;
-		float				Darkness;
-		float				NightMinDarkness;
-        UInt8               ShadowMode;
-		float				ShadowMapRadius[5];
-		float				ShadowMapFarPlane;
-		bool				UsePointShadowsDay;
-		bool				UsePointShadowsNight;
-		ExcludedFormsList	ExcludedForms;
-	};
-	
-	struct InteriorsStruct {
-		bool				Enabled;
-		FormsStruct			Forms;
-		bool				AlphaEnabled;
-		bool				TorchesCastShadows;
-		int					LightPoints;
-		int					Quality;
-		int					ShadowCubeMapSize;
-		int					DrawDistance;
-		float				Darkness;
-		float				LightRadiusMult;
-		bool				UseCastShadowFlag;
-		ExcludedFormsList	ExcludedForms;
-	};
-
-	struct ScreenSpaceStruct {
-		bool				Enabled;
-		float				BlurRadius;
-		float				RenderDistance;
-	};
-
-	ScreenSpaceStruct	ScreenSpace;
-	ExteriorsStruct		Exteriors;
-	InteriorsStruct		Interiors;
-};
+typedef std::vector<UInt32> FormsList;
 
 struct SettingsWaterStruct {
 	float choppiness;
@@ -445,13 +384,13 @@ public:
 	void					SetSettingWeather(const char* Section, const char* Key, float Value);
 	void					FillMenuSections(StringList* Sections, const char* ParentSection);
 	void					FillMenuSettings(Configuration::SettingList* Settings, const char* Section);
+	void					GetFormList(const char* Name, FormsList* SettingsList);
 	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, float Value, bool Reboot);
 	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, int Value, bool Reboot);
 	void					CreateNode(Configuration::ConfigNode* Node, const char* Section, const char* Key, bool Value, bool Reboot);
 	void					CreateNodeS(Configuration::ConfigNode* Node, const char* Section, const char* Key, const char* Value, bool Reboot);
 	bool					GetMenuShaderEnabled(const char* Name);
 	void					SetMenuShaderEnabled(const char* Name, bool enabled);
-	bool*					GetMenuShaderSetting(const char* Name);
 	SettingsWaterStruct*	GetSettingsWater(const char* PlayerLocation);
 	SettingsColoringStruct* GetSettingsColoring(const char* PlayerLocation);
 	SettingsWeatherStruct*	GetSettingsWeather(const char* WeatherName);
@@ -468,7 +407,6 @@ public:
 	bool							GameLoading;
 	bool							SettingsChanged;
 	SettingsMainStruct				SettingsMain;
-	SettingsShadowStruct			SettingsShadows;
 	SettingsWaterMap				SettingsWater;
 	SettingsColoringMap				SettingsColoring;
 	SettingsWeatherMap				SettingsWeather;

@@ -1,6 +1,8 @@
 #pragma once
 #include <stack>
 
+#define ShadowsSettings ShadowsExteriorEffect::SettingsShadowStruct
+
 class ShadowManager { // Never disposed
 public:
 	static void Initialize();
@@ -26,7 +28,7 @@ public:
 	bool					InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node);
 	void					GetPlane(D3DXPLANE* plane, float a, float b, float c, float d);
 
-	TESObjectREFR*			GetRef(TESObjectREFR* Ref, SettingsShadowStruct::FormsStruct* Forms, SettingsShadowStruct::ExcludedFormsList* ExcludedForms);
+	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms);
 	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
 	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject);
 	void					RenderAccums();
@@ -34,14 +36,13 @@ public:
 	void					RenderSkinnedGeometry(NiGeometry* Geo);
 	void					RenderSpeedTreeGeometry(NiGeometry* Geo);
 	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
-	void					RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir);
-	void					RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType);
-	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors);
+	void					RenderShadowMap(ShadowMapTypeEnum ShadowMapType, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir);
+	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType);
+	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, ShadowsSettings::InteriorsStruct* ShadowsInteriors);
 	void					RenderShadowMaps();
-	//void					GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]);
 	void					CalculateBlend(NiPointLight** Lights, int LightIndex);
     void                    BlurShadowMap(ShadowMapTypeEnum ShadowMapType);    
-	D3DXMATRIX				GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View);
+	D3DXMATRIX				GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View);
 	static void				GetCascadeDepths();
 
 	std::stack<NiGeometry*> geometryAccum;

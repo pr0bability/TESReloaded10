@@ -7,11 +7,12 @@ void ShadowManager::Initialize() {
 	TheShadowManager = new ShadowManager();
 
 	// initializes the settings
-	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
-	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+	ShadowsSettings::ExteriorsStruct* ShadowsExteriors = &Shadows->Settings.Exteriors;
+	ShadowsSettings::InteriorsStruct* ShadowsInteriors = &Shadows->Settings.Interiors;
 	UINT ShadowMapSize = ShadowsExteriors->ShadowMapResolution;
 	UINT ShadowCubeMapSize = ShadowsInteriors->ShadowCubeMapSize;
-	GetCascadeDepths();
+	Shadows->GetCascadeDepths();
 	ShadowsExteriors->ShadowMapRadius[MapOrtho] = ShadowMapSize;
 
 	// load the shaders
@@ -30,7 +31,8 @@ void ShadowManager::Initialize() {
 
 	// initialize the frame vertices for future shadow blurring
 	for (int i = 0; i <= MapOrtho; i++) {
-		float multiple = i == MapLod ? 2.0f : 1.0f; // double the size of lod map only
+		//float multiple = i == MapLod ? 2.0f : 1.0f; // double the size of lod map only
+		float multiple = 1.0f; // double the size of lod map only
 		ShadowMapSize = ShadowsExteriors->ShadowMapResolution * multiple;
 
 		if (i != MapOrtho) TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &TheShadowManager->BlurShadowVertex[i]);
@@ -39,37 +41,6 @@ void ShadowManager::Initialize() {
 	}
 	TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
 	memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
-}
-
-/*
-* Calculates the radius for each shadow map
-*/
-void ShadowManager::GetCascadeDepths() {
-	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
-	float camFar = ShadowsExteriors->ShadowRadius;
-	float logFactor = 0.9f;
-	float camNear = 10.0f;
-	int cascadeCount = 4;
-	float cascadeNum = 0.0f;
-
-	for (int i = 0; i < cascadeCount; i++) {
-		// formula for cascade ratios adapted from https://www.asawicki.info/news_1283_cascaded_shadow_mapping
-		cascadeNum += 1.0f;
-		ShadowsExteriors->ShadowMapRadius[i] = std::lerp(
-			camNear + (cascadeNum / cascadeCount) * (camFar - camNear),
-			camNear * powf(camFar / camNear, cascadeNum / cascadeCount),
-			logFactor);
-
-		// filtering objects occupying less than 10 pixels in the shadow map
-		ShadowsExteriors->Forms[i].MinRadius = 10.0f * ShadowsExteriors->ShadowMapRadius[i] / ShadowsExteriors->ShadowMapResolution;
-	}
-	ShadowsExteriors->ShadowMapRadius[cascadeCount] = camFar;
-
-	// Store Shadow map sizes in Constants to pass to the Shaders
-	TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius.x = ShadowsExteriors->ShadowMapRadius[MapNear];
-	TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius.y = ShadowsExteriors->ShadowMapRadius[MapMiddle];
-	TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius.z = ShadowsExteriors->ShadowMapRadius[MapFar];
-	TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius.w = ShadowsExteriors->ShadowMapRadius[MapLod];
 }
 
 
@@ -160,7 +131,7 @@ bool ShadowManager::InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node) {
 /*
 * Returns the given object ref if it passes the test for excluded form types, otherwise returns NULL.
 */
-TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, SettingsShadowStruct::FormsStruct* Forms, SettingsShadowStruct::ExcludedFormsList* ExcludedForms) {
+TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms) {
 	
 	TESObjectREFR* R = NULL;
 
@@ -324,7 +295,7 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 
-	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
+	TheRenderManager->CreateD3DMatrix(&Constants->ShadowWorld, &Geo->m_worldTransform);
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
 
@@ -359,7 +330,7 @@ void ShadowManager::RenderSpeedTreeGeometry(NiGeometry* Geo) {
 	NiGeometryBufferData* GeoData = ModelData->BuffData;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
-	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, &Geo->m_worldTransform);
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowWorld, &Geo->m_worldTransform);
 	SpeedTreeLeafShaderProperty* STProp = (SpeedTreeLeafShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	BSTreeNode* Node = (BSTreeNode*)Geo->m_parent->m_parent;
 	NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
@@ -384,7 +355,7 @@ void ShadowManager::RenderSkinnedGeometry(NiGeometry* Geo) {
 	NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
 	D3DPRIMITIVETYPE PrimitiveType = (SkinPartition->Partitions[0].Strips == 0) ? D3DPT_TRIANGLELIST : D3DPT_TRIANGLESTRIP;
 	TheRenderManager->CalculateBoneMatrixes(SkinInstance, &Geo->m_worldTransform);
-	if (SkinInstance->SkinToWorldWorldToSkin) memcpy(&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld, SkinInstance->SkinToWorldWorldToSkin, 0x40);
+	if (SkinInstance->SkinToWorldWorldToSkin) memcpy(&TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowWorld, SkinInstance->SkinToWorldWorldToSkin, 0x40);
 	for (UInt32 p = 0; p < SkinPartition->PartitionsCount; p++) {
 		if (!SkinInstance->IsPartitionEnabled(p)) continue;
 
@@ -430,7 +401,7 @@ void ShadowManager::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verti
 
 
 // calculates the minimum area viewproj matrix for a given cascade using cascade depth and frustum corners
-D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View) {
+D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View) {
 	D3DXMATRIX Proj;
 	float FarPlane = ShadowsExteriors->ShadowMapFarPlane;
 	float Radius = ShadowsExteriors->ShadowMapRadius[ShadowMapType];
@@ -523,19 +494,20 @@ D3DXMATRIX ShadowManager::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, Se
 	return View * Proj;
 }
 
-void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir) {
+void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir) {
 	auto timer = TimeLogger();
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 
-	if (!TheTextureManager->ShadowMapDepthSurface[ShadowMapType]) {
+	if (!Shadows->Textures.ShadowMapDepthSurface[ShadowMapType]) {
 		Logger::Log("ShadowDepthSurface missing for cascade %i", ShadowMapType);
 		return;
 	}
-	if (!TheTextureManager->ShadowMapSurface[ShadowMapType]) {
+	if (!Shadows->Textures.ShadowMapSurface[ShadowMapType]) {
 		Logger::Log("ShadowSurface missing for cascade %i", ShadowMapType);
 		return;
 	}
 
-	ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
+	//ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	GridCellArray* CellArray = Tes->gridCellArray;
@@ -552,20 +524,20 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 
 	// calculating the projection matrix for point of view of the light
 	D3DXMatrixLookAtRH(&View, &Eye, At, &Up);
-	ShadowMap->ShadowViewProj = GetCascadeViewProj(ShadowMapType, ShadowsExteriors, View); // calculating the size of the shadow cascade
-	ShadowMap->ShadowCameraToLight[ShadowMapType] = TheRenderManager->InvViewProjMatrix * ShadowMap->ShadowViewProj;
+	Shadows->Constants.ShadowViewProj = GetCascadeViewProj(ShadowMapType, ShadowsExteriors, View); // calculating the size of the shadow cascade
+	Shadows->Constants.ShadowCameraToLight[ShadowMapType] = TheRenderManager->InvViewProjMatrix * Shadows->Constants.ShadowViewProj;
 
 	BillboardRight = { View._11, View._21, View._31, 0.0f };
 	BillboardUp = { View._12, View._22, View._32, 0.0f };
-	SetFrustum(ShadowMapType, &ShadowMap->ShadowViewProj);
+	SetFrustum(ShadowMapType, &Shadows->Constants.ShadowViewProj);
     /*for (int i = 1; i < 4; i++){
         IDirect3DSurface9* targ= nullptr;
         Device->GetRenderTarget(i , &targ);
         Logger::Log("%u  : %08X", i, targ );
     }*/
-    Device->SetRenderTarget(0, TheTextureManager->ShadowMapSurface[ShadowMapType]);
+    Device->SetRenderTarget(0, Shadows->Textures.ShadowMapSurface[ShadowMapType]);
 
-	Device->SetDepthStencilSurface(TheTextureManager->ShadowMapDepthSurface[ShadowMapType]);
+	Device->SetDepthStencilSurface(Shadows->Textures.ShadowMapDepthSurface[ShadowMapType]);
 	Device->SetViewport(&ShadowMapViewPort[ShadowMapType]);
 
 	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
@@ -597,7 +569,7 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, SettingsSha
 }
 
 
-void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType) {
+void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType) {
 	if (!Cell || Cell->IsInterior())
 		return;
 	
@@ -619,16 +591,19 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, SettingsShadowStruct
 	RenderAccums();
 }
 
-void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, SettingsShadowStruct::InteriorsStruct* ShadowsInteriors) {
+void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, ShadowsSettings::InteriorsStruct* ShadowsInteriors) {
 	if (Lights[LightIndex] == NULL) return; // No light at current index
-	if (!TheTextureManager->ShadowCubeMapDepthSurface) {
+	
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+
+	if (!Shadows->Textures.ShadowCubeMapDepthSurface) {
 		Logger::Log("ShadowCubemapDepth missing for light %i", LightIndex);
 		return;
 	}
 
 	auto timer = TimeLogger();
 
-	ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
+	//ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	float Radius = 0.0f;
@@ -637,7 +612,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 	D3DXMATRIX View, Proj;
 	D3DXVECTOR3 Eye, At, Up, CameraDirection;
 
-	Device->SetDepthStencilSurface(TheTextureManager->ShadowCubeMapDepthSurface);
+	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
 	NiPointLight* pNiLight = Lights[LightIndex]->sourceLight;
 
@@ -648,11 +623,11 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 	Eye.x = LightPos->x - TheRenderManager->CameraPosition.x;
 	Eye.y = LightPos->y - TheRenderManager->CameraPosition.y;
 	Eye.z = LightPos->z - TheRenderManager->CameraPosition.z;
-	ShadowMap->ShadowCubeMapLightPosition.x = Eye.x;
-	ShadowMap->ShadowCubeMapLightPosition.y = Eye.y;
-	ShadowMap->ShadowCubeMapLightPosition.z = Eye.z;
-	ShadowMap->ShadowCubeMapLightPosition.w = Radius;
-	TheShaderManager->Effects.ShadowsExteriors->Constants.Data.z = Radius;
+	Shadows->Constants.ShadowCubeMapLightPosition.x = Eye.x;
+	Shadows->Constants.ShadowCubeMapLightPosition.y = Eye.y;
+	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
+	Shadows->Constants.ShadowCubeMapLightPosition.w = Radius;
+	Shadows->Constants.Data.z = Radius;
 	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(90.0f), 1.0f, 0.1f, Radius);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
@@ -731,14 +706,14 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		}
 		
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
-		ShadowMap->ShadowViewProj = View * Proj;
+		Shadows->Constants.ShadowViewProj = View * Proj;
 
-		if (!TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]) {
+		if (!Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]) {
 			Logger::Log("ShadowCubemapSurface missing for light %i, face %i", LightIndex, Face);
 			continue;
 		}
 
-		Device->SetRenderTarget(0, TheTextureManager->ShadowCubeMapSurface[LightIndex][Face]);
+		Device->SetRenderTarget(0, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]);
 		Device->SetViewport(&ShadowCubeMapViewPort);
 		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
 		Device->BeginScene();
@@ -799,10 +774,11 @@ static void FlagPlayerGeometry() {
 * Renders the different shadow maps: Near, Far, Ortho.
 */
 void ShadowManager::RenderShadowMaps() {
-	if (!TheSettingManager->GetSettingI("Main.Main.Misc", "RenderEffects")) return; // cancel out if rendering effects is disabled
+	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // cancel out if rendering effects is disabled
 
-	SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors = &TheSettingManager->SettingsShadows.Exteriors;
-	SettingsShadowStruct::InteriorsStruct* ShadowsInteriors = &TheSettingManager->SettingsShadows.Interiors;
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+	ShadowsSettings::ExteriorsStruct* ShadowsExteriors = &Shadows->Settings.Exteriors;
+	ShadowsSettings::InteriorsStruct* ShadowsInteriors = &Shadows->Settings.Interiors;
 
 	bool isExterior = TheShaderManager->GameState.isExterior;// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
 
@@ -815,8 +791,6 @@ void ShadowManager::RenderShadowMaps() {
 	auto timer = TimeLogger();
 
 	// prepare some pointers to the device and surfaces
-	SettingsShadowStruct::FormsStruct* ShadowsInteriorsForms = &ShadowsInteriors->Forms;
-	SettingsShadowStruct::ExcludedFormsList* ShadowsInteriorsExcludedForms = &ShadowsInteriors->ExcludedForms;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	IDirect3DSurface9* DepthSurface = NULL;
@@ -881,7 +855,7 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	// Render shadow maps for point lights
-	bool usePointLights = (TheShaderManager->GameState.isDayTime > 0.5) ? TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsDay : TheSettingManager->SettingsShadows.Exteriors.UsePointShadowsNight;
+	bool usePointLights = (TheShaderManager->GameState.isDayTime > 0.5) ? ShadowsExteriors->UsePointShadowsDay : ShadowsExteriors->UsePointShadowsNight;
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;
@@ -924,11 +898,11 @@ void ShadowManager::RenderShadowMaps() {
 			GetCurrentDirectoryA(MAX_PATH, Filename);
 			strcat(Filename, "\\Test");
 			if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES) CreateDirectoryA(Filename, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap0.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapNear], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap1.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapMiddle], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap2.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapFar], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap3.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapLod], NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap4.jpg", D3DXIFF_JPG, TheTextureManager->ShadowMapSurface[MapOrtho], NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap0.jpg", D3DXIFF_JPG, Shadows->Textures.ShadowMapSurface[MapNear], NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap1.jpg", D3DXIFF_JPG, Shadows->Textures.ShadowMapSurface[MapMiddle], NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap2.jpg", D3DXIFF_JPG, Shadows->Textures.ShadowMapSurface[MapFar], NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap3.jpg", D3DXIFF_JPG, Shadows->Textures.ShadowMapSurface[MapLod], NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap4.jpg", D3DXIFF_JPG, Shadows->Textures.ShadowMapSurface[MapOrtho], NULL, NULL);
 
 			InterfaceManager->ShowMessage("Textures taken!");
 		}
@@ -944,8 +918,8 @@ void ShadowManager::RenderShadowMaps() {
 void ShadowManager::BlurShadowMap(ShadowMapTypeEnum ShadowMapType) {
     IDirect3DDevice9* Device = TheRenderManager->device;
     NiDX9RenderState* RenderState = TheRenderManager->renderState;
-    IDirect3DTexture9* SourceShadowMap = TheTextureManager->ShadowMapTexture[ShadowMapType];
-    IDirect3DSurface9* TargetShadowMap = TheTextureManager->ShadowMapSurface[ShadowMapType];
+    IDirect3DTexture9* SourceShadowMap = TheShaderManager->Effects.ShadowsExteriors->Textures.ShadowMapTexture[ShadowMapType];
+    IDirect3DSurface9* TargetShadowMap = TheShaderManager->Effects.ShadowsExteriors->Textures.ShadowMapSurface[ShadowMapType];
 
     Device->SetDepthStencilSurface(NULL);
     RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);

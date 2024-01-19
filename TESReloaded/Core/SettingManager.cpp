@@ -381,8 +381,6 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Main.RenderEffects = GetSettingI("Main.Main.Misc", "RenderEffects");
 	SettingsMain.Main.RenderPreTonemapping = GetSettingI("Main.Main.Misc", "RenderPreTonemapping");
 
-	SettingsMain.Shaders.Extra = GetSettingI("Shaders.ExtraShaders.Status", "Enabled");
-
 	SettingsMain.FrameRate.SmartControl = GetSettingI("Main.FrameRate.SmartControl", "SmartControl");
 	SettingsMain.FrameRate.SmartControlFPS = GetSettingI("Main.FrameRate.SmartControl", "SmartControlFPS");
 	SettingsMain.FrameRate.FlowControl = GetSettingF("Main.FrameRate.SmartControl", "FlowControl");
@@ -640,90 +638,6 @@ void SettingManager::LoadSettings() {
 		}
 	}
 
-	// Generic exterior shadows settings
-	SettingsShadows.Exteriors.Enabled = GetSettingI("Shaders.ShadowsExteriors.Main", "Enabled");
-	SettingsShadows.Exteriors.Quality = GetSettingI("Shaders.ShadowsExteriors.Main", "Quality");
-	SettingsShadows.Exteriors.Darkness = GetSettingF("Shaders.ShadowsExteriors.Main", "Darkness");
-	SettingsShadows.Exteriors.NightMinDarkness = GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-	SettingsShadows.Exteriors.ShadowRadius = GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowsRadius");
-	SettingsShadows.Exteriors.ShadowMapResolution = GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMapResolution");
-	SettingsShadows.Exteriors.ShadowMapFarPlane = GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowMapFarPlane");
-	SettingsShadows.Exteriors.ShadowMode = GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
-	SettingsShadows.Exteriors.BlurShadowMaps = GetSettingI("Shaders.ShadowsExteriors.Main", "BlurShadowMaps");
-	SettingsShadows.Exteriors.UsePointShadowsDay = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
-	SettingsShadows.Exteriors.UsePointShadowsNight = GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
-
-	//Shadows Cascade settings
-	for (int shadowType = 0; shadowType <= ShadowManager::ShadowMapTypeEnum::MapOrtho; shadowType++) {
-		char sectionName[256] = "Shaders.ShadowsExteriors.";
-		switch (shadowType) {
-		case ShadowManager::ShadowMapTypeEnum::MapNear:
-			strcat(sectionName, "Near");
-			break;
-		case ShadowManager::ShadowMapTypeEnum::MapMiddle:
-			strcat(sectionName, "Middle");
-			break;
-		case ShadowManager::ShadowMapTypeEnum::MapFar:
-			strcat(sectionName, "Far");
-			break;
-		case ShadowManager::ShadowMapTypeEnum::MapLod:
-			strcat(sectionName, "Lod");
-			break;
-		case ShadowManager::ShadowMapTypeEnum::MapOrtho:
-			strcat(sectionName, "Ortho");
-			break;
-		}
-
-		SettingsShadows.Exteriors.AlphaEnabled[shadowType] = GetSettingI(sectionName, "AlphaEnabled");
-		SettingsShadows.Exteriors.Forms[shadowType].Activators = GetSettingI(sectionName, "Activators");
-		SettingsShadows.Exteriors.Forms[shadowType].Actors = GetSettingI(sectionName, "Actors");
-		SettingsShadows.Exteriors.Forms[shadowType].Apparatus = GetSettingI(sectionName, "Apparatus");
-		SettingsShadows.Exteriors.Forms[shadowType].Books = GetSettingI(sectionName, "Books");
-		SettingsShadows.Exteriors.Forms[shadowType].Containers = GetSettingI(sectionName, "Containers");
-		SettingsShadows.Exteriors.Forms[shadowType].Doors = GetSettingI(sectionName, "Doors");
-		SettingsShadows.Exteriors.Forms[shadowType].Furniture = GetSettingI(sectionName, "Furniture");
-		SettingsShadows.Exteriors.Forms[shadowType].Misc = GetSettingI(sectionName, "Misc");
-		SettingsShadows.Exteriors.Forms[shadowType].Statics = GetSettingI(sectionName, "Statics");
-		SettingsShadows.Exteriors.Forms[shadowType].Terrain = GetSettingI(sectionName, "Terrain");
-		SettingsShadows.Exteriors.Forms[shadowType].Trees = GetSettingI(sectionName, "Trees");
-		SettingsShadows.Exteriors.Forms[shadowType].Lod = GetSettingI(sectionName, "Lod");
-	};
-
-	Config.FillSections(&List, "Shaders.ShadowsExteriors.ExcludedFormID"); // get the list of excluded formIDs
-	if (List.size()) SettingsShadows.Exteriors.ExcludedForms.reserve(List.size());
-	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
-		SettingsShadows.Exteriors.ExcludedForms.push_back(strtol(Iter->c_str(), NULL, 16));
-	}
-	if (List.size()) std::sort(SettingsShadows.Exteriors.ExcludedForms.begin(), SettingsShadows.Exteriors.ExcludedForms.end());
-
-	SettingsShadows.Interiors.Enabled = GetSettingI("Shaders.ShadowsInteriors.Main", "Enabled");
-	SettingsShadows.Interiors.AlphaEnabled = GetSettingI("Shaders.ShadowsInteriors.Main", "AlphaEnabled");
-	SettingsShadows.Interiors.Forms.Activators = GetSettingI("Shaders.ShadowsInteriors.Main", "Activators");
-	SettingsShadows.Interiors.Forms.Actors = GetSettingI("Shaders.ShadowsInteriors.Main", "Actors");
-	SettingsShadows.Interiors.Forms.Apparatus = GetSettingI("Shaders.ShadowsInteriors.Main", "Apparatus");
-	SettingsShadows.Interiors.Forms.Books = GetSettingI("Shaders.ShadowsInteriors.Main", "Books");
-	SettingsShadows.Interiors.Forms.Containers = GetSettingI("Shaders.ShadowsInteriors.Main", "Containers");
-	SettingsShadows.Interiors.Forms.Doors = GetSettingI("Shaders.ShadowsInteriors.Main", "Doors");
-	SettingsShadows.Interiors.Forms.Furniture = GetSettingI("Shaders.ShadowsInteriors.Main", "Furniture");
-	SettingsShadows.Interiors.Forms.Misc = GetSettingI("Shaders.ShadowsInteriors.Main", "Misc");
-	SettingsShadows.Interiors.Forms.Statics = GetSettingI("Shaders.ShadowsInteriors.Main", "Statics");
-	SettingsShadows.Interiors.Forms.MinRadius = GetSettingF("Shaders.ShadowsInteriors.Main", "MinRadius");
-	SettingsShadows.Interiors.Quality = GetSettingI("Shaders.ShadowsInteriors.Main", "Quality");
-	SettingsShadows.Interiors.LightPoints = GetSettingI("Shaders.ShadowsInteriors.Main", "LightPoints");
-	SettingsShadows.Interiors.TorchesCastShadows = GetSettingI("Shaders.ShadowsInteriors.Main", "TorchesCastShadows");
-	SettingsShadows.Interiors.ShadowCubeMapSize = GetSettingI("Shaders.ShadowsInteriors.Main", "ShadowCubeMapSize");
-	SettingsShadows.Interiors.Darkness = GetSettingF("Shaders.ShadowsInteriors.Main", "Darkness");
-	SettingsShadows.Interiors.LightRadiusMult = GetSettingF("Shaders.ShadowsInteriors.Main", "LightRadiusMult");
-	SettingsShadows.Interiors.DrawDistance = GetSettingF("Shaders.ShadowsInteriors.Main", "DrawDistance");
-	SettingsShadows.Interiors.UseCastShadowFlag = GetSettingF("Shaders.ShadowsInteriors.Main", "UseCastShadowFlag");
-
-	Config.FillSections(&List, "Shaders.ShadowsInteriors.ExcludedFormID");
-	SettingsShadows.Interiors.ExcludedForms.reserve(List.size());
-	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
-		SettingsShadows.Interiors.ExcludedForms.push_back(strtol(Iter->c_str(), NULL, 16));
-	}
-	if (List.size()) std::sort(SettingsShadows.Interiors.ExcludedForms.begin(), SettingsShadows.Interiors.ExcludedForms.end());
-
 	Config.FillSections(&List, "Shaders.Water"); // get the list of waters
 	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
 		const char* WaterSection = Iter->c_str();
@@ -751,6 +665,20 @@ void SettingManager::LoadSettings() {
 
 	SettingsChanged = true;
 	timer.LogTime("SettingsManager::LoadSettings");
+}
+
+
+/*
+* Fills in a list of FormID from settings
+*/
+void SettingManager::GetFormList(const char* SectionName, FormsList* SettingList) {
+	StringList List;
+	Config.FillSections(&List, SectionName); // get the list of excluded formIDs
+	if (List.size()) SettingList->reserve(List.size());
+	for (StringList::iterator Iter = List.begin(); Iter != List.end(); ++Iter) {
+		SettingList->push_back(strtol(Iter->c_str(), NULL, 16));
+	}
+	if (List.size()) std::sort(SettingList->begin(), SettingList->end());
 }
 
 /*

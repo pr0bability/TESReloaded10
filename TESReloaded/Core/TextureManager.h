@@ -8,6 +8,7 @@ class TextureManager { // Never disposed
 public:
 	static void				Initialize();
 	void					InitTexture(const char* Name, IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT format);
+	void					RegisterTexture(const char* Name, IDirect3DBaseTexture9** Texture);
 	void					SetWaterHeightMap(IDirect3DBaseTexture9* WaterHeightMap);
     void                    SetWaterReflectionMap(IDirect3DBaseTexture9* WaterReflectionMap);
 	IDirect3DBaseTexture9*	GetFileTexture(std::string TexturePath, TextureRecord::TextureRecordType type);
@@ -23,12 +24,6 @@ public:
 	IDirect3DTexture9*		DepthTexture;
 	IDirect3DTexture9*		DepthTextureINTZ;
 	IDirect3DSurface9*		DepthSurface;
-	IDirect3DTexture9*		ShadowMapTexture[5];
-	IDirect3DSurface9*		ShadowMapSurface[5];
-	IDirect3DSurface9*		ShadowMapDepthSurface[5];
-	IDirect3DCubeTexture9*	ShadowCubeMapTexture[ShadowCubeMapsMax];
-	IDirect3DSurface9*		ShadowCubeMapSurface[ShadowCubeMapsMax][6];
-	IDirect3DSurface9*		ShadowCubeMapDepthSurface;
 	TextureList				TextureCache;
 	TexturePointersList		TextureNames;
     WaterMapList         	WaterHeightMapTextures;
