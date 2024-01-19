@@ -133,32 +133,44 @@ bool ShadowManager::InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node) {
 */
 TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms) {
 	
-	TESObjectREFR* R = NULL;
+	if (Ref && !Ref->GetNode()) return NULL;
+	if (Ref->flags & TESForm::FormFlags::kFormFlags_NotCastShadows) return NULL;
 
-	if (Ref && Ref->GetNode()) {
-		TESForm* Form = Ref->baseForm;
-		ExtraRefractionProperty* RefractionExtraProperty = (ExtraRefractionProperty*)Ref->extraDataList.GetExtraData(BSExtraData::ExtraDataType::kExtraData_RefractionProperty);
-		float Refraction = RefractionExtraProperty ? (1 - RefractionExtraProperty->refractionAmount) : 0.0f;
-
-		if (!(Ref->flags & TESForm::FormFlags::kFormFlags_NotCastShadows) && Refraction <= 0.5) {
-			UInt8 TypeID = Form->formType;
-			if ((TypeID == TESForm::FormType::kFormType_Activator && Forms->Activators) ||
-				(TypeID == TESForm::FormType::kFormType_Apparatus && Forms->Apparatus) ||
-				(TypeID == TESForm::FormType::kFormType_Book && Forms->Books) ||
-				(TypeID == TESForm::FormType::kFormType_Container && Forms->Containers) ||
-				(TypeID == TESForm::FormType::kFormType_Door && Forms->Doors) ||
-				(TypeID == TESForm::FormType::kFormType_Misc && Forms->Misc) ||
-				(TypeID >= TESForm::FormType::kFormType_Stat && TypeID <= TESForm::FormType::kFormType_MoveableStatic && Forms->Statics) ||
-				(TypeID == TESForm::FormType::kFormType_Tree && Forms->Trees) ||
-				(TypeID == TESForm::FormType::kFormType_Furniture && Forms->Furniture) ||
-                (TypeID == TESForm::FormType::kFormType_Land && Forms->Terrain) ||
-				(TypeID >= TESForm::FormType::kFormType_NPC && TypeID <= TESForm::FormType::kFormType_LeveledCreature && Forms->Actors))
-				R = Ref;
-			if (R && ExcludedForms->size() > 0 && std::binary_search(ExcludedForms->begin(), ExcludedForms->end(), Form->refID)) R = NULL;
-		}
+	TESForm* Form = Ref->baseForm;
+	UInt8 TypeID = Form->formType;
+	switch (TypeID) {
+	case TESForm::FormType::kFormType_Activator:
+		if (!Forms->Activators) return NULL; 
+	case TESForm::FormType::kFormType_Apparatus:
+		if (!Forms->Apparatus) return NULL;
+	case TESForm::FormType::kFormType_Book:
+		if (!Forms->Books) return NULL;
+	case TESForm::FormType::kFormType_Container:
+		if (!Forms->Containers) return NULL;
+	case TESForm::FormType::kFormType_Door:
+		if (!Forms->Doors) return NULL;
+	case TESForm::FormType::kFormType_Misc:
+		if (!Forms->Misc) return NULL;
+	case TESForm::FormType::kFormType_Tree:
+		if (!Forms->Trees) return NULL;
+	case TESForm::FormType::kFormType_Furniture:
+		if (!Forms->Furniture) return NULL;
+	case TESForm::FormType::kFormType_Land:
+		if (!Forms->Terrain) return NULL;
+	case TESForm::FormType::kFormType_NPC:
+		if (TypeID <= TESForm::FormType::kFormType_LeveledCreature && !Forms->Actors) return NULL;
+	case TESForm::FormType::kFormType_Stat:
+		if (TypeID <= TESForm::FormType::kFormType_MoveableStatic && !Forms->Statics) return NULL;
+	default:
+		break;
 	}
-	return R;
+	if (ExcludedForms->size() > 0 && std::binary_search(ExcludedForms->begin(), ExcludedForms->end(), Form->refID)) return NULL;
 
+	ExtraRefractionProperty* RefractionExtraProperty = (ExtraRefractionProperty*)Ref->extraDataList.GetExtraData(BSExtraData::ExtraDataType::kExtraData_RefractionProperty);
+	float Refraction = RefractionExtraProperty ? (1 - RefractionExtraProperty->refractionAmount) : 0.0f;
+	if (Refraction >= 0.5) return NULL;
+
+	return Ref;
 }
 
 // Detect which pass the object must be added to
