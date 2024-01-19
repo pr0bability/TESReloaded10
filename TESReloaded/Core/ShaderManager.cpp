@@ -69,30 +69,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterConstant("TESR_WorldViewProjectionTransform",  (D3DXVECTOR4*)&TheRenderManager->WorldViewProjMatrix);
 	TheShaderManager->RegisterConstant("TESR_InvViewProjectionTransform", (D3DXVECTOR4*)&TheRenderManager->InvViewProjMatrix);
 	TheShaderManager->RegisterConstant("TESR_ViewProjectionTransform", (D3DXVECTOR4*)&TheRenderManager->ViewProjMatrix);
-	TheShaderManager->RegisterConstant("TESR_ShadowRadius", &TheShaderManager->ShaderConst.ShadowMap.ShadowMapRadius);
-	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapBlend", &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapBlend);
-	TheShaderManager->RegisterConstant("TESR_ShadowWorldTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowWorld);
-	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowViewProj);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[0]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[1]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[2]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[3]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowMap.ShadowCameraToLight[4]);
 	TheShaderManager->RegisterConstant("TESR_OcclusionWorldViewProjTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj);
-	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &TheShaderManager->ShaderConst.ShadowMap.ShadowCubeMapLightPosition);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition0", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[0]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition1", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[1]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition2", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[2]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition3", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[3]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition4", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[4]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition5", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[5]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition6", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[6]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition7", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[7]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition8", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[8]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition9", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[9]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition10", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[10]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition11", &TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[11]);
 	TheShaderManager->RegisterConstant("TESR_LightPosition0", &TheShaderManager->LightPosition[0]);
 	TheShaderManager->RegisterConstant("TESR_LightPosition1", &TheShaderManager->LightPosition[1]);
 	TheShaderManager->RegisterConstant("TESR_LightPosition2", &TheShaderManager->LightPosition[2]);
@@ -163,6 +140,7 @@ template <typename T> void ShaderManager::RegisterEffect(T** Pointer)
 	//if (!effect->Name) return;
 
 	EffectsNames[effect->Name] = (EffectRecord**)Pointer;
+	effect->UpdateSettings();
 	effect->RegisterConstants();
 	effect->RegisterTextures();
 	effect->LoadEffect();
@@ -452,6 +430,9 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 	std::map<int, ShadowSceneLight*> SceneLights;
 	NiTList<ShadowSceneLight>::Entry* Entry = SceneNode->lights.start;
 
+	ShadowsSettings::InteriorsStruct* Settings = &Effects.ShadowsExteriors->Settings.Interiors;
+	ShadowsExteriorEffect::ShadowStruct* ShadowsConstants = &Effects.ShadowsExteriors->Constants;
+
 	while (Entry) {
 		NiPointLight* Light = Entry->data->sourceLight;
 		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
@@ -467,7 +448,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 		D3DXVec4Normalize(&LightVector, &LightVector);
 		float inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward);
 		float Distance = Light->GetDistance(&Player->pos);
-		float radius = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult;
+		float radius = Light->Spec.r * Settings->LightRadiusMult;
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
@@ -503,7 +484,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			}
 
 			// determin if light is a shadow caster
-			bool CastShadow = TheSettingManager->SettingsShadows.Interiors.UseCastShadowFlag ? Light->CastShadows : true;
+			bool CastShadow = Settings->UseCastShadowFlag ? Light->CastShadows : true;
 
 #if defined(OBLIVION)
 			// Oblivion exception for carried torch lights 
@@ -514,12 +495,12 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 #endif
 
 			D3DXVECTOR4 LightPos = Light->m_worldTransform.pos.toD3DXVEC4();
-			LightPos.w = Light->Spec.r * TheSettingManager->SettingsShadows.Interiors.LightRadiusMult;
+			LightPos.w = Light->Spec.r * Settings->LightRadiusMult;
 
 			if (CastShadow && ShadowIndex < ShadowCubeMapsMax) {
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = v->second;
-				TheShaderManager->ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = LightPos;
+				ShadowsConstants->ShadowLightPosition[ShadowIndex] = LightPos;
 				ShadowIndex++;
 				TheShadowManager->PointLightsNum++; // Constant to track number of shadow casting lights are present
 			}
@@ -542,13 +523,13 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
 				ShadowLightsList[ShadowIndex] = NULL;
-				ShaderConst.ShadowMap.ShadowLightPosition[ShadowIndex] = Empty;
+				ShadowsConstants->ShadowLightPosition[ShadowIndex] = Empty;
 				ShadowIndex++;
 			}
 		}
 	}
 
-	timer.LogTime("ShadowManager::GetNearbyLights");
+	timer.LogTime("ShaderManager::GetNearbyLights");
 
 }
 
