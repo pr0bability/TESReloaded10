@@ -69,7 +69,7 @@ public:
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
 	void					InitializeConstants();
 	void					UpdateConstants();
-	void					GetNearbyLights(NiPointLight* ShadowLightsList[], NiPointLight* LightsList[]);
+	void					GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[]);
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
 	ShaderCollection*		CreateCollection(const char* Name);
