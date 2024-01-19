@@ -41,7 +41,6 @@ public:
     void                    BlurShadowMap(ShadowMapTypeEnum ShadowMapType);    
 	D3DXMATRIX				GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View);
 	static void				GetCascadeDepths();
-	static float			lerp(float a, float b, float t);
 
 	std::stack<NiGeometry*> geometryAccum;
 	std::stack<NiGeometry*> skinnedGeoAccum;

@@ -55,7 +55,7 @@ void ShadowManager::GetCascadeDepths() {
 	for (int i = 0; i < cascadeCount; i++) {
 		// formula for cascade ratios adapted from https://www.asawicki.info/news_1283_cascaded_shadow_mapping
 		cascadeNum += 1.0f;
-		ShadowsExteriors->ShadowMapRadius[i] = lerp(
+		ShadowsExteriors->ShadowMapRadius[i] = std::lerp(
 			camNear + (cascadeNum / cascadeCount) * (camFar - camNear),
 			camNear * powf(camFar / camNear, cascadeNum / cascadeCount),
 			logFactor);
@@ -921,11 +921,6 @@ void ShadowManager::RenderShadowMaps() {
 	}
 
 	timer.LogTime("ShadowManager::RenderShadowMaps");
-}
-
-
-float ShadowManager::lerp(float a, float b, float t) {
-	return (1 - t) * a + t * b;
 }
 
 
