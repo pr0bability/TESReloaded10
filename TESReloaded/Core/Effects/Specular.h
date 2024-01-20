@@ -11,6 +11,35 @@ public:
 	};
 	SpecularStruct	Constants;
 
+	struct SettingsSpecularStruct {
+		struct ExteriorStruct {
+			float SpecularStrength;
+			float BlurMultiplier;
+			float Glossiness;
+			float DistanceFade;
+			float FresnelStrength;
+			float SkyTintStrength;
+			float SpecLumaTreshold;
+			float SkyTintSaturation;
+		};
+
+		struct RainStruct {
+			float SpecularStrength;
+			float BlurMultiplier;
+			float Glossiness;
+			float DistanceFade;
+			float FresnelStrength;
+			float SkyTintStrength;
+			float SpecLumaTreshold;
+			float SkyTintSaturation;
+		};
+
+		ExteriorStruct Exterior;
+		RainStruct Rain;
+
+	};
+	SettingsSpecularStruct Settings;
+
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();

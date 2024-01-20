@@ -245,36 +245,6 @@ struct SettingsWaterStruct {
 };
 
 
-struct SettingsSpecularStruct {
-	bool Enabled;
-	
-	struct ExteriorStruct {
-		float SpecularStrength;
-		float BlurMultiplier;
-		float Glossiness;
-		float DistanceFade;
-		float FresnelStrength;
-		float SkyTintStrength;
-		float SpecLumaTreshold;
-		float SkyTintSaturation;
-	};
-
-	struct RainStruct {
-		float SpecularStrength;
-		float BlurMultiplier;
-		float Glossiness;
-		float DistanceFade;
-		float FresnelStrength;
-		float SkyTintStrength;
-		float SpecLumaTreshold;
-		float SkyTintSaturation;
-	};
-
-	ExteriorStruct Exterior;
-	RainStruct Rain;
-
-};
-
 struct SettingsColoringStruct {
 	float Strength;
 	float BaseGamma;
@@ -410,5 +380,4 @@ public:
 	SettingsWaterMap				SettingsWater;
 	SettingsColoringMap				SettingsColoring;
 	SettingsWeatherMap				SettingsWeather;
-	SettingsSpecularStruct			SettingsSpecular;
 };
