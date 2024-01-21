@@ -350,7 +350,7 @@ void GameMenuManager::Render() {
 			}
 		}
 
-		int pos = DrawShadowedText(Sections[i].c_str(), 0, lineYPos, ItemColumnSize + MainItemColumnSize, textColor, Font, DT_LEFT);
+		int pos = DrawShadowedText(Sections[i].c_str(), 0, lineYPos, ItemColumnSize, textColor, Font, DT_LEFT);
 
 		// if in shader mode, add indication wether each shader is activated
 		if (isShaderSection) {
@@ -382,7 +382,7 @@ void GameMenuManager::Render() {
 
 				//Logger::Log("%s render time: %s", Sections[i].c_str(), duration.c_str());
 
-				DrawShadowedText(duration.c_str(), ItemColumnSize, lineYPos, MainItemColumnSize - RowSpace, TextColorNormal, FontNormal, DT_RIGHT);
+				DrawShadowedText(duration.c_str(), 0 - RowSpace, lineYPos, ItemColumnSize, TextColorNormal, FontNormal, DT_RIGHT);
 			}
 		}
 	}
@@ -408,7 +408,7 @@ void GameMenuManager::Render() {
 			}
 		}
 
-		DrawShadowedText(Sections[i].c_str(), MainItemColumnSize + ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, Font, DT_LEFT);
+		DrawShadowedText(Sections[i].c_str(), ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, Font, DT_LEFT);
 	}
 
 	// render right column (settings name/value pairs)
