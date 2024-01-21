@@ -334,12 +334,21 @@ void ShaderManager::UpdateConstants() {
 		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
 	}
 
+
 	// update Constants
 	for (const auto [Name, shader] : ShaderNames) {
 		if ((*shader)->Enabled) (*shader)->UpdateConstants();
 	}
+	timer.LogTime("ShaderManager::UpdateConstants for shaders & generic constants");
+
 	for (const auto [Name, effect] : EffectsNames) {
-		if ((*effect)->Enabled) (*effect)->UpdateConstants();
+		if ((*effect)->Enabled) {
+			(*effect)->UpdateConstants();
+			(*effect)->constantUpdateTime = timer.LogTime((*effect)->Name);
+		}
+		else {
+			(*effect)->constantUpdateTime = 0;
+		}
 	}
 
 	// Underwater effect uses constants from the water shader

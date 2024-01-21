@@ -8,10 +8,8 @@ FILE*	Logger::LogFile;
 //#define logperf
 
 TimeLogger::TimeLogger() {
-#ifdef logperf
 	start = std::chrono::system_clock::now();
 	end = std::chrono::system_clock::now();
-#endif
 };
 
 
@@ -22,12 +20,14 @@ TimeLogger::~TimeLogger() {
 /*
 * Starts the animator by setting a target value and a duration to reach it.
 */
-void TimeLogger::LogTime(const char* Name) {
-#ifdef logperf
+float TimeLogger::LogTime(const char* Name) {
 	end = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end - start;
-	Logger::Log("%s ran in %f ms", Name, elapsed_seconds * 1000);
+	std::chrono::duration<double> elapsed_seconds = (end - start) * 1000;
+#ifdef logperf
+	Logger::Log("%s ran in %f ms", Name, elapsed_seconds);
 #endif
+	start = end; // reset counter
+	return (float)elapsed_seconds.count();
 }
 
 stateMap RENDERSTATETYPE;

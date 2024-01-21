@@ -25,5 +25,5 @@ public:
 	TimeLogger();
 	virtual ~TimeLogger();
 
-	void LogTime(const char* Name);
+	float LogTime(const char* Name);
 };

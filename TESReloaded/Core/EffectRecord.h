@@ -19,6 +19,8 @@ public:
 
 	bool 					IsLoaded();
 	bool					Enabled;
+	float					renderTime;
+	float					constantUpdateTime;
 
 	ID3DXEffect* Effect;
 	std::string* Path;

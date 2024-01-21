@@ -152,7 +152,6 @@ void GameMenuManager::HandleInput() {
 		Logger::Log("Selected setting: %s.%s ", SelectedNode.Section, SelectedNode.Key);
 #endif
 
-		Logger::Log("Handle Input; Selected Column: %i", SelectedColumn);
 		// handle other types of user input
 		if (Global->OnKeyDown(MenuSettings.KeySave)) {
 			TheSettingManager->SaveSettings();
@@ -261,21 +260,21 @@ void GameMenuManager::DrawLine(int x, int y, int length) {
 }
 
 
-int GameMenuManager::DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font) {
+int GameMenuManager::DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font, int Alignment) {
 	float posX = PositionX + x;
 	float posY = PositionY + y;
 	RECT rectangle;
 	RECT rectangleShadow;
 
 	SetRect(&rectangle, posX, posY, posX + width, posY + MenuSettings.TextSize);
+
+	if (Alignment == DT_LEFT)
+		Font->DrawTextA(NULL, text, -1, &rectangle, DT_CALCRECT, TextShadowColorNormal); // calculate rectangle
+
 	SetRect(&rectangleShadow, rectangle.left + 1, rectangle.top + 1, rectangle.right + 1, rectangle.bottom + 1);
-	
-	//Logger::Log("draw text %s at x %i y %i, size %i", text, x, y, width);
 
-	Font->DrawTextA(NULL, text, -1, &rectangle, DT_CALCRECT, TextShadowColorNormal); // calculate rectangle
-
-	Font->DrawTextA(NULL, text, -1, &rectangleShadow, DT_LEFT, TextShadowColorNormal);
-	Font->DrawTextA(NULL, text, -1, &rectangle, DT_LEFT, color);
+	Font->DrawTextA(NULL, text, -1, &rectangleShadow, Alignment, TextShadowColorNormal);
+	Font->DrawTextA(NULL, text, -1, &rectangle, Alignment, color);
 
 	return (int)rectangle.right - PositionX;
 }
@@ -299,7 +298,7 @@ void GameMenuManager::Render() {
 	HandleInput();
 	if (!Enabled) return; // skip render if menu is disabled
 
-	DrawShadowedText(TitleMenu, 0, 0, TitleColumnSize, TextColorNormal, FontNormal);
+	DrawShadowedText(TitleMenu, 0, 0, TitleColumnSize, TextColorNormal, FontNormal, DT_LEFT);
 	DrawLine(0, MenuSettings.TextSize + RowSpace, TitleColumnSize); 	// draw line under Title
 
 	// render header as horizontal column
@@ -319,7 +318,7 @@ void GameMenuManager::Render() {
 			textColor = TextColorSelected;
 		}
 		
-		DrawShadowedText(Sections[i].c_str(), MainItemColumnSize * i, HeaderYPos, MainItemColumnSize, textColor, Font);
+		DrawShadowedText(Sections[i].c_str(), MainItemColumnSize * i, HeaderYPos, MainItemColumnSize, textColor, Font, DT_LEFT);
 	}
 
 	// draw line under header
@@ -351,14 +350,40 @@ void GameMenuManager::Render() {
 			}
 		}
 
-		int pos = DrawShadowedText(Sections[i].c_str(), 0, lineYPos, ItemColumnSize, textColor, Font);
+		int pos = DrawShadowedText(Sections[i].c_str(), 0, lineYPos, ItemColumnSize + MainItemColumnSize, textColor, Font, DT_LEFT);
 
 		// if in shader mode, add indication wether each shader is activated
 		if (isShaderSection) {
 			bool enabled = TheSettingManager->GetMenuShaderEnabled(Sections[i].c_str());
 			if (enabled) textColor = TextColorEnabled;
 
-			DrawShadowedText(enabled ? "ENABLED" : "DISABLED", pos + 1, lineYPos, 100, textColor, FontStatus);
+			DrawShadowedText(enabled ? "ENABLED" : "DISABLED", pos + 1, lineYPos, 100, textColor, FontStatus, DT_LEFT);
+
+			// show render time for effect
+			EffectRecord* effect = TheShaderManager->GetEffectByName(Sections[i].c_str());
+			if (effect) {
+				std::stringstream ss;
+
+				float total = max(effect->renderTime + effect->constantUpdateTime, 0);
+
+				// in the case of Shadows, we add the time spent rendering the shadows buffer and shadow maps
+				if (effect == TheShaderManager->Effects.ShadowsExteriors || effect == TheShaderManager->Effects.ShadowsInteriors) {
+					total = effect->renderTime + effect->constantUpdateTime;
+					total += TheShaderManager->Effects.PointShadows->renderTime;
+					total += TheShaderManager->Effects.PointShadows2->renderTime;
+					total += TheShadowManager->shadowMapsRenderTime;
+				}
+
+				if (!TheSettingManager->SettingsMain.Main.RenderEffects) total = 0;
+
+				ss << std::fixed << std::setprecision(4) << total;
+				std::string duration = ss.str();
+				duration += " ms ";
+
+				//Logger::Log("%s render time: %s", Sections[i].c_str(), duration.c_str());
+
+				DrawShadowedText(duration.c_str(), ItemColumnSize, lineYPos, MainItemColumnSize - RowSpace, TextColorNormal, FontNormal, DT_RIGHT);
+			}
 		}
 	}
 
@@ -383,7 +408,7 @@ void GameMenuManager::Render() {
 			}
 		}
 
-		DrawShadowedText(Sections[i].c_str(), ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, Font);
+		DrawShadowedText(Sections[i].c_str(), MainItemColumnSize + ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, Font, DT_LEFT);
 	}
 
 	// render right column (settings name/value pairs)
@@ -408,7 +433,7 @@ void GameMenuManager::Render() {
 			if (SelectedColumn == CurrentColumn) textColor = EditingMode ? TextColorEditing : TextColorSelected;
 		}
 
-		DrawShadowedText(SettingText, ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, FontNormal);
+		DrawShadowedText(SettingText, ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, FontNormal, DT_LEFT);
 		Setting++;
 	}
 
@@ -430,7 +455,7 @@ void GameMenuManager::Render() {
 	}
 
 	// render description
-	DrawShadowedText(DescriptionText, ItemColumnSize, HeaderYPos, ItemColumnSize * 2, TextColorNormal, FontNormal);
+	DrawShadowedText(DescriptionText, ItemColumnSize, HeaderYPos, ItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
 }
 
 

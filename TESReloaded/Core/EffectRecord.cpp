@@ -16,6 +16,8 @@ EffectRecord::EffectRecord(const char* effectName) {
 
 	Effect = NULL;
 	Enabled = false;
+	renderTime = 0;
+	constantUpdateTime = 0;
 }
 
 /*Shader Values arrays are freed in the superclass Destructor*/
@@ -239,7 +241,10 @@ bool EffectRecord::SwitchEffect() {
 */
 void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer) {
 
-	if (!Enabled || Effect == nullptr || !ShouldRender()) return; // skip rendering of disabled effects
+	if (!Enabled || Effect == nullptr || !ShouldRender()) {
+		renderTime = 0.0f;
+		return; // skip rendering of disabled effects
+	}
 
 	auto timer = TimeLogger();
 	if (SourceBuffer) Device->StretchRect(RenderTarget, NULL, SourceBuffer, NULL, D3DTEXF_NONE);
@@ -264,5 +269,5 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 	}
 
 	std::string name = "EffectRecord::Render " + *Path;
-	timer.LogTime(name.c_str());
+	renderTime = timer.LogTime(name.c_str());
 }
