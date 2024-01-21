@@ -6,7 +6,7 @@ void BloodLensEffect::UpdateConstants() {
 	}
 
 	if (Constants.Percent > 0.0f) {
-		Constants.Time.z = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Time");
+		Constants.Time.z = effectTime;
 		if (Constants.Percent == 1.0f) {
 			Constants.Time.w = 0.0f;
 			srand(time(NULL));
@@ -23,6 +23,7 @@ void BloodLensEffect::UpdateConstants() {
 }
 
 void BloodLensEffect::UpdateSettings() {
+	effectTime = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Time");
 	Constants.Params.w = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "Intensity") * Constants.Percent;
 	Constants.BloodColor.x = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorR");
 	Constants.BloodColor.y = TheSettingManager->GetSettingF("Shaders.BloodLens.Main", "ColorG");

@@ -10,6 +10,8 @@ public:
 		D3DXVECTOR4		Settings;
 	};
 
+	float	Mode;
+	float	aspectRatio;
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();
