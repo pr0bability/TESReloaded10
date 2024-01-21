@@ -15,6 +15,8 @@ public:
 	};
 	BloodLensStruct	Constants;
 
+	float effectTime;
+
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();

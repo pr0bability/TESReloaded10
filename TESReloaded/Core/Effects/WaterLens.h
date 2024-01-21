@@ -11,6 +11,8 @@ public:
 	};
 	WaterLensStruct	Constants;
 
+	float	amount;
+
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();

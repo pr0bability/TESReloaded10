@@ -12,13 +12,14 @@ void WaterLensEffect::UpdateConstants() {
 		 Constants.WaterLensAnimator.Start(0.01, 0);
 	}
 
-	Constants.Data.w = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Amount") * Constants.WaterLensAnimator.GetValue();
+	Constants.Data.w = amount * Constants.WaterLensAnimator.GetValue();
 }
 
 void WaterLensEffect::UpdateSettings(){
 	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultA");
 	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "TimeMultB");
 	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Viscosity");
+	amount = TheSettingManager->GetSettingF("Shaders.WaterLens.Main", "Amount");
 }
 
 void WaterLensEffect::RegisterConstants(){
