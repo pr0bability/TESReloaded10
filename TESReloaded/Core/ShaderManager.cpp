@@ -691,6 +691,21 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	timer.LogTime("ShaderManager::RenderEffects");
 }
 
+EffectRecord* ShaderManager::GetEffectByName(const char* Name) {
+	// effects
+	EffectsList::iterator t = EffectsNames.find(Name);
+	if (t == EffectsNames.end()) return nullptr;
+	return *(t->second);
+}
+
+
+ShaderCollection* ShaderManager::GetShaderCollectionByName(const char* Name) {
+	// shaders
+	ShaderList::iterator t = ShaderNames.find(Name);
+	if (t == ShaderNames.end()) return nullptr;
+	return *(t->second);
+}
+
 /*
 * Writes the settings corresponding to the shader/effect name, to switch it between enabled/disabled.*
 * Also creates or deletes the corresponding Effect Record.
@@ -699,25 +714,24 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 	IsMenuSwitch = true;
 
 	// effects
-	try {
-		EffectRecord* effect = *EffectsNames.at(Name);
+	EffectRecord* effect = GetEffectByName(Name);
+	if (effect) {
 		bool setting = effect->SwitchEffect();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
 
 		IsMenuSwitch = false;
 		return;
 	}
-	catch (const std::exception&) {}
 
 	// shaders
-	try {
-		ShaderCollection* shader = *ShaderNames.at(Name);
+	ShaderCollection* shader = GetShaderCollectionByName(Name);
+	if (shader) {
 		bool setting = shader->SwitchShader();
 		TheSettingManager->SetMenuShaderEnabled(Name, setting);
-	
+
 		IsMenuSwitch = false;
+		return;
 	}
-	catch (const std::exception&) {}
 
 	//bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
 	//DisposeShader(Name);
