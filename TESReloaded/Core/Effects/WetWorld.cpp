@@ -33,5 +33,5 @@ void WetWorldEffect::RegisterConstants() {
 }
 
 bool WetWorldEffect::ShouldRender() { 
-	return TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater; 
+	return (Constants.Data.x || Constants.Data.z) && TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater;
 };

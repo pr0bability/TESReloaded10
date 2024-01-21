@@ -15,7 +15,7 @@ public:
 	void					HandleInput();
 	void					MainMenuMessage();
 	void					DrawLine(int x, int y, int length);
-	int 					DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font);
+	int 					DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font, int Alignment);
 	bool					IsKeyPressed(UInt16 KeyCode);
 
 	bool										Enabled;

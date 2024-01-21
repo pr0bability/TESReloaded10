@@ -41,6 +41,8 @@ void ShadowManager::Initialize() {
 	}
 	TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
 	memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
+
+	TheShadowManager->shadowMapsRenderTime = 0;
 }
 
 
@@ -577,7 +579,7 @@ void ShadowManager::RenderShadowMap(ShadowMapTypeEnum ShadowMapType, ShadowsSett
 		Device->EndScene();
 	}
 
-	timer.LogTime("ShadowManager::RenderShadowMap ");
+	shadowMapsRenderTime = timer.LogTime("ShadowManager::RenderShadowMap ");
 }
 
 

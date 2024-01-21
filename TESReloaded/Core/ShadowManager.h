@@ -58,6 +58,8 @@ public:
 	ShaderRecordVertex*		ShadowCubeMapVertex;
 	ShaderRecordPixel*		ShadowCubeMapPixel;
 	int						PointLightsNum;
+
+	float					shadowMapsRenderTime;
     
 	float					ShadowCascadesDepth[3];
 
