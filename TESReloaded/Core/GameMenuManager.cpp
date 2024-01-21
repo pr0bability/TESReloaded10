@@ -1,18 +1,19 @@
-#define TextColorNormal D3DCOLOR_XRGB(MenuSettings->TextColorNormal[0], MenuSettings->TextColorNormal[1], MenuSettings->TextColorNormal[2])
-#define TextShadowColorNormal D3DCOLOR_XRGB(MenuSettings->TextShadowColorNormal[0], MenuSettings->TextShadowColorNormal[1], MenuSettings->TextShadowColorNormal[2])
-#define TextColorSelected D3DCOLOR_XRGB(MenuSettings->TextColorSelected[0], MenuSettings->TextColorSelected[1], MenuSettings->TextColorSelected[2])
-#define TextShadowColorSelected D3DCOLOR_XRGB(MenuSettings->TextShadowColorSelected[0], MenuSettings->TextShadowColorSelected[1], MenuSettings->TextShadowColorSelected[2])
-#define TextColorEditing D3DCOLOR_XRGB(MenuSettings->TextColorEditing[0], MenuSettings->TextColorEditing[1], MenuSettings->TextColorEditing[2])
-#define TextShadowColorEditing D3DCOLOR_XRGB(MenuSettings->TextShadowColorEditing[0], MenuSettings->TextShadowColorEditing[1], MenuSettings->TextShadowColorEditing[2])
-#define TextColorEnabled D3DCOLOR_XRGB(MenuSettings->TextColorEnabled[0], MenuSettings->TextColorEnabled[1], MenuSettings->TextColorEnabled[2])
-#define TextShadowColorEnabled D3DCOLOR_XRGB(MenuSettings->TextShadowColorEnabled[0], MenuSettings->TextShadowColorEnabled[1], MenuSettings->TextShadowColorEnabled[2])
-#define PositionX MenuSettings->PositionX
-#define PositionY MenuSettings->PositionY
-#define TitleColumnSize MenuSettings->TitleColumnSize
-#define MainItemColumnSize MenuSettings->MainItemColumnSize
-#define ItemColumnSize MenuSettings->ItemColumnSize
-#define RowSpace MenuSettings->RowSpace
-#define RowsPerPage MenuSettings->RowsPerPage
+#define MenuSettings TheSettingManager->SettingsMain.Menu
+#define TextColorNormal D3DCOLOR_XRGB(MenuSettings.TextColorNormal[0], MenuSettings.TextColorNormal[1], MenuSettings.TextColorNormal[2])
+#define TextShadowColorNormal D3DCOLOR_XRGB(MenuSettings.TextShadowColorNormal[0], MenuSettings.TextShadowColorNormal[1], MenuSettings.TextShadowColorNormal[2])
+#define TextColorSelected D3DCOLOR_XRGB(MenuSettings.TextColorSelected[0], MenuSettings.TextColorSelected[1], MenuSettings.TextColorSelected[2])
+#define TextShadowColorSelected D3DCOLOR_XRGB(MenuSettings.TextShadowColorSelected[0], MenuSettings.TextShadowColorSelected[1], MenuSettings.TextShadowColorSelected[2])
+#define TextColorEditing D3DCOLOR_XRGB(MenuSettings.TextColorEditing[0], MenuSettings.TextColorEditing[1], MenuSettings.TextColorEditing[2])
+#define TextShadowColorEditing D3DCOLOR_XRGB(MenuSettings.TextShadowColorEditing[0], MenuSettings.TextShadowColorEditing[1], MenuSettings.TextShadowColorEditing[2])
+#define TextColorEnabled D3DCOLOR_XRGB(MenuSettings.TextColorEnabled[0], MenuSettings.TextColorEnabled[1], MenuSettings.TextColorEnabled[2])
+#define TextShadowColorEnabled D3DCOLOR_XRGB(MenuSettings.TextShadowColorEnabled[0], MenuSettings.TextShadowColorEnabled[1], MenuSettings.TextShadowColorEnabled[2])
+#define PositionX TheSettingManager->SettingsMain.Menu.PositionX
+#define PositionY TheSettingManager->SettingsMain.Menu.PositionY
+#define TitleColumnSize TheSettingManager->SettingsMain.Menu.TitleColumnSize
+#define MainItemColumnSize TheSettingManager->SettingsMain.Menu.MainItemColumnSize
+#define ItemColumnSize TheSettingManager->SettingsMain.Menu.ItemColumnSize
+#define RowSpace TheSettingManager->SettingsMain.Menu.RowSpace
+#define RowsPerPage TheSettingManager->SettingsMain.Menu.RowsPerPage
 
 //#define debugMenuInput
 
@@ -21,8 +22,6 @@ void GameMenuManager::Initialize() {
 	Logger::Log("Starting the menu manager...");
 	TheGameMenuManager = new GameMenuManager();
 
-	SettingsMainStruct::MenuStruct* MenuSettings = &TheSettingManager->SettingsMain.Menu;
-
 	TheGameMenuManager->SelectedColumn = 0;
 	TheGameMenuManager->SelectedRow[4] = { 0 };
 	TheGameMenuManager->SelectedPage[4] = { 0 };
@@ -30,46 +29,35 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->EditingMode = false;
 	TheGameMenuManager->MainMenuOn = false;
 
-	D3DXCreateFontA(TheRenderManager->device, MenuSettings->TextSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings->TextFont, &TheGameMenuManager->FontNormal);
-	D3DXCreateFontA(TheRenderManager->device, MenuSettings->TextSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings->TextFont, &TheGameMenuManager->FontSelected);
-	D3DXCreateFontA(TheRenderManager->device, MenuSettings->TextSizeStatus, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings->TextFontStatus, &TheGameMenuManager->FontStatus);
+	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontNormal);
+	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontSelected);
+	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
 
 }
 
-void GameMenuManager::Render() {
-
-	SettingsMainStruct::MenuStruct* MenuSettings = &TheSettingManager->SettingsMain.Menu;
-	StringList Sections;
-	StringList::iterator Item;
-	SettingManager::Configuration::SettingList Settings;
-	SettingManager::Configuration::SettingList::iterator Setting;
-	const char* Text = NULL;
-	char TextShaderStatus[20];
-	char SettingText[80];
-	size_t ListSize = 0;
+void GameMenuManager::MainMenuMessage() {
 	std::chrono::time_point now = std::chrono::system_clock::now();
 
-	if (InterfaceManager->IsActive(Menu::MenuType::kMenuType_Main)) {
-		// on main menu, only draw the bottom text as signal the mod has loaded
-		if (!MainMenuOn) {
-			MainMenuOn = true;
-			MainMenuStartTime = now;
-		}
-
-		std::chrono::duration<double> elapsed_seconds = now - MainMenuStartTime;
-		if (elapsed_seconds.count() > 3.0) return; // only show message at the bottom of the screen for 3 seconds
-
-		SetRect(&Rect, 0, TheRenderManager->height - MenuSettings->TextSize - 10, TheRenderManager->width, TheRenderManager->height + MenuSettings->TextSize);
-		SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-		FontNormal->DrawTextA(NULL, PluginVersion::VersionString, -1, &RectShadow, DT_CENTER, TextShadowColorNormal);
-		FontNormal->DrawTextA(NULL, PluginVersion::VersionString, -1, &Rect, DT_CENTER, TextColorNormal);
-		return;
+	// on main menu, only draw the bottom text as signal the mod has loaded
+	if (!MainMenuOn) {
+		MainMenuOn = true;
+		MainMenuStartTime = now;
 	}
 
-	bool menuKeyDown = Global->OnKeyDown(MenuSettings->KeyEnable);
+	std::chrono::duration<double> elapsed_seconds = now - MainMenuStartTime;
+	if (elapsed_seconds.count() > 3.0) return; // only show message at the bottom of the screen for 3 seconds
+
+	SetRect(&Rect, 0, TheRenderManager->height - MenuSettings.TextSize - 10, TheRenderManager->width, TheRenderManager->height + MenuSettings.TextSize);
+	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
+	FontNormal->DrawTextA(NULL, PluginVersion::VersionString, -1, &RectShadow, DT_CENTER, TextShadowColorNormal);
+	FontNormal->DrawTextA(NULL, PluginVersion::VersionString, -1, &Rect, DT_CENTER, TextColorNormal);
+}
+
+void GameMenuManager::HandleInput() {
+	bool menuKeyDown = Global->OnKeyDown(MenuSettings.KeyEnable);
 
 #ifdef debugMenuInput
-	if (TheShaderManager->isExterior) Logger::Log("====Exterior====");
+	if (TheShaderManager->GameState.isExterior) Logger::Log("====Exterior====");
 	else Logger::Log("====Interior====");
 	Logger::Log("Menu key %i is down? %i", MenuSettings->KeyEnable, menuKeyDown);
 #endif
@@ -77,27 +65,22 @@ void GameMenuManager::Render() {
 	// check for menu key to toggle display of the menu
 	if (menuKeyDown) {
 		Enabled = !Enabled;
+		if (!Enabled) return; // menu is disabled, no need to check further inputs
 
 #ifdef debugMenuInput
 		Logger::Log("toggling menu : %i", Enabled);
 #endif
 
-		if (Enabled) {
-			lastKeyPressed = now;
-			keyDown = 999;
-		}
+		lastKeyPressed = std::chrono::system_clock::now();
+		keyDown = 999;
 		EditingMode = false;
 	}
 	if (!InterfaceManager->IsActive(Menu::MenuType::kMenuType_None)) {
+		// cancel out the menu if a game menu is active
 		Enabled = false;
 		EditingMode = false;
+		return;
 	}
-
-	if (!Enabled) return; // skip rendering of menu if it isn't enabled
-
-#ifdef debugMenuInput
-	Logger::Log("drawing menu");
-#endif
 
 	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
 	bool isStatusSection = !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6);
@@ -106,7 +89,7 @@ void GameMenuManager::Render() {
 	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
 
 	//handle entry using numpad keys or number row keys depending on setting
-	int startEntry = useNumpad ? MenuSettings->KeyEditing : 13;
+	int startEntry = useNumpad ? MenuSettings.KeyEditing : 13;
 	int key0 = useNumpad ? 82 : 11;
 	int key1 = useNumpad ? 79 : 2;
 	int key2 = useNumpad ? 80 : 3;
@@ -162,270 +145,279 @@ void GameMenuManager::Render() {
 			strcat(EditingValue, "-");
 		if (strlen(EditingValue) > 0 && IsKeyPressed(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
 	}
-	else if (SelectedNode.Section){ //SelectedNode.Section is empty the first time the menu renders
+	else if (SelectedNode.Section) { //SelectedNode.Section is empty the first time the menu renders
 
 #ifdef debugMenuInput
 		Logger::Log("Selected column: %i, selected row: %i, ", 1, SelectedRow[SelectedColumn]);
 		Logger::Log("Selected setting: %s.%s ", SelectedNode.Section, SelectedNode.Key);
 #endif
 
+		Logger::Log("Handle Input; Selected Column: %i", SelectedColumn);
 		// handle other types of user input
-		if (Global->OnKeyDown(MenuSettings->KeySave)) {
+		if (Global->OnKeyDown(MenuSettings.KeySave)) {
 			TheSettingManager->SaveSettings();
 			InterfaceManager->ShowMessage("Settings saved.");
 		}
-		else if (SelectedColumn == 0) {
+		else if (SelectedColumn == COLUMNS::HEADER) {
 			// header is a column tilted to the side (column 0). Left and Right change rows and Down moves to column 1 (or the actual menu)
-			if (IsKeyPressed(MenuSettings->KeyDown)) {
-				SelectedColumn = 1;
+			if (IsKeyPressed(MenuSettings.KeyDown)) {
+				SelectedColumn = COLUMNS::CATEGORY;
 			}
-			else if (IsKeyPressed(MenuSettings->KeyLeft) && SelectedRow[SelectedColumn] > 0) {
-				SelectedRow[SelectedColumn] -= 1;
+			else if (IsKeyPressed(MenuSettings.KeyLeft)) {
+				SelectedRow[SelectedColumn] = max(0, SelectedRow[SelectedColumn] - 1);
 			}
-			else if (IsKeyPressed(MenuSettings->KeyRight) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
-				SelectedRow[SelectedColumn] += 1;
+			else if (IsKeyPressed(MenuSettings.KeyRight)) {
+				SelectedRow[SelectedColumn] = min(SelectedRow[SelectedColumn] + 1, Rows[SelectedColumn]);
 			}
-			SelectedPage[1] = SelectedPage[2] = SelectedPage[3] = 0;
+			SelectedPage[COLUMNS::CATEGORY] = SelectedPage[COLUMNS::SECTION] = SelectedPage[COLUMNS::SETTINGS] = 0;
 		}
 		else {
 			// handle navigation
-			if (IsKeyPressed(MenuSettings->KeyUp)) {
-				if (SelectedRow[SelectedColumn] > 0) SelectedRow[SelectedColumn] -= 1; else SelectedColumn = 0; // move up in the column or go to header
+			if (IsKeyPressed(MenuSettings.KeyUp)) {
+				if (SelectedColumn == COLUMNS::CATEGORY && SelectedRow[SelectedColumn] == 0)
+					SelectedColumn = COLUMNS::HEADER;  // go to header
+				else
+					SelectedRow[SelectedColumn] = max(SelectedRow[SelectedColumn] - 1, 0);
+
+				if (SelectedColumn < COLUMNS::SETTINGS) {
+					// reset selected rows for columns further than current one
+					for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
+						SelectedRow[i] = 0; 
+					}
+				}
 			}
-			else if (IsKeyPressed(MenuSettings->KeyDown) && SelectedRow[SelectedColumn] < Rows[SelectedColumn] - 1) {
-				SelectedRow[SelectedColumn] += 1;
+			else if (IsKeyPressed(MenuSettings.KeyDown)) {
+				SelectedRow[SelectedColumn] = min(SelectedRow[SelectedColumn] + 1, Rows[SelectedColumn]);
+				if (SelectedColumn < COLUMNS::SETTINGS) {
+					// reset selected rows for columns further than current one
+					for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
+						SelectedRow[i] = 0; 
+					}
+				}
 			}
-			else if (IsKeyPressed(MenuSettings->KeyLeft)) {
+			else if (IsKeyPressed(MenuSettings.KeyLeft)) {
+				if (SelectedColumn == COLUMNS::CATEGORY) {
+					SelectedRow[SelectedColumn] = 0;
+					SelectedColumn = COLUMNS::HEADER;  // go to header
+				}
+				else 
+					SelectedColumn = max(SelectedColumn - 1, 0);
+			}
+			else if (IsKeyPressed(MenuSettings.KeyRight)) {
+				SelectedColumn = min(SelectedColumn + 1, COLUMNS::SETTINGS);
+			}
+			else if (IsKeyPressed(MenuSettings.KeyPageUp)) {
+				SelectedPage[SelectedColumn] = max(SelectedPage[SelectedColumn] - 1, 0);
 				SelectedRow[SelectedColumn] = 0;
-				SelectedColumn -= 1;
 			}
-			else if (IsKeyPressed(MenuSettings->KeyRight) && SelectedColumn < 3) {
-				SelectedColumn += 1;
-			}
-			else if (IsKeyPressed(MenuSettings->KeyPageUp) && SelectedPage[SelectedColumn] > 0) {
-				SelectedPage[SelectedColumn] -= 1;
+			else if (IsKeyPressed(MenuSettings.KeyPageDown)) {
+				SelectedPage[SelectedColumn] = min(SelectedPage[SelectedColumn] + 1, Pages[SelectedColumn]);
 				SelectedRow[SelectedColumn] = 0;
 			}
-			else if (IsKeyPressed(MenuSettings->KeyPageDown) && SelectedPage[SelectedColumn] < Pages[SelectedColumn]) {
-				SelectedPage[SelectedColumn] += 1;
-				SelectedRow[SelectedColumn] = 0;
-			}
-			else {
+			else if (IsKeyPressed(MenuSettings.KeyAdd)) {
 				// handle value add/subtract keys
-				if (IsKeyPressed(MenuSettings->KeyAdd)) {
-					//Logger::Log("Add for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i",SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
 
-					// react to user key input to reduce the value of the setting
-					if (isShaderSection && (SelectedColumn == 1 || (SelectedColumn == 3 && isStatusSection))) {
-						// enable shaders and effects
-						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
-						if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
-					}
-					else if (SelectedColumn == 1 && isWeatherSection) {
-						TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(SelectedNode.MidSection, TESForm::FormType::kFormType_Weather);
-						Tes->sky->ForceWeather(Weather);
-					}
-					else if (SelectedColumn == 3) {
-						TheSettingManager->Increment(SelectedNode.Section, SelectedNode.Key);
-					}
-					TheSettingManager->LoadSettings(); //update constants stored in Settings structs
-				}
-				else if (IsKeyPressed(MenuSettings->KeySubtract)) {
-					//Logger::Log("Subtract for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i", SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
+				//Logger::Log("Add for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i",SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
 
-					// react to user key input to reduce the value of the setting
-					if (isShaderSection && (SelectedColumn == 1 || (SelectedColumn == 3 && isStatusSection))) {
-						// disable shaders and effects
-						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
-						if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
-					}
-					else if (SelectedColumn == 3) {
-						TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);
-					}
-					TheSettingManager->LoadSettings(); //update constants stored in Settings structs
+				// react to user key input to reduce the value of the setting
+				if (isShaderSection && (SelectedColumn == COLUMNS::CATEGORY || (SelectedColumn == COLUMNS::SETTINGS && isStatusSection))) {
+					// enable shaders and effects
+					bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
+					if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
 				}
+				else if (SelectedColumn == COLUMNS::CATEGORY && isWeatherSection) {
+					TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(SelectedNode.MidSection, TESForm::FormType::kFormType_Weather);
+					Tes->sky->ForceWeather(Weather);
+				}
+				else if (SelectedColumn == COLUMNS::SETTINGS) {
+					TheSettingManager->Increment(SelectedNode.Section, SelectedNode.Key);
+				}
+				TheSettingManager->LoadSettings(); //update constants stored in Settings structs
+			}
+			else if (IsKeyPressed(MenuSettings.KeySubtract)) {
+				//Logger::Log("Subtract for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i", SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
+
+				// react to user key input to reduce the value of the setting
+				if (isShaderSection && (SelectedColumn == COLUMNS::CATEGORY || (SelectedColumn == COLUMNS::SETTINGS && isStatusSection))) {
+					// disable shaders and effects
+					bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
+					if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
+				}
+				else if (SelectedColumn == COLUMNS::SETTINGS) {
+					TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);
+				}
+				TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 			}
 		}
 	}
+}
 
-	Text = TitleMenu;
-	SetRect(&Rect, PositionX, PositionY, PositionX + TitleColumnSize, PositionY + MenuSettings->TextSize);
-	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-	FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-	FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
 
-	// draw line under Title
-	SetRect(&Rect, Rect.left, Rect.bottom + RowSpace, Rect.right, Rect.bottom + RowSpace + 2);
+void GameMenuManager::DrawLine(int x, int y, int length) {
+	float posX = PositionX + x;
+	float posY = PositionY + y;
+	SetRect(&Rect, posX, posY, posX + length, posY + 2);
 	TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L);
+}
 
-	D3DXCOLOR textColor = TextColorNormal;
-	D3DXCOLOR shadowColor = TextShadowColorNormal;
 
-	// render header
-	Rows[0] = 0;
-	SetRect(&Rect, Rect.left + MainItemColumnSize * 0, Rect.bottom + RowSpace, Rect.left + MainItemColumnSize * 1, Rect.bottom + RowSpace + MenuSettings->TextSize);
+int GameMenuManager::DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font) {
+	float posX = PositionX + x;
+	float posY = PositionY + y;
+	RECT rectangle;
+	RECT rectangleShadow;
+
+	SetRect(&rectangle, posX, posY, posX + width, posY + MenuSettings.TextSize);
+	SetRect(&rectangleShadow, rectangle.left + 1, rectangle.top + 1, rectangle.right + 1, rectangle.bottom + 1);
+	
+	//Logger::Log("draw text %s at x %i y %i, size %i", text, x, y, width);
+
+	Font->DrawTextA(NULL, text, -1, &rectangle, DT_CALCRECT, TextShadowColorNormal); // calculate rectangle
+
+	Font->DrawTextA(NULL, text, -1, &rectangleShadow, DT_LEFT, TextShadowColorNormal);
+	Font->DrawTextA(NULL, text, -1, &rectangle, DT_LEFT, color);
+
+	return (int)rectangle.right - PositionX;
+}
+
+
+void GameMenuManager::Render() {
+
+	StringList Sections;
+	SettingManager::Configuration::SettingList Settings;
+
+	const char* Text = NULL;
+	int CurrentColumn = 0;
+	char TextShaderStatus[20];
+	size_t ListSize = 0;
+
+	if (InterfaceManager->IsActive(Menu::MenuType::kMenuType_Main)) {
+		MainMenuMessage();
+		return;
+	}
+
+	HandleInput();
+	if (!Enabled) return; // skip render if menu is disabled
+
+	DrawShadowedText(TitleMenu, 0, 0, TitleColumnSize, TextColorNormal, FontNormal);
+	DrawLine(0, MenuSettings.TextSize + RowSpace, TitleColumnSize); 	// draw line under Title
+
+	// render header as horizontal column
+	int HeaderYPos = (MenuSettings.TextSize + RowSpace * 2 + 2);
 	TheSettingManager->FillMenuSections(&Sections, NULL);
-
 	ListSize = Sections.size();
-	Pages[0] = ListSize / RowsPerPage;
+	Rows[COLUMNS::HEADER] = ListSize - 1;
+	Pages[COLUMNS::HEADER] = 0;
 	for (UInt32 i = 0; i < ListSize; i++) {
-		Text = Sections[i].c_str();
-		SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-		if (SelectedRow[0] == Rows[0]) {
-			strcpy(SelectedNode.Section, Text);
-			FontSelected->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorSelected);
-			FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorSelected);
+		ID3DXFont* Font = FontNormal;
+		D3DXCOLOR textColor = TextColorNormal;
+		
+		if (SelectedRow[COLUMNS::HEADER] == i) {
+			strcpy(SelectedNode.Section, Sections[i].c_str());
+
+			Font = FontSelected;
+			textColor = TextColorSelected;
 		}
-		else {
-			FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, TextShadowColorNormal);
-			FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, TextColorNormal);
-		}
-		Rect.left += MainItemColumnSize;
-		Rect.right += MainItemColumnSize;
-		Rows[0]++;
+		
+		DrawShadowedText(Sections[i].c_str(), MainItemColumnSize * i, HeaderYPos, MainItemColumnSize, textColor, Font);
 	}
 
 	// draw line under header
-	SetRect(&Rect, PositionX, Rect.bottom + RowSpace, PositionX + TitleColumnSize, Rect.bottom + RowSpace + 2);
-	TheRenderManager->device->Clear(1L, (D3DRECT*)&Rect, D3DCLEAR_TARGET, TextColorNormal, 0.0f, 0L); //fill rectangle with color
+	DrawLine(0, HeaderYPos + MenuSettings.TextSize + RowSpace, 3 * ItemColumnSize);
+
+	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
 
 	// render left column (shaders/menu category names)
-	int MenuRectX = PositionX;
-	int MenuRectY = Rect.bottom + RowSpace;
-	Rows[1] = 0;
-	SetRect(&Rect, MenuRectX + ItemColumnSize * 0, MenuRectY, MenuRectX + ItemColumnSize * 1, MenuRectY + MenuSettings->TextSize);
+	int MenuHeight = HeaderYPos + MenuSettings.TextSize + RowSpace * 3 + 2;
+	int rowHeight = MenuSettings.TextSize + RowSpace;
+
 	TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section);
 	ListSize = Sections.size();
-	Pages[1] = ListSize / RowsPerPage;
-	for (UInt32 i = 0; i < ListSize; i++) {
-		if (i >= RowsPerPage * SelectedPage[1] && i < RowsPerPage * (SelectedPage[1] + 1)) {
-			Text = Sections[i].c_str();
-			Rect.top += MenuSettings->TextSize + RowSpace;
-			Rect.bottom += MenuSettings->TextSize + RowSpace;
-			SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-			if (SelectedRow[1] == Rows[1]) {
-				strcat(SelectedNode.Section, ".");
-				strcat(SelectedNode.Section, Text);
+	CurrentColumn = COLUMNS::CATEGORY;
+	Rows[CurrentColumn] = ListSize - 1;
+	Pages[CurrentColumn] = ListSize / RowsPerPage;
+	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
+		ID3DXFont* Font = FontNormal;
+		D3DXCOLOR textColor = TextColorNormal;
+		int lineYPos = MenuHeight + rowHeight * (i % RowsPerPage);
 
-				textColor = (SelectedColumn >= 1) ? TextColorSelected : TextColorNormal;
-				shadowColor = (SelectedColumn >= 1) ? TextShadowColorSelected : TextShadowColorNormal;
+		if (SelectedRow[CurrentColumn] == i ) {
+			strcat(SelectedNode.Section, ".");
+			strcat(SelectedNode.Section, Sections[i].c_str());
+
+			if (SelectedColumn >= CurrentColumn){
+				Font = FontSelected;
+				textColor = TextColorSelected;
 			}
-			else {
-				textColor = TextColorNormal;
-				shadowColor = TextShadowColorNormal;
-			}
+		}
 
-			FontSelected->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, shadowColor);
-			FontSelected->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, textColor);
+		int pos = DrawShadowedText(Sections[i].c_str(), 0, lineYPos, ItemColumnSize, textColor, Font);
 
-			// if in shader mode, add indication wether each shader is activated
-			if (!memcmp(SelectedNode.Section, "Shaders", 7)) {
-				if (SelectedRow[1] == Rows[1] && SelectedColumn >= 1)
-					FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_CALCRECT, TextColorSelected);
-				else
-					FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_CALCRECT, TextColorNormal);
-				Rect.left = Rect.right + 1;
-				Rect.right += 100;
-				SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-				bool enabled = TheSettingManager->GetMenuShaderEnabled(Text);
+		// if in shader mode, add indication wether each shader is activated
+		if (isShaderSection) {
+			bool enabled = TheSettingManager->GetMenuShaderEnabled(Sections[i].c_str());
+			if (enabled) textColor = TextColorEnabled;
 
-				if (SelectedRow[1] == Rows[1] && SelectedColumn >= 1) {
-					textColor = enabled ? TextColorEnabled : TextColorSelected;
-					shadowColor = enabled ? TextShadowColorEnabled : TextShadowColorSelected;
-				}
-				else {
-					textColor = enabled ? TextColorEnabled : TextColorNormal;
-					shadowColor = enabled ? TextShadowColorEnabled : TextShadowColorNormal;
-				}
-
-				strcpy(TextShaderStatus, enabled ? "ENABLED" : "DISABLED");
-				FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &RectShadow, DT_LEFT, shadowColor);
-				FontStatus->DrawTextA(NULL, TextShaderStatus, -1, &Rect, DT_LEFT, textColor);
-
-				Rect.left = MenuRectX + ItemColumnSize * 0;
-				Rect.right = MenuRectX + ItemColumnSize * 1;
-			}
-			Rows[1]++;
+			DrawShadowedText(enabled ? "ENABLED" : "DISABLED", pos + 1, lineYPos, 100, textColor, FontStatus);
 		}
 	}
 
-
 	// render middle column (shader/menu subsection names)
-	Rows[2] = 0;
-	SetRect(&Rect, MenuRectX + ItemColumnSize * 1, MenuRectY, MenuRectX + ItemColumnSize * 2, MenuRectY + MenuSettings->TextSize);
 	TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section); // get a list of sections for a given category
 	ListSize = Sections.size();
-	Pages[2] = ListSize / RowsPerPage;
-	for (UInt32 i = 0; i < ListSize; i++) {
-		if (i >= RowsPerPage * SelectedPage[2] && i < RowsPerPage * (SelectedPage[2] + 1)) {
-			Text = Sections[i].c_str();
-			Rect.top += MenuSettings->TextSize + RowSpace;
-			Rect.bottom += MenuSettings->TextSize + RowSpace;
-			SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-			if (SelectedRow[2] == Rows[2]) {
-				strcat(SelectedNode.Section, ".");
-				strcat(SelectedNode.Section, Text);
+	CurrentColumn = COLUMNS::SECTION;
+	Rows[CurrentColumn] = ListSize - 1;
+	Pages[CurrentColumn] = ListSize / RowsPerPage;
+	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
+		// Selected is true as long as we are deeper in the menu than current column
+		ID3DXFont* Font = FontNormal;
+		D3DXCOLOR textColor = TextColorNormal;
 
-				textColor = (SelectedColumn >= 2) ? TextColorSelected : TextColorNormal;
-				shadowColor = (SelectedColumn >= 2) ? TextShadowColorSelected : TextShadowColorNormal;
-			}
-			else {
-				textColor = TextColorNormal;
-				shadowColor = TextShadowColorNormal;
-			}
-			FontNormal->DrawTextA(NULL, Text, -1, &RectShadow, DT_LEFT, shadowColor);
-			FontNormal->DrawTextA(NULL, Text, -1, &Rect, DT_LEFT, textColor);
+		if (SelectedRow[CurrentColumn] == i) {
+			strcat(SelectedNode.Section, ".");
+			strcat(SelectedNode.Section, Sections[i].c_str());
 
-			Rows[2]++;
+			if (SelectedColumn >= CurrentColumn) {
+				Font = FontSelected;
+				textColor = TextColorSelected;
+			}
 		}
+
+		DrawShadowedText(Sections[i].c_str(), ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, Font);
 	}
 
 	// render right column (settings name/value pairs)
-	Rows[3] = 0;
-	SetRect(&Rect, MenuRectX + ItemColumnSize * 2, MenuRectY, MenuRectX + ItemColumnSize * 3, MenuRectY + MenuSettings->TextSize);
 	TheSettingManager->FillMenuSettings(&Settings, SelectedNode.Section); // build a setting list to display values
 	ListSize = Settings.size();
-	Pages[3] = ListSize / RowsPerPage;
-	Setting = Settings.begin();
-	for (UInt32 i = 0; i < ListSize; i++) {
-		if (i >= RowsPerPage * SelectedPage[3] && i < RowsPerPage * (SelectedPage[3] + 1)) {
-			strcpy(SettingText, Setting->Key);
-			strcat(SettingText, " = ");
-			strcat(SettingText, Setting->Value);
-			Rect.top += MenuSettings->TextSize + RowSpace;
-			Rect.bottom += MenuSettings->TextSize + RowSpace;
-			SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
+	CurrentColumn = COLUMNS::SETTINGS;
+	Rows[CurrentColumn] = ListSize - 1;
+	Pages[CurrentColumn] = ListSize / RowsPerPage;
+	SettingManager::Configuration::SettingList::iterator Setting = Settings.begin();
 
-			textColor = TextColorNormal;
-			shadowColor = TextShadowColorNormal;
-			if (SelectedRow[3] == Rows[3]) {
-				memcpy((void*)&SelectedNode, Setting._Ptr, sizeof(SettingManager::Configuration::ConfigNode));
-				if (SelectedColumn >= 3) {
-					if (EditingMode) {
-						strcpy(SelectedNode.Value, EditingValue);
-						strcpy(SettingText, Setting->Key);
-						strcat(SettingText, " = ");
-						strcat(SettingText, EditingValue);
-					}
-					textColor = EditingMode ? TextColorEditing : TextColorSelected;
-					shadowColor = EditingMode ? TextShadowColorEditing : TextShadowColorSelected;
-				}
-			}
+	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
+		//SettingManager::Configuration::ConfigNode Setting = Settings[i];
 
-			FontNormal->DrawTextA(NULL, SettingText, -1, &RectShadow, DT_LEFT, shadowColor);
-			FontNormal->DrawTextA(NULL, SettingText, -1, &Rect, DT_LEFT, textColor);
-
-			Rows[3]++;
+		char SettingText[80];
+		strcpy(SettingText, Setting->Key);
+		strcat(SettingText, " = ");
+		strcat(SettingText, Setting->Value);
+		D3DXCOLOR textColor = TextColorNormal;
+		
+		if (SelectedRow[CurrentColumn] == i) {
+			memcpy((void*)&SelectedNode, Setting._Ptr, sizeof(SettingManager::Configuration::ConfigNode));
+			if (SelectedColumn == CurrentColumn) textColor = EditingMode ? TextColorEditing : TextColorSelected;
 		}
+
+		DrawShadowedText(SettingText, ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, FontNormal);
 		Setting++;
 	}
 
+	//Draw Description/Help line
 	const char* DescriptionText = "";
-
-	if (SelectedColumn == 3) {
+	if (SelectedColumn == COLUMNS::SETTINGS) {
 		DescriptionText = SelectedNode.Description.c_str();
 	}
-	else if (isShaderSection && SelectedColumn == 1) {
+	else if (isShaderSection && SelectedColumn == COLUMNS::CATEGORY) {
 		// Get the general description of the effect from the Status.Enabled node of the Shader settings
 		SettingManager::Configuration::ConfigNode StatusNode;
 		char statusSection[256];
@@ -437,17 +429,9 @@ void GameMenuManager::Render() {
 		DescriptionText = success?StatusNode.Description.c_str():"";
 	}
 
-	int right = MenuRectX + ItemColumnSize * 3;
-	int bottom = MenuRectY + (RowsPerPage * MenuSettings->TextSize);
-
 	// render description
-	SetRect(&Rect, PositionX, bottom - MenuSettings->TextSize, right, bottom + MenuSettings->TextSize);
-	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-
-	FontNormal->DrawTextA(NULL, DescriptionText, -1, &RectShadow, DT_RIGHT, TextShadowColorNormal);
-	FontNormal->DrawTextA(NULL, DescriptionText, -1, &Rect, DT_RIGHT, TextColorNormal);
+	DrawShadowedText(DescriptionText, ItemColumnSize, HeaderYPos, ItemColumnSize * 2, TextColorNormal, FontNormal);
 }
-
 
 
 // Returns a key pressed value at regular intervals if key is held down

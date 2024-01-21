@@ -4,16 +4,27 @@ class GameMenuManager { // Never disposed
 public:
 	static void Initialize();
 
+	enum COLUMNS {
+		HEADER = 0,
+		CATEGORY = 1,
+		SECTION = 2,
+		SETTINGS = 3,
+	};
+
 	void					Render();
+	void					HandleInput();
+	void					MainMenuMessage();
+	void					DrawLine(int x, int y, int length);
+	int 					DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font);
 	bool					IsKeyPressed(UInt16 KeyCode);
 
 	bool										Enabled;
 	bool										EditingMode;
-	UInt32										Pages[4];
-	UInt32										SelectedPage[4];
-	UInt32										Rows[4];
-	UInt32										SelectedRow[4];
-	UInt32										SelectedColumn;
+	int 										Pages[4];
+	int 										SelectedPage[4];
+	int 										Rows[4];
+	int 										SelectedRow[4];
+	int 										SelectedColumn;
 	char										EditingValue[20];
 	SettingManager::Configuration::ConfigNode	SelectedNode;
 	ID3DXFont*									FontSelected;
