@@ -29,15 +29,6 @@ public:
 		MapOrtho = 4,
 	};
 
-	enum PlaneEnum {
-		PlaneNear	= 0,
-		PlaneFar	= 1,
-		PlaneLeft	= 2,
-		PlaneRight	= 3,
-		PlaneTop	= 4,
-		PlaneBottom	= 5,
-	};
-
 
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms);
 	void					AccumChildren(NiAVObject* NiObject, float MinRadius);

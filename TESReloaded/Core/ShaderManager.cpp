@@ -36,7 +36,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterEffect<LowHFEffect>(&TheShaderManager->Effects.LowHF);
 	TheShaderManager->RegisterEffect<MotionBlurEffect>(&TheShaderManager->Effects.MotionBlur);
 	TheShaderManager->RegisterEffect<NormalsEffect>(&TheShaderManager->Effects.Normals);
-	TheShaderManager->RegisterEffect<PretonemapperEffect>(&TheShaderManager->Effects.Pretonemapper);
 	TheShaderManager->RegisterEffect<RainEffect>(&TheShaderManager->Effects.Rain);
 	TheShaderManager->RegisterEffect<SharpeningEffect>(&TheShaderManager->Effects.Sharpening);
 	TheShaderManager->RegisterEffect<ShadowsExteriorEffect>(&TheShaderManager->Effects.ShadowsExteriors);
@@ -394,9 +393,6 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	ShaderCollection* Collection = GetShaderCollection(VertexShader->ShaderName);
 	bool enabled = Collection->Enabled;
 
-	// if AMD and no DXVK, disable glitchy Tonemapping shader replacements
-	if (Collection == Shaders.Tonemapping && (TheRenderManager->RESZ && !TheRenderManager->DXVK)) return false;
-
 	// Load generic, interior and exterior shaders
 	VertexShader->ShaderProg  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, NULL);
 	VertexShader->ShaderProgE = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Exteriors\\");
@@ -422,8 +418,6 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 	ShaderCollection* Collection = GetShaderCollection(PixelShader->ShaderName);
 
 	bool enabled = Collection->Enabled;
-	// if AMD and no DXVK, disable glitchy Tonemapping shader replacements
-	if (Collection == Shaders.Tonemapping && (TheRenderManager->RESZ && !TheRenderManager->DXVK)) return false;
 
 	PixelShader->ShaderProg  = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, NULL);
 	PixelShader->ShaderProgE = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Exteriors\\");
@@ -629,10 +623,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
-	
-	// For AMD devices without DXVK, replace vanilla tonemapping replacement with an Effect
-	if ((TheRenderManager->RESZ && !TheRenderManager->DXVK) && Shaders.Tonemapping->Enabled)
-		Effects.Pretonemapper->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }

@@ -105,10 +105,12 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	HRESULT prepass = D3DXPreprocessShaderFromFileA(FileName, NULL, NULL, &ShaderSource, &Errors);
 	bool Compile = ShouldCompileShader(FileNameBinary, FileName, (ShaderCompileType)TheSettingManager->SettingsMain.Develop.CompileShaders);
 	if (prepass == D3D_OK) {
+
 		if (strstr(Name, ".vso"))
 			strcpy(ShaderProfile, "vs_3_0");
 		else if (strstr(Name, ".pso"))
 			strcpy(ShaderProfile, "ps_3_0");
+
 		if (Compile) {
 			D3DXCompileShaderFromFileA(FileName, NULL, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
 			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
