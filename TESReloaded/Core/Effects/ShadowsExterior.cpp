@@ -211,3 +211,98 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	Constants.ShadowMapRadius.z = Settings.Exteriors.ShadowMapRadius[MapFar];
 	Constants.ShadowMapRadius.w = Settings.Exteriors.ShadowMapRadius[MapLod];
 }
+
+
+// calculates the minimum area viewproj matrix for a given cascade using cascade depth and frustum corners
+D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View) {
+	D3DXMATRIX Proj;
+	float FarPlane = ShadowsExteriors->ShadowMapFarPlane;
+	float Radius = ShadowsExteriors->ShadowMapRadius[ShadowMapType];
+	NiCamera* Camera = WorldSceneGraph->camera;
+
+	// calculating the size of the shadow cascade
+	float znear;
+	float zfar;
+	switch (ShadowMapType) {
+	case ShadowMapTypeEnum::MapNear:
+		znear = 10;
+		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear];
+		break;
+	case ShadowMapTypeEnum::MapMiddle:
+		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear] * 0.9;
+		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle];
+		break;
+	case ShadowMapTypeEnum::MapFar:
+		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle] * 0.9;
+		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
+		break;
+	case ShadowMapTypeEnum::MapLod:
+		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar] * 0.9;
+		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapLod];
+		break;
+	case ShadowMapTypeEnum::MapOrtho:
+		// shift the covered area in the direction of the camera vector
+		D3DXVECTOR4 Center = D3DXVECTOR4(TheRenderManager->CameraForward.x, TheRenderManager->CameraForward.y, 0.0, 1.0);
+		D3DXVec4Normalize(&Center, &Center);
+		Radius *= 2;
+		Center.x *= Radius;
+		Center.y *= Radius;
+		D3DXVec4Transform(&Center, &Center, &View);
+		D3DXMatrixOrthoOffCenterRH(&Proj, Center.x - Radius, Center.x + Radius, Center.y - Radius, Center.y + Radius, FarPlane * 0.8f, 1.2f * FarPlane);
+		return View * Proj;
+	}
+
+	float w = Camera->Frustum.Right - Camera->Frustum.Left;
+	float h = Camera->Frustum.Top - Camera->Frustum.Bottom;
+
+	float ar = h / w;
+
+	//Logger::Log("fov %f   %f   %f", WorldSceneGraph->cameraFOV, Player->GetFoV(false), Player->GetFoV(true));
+	float fov = TheRenderManager->FOVData.z;
+	float fovY = TheRenderManager->FOVData.w;
+
+	float tanHalfHFOV = tanf(fov * 0.5f);
+	float tanHalfVFOV = tanf(fovY * 0.5f);
+
+	float xn = znear * tanHalfHFOV;
+	float xf = zfar * tanHalfHFOV;
+	float yn = znear * tanHalfVFOV;
+	float yf = zfar * tanHalfVFOV;
+
+	D3DXVECTOR4 frustrumPoints[8];
+
+	// near face
+	frustrumPoints[0] = D3DXVECTOR4(xn, yn, znear, 1.0);
+	frustrumPoints[1] = D3DXVECTOR4(-xn, yn, znear, 1.0);
+	frustrumPoints[2] = D3DXVECTOR4(xn, -yn, znear, 1.0);
+	frustrumPoints[3] = D3DXVECTOR4(-xn, -yn, znear, 1.0);
+
+	// far face
+	frustrumPoints[4] = D3DXVECTOR4(xf, yf, zfar, 1.0);
+	frustrumPoints[5] = D3DXVECTOR4(-xf, yf, zfar, 1.0);
+	frustrumPoints[6] = D3DXVECTOR4(xf, -yf, zfar, 1.0);
+	frustrumPoints[7] = D3DXVECTOR4(-xf, -yf, zfar, 1.0);
+
+	// values of the final light frustrum
+	float left = 0.0f;
+	float right = 0.0f;
+	float bottom = 0.0f;
+	float top = 0.0f;
+
+	// transform from camera to world then to light space
+	D3DXMATRIX m = TheRenderManager->InvViewMatrix * View;
+	D3DXVECTOR4 p;
+	for (int i = 0; i < 8; i++) {
+		D3DXVec4Transform(&p, &frustrumPoints[i], &m);
+
+		// extend frustrum to include all corners
+		if (p.x < left || left == 0.0f) left = p.x;
+		if (p.x > right || right == 0.0f) right = p.x;
+		if (p.y > top || top == 0.0f) top = p.y;
+		if (p.y < bottom || bottom == 0.0f) bottom = p.y;
+	}
+
+
+	D3DXMatrixOrthoOffCenterRH(&Proj, left, right, bottom, top, FarPlane * 0.6f, 1.4f * FarPlane);
+	return View * Proj;
+}

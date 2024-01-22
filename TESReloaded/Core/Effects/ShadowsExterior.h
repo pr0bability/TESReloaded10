@@ -105,10 +105,11 @@ public:
 	};
 	ShadowTextures	Textures;
 
-	void	UpdateConstants();
-	void	UpdateSettings();
-	void	RegisterConstants();
-	void	RegisterTextures();
+	void		UpdateConstants();
+	void		UpdateSettings();
+	void		RegisterConstants();
+	void		RegisterTextures();
 
-	void	GetCascadeDepths();
+	void		GetCascadeDepths();
+	D3DXMATRIX	GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View);
 };

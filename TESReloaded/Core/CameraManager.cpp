@@ -136,3 +136,84 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 	}
 
 }
+
+
+void CameraManager::GetPlane(D3DXPLANE* plane, float a, float b, float c, float d) {
+	D3DXPLANE newPlane = D3DXPLANE(a, b, c, d);
+	D3DXPlaneNormalize(plane, &newPlane);
+}
+
+/**
+* Generates the Frustrum planes from a matrix
+*/
+void CameraManager::SetFrustum(frustum* Frustum, D3DMATRIX* Matrix) {
+	
+	GetPlane(&Frustum->plane[frustum::PLANENEAR],
+		Matrix->_13,
+		Matrix->_23,
+		Matrix->_33,
+		Matrix->_43
+	);
+	GetPlane(&(Frustum->plane[frustum::PLANEFAR]),
+		Matrix->_14 - Matrix->_13,
+		Matrix->_24 - Matrix->_23,
+		Matrix->_34 - Matrix->_33,
+		Matrix->_44 - Matrix->_43
+	);
+	GetPlane(&Frustum->plane[frustum::PLANELEFT],
+		Matrix->_14 + Matrix->_11,
+		Matrix->_24 + Matrix->_21,
+		Matrix->_34 + Matrix->_31,
+		Matrix->_44 + Matrix->_41
+	);
+	GetPlane(&Frustum->plane[frustum::PLANERIGHT],
+		Matrix->_14 - Matrix->_11,
+		Matrix->_24 - Matrix->_21,
+		Matrix->_34 - Matrix->_31,
+		Matrix->_44 - Matrix->_41
+	);
+	GetPlane(&Frustum->plane[frustum::PLANETOP],
+		Matrix->_14 - Matrix->_12,
+		Matrix->_24 - Matrix->_22,
+		Matrix->_34 - Matrix->_32,
+		Matrix->_44 - Matrix->_42
+	);
+	GetPlane(&Frustum->plane[frustum::PLANEBOTTOM],
+		Matrix->_14 + Matrix->_12,
+		Matrix->_24 + Matrix->_22,
+		Matrix->_34 + Matrix->_32,
+		Matrix->_44 + Matrix->_42
+	);
+}
+
+
+/*
+* Checks wether the given node is in the frustrum using its radius for the current type of Shadow map.
+*/
+bool CameraManager::InFrustum(frustum* frustum, NiNode* Node) {
+	NiBound* Bound = Node->GetWorldBound();
+	if (!Bound) return false;
+
+	D3DXVECTOR3 Position = { 
+		Bound->Center.x - TheRenderManager->CameraPosition.x, 
+		Bound->Center.y - TheRenderManager->CameraPosition.y, 
+		Bound->Center.z - TheRenderManager->CameraPosition.z 
+	};
+
+	for (int i = 0; i < 6; ++i) {
+		if (D3DXPlaneDotCoord(&frustum->plane[i], &Position) <= -Bound->Radius)
+			return false;
+	}
+	return true;
+
+		//if (ShadowMapType > MapNear && ShadowMapType < MapOrtho && R) { // Ensures to not be fully in the near frustum
+		//	for (int i = 0; i < 6; ++i) {
+		//		Distance = D3DXPlaneDotCoord(&ShadowMapFrustum[ShadowMapType - 1][i], &Position);
+		//		if (Distance <= -Bound->Radius || std::fabs(Distance) < Bound->Radius) {
+		//			R = false;
+		//			break;
+		//		}
+		//	}
+		//	R = !R;
+		//}
+}
