@@ -51,10 +51,7 @@ public:
 	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType);
 	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, ShadowsSettings::InteriorsStruct* ShadowsInteriors);
 	void					RenderShadowMaps();
-	void					CalculateBlend(NiPointLight** Lights, int LightIndex);
     void                    BlurShadowMap(ShadowMapTypeEnum ShadowMapType);    
-	D3DXMATRIX				GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View);
-	static void				GetCascadeDepths();
 
 	std::stack<NiGeometry*> geometryAccum;
 	std::stack<NiGeometry*> skinnedGeoAccum;
