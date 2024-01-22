@@ -5,6 +5,13 @@ class LensEffect : public EffectRecord
 public:
 	LensEffect() : EffectRecord("Lens") {};
 
+	struct LensSettings {
+		float MainThreshold;
+		float NightThreshold;
+		float InteriorThreshold;
+	};
+	LensSettings	Settings;
+
 	struct LensStruct {
 		D3DXVECTOR4		Data;
 	};

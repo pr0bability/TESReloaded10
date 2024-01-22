@@ -5,12 +5,12 @@ void WetWorldEffect::UpdateConstants() {
 	if (TheShaderManager->GameState.isRainy && Constants.PuddlesAnimator.switched == false) {
 		// it just started raining
 		Constants.PuddlesAnimator.switched = true;
-		Constants.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase"), 1);
+		Constants.PuddlesAnimator.Start(increaseRate, 1);
 	}
 	else if (!TheShaderManager->GameState.isRainy && Constants.PuddlesAnimator.switched) {
 		// it just stopped raining
 		Constants.PuddlesAnimator.switched = false;
-		Constants.PuddlesAnimator.Start(TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease"), 0);
+		Constants.PuddlesAnimator.Start(decreaseRate, 0);
 	}
 	Constants.Data.x = TheShaderManager->Effects.Rain->Constants.RainAnimator.GetValue();
 	Constants.Data.y = TheShaderManager->GameState.isRainy;
@@ -20,6 +20,9 @@ void WetWorldEffect::UpdateConstants() {
 }
 
 void WetWorldEffect::UpdateSettings() {
+	increaseRate = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Increase");
+	decreaseRate = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "Decrease");
+
 	Constants.Coeffs.x = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_R");
 	Constants.Coeffs.y = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_G");
 	Constants.Coeffs.z = TheSettingManager->GetSettingF("Shaders.WetWorld.Main", "PuddleCoeff_B");

@@ -6,12 +6,12 @@ void SnowAccumulationEffect::UpdateConstants() {
 	if (TheShaderManager->GameState.isSnow && !Constants.SnowAccumulationAnimator.switched) {
 		// it just started snowing
 		Constants.SnowAccumulationAnimator.switched = true;
-		Constants.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Increase"), 1);
+		Constants.SnowAccumulationAnimator.Start(increaseRate, 1);
 	}
 	else if (!TheShaderManager->GameState.isSnow && Constants.SnowAccumulationAnimator.switched) {
 		// it just stopped snowing
 		Constants.SnowAccumulationAnimator.switched = false;
-		Constants.SnowAccumulationAnimator.Start(TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Decrease"), 0);
+		Constants.SnowAccumulationAnimator.Start(decreaseRate, 0);
 	}
 
 	Constants.Data.w = Constants.SnowAccumulationAnimator.GetValue();
@@ -20,6 +20,9 @@ void SnowAccumulationEffect::UpdateConstants() {
 }
 
 void SnowAccumulationEffect::UpdateSettings(){
+	increaseRate = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Increase");
+	decreaseRate = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "Decrease");
+
 	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurNormDropThreshhold");
 	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "BlurRadiusMultiplier");
 	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.SnowAccumulation.Main", "SunPower");
@@ -34,5 +37,5 @@ void SnowAccumulationEffect::RegisterConstants() {
 }
 
 bool SnowAccumulationEffect::ShouldRender() { 
-	return Constants.Data.w > 0.0f && TheShaderManager->GameState.isExterior; 
+	return Constants.Data.w > 0.0f && TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater; 
 }
