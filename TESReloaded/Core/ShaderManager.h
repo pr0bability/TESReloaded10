@@ -91,7 +91,6 @@ public:
 		LowHFEffect*			LowHF;
 		MotionBlurEffect*		MotionBlur;
 		NormalsEffect*			Normals;
-		PretonemapperEffect*	Pretonemapper;
 		RainEffect*				Rain;
 		SharpeningEffect*		Sharpening;
 		SpecularEffect*			Specular;
