@@ -358,9 +358,10 @@ void ShaderManager::UpdateConstants() {
 	timer.LogTime("ShaderManager::UpdateConstants");
 }
 
+
 float ShaderManager::GetTransitionValue(float Day, float Night, float Interior) {
 	if (GameState.isExterior) {
-		return std::lerp(Day, Night, GameState.transitionCurve);
+		return std::lerp(Night, Day, GameState.transitionCurve);
 	}
 	else {
 		return Interior;
