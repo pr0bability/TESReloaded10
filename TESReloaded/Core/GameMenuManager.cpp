@@ -367,10 +367,12 @@ void GameMenuManager::Render() {
 				float total = max(effect->renderTime + effect->constantUpdateTime, 0);
 
 				// in the case of Shadows, we add the time spent rendering the shadows buffer and shadow maps
-				if (effect == TheShaderManager->Effects.ShadowsExteriors || effect == TheShaderManager->Effects.ShadowsInteriors) {
-					total = effect->renderTime + effect->constantUpdateTime;
+				if ((effect == TheShaderManager->Effects.ShadowsExteriors && TheShaderManager->GameState.isExterior)|| 
+					(effect == TheShaderManager->Effects.ShadowsInteriors && !TheShaderManager->GameState.isExterior)) {
+
 					total += TheShaderManager->Effects.PointShadows->renderTime;
 					total += TheShaderManager->Effects.PointShadows2->renderTime;
+					total += TheShaderManager->Effects.SunShadows->renderTime;
 					total += TheShadowManager->shadowMapsRenderTime;
 				}
 
@@ -378,11 +380,11 @@ void GameMenuManager::Render() {
 
 				ss << std::fixed << std::setprecision(4) << total;
 				std::string duration = ss.str();
-				duration += " ms ";
+				duration += " ms";
 
 				//Logger::Log("%s render time: %s", Sections[i].c_str(), duration.c_str());
 
-				DrawShadowedText(duration.c_str(), 0 - RowSpace, lineYPos, ItemColumnSize, TextColorNormal, FontNormal, DT_RIGHT);
+				DrawShadowedText(duration.c_str(), 0, lineYPos, ItemColumnSize - MenuSettings.TextSize, TextColorNormal, FontNormal, DT_RIGHT);
 			}
 		}
 	}
@@ -422,17 +424,34 @@ void GameMenuManager::Render() {
 	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
 		//SettingManager::Configuration::ConfigNode Setting = Settings[i];
 
+		D3DXCOLOR textColor = TextColorNormal;
+
 		char SettingText[80];
 		strcpy(SettingText, Setting->Key);
 		strcat(SettingText, " = ");
-		strcat(SettingText, Setting->Value);
-		D3DXCOLOR textColor = TextColorNormal;
-		
+
+
 		if (SelectedRow[CurrentColumn] == i) {
 			memcpy((void*)&SelectedNode, Setting._Ptr, sizeof(SettingManager::Configuration::ConfigNode));
-			if (SelectedColumn == CurrentColumn) textColor = EditingMode ? TextColorEditing : TextColorSelected;
-		}
 
+			if (SelectedColumn == CurrentColumn) {
+				if (EditingMode) {
+					strcat(SettingText, EditingValue);
+					textColor = TextColorEditing;
+				}
+				else {
+					strcat(SettingText, Setting->Value);
+					textColor = TextColorSelected;
+				}
+			}
+			else {
+				strcat(SettingText, Setting->Value);
+			}
+		}
+		else {
+			strcat(SettingText, Setting->Value);
+		}
+	
 		DrawShadowedText(SettingText, ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, FontNormal, DT_LEFT);
 		Setting++;
 	}
