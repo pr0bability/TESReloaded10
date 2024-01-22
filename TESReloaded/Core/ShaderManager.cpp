@@ -135,9 +135,6 @@ template <typename T> void ShaderManager::RegisterEffect(T** Pointer)
 	T* effect = new T();
 	*Pointer = effect;
 
-	//Logger::Log("Registering effect %i %s", (int)EffectsNames.size(), effect->Name);
-	//if (!effect->Name) return;
-
 	EffectsNames[effect->Name] = (EffectRecord**)Pointer;
 	effect->UpdateSettings();
 	effect->RegisterConstants();
@@ -150,8 +147,6 @@ template <typename T> void ShaderManager::RegisterShaderCollection(T** Pointer)
 {
 	T* collection = new T();
 	*Pointer = collection;
-
-	//if (!collection->Name) return;
 	
 	ShaderNames[collection->Name] = (ShaderCollection**)Pointer;
 	collection->RegisterConstants();
@@ -601,7 +596,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	if ((GameState.isExterior && Effects.ShadowsExteriors->Enabled) || (!GameState.isExterior && Effects.ShadowsInteriors->Enabled)) {
 		// separate lights in 2 batches
 		RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.PointShadows, true);
-		if (TheShadowManager->PointLightsNum > 6) RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.PointShadows2, false);
+		if (Effects.ShadowsExteriors->Settings.Interiors.LightPoints > 6) RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.PointShadows2, false);
 		if (GameState.isExterior) RenderEffectToRT(Effects.ShadowsExteriors->Textures.ShadowPassSurface, Effects.SunShadows, false);
 	}
 

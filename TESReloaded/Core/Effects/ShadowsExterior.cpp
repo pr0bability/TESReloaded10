@@ -117,6 +117,8 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Interiors.LightRadiusMult = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "LightRadiusMult");
 	Settings.Interiors.DrawDistance = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "DrawDistance");
 	Settings.Interiors.UseCastShadowFlag = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "UseCastShadowFlag");
+	Settings.Interiors.PlayerShadowFirstPerson = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "PlayerShadowFirstPerson");
+	Settings.Interiors.PlayerShadowThirdPerson = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "PlayerShadowThirdPerson");
 
 	TheSettingManager->GetFormList("Shaders.ShadowsInteriors.ExcludedFormID", &Settings.Interiors.ExcludedForms);
 }
@@ -140,11 +142,24 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
 
 	// Lights position constants
-	std::string shadowLightConstantName = "TESR_ShadowLightPosition";
-	for (int i = 0; i < TrackedLightsMax; i++) {
-		std::string constantName = shadowLightConstantName + std::to_string(i);
-		TheShaderManager->RegisterConstant(constantName.c_str(), &Constants.ShadowLightPosition[i]);
-	}
+	//std::string shadowLightConstantName = "TESR_ShadowLightPosition";
+	//for (int i = 0; i < TrackedLightsMax; i++) {
+	//	std::string constantName = shadowLightConstantName + std::to_string(i);
+	//	TheShaderManager->RegisterConstant(constantName.c_str(), &(Constants.ShadowLightPosition[i]));
+	//}
+
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition0", &Constants.ShadowLightPosition[0]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition1", &Constants.ShadowLightPosition[1]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition2", &Constants.ShadowLightPosition[2]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition3", &Constants.ShadowLightPosition[3]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition4", &Constants.ShadowLightPosition[4]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition5", &Constants.ShadowLightPosition[5]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition6", &Constants.ShadowLightPosition[6]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition7", &Constants.ShadowLightPosition[7]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition8", &Constants.ShadowLightPosition[8]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition8", &Constants.ShadowLightPosition[9]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition10", &Constants.ShadowLightPosition[10]);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition11", &Constants.ShadowLightPosition[11]);
 }
 
 void ShadowsExteriorEffect::RegisterTextures() {

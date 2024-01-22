@@ -521,8 +521,14 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 			bool isThirdPerson = (shaderProp->flags & NiShadeProperty::kThirdPerson) != 0;
 
 			// Skip objects if they are barely visible. 
+			if ((matProp && matProp->fAlpha < 0.05f))
+				continue;
+
 			// Also skip viewmodel due to issues, and render player's model only in 3rd person
-			if ((matProp && matProp->fAlpha < 0.05f) || isFirstPerson || (!Player->isThirdPerson && isThirdPerson))
+			if (isFirstPerson && !Player->isThirdPerson && !Shadows->Settings.Interiors.PlayerShadowFirstPerson)
+				continue;
+				
+			if (isThirdPerson && Player->isThirdPerson && !Shadows->Settings.Interiors.PlayerShadowThirdPerson)
 				continue;
 
 			// check data for rigged geometry
