@@ -12,7 +12,7 @@ float4 TESR_SkyData: register(c10); // x: athmosphere thickness, y: sun influenc
 float4 TESR_SunAmount : register(c11); // x: dayTime, y:sunGlareAmnt, z:replace sun
 float4 TESR_DebugVar: register(c12);
 float4 TESR_SunPosition: register(c13);
-float4 TESR_SunsetColor: register(c14);
+float4 TESR_SunsetColor: register(c14); // sunsetColor.w is sky strength multiplier
 float4 TESR_HDRBloomData: register(c15);
 
 
@@ -68,8 +68,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
     // skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z * (TESR_SunAmount.x > 0); // add sun disk and boost brightness during sunrise/sunset
 
-    OUT.color_0.rgb = pows(skyColor, 1.0 / 2.2);//* TESR_SunsetColor.w; // multiply sky strength for HDR
-    OUT.color_0.a = 1;
+    OUT.color_0 = delinearize(float4(skyColor * TESR_SunsetColor.w, 1)) ; // multiply sky strength for HDR
 
     // dithering
 	OUT.color_0.rgb += ditherMat[ (IN.screen.x)%4 ][ (IN.screen.y)%4 ] / 255;
