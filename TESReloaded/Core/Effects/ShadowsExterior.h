@@ -78,6 +78,8 @@ public:
 			float				LightRadiusMult;
 			bool				UseCastShadowFlag;
 			ExcludedFormsList	ExcludedForms;
+			bool				PlayerShadowThirdPerson;
+			bool				PlayerShadowFirstPerson;
 		};
 
 		struct ScreenSpaceStruct {
