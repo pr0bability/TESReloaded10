@@ -7,15 +7,16 @@ void SkyShaders::RegisterConstants() {
 }
 
 void SkyShaders::UpdateConstants() {
-	if (TheShaderManager->Shaders.Tonemapping->Enabled && (TheSettingManager->SettingsChanged || TheShaderManager->GameState.isDayTimeChanged)) {
-		Constants.SunsetColor.w = TheSettingManager->GetSettingTransition("Shaders.Tonemapping", "SkyMultiplier", TheShaderManager->GameState.isExterior, TheShaderManager->GameState.transitionCurve);
-	}
-	else {
-		TheShaderManager->Shaders.Sky->Constants.SunsetColor.w = 1.0;
-	}
+	if (TheShaderManager->Shaders.Tonemapping->Enabled)
+		Constants.SunsetColor.w = TheShaderManager->GetTransitionValue(Settings.SkyMultiplierDay, Settings.SkyMultiplierNight, 1.0);
+	else
+		Constants.SunsetColor.w = 1.0;
 }
 
 void SkyShaders::UpdateSettings() {
+
+	Settings.SkyMultiplierDay = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "SkyMultiplier");
+	Settings.SkyMultiplierNight = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "SkyMultiplier");
 
 	Constants.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
 	Constants.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");

@@ -17,6 +17,9 @@ public:
 	};
 	WetWorldStruct	Constants;
 
+	float increaseRate;
+	float decreaseRate;
+
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();

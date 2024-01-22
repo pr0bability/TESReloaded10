@@ -3,14 +3,14 @@
 void DepthOfFieldEffect::UpdateConstants() {
 	TheShaderManager->avglumaRequired = true;
 
-	const char* sectionName = "Shaders.DepthOfField.FirstPersonView";
+	ValuesStruct* category = &Settings.FirstPerson;
 	if (TheCameraManager->IsVanity())
-		sectionName = "Shaders.DepthOfField.VanityView";
+		category = &Settings.VanityView;
 	else if (!TheCameraManager->IsFirstPerson())
-		sectionName = "Shaders.DepthOfField.ThirdPersonView";
+		category = &Settings.FirstPerson;
 
-	int Mode = TheSettingManager->GetSettingI(sectionName, "Mode");
-	bool dofActive = TheSettingManager->GetSettingI(sectionName, "Enabled");
+	int Mode = category->Mode;
+	bool dofActive = category->Enabled;
 
 	// disable based on settings/context
 	if ((Mode == 1 && (TheShaderManager->GameState.isDialog || TheShaderManager->GameState.isPersuasion)) ||
@@ -21,19 +21,52 @@ void DepthOfFieldEffect::UpdateConstants() {
 	Constants.Enabled = dofActive;
 
 	if (dofActive) {
-		Constants.Blur.x = TheSettingManager->GetSettingF(sectionName, "DistantBlur");
-		Constants.Blur.y = TheSettingManager->GetSettingF(sectionName, "DistantBlurStartRange");
-		Constants.Blur.z = TheSettingManager->GetSettingF(sectionName, "DistantBlurEndRange");
-		Constants.Blur.w = TheSettingManager->GetSettingF(sectionName, "BaseBlurRadius");
-		Constants.Data.x = TheSettingManager->GetSettingF(sectionName, "BlurFallOff");
-		Constants.Data.y = TheSettingManager->GetSettingF(sectionName, "Radius");
-		Constants.Data.z = TheSettingManager->GetSettingF(sectionName, "DiameterRange");
-		Constants.Data.w = TheSettingManager->GetSettingF(sectionName, "NearBlurCutOff");
+		Constants.Blur.x = category->DistantBlur;
+		Constants.Blur.y = category->DistantBlurStartRange;
+		Constants.Blur.z = category->DistantBlurEndRange;
+		Constants.Blur.w = category->BaseBlurRadius;
+		Constants.Data.x = category->BlurFallOff;
+		Constants.Data.y = category->Radius;
+		Constants.Data.z = category->DiameterRange;
+		Constants.Data.w = category->NearBlurCutOff;
 	}
 
 }
 
-void DepthOfFieldEffect::UpdateSettings() {}
+void DepthOfFieldEffect::UpdateSettings() {
+	Settings.FirstPerson.DistantBlur = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "DistantBlur");
+	Settings.FirstPerson.DistantBlurStartRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "DistantBlurStartRange");
+	Settings.FirstPerson.DistantBlurEndRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "DistantBlurEndRange");
+	Settings.FirstPerson.BaseBlurRadius = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "BaseBlurRadius");
+	Settings.FirstPerson.BlurFallOff = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "BlurFallOff");
+	Settings.FirstPerson.Radius = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "Radius");
+	Settings.FirstPerson.DiameterRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "DiameterRange");
+	Settings.FirstPerson.NearBlurCutOff = TheSettingManager->GetSettingF("Shaders.DepthOfField.FirstPersonView", "NearBlurCutOff");
+	Settings.FirstPerson.Mode = TheSettingManager->GetSettingI("Shaders.DepthOfField.FirstPersonView", "Mode");
+	Settings.FirstPerson.Enabled = TheSettingManager->GetSettingI("Shaders.DepthOfField.FirstPersonView", "Enabled");
+
+	Settings.ThirdPerson.DistantBlur = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DistantBlur");
+	Settings.ThirdPerson.DistantBlurStartRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DistantBlurStartRange");
+	Settings.ThirdPerson.DistantBlurEndRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DistantBlurEndRange");
+	Settings.ThirdPerson.BaseBlurRadius = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "BaseBlurRadius");
+	Settings.ThirdPerson.BlurFallOff = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "BlurFallOff");
+	Settings.ThirdPerson.Radius = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "Radius");
+	Settings.ThirdPerson.DiameterRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "DiameterRange");
+	Settings.ThirdPerson.NearBlurCutOff = TheSettingManager->GetSettingF("Shaders.DepthOfField.ThirdPersonView", "NearBlurCutOff");
+	Settings.ThirdPerson.Mode = TheSettingManager->GetSettingI("Shaders.DepthOfField.ThirdPersonView", "Mode");
+	Settings.ThirdPerson.Enabled = TheSettingManager->GetSettingI("Shaders.DepthOfField.ThirdPersonView", "Enabled");
+
+	Settings.VanityView.DistantBlur = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "DistantBlur");
+	Settings.VanityView.DistantBlurStartRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "DistantBlurStartRange");
+	Settings.VanityView.DistantBlurEndRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "DistantBlurEndRange");
+	Settings.VanityView.BaseBlurRadius = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "BaseBlurRadius");
+	Settings.VanityView.BlurFallOff = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "BlurFallOff");
+	Settings.VanityView.Radius = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "Radius");
+	Settings.VanityView.DiameterRange = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "DiameterRange");
+	Settings.VanityView.NearBlurCutOff = TheSettingManager->GetSettingF("Shaders.DepthOfField.VanityView", "NearBlurCutOff");
+	Settings.VanityView.Mode = TheSettingManager->GetSettingI("Shaders.DepthOfField.VanityView", "Mode");
+	Settings.VanityView.Enabled = TheSettingManager->GetSettingI("Shaders.DepthOfField.VanityView", "Enabled");
+}
 
 void DepthOfFieldEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_DepthOfFieldBlur", &Constants.Blur);

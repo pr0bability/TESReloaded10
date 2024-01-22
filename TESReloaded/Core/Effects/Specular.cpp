@@ -4,15 +4,17 @@ void SpecularEffect::UpdateConstants() {
 
 	float rainyPercent = TheShaderManager->Effects.Rain->Constants.RainAnimator.GetValue();
 
+
 	// handle transition by interpolating previous and current weather settings
 	Constants.Data.x = std::lerp(Settings.Exterior.SpecLumaTreshold, Settings.Rain.SpecLumaTreshold, rainyPercent);
 	Constants.Data.y = std::lerp(Settings.Exterior.BlurMultiplier, Settings.Rain.BlurMultiplier, rainyPercent);
 	Constants.Data.z = std::lerp(Settings.Exterior.Glossiness, Settings.Rain.Glossiness, rainyPercent);
 	Constants.Data.w = std::lerp(Settings.Exterior.DistanceFade, Settings.Rain.DistanceFade, rainyPercent);
-	Constants.EffectStrength.x = std::lerp(Settings.Exterior.SpecularStrength, Settings.Rain.SpecularStrength, rainyPercent);;
-	Constants.EffectStrength.y = std::lerp(Settings.Exterior.SkyTintStrength, Settings.Rain.SkyTintStrength, rainyPercent);;
-	Constants.EffectStrength.z = std::lerp(Settings.Exterior.FresnelStrength, Settings.Rain.FresnelStrength, rainyPercent);;
-	Constants.EffectStrength.w = std::lerp(Settings.Exterior.SkyTintSaturation, Settings.Rain.SkyTintSaturation, rainyPercent);;
+	Constants.EffectStrength.x = std::lerp(Settings.Exterior.SpecularStrength, Settings.Rain.SpecularStrength, rainyPercent);
+	Constants.EffectStrength.y = std::lerp(Settings.Exterior.SkyTintStrength, Settings.Rain.SkyTintStrength, rainyPercent);
+	Constants.EffectStrength.z = std::lerp(Settings.Exterior.FresnelStrength, Settings.Rain.FresnelStrength, rainyPercent);
+	Constants.EffectStrength.w = std::lerp(Settings.Exterior.SkyTintSaturation, Settings.Rain.SkyTintSaturation, rainyPercent);
+
 
 }
 

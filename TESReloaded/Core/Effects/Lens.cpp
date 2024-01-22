@@ -1,17 +1,14 @@
 #include "Lens.h"
 
 void LensEffect::UpdateConstants() {
-
-	if (TheShaderManager->GameState.isExterior) {
-		Constants.Data.y = std::lerp(TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold"), TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold"), TheShaderManager->GameState.transitionCurve);
-	}
-	else {
-		Constants.Data.y = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
-	}
+	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.MainThreshold, Settings.NightThreshold, Settings.InteriorThreshold);
 }
 
 void LensEffect::UpdateSettings(){
 	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
+	Settings.MainThreshold = TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold");
+	Settings.NightThreshold = TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold");
+	Settings.InteriorThreshold = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
 }
 
 void LensEffect::RegisterConstants() {
@@ -20,5 +17,5 @@ void LensEffect::RegisterConstants() {
 
 bool LensEffect::ShouldRender() 
 {
-	return !TheShaderManager->GameState.isUnderwater; 
+	return !TheShaderManager->GameState.isUnderwater && Constants.Data.x > 0;
 };

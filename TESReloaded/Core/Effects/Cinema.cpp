@@ -4,15 +4,13 @@ void CinemaEffect::UpdateConstants() {
 
 	Constants.Data.x = 1.0f; // set cinema aspect ratio to native ar
 	if (Enabled) {
-		float AR = aspectRatio;
-
 		// disable based on settings/context
 		if ((Mode == 1 && (TheShaderManager->GameState.isDialog || TheShaderManager->GameState.isPersuasion)) ||
 			(Mode == 2 && (!TheShaderManager->GameState.isDialog)) ||
 			(Mode == 3 && (!TheShaderManager->GameState.isPersuasion)) ||
-			(Mode == 4 && (!TheShaderManager->GameState.isDialog && !TheShaderManager->GameState.isPersuasion))) AR = 1.0f;
-
-		Constants.Data.x = AR;
+			(Mode == 4 && (!TheShaderManager->GameState.isDialog && !TheShaderManager->GameState.isPersuasion))) Constants.Data.x = 1.0f;
+		else
+			Constants.Data.x = aspectRatio;
 	}
 
 }
