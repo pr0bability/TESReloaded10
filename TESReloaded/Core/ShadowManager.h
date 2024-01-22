@@ -3,6 +3,20 @@
 
 #define ShadowsSettings ShadowsExteriorEffect::SettingsShadowStruct
 
+typedef struct frustum {
+	enum PLANE {
+		PLANENEAR = 0,
+		PLANEFAR = 1,
+		PLANELEFT = 2,
+		PLANERIGHT = 3,
+		PLANETOP = 4,
+		PLANEBOTTOM = 5,
+	};
+	PLANE PLANE;
+	D3DXPLANE plane[6];
+} frustum;
+
+
 class ShadowManager { // Never disposed
 public:
 	static void Initialize();
@@ -24,9 +38,6 @@ public:
 		PlaneBottom	= 5,
 	};
 
-	void					SetFrustum(ShadowMapTypeEnum ShadowMapType, D3DMATRIX* Matrix);
-	bool					InFrustum(ShadowMapTypeEnum ShadowMapType, NiNode* Node);
-	void					GetPlane(D3DXPLANE* plane, float a, float b, float c, float d);
 
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms);
 	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
@@ -52,7 +63,7 @@ public:
     ShaderRecordVertex*		ShadowMapVertex;
 	ShaderRecordPixel*		ShadowMapPixel;
 	D3DVIEWPORT9			ShadowMapViewPort[5];
-	D3DXPLANE				ShadowMapFrustum[5][6];
+	frustum					ShadowMapFrustum[5];
 	NiVector4				BillboardRight;
 	NiVector4				BillboardUp;
 	ShaderRecordVertex*		ShadowCubeMapVertex;
