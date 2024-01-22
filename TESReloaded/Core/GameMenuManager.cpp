@@ -359,9 +359,9 @@ void GameMenuManager::Render() {
 
 			DrawShadowedText(enabled ? "ENABLED" : "DISABLED", pos + 1, lineYPos, 100, textColor, FontStatus, DT_LEFT);
 
-			// show render time for effect
+			// show render time for effect if debug mode enabled
 			EffectRecord* effect = TheShaderManager->GetEffectByName(Sections[i].c_str());
-			if (effect) {
+			if (effect && TheSettingManager->SettingsMain.Develop.DebugMode) { 
 				std::stringstream ss;
 
 				float total = max(effect->renderTime + effect->constantUpdateTime, 0);
