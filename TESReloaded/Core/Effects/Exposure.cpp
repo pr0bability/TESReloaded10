@@ -22,10 +22,10 @@ void ExposureEffect::UpdateSettings(){
 	Settings.Night.DarkAdaptSpeed = TheSettingManager->GetSettingF("Shaders.Exposure.Night", "DarkAdaptSpeed");
 	Settings.Night.LightAdaptSpeed = TheSettingManager->GetSettingF("Shaders.Exposure.Night", "LightAdaptSpeed");
 													
-	Settings.Night.MinBrightness = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "MinBrightness");
-	Settings.Night.MaxBrightness = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "MaxBrightness");
-	Settings.Night.DarkAdaptSpeed = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "DarkAdaptSpeed");
-	Settings.Night.LightAdaptSpeed = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "LightAdaptSpeed");
+	Settings.Interiors.MinBrightness = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "MinBrightness");
+	Settings.Interiors.MaxBrightness = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "MaxBrightness");
+	Settings.Interiors.DarkAdaptSpeed = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "DarkAdaptSpeed");
+	Settings.Interiors.LightAdaptSpeed = TheSettingManager->GetSettingF("Shaders.Exposure.Interiors", "LightAdaptSpeed");
 }
 
 void ExposureEffect::RegisterConstants() {
