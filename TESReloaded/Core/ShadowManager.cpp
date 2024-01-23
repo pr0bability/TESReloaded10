@@ -51,7 +51,7 @@ void ShadowManager::Initialize() {
 */
 TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms) {
 	
-	if (Ref && !Ref->GetNode()) return NULL;
+	if (!Ref || !Ref->GetNode()) return NULL;
 	if (Ref->flags & TESForm::FormFlags::kFormFlags_NotCastShadows) return NULL;
 
 	TESForm* Form = Ref->baseForm;
@@ -59,26 +59,37 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsS
 	switch (TypeID) {
 	case TESForm::FormType::kFormType_Activator:
 		if (!Forms->Activators) return NULL; 
+		break;
 	case TESForm::FormType::kFormType_Apparatus:
 		if (!Forms->Apparatus) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Book:
 		if (!Forms->Books) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Container:
 		if (!Forms->Containers) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Door:
 		if (!Forms->Doors) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Misc:
 		if (!Forms->Misc) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Tree:
 		if (!Forms->Trees) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Furniture:
 		if (!Forms->Furniture) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Land:
 		if (!Forms->Terrain) return NULL;
+		break;
 	case TESForm::FormType::kFormType_NPC:
 		if (TypeID <= TESForm::FormType::kFormType_LeveledCreature && !Forms->Actors) return NULL;
+		break;
 	case TESForm::FormType::kFormType_Stat:
 		if (TypeID <= TESForm::FormType::kFormType_MoveableStatic && !Forms->Statics) return NULL;
+		break;
 	default:
 		break;
 	}
