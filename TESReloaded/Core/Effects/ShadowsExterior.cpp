@@ -59,6 +59,8 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
 	//Shadows Cascade settings
+	GetCascadeDepths();
+
 	for (int shadowType = 0; shadowType <= ShadowManager::ShadowMapTypeEnum::MapOrtho; shadowType++) {
 		char sectionName[256] = "Shaders.ShadowsExteriors.";
 		switch (shadowType) {
@@ -78,20 +80,21 @@ void ShadowsExteriorEffect::UpdateSettings() {
 			strcat(sectionName, "Ortho");
 			break;
 		}
+		ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
 
-		Settings.Exteriors.AlphaEnabled[shadowType] = TheSettingManager->GetSettingI(sectionName, "AlphaEnabled");
-		Settings.Exteriors.Forms[shadowType].Activators = TheSettingManager->GetSettingI(sectionName, "Activators");
-		Settings.Exteriors.Forms[shadowType].Actors = TheSettingManager->GetSettingI(sectionName, "Actors");
-		Settings.Exteriors.Forms[shadowType].Apparatus = TheSettingManager->GetSettingI(sectionName, "Apparatus");
-		Settings.Exteriors.Forms[shadowType].Books = TheSettingManager->GetSettingI(sectionName, "Books");
-		Settings.Exteriors.Forms[shadowType].Containers = TheSettingManager->GetSettingI(sectionName, "Containers");
-		Settings.Exteriors.Forms[shadowType].Doors = TheSettingManager->GetSettingI(sectionName, "Doors");
-		Settings.Exteriors.Forms[shadowType].Furniture = TheSettingManager->GetSettingI(sectionName, "Furniture");
-		Settings.Exteriors.Forms[shadowType].Misc = TheSettingManager->GetSettingI(sectionName, "Misc");
-		Settings.Exteriors.Forms[shadowType].Statics = TheSettingManager->GetSettingI(sectionName, "Statics");
-		Settings.Exteriors.Forms[shadowType].Terrain = TheSettingManager->GetSettingI(sectionName, "Terrain");
-		Settings.Exteriors.Forms[shadowType].Trees = TheSettingManager->GetSettingI(sectionName, "Trees");
-		Settings.Exteriors.Forms[shadowType].Lod = TheSettingManager->GetSettingI(sectionName, "Lod");
+		ShadowMap->AlphaEnabled = TheSettingManager->GetSettingI(sectionName, "AlphaEnabled");
+		ShadowMap->Forms.Activators = TheSettingManager->GetSettingI(sectionName, "Activators");
+		ShadowMap->Forms.Actors = TheSettingManager->GetSettingI(sectionName, "Actors");
+		ShadowMap->Forms.Apparatus = TheSettingManager->GetSettingI(sectionName, "Apparatus");
+		ShadowMap->Forms.Books = TheSettingManager->GetSettingI(sectionName, "Books");
+		ShadowMap->Forms.Containers = TheSettingManager->GetSettingI(sectionName, "Containers");
+		ShadowMap->Forms.Doors = TheSettingManager->GetSettingI(sectionName, "Doors");
+		ShadowMap->Forms.Furniture = TheSettingManager->GetSettingI(sectionName, "Furniture");
+		ShadowMap->Forms.Misc = TheSettingManager->GetSettingI(sectionName, "Misc");
+		ShadowMap->Forms.Statics = TheSettingManager->GetSettingI(sectionName, "Statics");
+		ShadowMap->Forms.Terrain = TheSettingManager->GetSettingI(sectionName, "Terrain");
+		ShadowMap->Forms.Trees = TheSettingManager->GetSettingI(sectionName, "Trees");
+		ShadowMap->Forms.Lod = TheSettingManager->GetSettingI(sectionName, "Lod");
 	};
 
 	// get the list of excluded formIDs
@@ -133,12 +136,12 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapBlend", &Constants.ShadowCubeMapBlend);
 	TheShaderManager->RegisterConstant("TESR_ShadowWorldTransform", (D3DXVECTOR4*)&Constants.ShadowWorld);
 	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&Constants.ShadowViewProj);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&Constants.ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&Constants.ShadowCameraToLight[ShadowManager::ShadowMapTypeEnum::MapNear]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&Constants.ShadowCameraToLight[ShadowManager::ShadowMapTypeEnum::MapMiddle]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&Constants.ShadowCameraToLight[ShadowManager::ShadowMapTypeEnum::MapFar]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&Constants.ShadowCameraToLight[ShadowManager::ShadowMapTypeEnum::MapLod]);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&Constants.ShadowCameraToLight[ShadowManager::ShadowMapTypeEnum::MapOrtho]);
+	//TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&Constants.ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapNear].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapMiddle].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapFar].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapLod].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapOrtho].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
 
 	// Lights position constants
@@ -164,7 +167,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 
 void ShadowsExteriorEffect::RegisterTextures() {
 	int ShadowMapSize;
-	int ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
+	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
 	// initialize cascade shadowmaps
 	std::vector<const char*>ShadowBufferNames = {
@@ -178,8 +181,9 @@ void ShadowsExteriorEffect::RegisterTextures() {
 		// create one texture per Exterior ShadowMap type
 		float multiple = 1;// i == ShadowManager::ShadowMapTypeEnum::MapLod ? 2.0f : 1.0f; // double the size of lod map only
 		ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
-		TheTextureManager->InitTexture(ShadowBufferNames[i], &Textures.ShadowMapTexture[i], &Textures.ShadowMapSurface[i], ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowMapDepthSurface[i], NULL);
+
+		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
 	}
 
 	// initialize point lights cubemaps
@@ -194,6 +198,19 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	// Create the stencil surface used for rendering cubemaps
 	TheRenderManager->device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowCubeMapDepthSurface, NULL);
 
+
+	// initialize the frame vertices for future shadow blurring
+	for (int i = 0; i <= MapOrtho; i++) {
+		//float multiple = i == MapLod ? 2.0f : 1.0f; // double the size of lod map only
+		float multiple = 1.0f; // double the size of lod map only
+		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
+
+		if (i != MapOrtho) TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
+		ShadowMaps[i].ShadowMapViewPort = { 0, 0, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+		ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
+	}
+	//TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
+	//memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
 
 	// Initialize shadow buffer
 	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, D3DFMT_A8R8G8B8);
@@ -210,62 +227,60 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	for (int i = 0; i < cascadeCount; i++) {
 		// formula for cascade ratios adapted from https://www.asawicki.info/news_1283_cascaded_shadow_mapping
 		cascadeNum += 1.0f;
-		Settings.Exteriors.ShadowMapRadius[i] = std::lerp(
+
+		ShadowMaps[i].ShadowMapRadius = std::lerp(
 			camNear + (cascadeNum / cascadeCount) * (camFar - camNear),
 			camNear * powf(camFar / camNear, cascadeNum / cascadeCount),
 			logFactor);
 
 		// filtering objects occupying less than 10 pixels in the shadow map
-		Settings.Exteriors.Forms[i].MinRadius = 10.0f * Settings.Exteriors.ShadowMapRadius[i] / Settings.Exteriors.ShadowMapResolution;
+		ShadowMaps[i].Forms.MinRadius = 10.0f * ShadowMaps[i].ShadowMapRadius / Settings.Exteriors.ShadowMapResolution;
 	}
-	Settings.Exteriors.ShadowMapRadius[cascadeCount] = camFar;
+	ShadowMaps[cascadeCount].ShadowMapRadius = camFar;
+
+	// Get Near distance for each cascade
+	ShadowMaps[MapNear].ShadowMapNear = 0;
+	ShadowMaps[MapMiddle].ShadowMapNear = ShadowMaps[MapNear].ShadowMapRadius * 0.9;
+	ShadowMaps[MapFar].ShadowMapNear = ShadowMaps[MapMiddle].ShadowMapRadius * 0.9;
+	ShadowMaps[MapLod].ShadowMapNear = ShadowMaps[MapFar].ShadowMapRadius * 0.9;
 
 	// Store Shadow map sizes in Constants to pass to the Shaders
-	Constants.ShadowMapRadius.x = Settings.Exteriors.ShadowMapRadius[MapNear];
-	Constants.ShadowMapRadius.y = Settings.Exteriors.ShadowMapRadius[MapMiddle];
-	Constants.ShadowMapRadius.z = Settings.Exteriors.ShadowMapRadius[MapFar];
-	Constants.ShadowMapRadius.w = Settings.Exteriors.ShadowMapRadius[MapLod];
+	Constants.ShadowMapRadius.x = ShadowMaps[MapNear].ShadowMapRadius;
+	Constants.ShadowMapRadius.y = ShadowMaps[MapMiddle].ShadowMapRadius;
+	Constants.ShadowMapRadius.z = ShadowMaps[MapFar].ShadowMapRadius;
+	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius;
+
+}
+
+
+D3DXMATRIX ShadowsExteriorEffect::GetOrthoViewProj(D3DXMATRIX View) {
+	float FarPlane = Settings.Exteriors.ShadowMapFarPlane;
+	float Radius = ShadowMaps[MapOrtho].ShadowMapRadius;
+
+	// shift the covered area in the direction of the camera vector
+	D3DXVECTOR4 Center = D3DXVECTOR4(TheRenderManager->CameraForward.x, TheRenderManager->CameraForward.y, 0.0, 1.0);
+	D3DXVec4Normalize(&Center, &Center);
+	Radius *= 2;
+	Center.x *= Radius;
+	Center.y *= Radius;
+	D3DXVec4Transform(&Center, &Center, &View);
+
+	D3DXMATRIX Proj;
+	D3DXMatrixOrthoOffCenterRH(&Proj, Center.x - Radius, Center.x + Radius, Center.y - Radius, Center.y + Radius, FarPlane * 0.8f, 1.2f * FarPlane);
+	return View * Proj;
 }
 
 
 // calculates the minimum area viewproj matrix for a given cascade using cascade depth and frustum corners
-D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapTypeEnum ShadowMapType, SettingsShadowStruct::ExteriorsStruct* ShadowsExteriors, D3DXMATRIX View) {
+D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXMATRIX View) {
 	D3DXMATRIX Proj;
-	float FarPlane = ShadowsExteriors->ShadowMapFarPlane;
-	float Radius = ShadowsExteriors->ShadowMapRadius[ShadowMapType];
+	float FarPlane = Settings.Exteriors.ShadowMapFarPlane;
+	float Radius = ShadowMap->ShadowMapRadius;
 	NiCamera* Camera = WorldSceneGraph->camera;
 
 	// calculating the size of the shadow cascade
-	float znear;
-	float zfar;
-	switch (ShadowMapType) {
-	case ShadowMapTypeEnum::MapNear:
-		znear = 10;
-		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear];
-		break;
-	case ShadowMapTypeEnum::MapMiddle:
-		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapNear] * 0.9;
-		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle];
-		break;
-	case ShadowMapTypeEnum::MapFar:
-		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapMiddle] * 0.9;
-		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar];
-		break;
-	case ShadowMapTypeEnum::MapLod:
-		znear = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapFar] * 0.9;
-		zfar = ShadowsExteriors->ShadowMapRadius[ShadowMapTypeEnum::MapLod];
-		break;
-	case ShadowMapTypeEnum::MapOrtho:
-		// shift the covered area in the direction of the camera vector
-		D3DXVECTOR4 Center = D3DXVECTOR4(TheRenderManager->CameraForward.x, TheRenderManager->CameraForward.y, 0.0, 1.0);
-		D3DXVec4Normalize(&Center, &Center);
-		Radius *= 2;
-		Center.x *= Radius;
-		Center.y *= Radius;
-		D3DXVec4Transform(&Center, &Center, &View);
-		D3DXMatrixOrthoOffCenterRH(&Proj, Center.x - Radius, Center.x + Radius, Center.y - Radius, Center.y + Radius, FarPlane * 0.8f, 1.2f * FarPlane);
-		return View * Proj;
-	}
+	float znear = ShadowMap->ShadowMapNear;
+	float zfar = ShadowMap->ShadowMapRadius;
 
 	float w = Camera->Frustum.Right - Camera->Frustum.Left;
 	float h = Camera->Frustum.Top - Camera->Frustum.Bottom;

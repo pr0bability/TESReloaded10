@@ -3,18 +3,18 @@
 
 #define ShadowsSettings ShadowsExteriorEffect::SettingsShadowStruct
 
-typedef struct frustum {
-	enum PLANE {
-		PLANENEAR = 0,
-		PLANEFAR = 1,
-		PLANELEFT = 2,
-		PLANERIGHT = 3,
-		PLANETOP = 4,
-		PLANEBOTTOM = 5,
-	};
-	PLANE PLANE;
-	D3DXPLANE plane[6];
-} frustum;
+//typedef struct frustum {
+//	enum PLANE {
+//		PLANENEAR = 0,
+//		PLANEFAR = 1,
+//		PLANELEFT = 2,
+//		PLANERIGHT = 3,
+//		PLANETOP = 4,
+//		PLANEBOTTOM = 5,
+//	};
+//	PLANE PLANE;
+//	D3DXPLANE plane[6];
+//} frustum;
 
 
 class ShadowManager { // Never disposed
@@ -30,7 +30,7 @@ public:
 	};
 
 
-	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsSettings::FormsStruct* Forms, ShadowsSettings::ExcludedFormsList* ExcludedForms);
+	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
 	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
 	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject);
 	void					RenderAccums();
@@ -38,11 +38,12 @@ public:
 	void					RenderSkinnedGeometry(NiGeometry* Geo);
 	void					RenderSpeedTreeGeometry(NiGeometry* Geo);
 	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
-	void					RenderShadowMap(ShadowMapTypeEnum ShadowMapType, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, D3DXVECTOR3* At, D3DXVECTOR4* SunDir);
-	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsSettings::ExteriorsStruct* ShadowsExteriors, ShadowMapTypeEnum ShadowMapType);
-	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex, ShadowsSettings::InteriorsStruct* ShadowsInteriors);
+	D3DXMATRIX				GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir);
+	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj);
+	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
+	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
-    void                    BlurShadowMap(ShadowMapTypeEnum ShadowMapType);    
+    void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 
 	std::stack<NiGeometry*> geometryAccum;
 	std::stack<NiGeometry*> skinnedGeoAccum;
@@ -50,8 +51,8 @@ public:
 
     ShaderRecordVertex*		ShadowMapVertex;
 	ShaderRecordPixel*		ShadowMapPixel;
-	D3DVIEWPORT9			ShadowMapViewPort[5];
-	frustum					ShadowMapFrustum[5];
+	//D3DVIEWPORT9			ShadowMapViewPort[5];
+	//frustum					ShadowMapFrustum[5];
 	NiVector4				BillboardRight;
 	NiVector4				BillboardUp;
 	ShaderRecordVertex*		ShadowCubeMapVertex;
@@ -64,8 +65,8 @@ public:
 
     ShaderRecordVertex*		ShadowMapBlurVertex;
 	ShaderRecordPixel*		ShadowMapBlurPixel;
-    IDirect3DVertexBuffer9* BlurShadowVertex[4];
-    float                   ShadowMapInverseResolution[5];
+    /*IDirect3DVertexBuffer9* BlurShadowVertexBuffer[4];*/
+    //float                   ShadowMapInverseResolution[5];
     
 	D3DVIEWPORT9			ShadowCubeMapViewPort;
 	NiPointLight*			ShadowCubeMapLights[ShadowCubeMapsMax];

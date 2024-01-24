@@ -438,7 +438,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 	std::map<int, ShadowSceneLight*> SceneLights;
 	NiTList<ShadowSceneLight>::Entry* Entry = SceneNode->lights.start;
 
-	ShadowsSettings::InteriorsStruct* Settings = &Effects.ShadowsExteriors->Settings.Interiors;
+	ShadowsExteriorEffect::InteriorsStruct* Settings = &Effects.ShadowsExteriors->Settings.Interiors;
 	ShadowsExteriorEffect::ShadowStruct* ShadowsConstants = &Effects.ShadowsExteriors->Constants;
 
 	while (Entry) {
