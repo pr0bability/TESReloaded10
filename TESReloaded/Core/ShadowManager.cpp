@@ -135,16 +135,10 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, float MinRadius) {
     		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->GetWorldBoundRadius() < MinRadius) continue; // culling containers
 
 		for (int i = 0; i < Node->m_children.end; i++) {
-			try {
-				child = Node->m_children.data[i];
-				if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
-				if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
-				AccumObject(&containers, child);
-			}
-			catch (const std::exception& e) {
-				Logger::Log("%s", e.what());
-				InterfaceManager->ShowMessage(e.what());
-			}
+			child = Node->m_children.data[i];
+			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || child->GetWorldBoundRadius() < MinRadius) continue; // culling children
+			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+			AccumObject(&containers, child);
 		}
 	}
 }
@@ -331,19 +325,16 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 
 	if (!ShadowMap->ShadowMapDepthSurface) {
-//		Logger::Log("ShadowDepthSurface missing for cascade %i", ShadowMapType);
+		//Logger::Log("ShadowDepthSurface missing for cascade %i", ShadowMapType);
 		return;
 	}
 	if (!ShadowMap->ShadowMapSurface) {
-//		Logger::Log("ShadowSurface missing for cascade %i", ShadowMapType);
+		//Logger::Log("ShadowSurface missing for cascade %i", ShadowMapType);
 		return;
 	}
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
-	GridCellArray* CellArray = Tes->gridCellArray;
-	UInt32 CellArraySize = CellArray->size * CellArray->size;
-	AlphaEnabled = ShadowMap->AlphaEnabled;
 
 	ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
 	TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, ViewProj);
@@ -366,6 +357,8 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	RenderState->SetPixelShader(ShadowMapPixel->ShaderHandle, false);
 	Device->BeginScene();
 
+	GridCellArray* CellArray = Tes->gridCellArray;
+	UInt32 CellArraySize = CellArray->size * CellArray->size;
 	if (Player->GetWorldSpace()) {
 		for (UInt32 i = 0; i < CellArraySize; i++) {
 			if (TESObjectCELL* Cell = CellArray->GetCell(i)) {
@@ -652,14 +645,12 @@ void ShadowManager::RenderShadowMaps() {
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
 	TESObjectCELL* currentCell = Player->parentCell;
 
-	// Render directional shadows for Sun/Moon
-
-	ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
-	NiNode* PlayerNode = Player->GetNode();
-
 	// Flag player geometry so we can control if it should be rendered in shadow cubemaps
 	FlagPlayerGeometry();
 
+	// Render directional shadows for Sun/Moon
+	ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
+	NiNode* PlayerNode = Player->GetNode();
 	D3DXVECTOR3 At;
 	At.x = PlayerNode->m_worldTransform.pos.x - TheRenderManager->CameraPosition.x;
 	At.y = PlayerNode->m_worldTransform.pos.y - TheRenderManager->CameraPosition.y;
@@ -668,24 +659,15 @@ void ShadowManager::RenderShadowMaps() {
 	CurrentVertex = ShadowMapVertex;
 	CurrentPixel = ShadowMapPixel;
 
-	// track point lights for interiors and exteriors
-	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
-	NiPointLight* Lights[TrackedLightsMax] = { NULL };
-	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
-
 	// Render all shadow maps
 	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
-	float FarPlane = ShadowMapFarPlane;
-
 	if (isExterior && ExteriorEnabled && SunDir->z > 0.0f) {
 		ShadowData->z = 0; // set shader constant to identify other shadow maps
-
 		D3DXMATRIX View = GetViewMatrix(&At, SunDir);
 		for (int i = MapNear; i < MapOrtho; i++) {
 			ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View); // calculating the matrix projection of the shadow cascade
+			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View);
 
-			//ShadowMapTypeEnum ShadowMapType = static_cast<ShadowMapTypeEnum>(i);
 			RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 			if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
 		}
@@ -696,14 +678,19 @@ void ShadowManager::RenderShadowMaps() {
 		ShadowData->z = 1; // identify ortho map in shader constant
 		D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
 		D3DMATRIX View = GetViewMatrix(&At, &OrthoDir);
-		D3DMATRIX OrthoViewProj = Shadows->GetOrthoViewProj(View);
+		Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(View);
 
-		RenderShadowMap(&Shadows->ShadowMaps[MapOrtho], &OrthoViewProj);
+		RenderShadowMap(&Shadows->ShadowMaps[MapOrtho], &Shadows->Constants.ShadowViewProj);
 		OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
 	}
 
 	// Render shadow maps for point lights
 	bool usePointLights = (TheShaderManager->GameState.isDayTime > 0.5) ? ShadowsExteriors->UsePointShadowsDay : ShadowsExteriors->UsePointShadowsNight;
+
+	// track point lights for interiors and exteriors
+	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
+	NiPointLight* Lights[TrackedLightsMax] = { NULL };
+	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		CurrentVertex = ShadowCubeMapVertex;

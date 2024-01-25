@@ -236,7 +236,6 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 		// filtering objects occupying less than 10 pixels in the shadow map
 		ShadowMaps[i].Forms.MinRadius = 10.0f * ShadowMaps[i].ShadowMapRadius / Settings.Exteriors.ShadowMapResolution;
 	}
-	ShadowMaps[cascadeCount].ShadowMapRadius = camFar;
 
 	// Get Near distance for each cascade
 	ShadowMaps[MapNear].ShadowMapNear = 0;
@@ -250,6 +249,8 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	Constants.ShadowMapRadius.z = ShadowMaps[MapFar].ShadowMapRadius;
 	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius;
 
+	// ortho distance render?
+	ShadowMaps[cascadeCount].ShadowMapRadius = ShadowMaps[MapFar].ShadowMapRadius;
 }
 
 
