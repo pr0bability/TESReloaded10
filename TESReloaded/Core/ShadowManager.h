@@ -1,21 +1,6 @@
 #pragma once
 #include <stack>
 
-#define ShadowsSettings ShadowsExteriorEffect::SettingsShadowStruct
-
-//typedef struct frustum {
-//	enum PLANE {
-//		PLANENEAR = 0,
-//		PLANEFAR = 1,
-//		PLANELEFT = 2,
-//		PLANERIGHT = 3,
-//		PLANETOP = 4,
-//		PLANEBOTTOM = 5,
-//	};
-//	PLANE PLANE;
-//	D3DXPLANE plane[6];
-//} frustum;
-
 
 class ShadowManager { // Never disposed
 public:
@@ -49,28 +34,18 @@ public:
 	std::stack<NiGeometry*> skinnedGeoAccum;
 	std::stack<NiGeometry*> speedTreeAccum;
 
-    ShaderRecordVertex*		ShadowMapVertex;
-	ShaderRecordPixel*		ShadowMapPixel;
-	//D3DVIEWPORT9			ShadowMapViewPort[5];
-	//frustum					ShadowMapFrustum[5];
 	NiVector4				BillboardRight;
 	NiVector4				BillboardUp;
+	ShaderRecordVertex*		ShadowMapVertex;
+	ShaderRecordPixel*		ShadowMapPixel;
 	ShaderRecordVertex*		ShadowCubeMapVertex;
 	ShaderRecordPixel*		ShadowCubeMapPixel;
-	int						PointLightsNum;
-
-	float					shadowMapsRenderTime;
-    
-	float					ShadowCascadesDepth[3];
-
     ShaderRecordVertex*		ShadowMapBlurVertex;
 	ShaderRecordPixel*		ShadowMapBlurPixel;
-    /*IDirect3DVertexBuffer9* BlurShadowVertexBuffer[4];*/
-    //float                   ShadowMapInverseResolution[5];
-    
 	D3DVIEWPORT9			ShadowCubeMapViewPort;
-	NiPointLight*			ShadowCubeMapLights[ShadowCubeMapsMax];
 	ShaderRecordVertex*		CurrentVertex;
 	ShaderRecordPixel*		CurrentPixel;
 	bool					AlphaEnabled;
+	int						PointLightsNum;
+	float					shadowMapsRenderTime;
 };

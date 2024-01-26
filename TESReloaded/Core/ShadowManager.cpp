@@ -24,7 +24,6 @@ void ShadowManager::Initialize() {
 
 	UINT ShadowCubeMapSize = TheShaderManager->Effects.ShadowsExteriors->Settings.Interiors.ShadowCubeMapSize;
 	TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
-	memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
 
 	TheShadowManager->shadowMapsRenderTime = 0;
 }
@@ -537,7 +536,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		Device->EndScene();
 	}
 
-	timer.LogTime("RenderShadowCubeMap");	
+	timer.LogTime("RenderShadowCubeMap");
 }
 
 
@@ -701,19 +700,6 @@ void ShadowManager::RenderShadowMaps() {
 		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
 			RenderShadowCubeMap(ShadowLights, i);
 		}
-	}
-
-	if (isExterior) {
-		// Update constants used by shadow shaders: x=quality, y=darkness
-		ShadowData->x = ShadowsExteriors->Quality;
-		if (TheShaderManager->Effects.ShadowsExteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
-		ShadowData->y = ShadowsExteriors->Darkness;
-	}
-	else {
-		ShadowData->x = ShadowsInteriors->Quality;
-		if (TheShaderManager->Effects.ShadowsInteriors->Enabled) ShadowData->x = -1; // Disable the forward shadowing
-		ShadowData->y = ShadowsInteriors->Darkness;
-		ShadowData->z = 1.0f / (float)ShadowsInteriors->ShadowCubeMapSize;
 	}
 
 	// reset renderer to previous state

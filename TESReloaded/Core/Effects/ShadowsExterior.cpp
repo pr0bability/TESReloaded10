@@ -30,14 +30,24 @@ void ShadowsExteriorEffect::UpdateConstants() {
 		}
 		Constants.ShadowFade.y = Settings.Exteriors.Enabled && Enabled;
 		Constants.ShadowFade.w = Constants.ShadowMapRadius.w; //furthest distance for point lights shadows
+
+		// Update constants used by shadow shaders: x=quality, y=darkness
+		Constants.Data.x = Settings.Exteriors.Quality;
+		//if (Enabled) Constants.ShadowData->x = -1; // Disable the forward shadowing
+		Constants.Data.y = Settings.Exteriors.Darkness;
 	}
 	else {
 		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
 		Constants.ShadowFade.y = Enabled;
 		Constants.ShadowFade.z = 1; // z enables point lights
 		Constants.ShadowFade.w = Settings.Interiors.DrawDistance; //furthest distance for point lights shadows
-	}
 
+		// Update constants used by shadow shaders: x=quality, y=darkness
+		Constants.Data.x = Settings.Interiors.Quality;
+		//if (TheShaderManager->Effects.ShadowsInteriors->Enabled) Constants.Data.x = -1; // Disable the forward shadowing
+		Constants.Data.y = Settings.Interiors.Darkness;
+		Constants.Data.z = 1.0f / (float)Settings.Interiors.ShadowCubeMapSize;
+	}
 }
 
 void ShadowsExteriorEffect::UpdateSettings() {
@@ -61,22 +71,22 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	//Shadows Cascade settings
 	GetCascadeDepths();
 
-	for (int shadowType = 0; shadowType <= ShadowManager::ShadowMapTypeEnum::MapOrtho; shadowType++) {
+	for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
 		char sectionName[256] = "Shaders.ShadowsExteriors.";
 		switch (shadowType) {
-		case ShadowManager::ShadowMapTypeEnum::MapNear:
+		case MapNear:
 			strcat(sectionName, "Near");
 			break;
-		case ShadowManager::ShadowMapTypeEnum::MapMiddle:
+		case MapMiddle:
 			strcat(sectionName, "Middle");
 			break;
-		case ShadowManager::ShadowMapTypeEnum::MapFar:
+		case MapFar:
 			strcat(sectionName, "Far");
 			break;
-		case ShadowManager::ShadowMapTypeEnum::MapLod:
+		case MapLod:
 			strcat(sectionName, "Lod");
 			break;
-		case ShadowManager::ShadowMapTypeEnum::MapOrtho:
+		case MapOrtho:
 			strcat(sectionName, "Ortho");
 			break;
 		}
@@ -136,21 +146,12 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapBlend", &Constants.ShadowCubeMapBlend);
 	TheShaderManager->RegisterConstant("TESR_ShadowWorldTransform", (D3DXVECTOR4*)&Constants.ShadowWorld);
 	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&Constants.ShadowViewProj);
-	//TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&Constants.ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapNear].ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapMiddle].ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapFar].ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapLod].ShadowCameraToLight);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[ShadowManager::ShadowMapTypeEnum::MapOrtho].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&ShadowMaps[MapNear].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&ShadowMaps[MapMiddle].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&ShadowMaps[MapFar].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&ShadowMaps[MapLod].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[MapOrtho].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
-
-	// Lights position constants
-	//std::string shadowLightConstantName = "TESR_ShadowLightPosition";
-	//for (int i = 0; i < TrackedLightsMax; i++) {
-	//	std::string constantName = shadowLightConstantName + std::to_string(i);
-	//	TheShaderManager->RegisterConstant(constantName.c_str(), &(Constants.ShadowLightPosition[i]));
-	//}
-
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition0", &Constants.ShadowLightPosition[0]);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition1", &Constants.ShadowLightPosition[1]);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition2", &Constants.ShadowLightPosition[2]);
@@ -238,7 +239,7 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	}
 
 	// Get Near distance for each cascade
-	ShadowMaps[MapNear].ShadowMapNear = 0;
+	ShadowMaps[MapNear].ShadowMapNear = camNear;
 	ShadowMaps[MapMiddle].ShadowMapNear = ShadowMaps[MapNear].ShadowMapRadius * 0.9;
 	ShadowMaps[MapFar].ShadowMapNear = ShadowMaps[MapMiddle].ShadowMapRadius * 0.9;
 	ShadowMaps[MapLod].ShadowMapNear = ShadowMaps[MapFar].ShadowMapRadius * 0.9;
@@ -249,8 +250,8 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	Constants.ShadowMapRadius.z = ShadowMaps[MapFar].ShadowMapRadius;
 	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius;
 
-	// ortho distance render?
-	ShadowMaps[cascadeCount].ShadowMapRadius = ShadowMaps[MapFar].ShadowMapRadius;
+	// ortho distance render
+	ShadowMaps[MapOrtho].ShadowMapRadius = ShadowMaps[MapFar].ShadowMapRadius;
 }
 
 
