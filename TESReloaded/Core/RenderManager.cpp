@@ -363,6 +363,8 @@ void RenderManager::ResolveDepthBuffer() {
 
 }
 
+ 
+
 void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget){
 	if (Global->OnKeyDown(TheSettingManager->SettingsMain.Main.ScreenshotKey)) {
 		char Filename[MAX_PATH];

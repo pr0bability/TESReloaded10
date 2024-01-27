@@ -118,11 +118,11 @@ void NiObject::LogObjectAttributes(){
     Pointers::Functions::FormMemoryDeAlloc(debug);
 }
 
-void	NiDX9Renderer::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE State, DWORD Value) {
+void NiDX9Renderer::SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE State, DWORD Value) {
     renderState->SetSamplerState(Sampler, State, Value, false);
 }
 
-void	NiDX9Renderer::PackGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiD3DShaderDeclaration* ShaderDeclaration) {
+void NiDX9Renderer::PackGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiD3DShaderDeclaration* ShaderDeclaration) {
     
 }
 
@@ -130,7 +130,7 @@ void NiDX9Renderer::PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiG
     
 }
 
-void	NiDX9Renderer::CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform) {
+void NiDX9Renderer::CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform) {
     ThisCall(0x00E6FE30, this, SkinInstance, WorldTrasform, false, 3, true); 
 }
 

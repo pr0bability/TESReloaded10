@@ -305,6 +305,9 @@
     <ClInclude Include="..\TESReloaded\Framework\Common\Base\Utils.h">
       <Filter>Framework\Common\Base</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\RenderPass.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -519,6 +522,9 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\Effects\AvgLuma.cpp">
       <Filter>Core\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\RenderPass.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
