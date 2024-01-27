@@ -30,6 +30,7 @@ class ShadowSceneNode;		extern ShadowSceneNode*			SceneNode;
 #include "FrameRateManager.h"
 #include "GameEventManager.h"
 #include "GameMenuManager.h"
+#include "RenderPass.h"
 #include "ShadowManager.h"
 #include "CameraManager.h"
 #include "BinkManager.h"

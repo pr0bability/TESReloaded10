@@ -10,6 +10,7 @@
 #include <string>
 #include <regex>
 #include <vector>
+#include <stack>
 #include <map>
 #include <unordered_map>
 #include <sstream>

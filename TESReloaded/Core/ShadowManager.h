@@ -1,5 +1,4 @@
 #pragma once
-#include <stack>
 
 
 class ShadowManager { // Never disposed
@@ -19,10 +18,10 @@ public:
 	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
 	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject);
 	void					RenderAccums();
-	void					RenderGeometry(NiGeometry* Geo);
-	void					RenderSkinnedGeometry(NiGeometry* Geo);
-	void					RenderSpeedTreeGeometry(NiGeometry* Geo);
-	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
+	//void					RenderGeometry(NiGeometry* Geo);
+	//void					RenderSkinnedGeometry(NiGeometry* Geo);
+	//void					RenderSpeedTreeGeometry(NiGeometry* Geo);
+//	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
 	D3DXMATRIX				GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir);
 	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj);
 	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
@@ -30,9 +29,9 @@ public:
 	void					RenderShadowMaps();
     void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 
-	std::stack<NiGeometry*> geometryAccum;
-	std::stack<NiGeometry*> skinnedGeoAccum;
-	std::stack<NiGeometry*> speedTreeAccum;
+	ShadowRenderPass*				geometryPass;
+	SkinnedGeoShadowRenderPass*		skinnedGeoPass;
+	SpeedTreeShadowRenderPass*		speedTreePass;
 
 	NiVector4				BillboardRight;
 	NiVector4				BillboardUp;

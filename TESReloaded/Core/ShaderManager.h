@@ -5,7 +5,6 @@
 #include "ShaderRecord.h"
 #include "EffectRecord.h"
 #include "ShaderCollection.h"
-#include "Effects/Animator.h"
 #include "Effects/Effects.h"
 
 struct ShaderConstants {
@@ -14,6 +13,7 @@ struct ShaderConstants {
 		D3DXMATRIX		OcclusionWorldViewProj;
 	};
 
+	D3DXMATRIXA16			ShadowWorld;
 	D3DXVECTOR4				ReciprocalResolution;
 	D3DXVECTOR4				SunDir;
 	D3DXVECTOR4				SunPosition;
