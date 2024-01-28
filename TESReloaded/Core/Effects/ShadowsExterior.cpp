@@ -151,6 +151,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&ShadowMaps[MapLod].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[MapOrtho].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
+	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition", (D3DXVECTOR4*)&Constants.ShadowLightPosition);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition0", &Constants.ShadowLightPosition[0]);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition1", &Constants.ShadowLightPosition[1]);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition2", &Constants.ShadowLightPosition[2]);

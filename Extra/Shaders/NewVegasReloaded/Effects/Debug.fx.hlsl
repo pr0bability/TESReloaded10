@@ -10,30 +10,8 @@ float4 TESR_SunDirection;
 float4 TESR_DebugVar;
 float4 TESR_ShadowRadius;
 
-float4 TESR_LightPosition0;
-float4 TESR_LightPosition1;
-float4 TESR_LightPosition2;
-float4 TESR_LightPosition3;
-float4 TESR_LightPosition4;
-float4 TESR_LightPosition5;
-float4 TESR_LightPosition6;
-float4 TESR_LightPosition7;
-float4 TESR_LightPosition8;
-float4 TESR_LightPosition9;
-float4 TESR_LightPosition10;
-float4 TESR_LightPosition11;
-float4 TESR_ShadowLightPosition0;
-float4 TESR_ShadowLightPosition1;
-float4 TESR_ShadowLightPosition2;
-float4 TESR_ShadowLightPosition3;
-float4 TESR_ShadowLightPosition4;
-float4 TESR_ShadowLightPosition5;
-float4 TESR_ShadowLightPosition6;
-float4 TESR_ShadowLightPosition7;
-float4 TESR_ShadowLightPosition8;
-float4 TESR_ShadowLightPosition9;
-float4 TESR_ShadowLightPosition10;
-float4 TESR_ShadowLightPosition11;
+float4 TESR_LightPosition[12];
+float4 TESR_ShadowLightPosition[12];
 
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -119,29 +97,13 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	// if (depth > TESR_ShadowRadius.y && depth < TESR_ShadowRadius.z) color *= float4(1, 1, 0.5, 1);
 	// if (depth > TESR_ShadowRadius.z && depth < TESR_ShadowRadius.w) color *= float4(0.5, 1, 1, 1);
 
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition0, float4(0, 1, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition1, float4(0, 1, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition2, float4(0, 1, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition3, float4(0, 1, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition4, float4(0, 1, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition5, float4(0, 1, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition6, float4(0, 0, 1, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition7, float4(0, 0, 1, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition8, float4(0, 0, 1, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition9, float4(0, 0, 1, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition10, float4(0, 0, 1, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition11, float4(0, 0, 1, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition0, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition1, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition2, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition3, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition4, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition6, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition7, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition8, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition9, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition10, float4(1, 0, 0, 1));
-	color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition11, float4(1, 0, 0, 1));
+	for (int i=0; i<12; i++){
+		float4 tint = i<7?green:blue;
+		color = showLightInfluence(color, IN.UVCoord, position, TESR_ShadowLightPosition[i], tint);
+	}
+	for (i=0; i<12; i++){
+		color = showLightInfluence(color, IN.UVCoord, position, TESR_LightPosition[i], red);
+	}
 
     if (IN.UVCoord.x > 0.9 && IN.UVCoord.x < 0.95){
         if (IN.UVCoord.y > 0.15 && IN.UVCoord.y < 0.2) return TESR_SunColor;
