@@ -152,9 +152,15 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 
 		switch (ConstantDesc.Class) {
 		case D3DXPC_VECTOR:
+			FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
+			FloatShaderValues[FloatIndex].Type = (D3DXPARAMETER_TYPE)D3DXPC_VECTOR;
+			FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
+			FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Elements;
+			FloatIndex++;
+			break;
 		case D3DXPC_MATRIX_ROWS:
 			FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
-			FloatShaderValues[FloatIndex].Type = ConstantDesc.Type;
+			FloatShaderValues[FloatIndex].Type = (D3DXPARAMETER_TYPE)D3DXPC_MATRIX_ROWS;
 			FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
 			FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
 			FloatIndex++;
@@ -205,8 +211,12 @@ void EffectRecord::SetCT() {
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
 		Constant = &FloatShaderValues[c];
 		if (Constant->Value == nullptr)  Constant->GetValueFromConstantTable();
-		if (Constant->RegisterCount == 1)
-			Effect->SetVector((D3DXHANDLE)Constant->RegisterIndex, Constant->Value);
+		if (Constant->Type == (D3DXPARAMETER_TYPE)D3DXPC_VECTOR) {
+			if (Constant->RegisterCount > 1)
+				Effect->SetVectorArray((D3DXHANDLE)Constant->RegisterIndex, Constant->Value, Constant->RegisterCount);
+			else
+				Effect->SetVector((D3DXHANDLE)Constant->RegisterIndex, Constant->Value);
+		}
 		else
 			Effect->SetMatrix((D3DXHANDLE)Constant->RegisterIndex, (D3DXMATRIX*)Constant->Value);
 	}
