@@ -6,8 +6,13 @@ void RenderPass::RenderAccum() {
 
 	// Could add setup of device/renderstate/current shaders here
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
-	RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
-	RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
+
+	if (RenderState->GetPixelShader() != PixelShader->ShaderHandle)
+		RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
+
+	if (RenderState->GetVertexShader() != VertexShader->ShaderHandle)
+		RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
+
 
 	// Render normal geometry
 	while (!GeometryList.empty()) {

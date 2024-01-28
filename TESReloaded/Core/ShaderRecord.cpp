@@ -34,34 +34,30 @@ bool ShaderProgram::ShouldCompileShader(const char* fileBin, const char* fileHls
 	if (CompileStatus == ShaderCompileType::AlwaysOff) return  false;
 	if (CompileStatus == ShaderCompileType::RecompileInMenu) return TheShaderManager->IsMenuSwitch ? true : false;
 
-	if (CompileStatus == ShaderCompileType::RecompileChanged) {
-		WIN32_FILE_ATTRIBUTE_DATA attributesBin = { 0 };
-		WIN32_FILE_ATTRIBUTE_DATA attributesSource = { 0 };
-		BOOL hr = GetFileAttributesExA(fileBin, GetFileExInfoStandard, &attributesBin); // from winbase.h
-		if (hr == FALSE) {
-			// 			Logger::Log("File %s not present, compile", fileHlsl);
-			return true; //File not present compile
-		}
-		else {
-			BOOL hr = GetFileAttributesExA(fileHlsl, GetFileExInfoStandard, &attributesSource); // from winbase.h
-			if (hr == FALSE) {
-				//				Logger::Log("[ERROR] Can't open source %s", fileHlsl);
-				return true; //BOH
-			}
+	if (CompileStatus != ShaderCompileType::RecompileChanged) return false;
 
-			ULARGE_INTEGER timeBin, timeSource;
-			timeBin.LowPart = attributesBin.ftLastWriteTime.dwLowDateTime;
-			timeBin.HighPart = attributesBin.ftLastWriteTime.dwHighDateTime;
-			timeSource.LowPart = attributesSource.ftLastWriteTime.dwLowDateTime;
-			timeSource.HighPart = attributesSource.ftLastWriteTime.dwHighDateTime;
+	WIN32_FILE_ATTRIBUTE_DATA attributesBin = { 0 };
+	WIN32_FILE_ATTRIBUTE_DATA attributesSource = { 0 };
+	BOOL hr = GetFileAttributesExA(fileBin, GetFileExInfoStandard, &attributesBin); // from winbase.h
+	if (!hr) 
+		return true; //File not present, compile
 
-			if (timeBin.QuadPart < timeSource.QuadPart) {
-				Logger::Log("Binary older then source, compile %s", fileHlsl);
-				return true;
-			}
-		}
+	hr = GetFileAttributesExA(fileHlsl, GetFileExInfoStandard, &attributesSource); // from winbase.h
+	if (!hr) {
+		Logger::Log("[ERROR] Can't Compile %s, source cannot be read", fileHlsl);
+		return false;
 	}
-	return false;
+
+	ULARGE_INTEGER timeBin, timeSource;
+	timeBin.LowPart = attributesBin.ftLastWriteTime.dwLowDateTime;
+	timeBin.HighPart = attributesBin.ftLastWriteTime.dwHighDateTime;
+	timeSource.LowPart = attributesSource.ftLastWriteTime.dwLowDateTime;
+	timeSource.HighPart = attributesSource.ftLastWriteTime.dwHighDateTime;
+
+	if (timeBin.QuadPart < timeSource.QuadPart) {
+		Logger::Log("Binary older then source, compile %s", fileHlsl);
+		return true;
+	}
 }
 
 
@@ -111,19 +107,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 		else if (strstr(Name, ".pso"))
 			strcpy(ShaderProfile, "ps_3_0");
 
-		if (Compile) {
-			D3DXCompileShaderFromFileA(FileName, NULL, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
-			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
-			if (Shader) {
-				Function = Shader->GetBufferPointer();
-				std::ofstream FileBinary(FileNameBinary, std::ios::out | std::ios::binary);
-				FileBinary.write((const char*)Function, Shader->GetBufferSize());
-				FileBinary.flush();
-				FileBinary.close();
-				Logger::Log("Shader compiled: %s", FileName);
-			}
-		}
-		else {
+		if (!Compile){
 			std::ifstream FileBinary(FileNameBinary, std::ios::in | std::ios::binary | std::ios::ate);
 			if (FileBinary.is_open()) {
 				std::streamoff Size = FileBinary.tellg();
@@ -135,7 +119,21 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 				//D3DXGetShaderConstantTable((const DWORD*)Function, &ConstantTable);
 			}
 			else {
-				Logger::Log("ERROR: Shader %s not found. Try to enable the CompileShader option to recompile the shaders.", FileNameBinary);
+				Logger::Log("ERROR: Shader binary %s not found.", FileNameBinary);
+			}
+		}
+
+		if (Compile || !Function) {
+			// compile if option was enabled or compiled version not found
+			D3DXCompileShaderFromFileA(FileName, NULL, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
+			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+			if (Shader) {
+				Function = Shader->GetBufferPointer();
+				std::ofstream FileBinary(FileNameBinary, std::ios::out | std::ios::binary);
+				FileBinary.write((const char*)Function, Shader->GetBufferSize());
+				FileBinary.flush();
+				FileBinary.close();
+				Logger::Log("Shader compiled: %s", FileName);
 			}
 		}
 
@@ -166,7 +164,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 						TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
 					}
 					ShaderProg->CreateCT(ShaderSource, ConstantTable);
-					//Logger::Log("Shader loaded: %s", FileNameBinary);
+					Logger::Log("Shader loaded: %s", FileNameBinary);
 				}
 			}
 		}
@@ -361,8 +359,10 @@ void ShaderRecord::SetCT() {
 
 		if (Sampler->Texture->Texture != nullptr) {
 			TheRenderManager->renderState->SetTexture(Sampler->RegisterIndex, Sampler->Texture->Texture);
+
 			for (int i = 1; i < SamplerStatesMax; i++) {
-				TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
+				if (TheRenderManager->renderState->GetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i) != Sampler->Texture->SamplerStates[i])
+					TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
 			}
 		}
 	}
