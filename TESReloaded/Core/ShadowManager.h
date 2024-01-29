@@ -47,4 +47,5 @@ public:
 	bool					AlphaEnabled;
 	int						PointLightsNum;
 	float					shadowMapsRenderTime;
+	bool					ShadowShadersLoaded;
 };
