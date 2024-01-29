@@ -263,7 +263,7 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 
 	size_t SamplerPos = Source.find(("register ( s" + std::to_string(Index) + " )"));
 	if (SamplerPos == std::string::npos) {
-		Logger::Log("[ERROR] %s  cannot be binded", Name);
+		Logger::Log("[ERROR] %s  cannot be binded: sampler index not found", Name);
 		return;
 	}
 
@@ -284,13 +284,13 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 			PathS = TextureString.substr(StartPath + 1, EndPath - 1 - StartPath);
 			PathS.insert(0, "Data\\Textures\\");
 			TexturePath = PathS;
-					}
+		}
 	}
 
 	size_t StartStatePos = SamplerLine.find("{");
 	size_t EndStatePos = SamplerLine.rfind("}");
 	if (EndStatePos == std::string::npos || StartStatePos == std::string::npos) {
-		Logger::Log("[ERROR] %s cannot be binded", Name);
+		Logger::Log("[ERROR] during binding of %s : Samplerstate description not found", Name);
 		return;
 	}
 	SamplerString = SamplerLine.substr(StartStatePos + 1, EndStatePos - StartStatePos - 1);
@@ -315,7 +315,8 @@ void ShaderTextureValue::GetTextureRecord() {
 	// preload file textures, game textures will get bind during constant table setting
 	if (TexturePath != "") Texture->Texture = TheTextureManager->GetFileTexture(TexturePath, Type);
 
-	Texture->GetSamplerStates(trim(SamplerString));
+	// override default sampler states if the sampler string was found
+	if (!SamplerString.empty()) Texture->GetSamplerStates(trim(SamplerString));
 
 	timer.LogTime("ShaderTextureValue::GetTextureRecord");
 }
@@ -353,8 +354,8 @@ void ShaderRecord::SetCT() {
 		if (Sampler->Texture->Texture == nullptr) {
 			Sampler->Texture->BindTexture(Sampler->Name);
 
-			if (Sampler->Texture->Texture) Logger::Log("%s : Texture %s Succesfully bound", Name, Sampler->Name);
-			else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
+			//if (Sampler->Texture->Texture) Logger::Log("%s : Texture %s Succesfully bound", Name, Sampler->Name);
+			//else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
 		}
 
 		if (Sampler->Texture->Texture != nullptr) {

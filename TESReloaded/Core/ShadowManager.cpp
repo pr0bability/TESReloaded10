@@ -8,6 +8,11 @@ void ShadowManager::Initialize() {
 	Logger::Log("Starting the shadows manager...");
 	TheShadowManager = new ShadowManager();
 
+	// setup the shadow render passes for the shadowmaps
+	TheShadowManager->geometryPass = new ShadowRenderPass();
+	TheShadowManager->skinnedGeoPass = new SkinnedGeoShadowRenderPass();
+	TheShadowManager->speedTreePass = new SpeedTreeShadowRenderPass();
+
 	// load the shaders
 	TheShadowManager->ShadowMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowMap.vso", "Shadows\\");
 	TheShadowManager->ShadowMapPixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("ShadowMap.pso", "Shadows\\");
@@ -17,19 +22,17 @@ void ShadowManager::Initialize() {
     TheShadowManager->ShadowMapBlurVertex = (ShaderRecordVertex*) ShaderRecord::LoadShader("ShadowMapBlur.vso", "Shadows\\");
     TheShadowManager->ShadowMapBlurPixel = (ShaderRecordPixel*) ShaderRecord::LoadShader("ShadowMapBlur.pso", "Shadows\\");
 
+	TheShadowManager->ShadowShadersLoaded = true;
     if (TheShadowManager->ShadowMapVertex == nullptr || TheShadowManager->ShadowMapPixel == nullptr  || TheShadowManager->ShadowMapBlurVertex  == nullptr
         || TheShadowManager->ShadowCubeMapVertex == nullptr || TheShadowManager->ShadowCubeMapPixel == nullptr || TheShadowManager->ShadowMapBlurPixel  == nullptr ){
-        Logger::Log("[ERROR]: Could not load one or more of the ShadowMap generation shaders. Reinstall the mod.");
+		TheShadowManager->ShadowShadersLoaded = false;
+		Logger::Log("[ERROR]: Could not load one or more of the ShadowMap generation shaders. Reinstall the mod.");
     }
 
 	UINT ShadowCubeMapSize = TheShaderManager->Effects.ShadowsExteriors->Settings.Interiors.ShadowCubeMapSize;
 	TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
 
 	TheShadowManager->shadowMapsRenderTime = 0;
-
-	TheShadowManager->geometryPass= new ShadowRenderPass();
-	TheShadowManager->skinnedGeoPass = new SkinnedGeoShadowRenderPass();
-	TheShadowManager->speedTreePass = new SpeedTreeShadowRenderPass();
 }
 
 
@@ -436,7 +439,7 @@ D3DXMATRIX ShadowManager::GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir) {
 * Renders the different shadow maps: Near, Far, Ortho.
 */
 void ShadowManager::RenderShadowMaps() {
-	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // cancel out if rendering effects is disabled
+	if (!TheSettingManager->SettingsMain.Main.RenderEffects || !ShadowShadersLoaded) return; // cancel out if rendering effects is disabled
 
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	ShadowsExteriorEffect::ExteriorsStruct* ShadowsExteriors = &Shadows->Settings.Exteriors;
