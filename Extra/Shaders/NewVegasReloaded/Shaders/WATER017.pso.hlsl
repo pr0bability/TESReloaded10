@@ -60,14 +60,15 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x);
     surfaceNormal = getDisplacement(IN, BlendRadius.w, surfaceNormal);
+    normalize(surfaceNormal);
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
     float sunLuma = luma(linSunColor);
-    float exteriorRefractionModifier = 0.5;		// reduce refraction because of the way interior depth is encoded
+    float exteriorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
-    float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff);
+    float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * exteriorRefractionModifier);
     float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
     float4 refractionPos = reflectionPos;
     refractionPos.y = refractionPos.w - reflectionPos.y;
@@ -76,7 +77,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
     color = getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color); // fade to full fog to hide LOD seam
-    color = lerp(getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color), linShallowColor,LODfade);
+    //color = lerp(getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color), linShallowColor,LODfade);
     color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
     color = getShoreFade(IN, waterDepth.x, color);

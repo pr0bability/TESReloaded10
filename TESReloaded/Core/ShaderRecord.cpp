@@ -345,7 +345,10 @@ void ShaderFloatValue::GetValueFromConstantTable() {
 void ShaderRecord::SetCT() {
 
 	if (HasRenderedBuffer) TheRenderManager->device->StretchRect(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface, NULL, TheTextureManager->RenderedSurface, NULL, D3DTEXF_NONE);
-	if (HasDepthBuffer) TheRenderManager->ResolveDepthBuffer();
+	if (HasDepthBuffer) {
+		//Logger::Log("Resolving depth buffer for shader %s", Name);
+		TheRenderManager->ResolveDepthBuffer();
+	}
 	
 	// binds textures
 	ShaderTextureValue* Sampler;

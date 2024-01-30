@@ -95,10 +95,10 @@ float3 getDisplacement(PS_INPUT IN, float blendRadius, float3 surfaceNormal){
     float4 displacement = tex2D(DisplacementMap, IN.LTEXCOORD_6.xy);
 
     displacement.xy = (displacement.zw - 0.5) * blendRadius / 2;
-    displacement.z = 1;
+    //displacement.z = reconstructZ(displacement.xy);
 
     // sample displacement and mix with the wave texture
-    float4 DisplacementNormal = normalize(displacement);
+    float3 DisplacementNormal = reconstructZ(displacement.xy);
 
     surfaceNormal = compress(surfaceNormal);
     surfaceNormal = float3(surfaceNormal.xy + DisplacementNormal.xy,  surfaceNormal.z);
@@ -108,13 +108,21 @@ float3 getDisplacement(PS_INPUT IN, float blendRadius, float3 surfaceNormal){
 
 float4 getLightTravel(float3 refractedDepth, float4 shallowColor, float4 deepColor, float sunLuma, float4 color){
     float4 waterColor = lerp(shallowColor, deepColor, refractedDepth.y); 
-    // return color * waterColor * sunLuma / TESR_WaterSettings.y;
-    float3 result = color.rgb * lerp(0.7, waterColor.rgb * sunLuma / TESR_WaterSettings.y, pow(abs(refractedDepth.x), TESR_WaterSettings.y)); //never reach 1 so that water is always absorbing some light
+    //float4 waterColor = shallowColor; 
+    float depthDarknessPower = saturate(pows((1 - TESR_WaterSettings.y), 3)); // high darkness means low values
+    // return color * waterColor * sunLuma / TESR_WaterSettings.y; saturate(sunLuma) * 
+
+    //float3 result = lerp(waterColor, 1, depthDarknessPower);
+
+    float3 result = color.rgb * lerp(0.7, lerp(waterColor.rgb * depthDarknessPower, 1, depthDarknessPower) , refractedDepth.x) ; //never reach 1 so that water is always absorbing some light
     return float4(result, 1);
 }
 
 float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float sunLuma, float4 color){
     float turbidity = max(0.00001, TESR_WaterVolume.z); // clamp minimum value to avoid division by 0
+
+    float depth = pow(refractedDepth.x, turbidity);
+
     float fogCoeff = 1 - saturate((FogParam.z - (refractedDepth.x * FogParam.z)) / FogParam.w);
     float3 fog = shallowColor.rgb * sunLuma;
 
@@ -138,23 +146,20 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
 
     float fresnelCoeff = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
 
-    // float reflectionLuma = 1 - luma(reflection);
-    float4 reflectionColor = lerp (reflection * linearize(ReflectionColor), reflection, saturate(reflectivity));
-    // reflectionColor = lerp (reflectionColor, shallowColor, reflectionLuma);
-    // float3 reflectionColor = VarAmounts.y * (reflection - ReflectionColor) + ReflectionColor.rgbb;
-	float3 result = lerp(color.rgb, reflectionColor.rgb, saturate(fresnelCoeff * reflectivity));
+    float4 reflectionColor = lerp (luma(reflection) * linearize(ReflectionColor), reflection, VarAmounts.y) * 0.7;
+	float3 result = lerp(color.rgb, reflection.rgb , saturate(fresnelCoeff * reflectivity));
     return float4(result, 1);
 }
 
 float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float3 specColor, float4 color){
     float2 scatteringConst = {-0.569999993, 0.819999993}; //scattering to simulate water coming through the waves
-    float specularBoost = 250 ;
-    float glossiness = 100;
+    float specularBoost = 5;
+    float glossiness = 10000;
 
     // phong blinn specular with fresnel modulation
 	float3 halfwayDir = normalize(lightDir + eyeDirection);
-    float fresnel = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
-	float specular = pow(shades(halfwayDir, surfaceNormal.xyz), 15) * (fresnel);
+    //float fresnel = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
+	float specular = pow(shades(halfwayDir, normalize(surfaceNormal).xyz), glossiness);// * (fresnel);
 
     // float specular = pow(abs(shades(reflect(-eyeDirection, surfaceNormal), lightDir)), VarAmounts.x);
     float scattering = 0;//pow(abs(saturate(dot(surfaceNormal.xz, scatteringConst))), glossiness) * 0.03; 

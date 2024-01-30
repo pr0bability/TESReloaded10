@@ -64,7 +64,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
     float sunLuma = luma(linSunColor);
-    float exteriorRefractionModifier = 0.5;		// reduce refraction because of the way interior depth is encoded
+    float exteriorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 
     float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
@@ -84,7 +84,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
     color = lerp(getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color), float4(linShallowColor.rgb * sunLuma, 1), LODfade); // fade to full fog to hide LOD seam
-    color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
+    //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
     color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb * dot(TESR_SunDirection.rgb, float3(0, 0, 1)), color);
     color = getShoreFade(IN, waterDepth.x, color);
