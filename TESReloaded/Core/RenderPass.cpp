@@ -7,10 +7,10 @@ void RenderPass::RenderAccum() {
 	// Could add setup of device/renderstate/current shaders here
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
-	if (RenderState->GetPixelShader() != PixelShader->ShaderHandle)
+	//if (RenderState->GetPixelShader() != PixelShader->ShaderHandle)
 		RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
 
-	if (RenderState->GetVertexShader() != VertexShader->ShaderHandle)
+	//if (RenderState->GetVertexShader() != VertexShader->ShaderHandle)
 		RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
 
 
@@ -84,22 +84,24 @@ bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
 
 void ShadowRenderPass::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowWorldTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowWorld);
+	TheTextureManager->RegisterTexture("TESR_DiffuseMap", &Constants.DiffuseMap);
 }
 
 
 void ShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
-	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
-	Constants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-	Constants->Data.y = 0.0f; // Alpha Control
+	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
+	ShadowConstants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	ShadowConstants->Data.y = 0.0f; // Alpha Control
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
 	if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
 		if (NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0]) {
 
-			Constants->Data.y = 1.0f; // Alpha Control
+			ShadowConstants->Data.y = 1.0f; // Alpha Control
+//			Constants.DiffuseMap = Texture->rendererData->dTexture;
 
-			// Set diffuse texture at register 0
+			//// Set diffuse texture at register 0
 			NiDX9RenderState* RenderState = TheRenderManager->renderState;
 			RenderState->SetTexture(0, Texture->rendererData->dTexture);
 			RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
@@ -139,7 +141,7 @@ bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo) {
 
 
 void SkinnedGeoShadowRenderPass::RegisterConstants() {
-	TheShaderManager->RegisterConstant("TESR_BoneMatrices", NULL);
+	//TheShaderManager->RegisterConstant("TESR_Bones", NULL);
 }
 
 
@@ -170,6 +172,7 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 		NiSkinPartition::Partition* Partition = &SkinPartition->Partitions[p];
 		GeoData = Partition->BuffData;
 
+		//Constants.BoneMatrices = (D3DXVECTOR4*)SkinInstance->BoneMatrixes;
 		int StartRegister = 9;
 		for (int i = 0; i < Partition->Bones; i++) {
 			UInt16 NewIndex = (Partition->pBones == NULL) ? i : Partition->pBones[i];
@@ -191,12 +194,13 @@ SpeedTreeShadowRenderPass::SpeedTreeShadowRenderPass() {
 
 
 void SpeedTreeShadowRenderPass::RegisterConstants() {
-	TheShaderManager->RegisterConstant("TESR_BillboardRight", NULL);
-	TheShaderManager->RegisterConstant("TESR_BillboardLeft", NULL);
-	TheShaderManager->RegisterConstant("TESR_RockParams", NULL);
-	TheShaderManager->RegisterConstant("TESR_RustleParams", NULL);
-	TheShaderManager->RegisterConstant("TESR_WindMatrixes", NULL);
-	TheShaderManager->RegisterConstant("TESR_LeafBase", NULL);
+	TheShaderManager->RegisterConstant("TESR_BillboardRight", Constants.BillboardRight);
+	TheShaderManager->RegisterConstant("TESR_BillboardUp", Constants.BillboardUp);
+	TheShaderManager->RegisterConstant("TESR_RockParams", (D3DXVECTOR4*)Pointers::ShaderParams::RockParams);
+	TheShaderManager->RegisterConstant("TESR_RustleParams", (D3DXVECTOR4*)Pointers::ShaderParams::RustleParams);
+	TheShaderManager->RegisterConstant("TESR_WindMatrices", (D3DXVECTOR4*)Pointers::ShaderParams::WindMatrixes);
+	TheShaderManager->RegisterConstant("TESR_LeafBase", Constants.LeafBase);
+	TheTextureManager->RegisterTexture("TESR_LeafDiffuseMap", &Constants.DiffuseMap);
 }
 
 
@@ -212,14 +216,17 @@ bool SpeedTreeShadowRenderPass::AccumObject(NiGeometry* Geo) {
 
 void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 
-	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
+	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
-	Constants->Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
-	Constants->Data.y = 0.0f; // Alpha control
+	ShadowConstants->Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	ShadowConstants->Data.y = 0.0f; // Alpha control
 
-	// Bind constant values for leaf transformation
+	//Constants.BillboardRight = (D3DXVECTOR4*)&TheShadowManager->BillboardRight;
+	//Constants.BillboardUp = (D3DXVECTOR4*)&TheShadowManager->BillboardUp;
+
+	//// Bind constant values for leaf transformation
 	Device->SetVertexShaderConstantF(63, (float*)&TheShadowManager->BillboardRight, 1);
 	Device->SetVertexShaderConstantF(64, (float*)&TheShadowManager->BillboardUp, 1);
 	Device->SetVertexShaderConstantF(65, Pointers::ShaderParams::RockParams, 1);
@@ -230,9 +237,13 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	BSTreeNode* Node = (BSTreeNode*)Geo->m_parent->m_parent;
 	NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
 
+	//Constants.LeafBase = (D3DXVECTOR4*)STProp->leafData->leafBase;
+	if (Texture) ShadowConstants->Data.y = 1.0f;
+	//Constants.DiffuseMap = Texture->dTexture;
+
 	// Bind constant values for leaf transformation
 	Device->SetVertexShaderConstantF(83, STProp->leafData->leafBase, 48);
-
+	
 	// Set diffuse texture at register 0
 	RenderState->SetTexture(0, Texture->dTexture);
 	RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);

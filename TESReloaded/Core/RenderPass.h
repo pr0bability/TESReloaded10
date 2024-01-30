@@ -26,6 +26,11 @@ class ShadowRenderPass : public RenderPass {
 public:
 	ShadowRenderPass();
 
+	struct ConstantsStruct {
+		IDirect3DBaseTexture9* DiffuseMap;
+	};
+	ConstantsStruct Constants;
+
 	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
@@ -34,6 +39,11 @@ public:
 class SkinnedGeoShadowRenderPass : public RenderPass {
 public:
 	SkinnedGeoShadowRenderPass();
+
+	struct ConstantsStruct {
+		D3DXVECTOR4* BoneMatrices;
+	};
+	ConstantsStruct Constants;
 
 	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants();
@@ -45,6 +55,14 @@ public:
 class SpeedTreeShadowRenderPass : public RenderPass {
 public:
 	SpeedTreeShadowRenderPass();
+
+	struct ConstantsStruct {
+		D3DXVECTOR4* BillboardRight;
+		D3DXVECTOR4* BillboardUp;
+		D3DXVECTOR4* LeafBase;
+		IDirect3DBaseTexture9* DiffuseMap;
+	};
+	ConstantsStruct Constants;
 
 	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants(); 
