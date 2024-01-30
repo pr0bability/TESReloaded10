@@ -69,12 +69,12 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
 
     float4 color = linShallowColor * sunLuma;
-    color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
+    //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
     color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb* dot(TESR_SunDirection.rgb, float3(0, 0, 1)), color);
     color.a = 1;
 
-    color = pows(color, 1.0/2.2); //delinearise
+    color = delinearize(color); //delinearise
     OUT.color_0 = color;
 
     return OUT;	

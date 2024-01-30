@@ -341,10 +341,10 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 				continue;
 
 			// Also skip viewmodel due to issues, and render player's model only in 3rd person
-			if (isFirstPerson && !Player->isThirdPerson && !Settings->PlayerShadowFirstPerson)
+			if (!Player->isThirdPerson && !Settings->PlayerShadowFirstPerson && (isFirstPerson || isThirdPerson))
 				continue;
 				
-			if (isThirdPerson && Player->isThirdPerson && !Settings->PlayerShadowThirdPerson)
+			if (Player->isThirdPerson && !Settings->PlayerShadowThirdPerson && (isFirstPerson || isThirdPerson))
 				continue;
 
 			if (skinnedGeoPass->AccumObject(geo)) {}
@@ -526,8 +526,6 @@ void ShadowManager::RenderShadowMaps() {
 	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
-		
-
 		CurrentVertex = ShadowCubeMapVertex;
 		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
