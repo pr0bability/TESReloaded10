@@ -65,8 +65,6 @@ void GameMenuManager::HandleInput() {
 	// check for menu key to toggle display of the menu
 	if (menuKeyDown) {
 		Enabled = !Enabled;
-		if (!Enabled) return; // menu is disabled, no need to check further inputs
-
 #ifdef debugMenuInput
 		Logger::Log("toggling menu : %i", Enabled);
 #endif
@@ -81,6 +79,8 @@ void GameMenuManager::HandleInput() {
 		EditingMode = false;
 		return;
 	}
+
+	if (!Enabled) return; // menu is disabled, no need to check further inputs
 
 	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
 	bool isStatusSection = !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6);
