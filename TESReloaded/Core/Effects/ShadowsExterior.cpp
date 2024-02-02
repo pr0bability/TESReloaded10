@@ -145,6 +145,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowRadius", &Constants.ShadowMapRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapBlend", &Constants.ShadowCubeMapBlend);
 	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&Constants.ShadowViewProj);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&Constants.ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&ShadowMaps[MapNear].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&ShadowMaps[MapMiddle].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&ShadowMaps[MapFar].ShadowCameraToLight);
@@ -180,7 +181,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	};
 	for (int i = 0; i <= ShadowManager::ShadowMapTypeEnum::MapOrtho; i++) {
 		// create one texture per Exterior ShadowMap type
-		float multiple = 1;// i == ShadowManager::ShadowMapTypeEnum::MapLod ? 2.0f : 1.0f; // double the size of lod map only
+		float multiple = (i == ShadowManager::ShadowMapTypeEnum::MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
 		ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
 
 		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
@@ -202,8 +203,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 
 	// initialize the frame vertices for future shadow blurring
 	for (int i = 0; i <= MapOrtho; i++) {
-		//float multiple = i == MapLod ? 2.0f : 1.0f; // double the size of lod map only
-		float multiple = 1.0f; // double the size of lod map only
+		float multiple = (i == ShadowManager::ShadowMapTypeEnum::MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
 		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
 
 		if (i != MapOrtho) TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
