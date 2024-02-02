@@ -70,6 +70,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterConstant("TESR_ViewProjectionTransform", (D3DXVECTOR4*)&TheRenderManager->ViewProjMatrix);
 	TheShaderManager->RegisterConstant("TESR_OcclusionWorldViewProjTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj);
 	TheShaderManager->RegisterConstant("TESR_LightPosition", (D3DXVECTOR4*) &TheShaderManager->LightPosition);
+	TheShaderManager->RegisterConstant("TESR_LightColor", (D3DXVECTOR4*) &TheShaderManager->LightColor);
 	TheShaderManager->RegisterConstant("TESR_LightPosition0", &TheShaderManager->LightPosition[0]);
 	TheShaderManager->RegisterConstant("TESR_LightPosition1", &TheShaderManager->LightPosition[1]);
 	TheShaderManager->RegisterConstant("TESR_LightPosition2", &TheShaderManager->LightPosition[2]);
@@ -471,6 +472,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 	// save only the n first lights (based on #define TrackedLightsMax)
 	memset(&TheShaderManager->LightPosition, 0, TrackedLightsMax * sizeof(D3DXVECTOR4)); // clear previous lights from array
+	memset(&TheShaderManager->LightColor, 0, (TrackedLightsMax + ShadowCubeMapsMax) * sizeof(D3DXVECTOR4)); // clear previous lights from array
 
 	// get the data for all tracked lights
 	int ShadowIndex = 0;
@@ -510,12 +512,15 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = v->second;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = LightPos;
+				LightColor[ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
+
 				ShadowIndex++;
 				TheShadowManager->PointLightsNum++; // Constant to track number of shadow casting lights are present
 			}
 			else if (LightIndex < TrackedLightsMax) {
 				LightsList[LightIndex] = Light;
 				LightPosition[LightIndex] = LightPos;
+				LightColor[ShadowCubeMapsMax + ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
 				LightIndex++;
 			};
 
@@ -527,12 +532,14 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				//Logger::Log("clearing light at index %i", LightIndex);
 				LightsList[LightIndex] = NULL;
 				LightPosition[LightIndex] = Empty;
+				LightColor[LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
 				LightIndex++;
 			}
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
 				ShadowLightsList[ShadowIndex] = NULL;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = Empty;
+				LightColor[ShadowCubeMapsMax + ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
 				ShadowIndex++;
 			}
 		}
