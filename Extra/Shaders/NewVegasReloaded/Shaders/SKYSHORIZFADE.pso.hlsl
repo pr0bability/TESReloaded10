@@ -64,24 +64,24 @@ float noise( float3 x )
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float4 stars = tex2D(TexMap, IN.TexUV.xy);
-    stars.rgb = pows(stars.rgb,2.2); //linearise
-    float4 sky = IN.color_0;
-    sky.rgb = pows(sky.rgb,2.2); //linearise
+    float4 stars = linearize(tex2D(TexMap, IN.TexUV.xy));
+    float4 skytint = linearize(IN.color_0);
 
     float starFlicker = 0.05;
     float noiseScale = 4;
-    float flickerSpeed = 0.01;
+    float flickerSpeed = 0.1;
 
     float3 eyeDir = normalize(IN.location);
   
     // create animated noise to modulate star brightness
+    float starsLuma = smoothstep(0, 1, luma(stars.rgb)); // only pick the brightest areas of the sky for the flicker
+
     float n = noise(noiseScale * eyeDir);
     n *= noise((TESR_GameTime.x * flickerSpeed).xxx + noiseScale * eyeDir) * 2;
 
-    OUT.color_0.a = (stars.a * sky.a) * IN.texcoord_2.x * TESR_SkyData.w * (n + 1);
-    stars.rgb = stars.rgb * (n * 0.3 + 1) * sky.rgb;
-    stars.rgb = pows(stars.rgb,1.0/2.2); //delinearise
+    OUT.color_0.a = (stars.a * skytint.a) * IN.texcoord_2.x * TESR_SkyData.w ;//* (n * starsLuma + 1);
+    stars.rgb = stars.rgb * (n * 100 * starsLuma + 1) * skytint.rgb;
+    stars.rgb = delinearize(stars); //delinearise
     OUT.color_0.rgb = stars.rgb;
     return OUT;
 };
