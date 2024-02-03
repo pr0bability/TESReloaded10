@@ -78,13 +78,13 @@ void WaterShaders::UpdateSettings() {
 	Constants.Default.waterVolume.w = TheSettingManager->GetSettingF(sectionName, "causticsStrengthS");
 	Constants.Default.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
 
-	Constants.Placed.waveParams.x = TheSettingManager->GetSettingF("Shaders.Placed.Default", "choppiness");
-	Constants.Placed.waveParams.y = TheSettingManager->GetSettingF("Shaders.Placed.Default", "waveWidth");
-	Constants.Placed.waveParams.z = TheSettingManager->GetSettingF("Shaders.Placed.Default", "waveSpeed");
-	Constants.Placed.waveParams.w = TheSettingManager->GetSettingF("Shaders.Placed.Default", "reflectivity");
-	Constants.Placed.waterSettings.y = TheSettingManager->GetSettingF("Shaders.Placed.Default", "depthDarkness");
-	Constants.Placed.waterVolume.y = TheSettingManager->GetSettingF("Shaders.Placed.Default", "shoreFactor");
-	Constants.Placed.waterVolume.z = TheSettingManager->GetSettingF("Shaders.Placed.Default", "turbidity");
-	Constants.Placed.waterVolume.w = TheSettingManager->GetSettingF("Shaders.Placed.Default", "causticsStrengthS");
-	Constants.Placed.shorelineParams.x = TheSettingManager->GetSettingF("Shaders.Placed.Default", "shoreMovement");
+	Constants.Placed.waveParams.x = TheSettingManager->GetSettingF("Shaders.Water.Placed", "choppiness");
+	Constants.Placed.waveParams.y = TheSettingManager->GetSettingF("Shaders.Water.Placed", "waveWidth");
+	Constants.Placed.waveParams.z = TheSettingManager->GetSettingF("Shaders.Water.Placed", "waveSpeed");
+	Constants.Placed.waveParams.w = TheSettingManager->GetSettingF("Shaders.Water.Placed", "reflectivity");
+	Constants.Placed.waterSettings.y = TheSettingManager->GetSettingF("Shaders.Water.Placed", "depthDarkness");
+	Constants.Placed.waterVolume.y = TheSettingManager->GetSettingF("Shaders.Water.Placed", "shoreFactor");
+	Constants.Placed.waterVolume.z = TheSettingManager->GetSettingF("Shaders.Water.Placed", "turbidity");
+	Constants.Placed.waterVolume.w = TheSettingManager->GetSettingF("Shaders.Water.Placed", "causticsStrengthS");
+	Constants.Placed.shorelineParams.x = TheSettingManager->GetSettingF("Shaders.Water.Placed", "shoreMovement");
 }

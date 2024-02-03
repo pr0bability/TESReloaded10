@@ -9,6 +9,8 @@ float TexScale : register(c8);
 float4 QPosAdjust : register(c9);
 float ObjectUV : register(c10);
 
+float4 TESR_CameraPosition : register(c11);
+
 // Registers:
 //
 //   Name          Reg   Size
@@ -42,6 +44,7 @@ struct VS_OUTPUT {
     float4 texcoord_5 : TEXCOORD5;
     float4 texcoord_6 : TEXCOORD6;
     float4 texcoord_7 : TEXCOORD7;
+    //float4 WorldPosition : TEXCOORD8;
 };
 
 // Code:
@@ -78,6 +81,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     r0.x = (-(sqr(ObjectUV.x)) < sqr(ObjectUV.x) ? 1.0 : 0.0);
     OUT.texcoord_7.zw = 0;
     OUT.texcoord_7.xy = (r0.x * ((IN.LTEXCOORD_0.xy / (r0.y * TexScale.x)) - q4.xy)) + q4.xy;
+    //OUT.WorldPosition = mul(WorldMat, IN.LPOSITION) + TESR_CameraPosition;
     return OUT;
 	
 };

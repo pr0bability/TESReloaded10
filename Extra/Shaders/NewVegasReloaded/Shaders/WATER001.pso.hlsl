@@ -78,12 +78,13 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_PlacedWaterSettings, color);
-    //color = getTurbidityFog(refractedDepth, ShallowColor, sunLuma, color);
-    color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, TESR_PlacedWaveParams.w, color);
+    color = getTurbidityFog(refractedDepth, ShallowColor, TESR_PlacedWaterVolume, sunLuma, color);
+    //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_PlacedWaveParams.w, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
 
     color = delinearize(color);
     OUT.color_0 = color;
+    OUT.color_0.a = 1;
     return OUT;
 };

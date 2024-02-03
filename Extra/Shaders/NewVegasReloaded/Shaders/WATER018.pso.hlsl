@@ -23,6 +23,7 @@ float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
 float4 TESR_WetWorldData : register(c20);
 float4 TESR_PlacedWaterShorelineParams : register(c21);
+float4 TESR_DebugVar : register(c22);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);
@@ -75,9 +76,9 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_PlacedWaterSettings, color);
-    //color = getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color);
-    color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, TESR_PlacedWaveParams.w, color);
+    color = getTurbidityFog(refractedDepth, linShallowColor, TESR_PlacedWaterVolume, sunLuma, color);
+    //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_PlacedWaveParams.w, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
 
     color = delinearize(color); //delinearise
