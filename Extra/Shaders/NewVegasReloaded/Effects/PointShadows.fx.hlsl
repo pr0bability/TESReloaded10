@@ -1,23 +1,7 @@
 // Shader To compute a shadow pass for point light shadows (Only for 6 lights)
 
-float4 TESR_ShadowLightPosition0;
-float4 TESR_ShadowLightPosition1;
-float4 TESR_ShadowLightPosition2;
-float4 TESR_ShadowLightPosition3;
-float4 TESR_ShadowLightPosition4;
-float4 TESR_ShadowLightPosition5;
-float4 TESR_LightPosition0;
-float4 TESR_LightPosition1;
-float4 TESR_LightPosition2;
-float4 TESR_LightPosition3;
-float4 TESR_LightPosition4;
-float4 TESR_LightPosition5;
-float4 TESR_LightPosition6;
-float4 TESR_LightPosition7;
-float4 TESR_LightPosition8;
-float4 TESR_LightPosition9;
-float4 TESR_LightPosition10;
-float4 TESR_LightPosition11;
+float4 TESR_ShadowLightPosition[12];
+float4 TESR_LightPosition[12];
 float4 TESR_ShadowFade;
 
 //sampler_state removed to avoid a artifact. TODO investigate
@@ -64,24 +48,16 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	float4 normal = float4(GetWorldNormal(uv), 1);
 	// float Shadow = 0.0;
 
-	float Shadow = GetPointLightAmount(TESR_ShadowCubeMapBuffer0, world_pos, TESR_ShadowLightPosition0, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer1, world_pos, TESR_ShadowLightPosition1, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer2, world_pos, TESR_ShadowLightPosition2, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer3, world_pos, TESR_ShadowLightPosition3, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer4, world_pos, TESR_ShadowLightPosition4, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer5, world_pos, TESR_ShadowLightPosition5, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition0, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition1, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition2, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition3, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition4, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition5, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition6, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition7, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition8, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition9, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition10, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_LightPosition11, normal);
+	float Shadow = GetPointLightAmount(TESR_ShadowCubeMapBuffer0, world_pos, TESR_ShadowLightPosition[0], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer1, world_pos, TESR_ShadowLightPosition[1], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer2, world_pos, TESR_ShadowLightPosition[2], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer3, world_pos, TESR_ShadowLightPosition[3], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer4, world_pos, TESR_ShadowLightPosition[4], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer5, world_pos, TESR_ShadowLightPosition[5], normal);
+	
+	for (int i = 0; i< 12; i++){
+		Shadow += GetPointLightContribution(world_pos, TESR_LightPosition[i], normal);
+	}
 
 	Shadow = saturate(Shadow);
 	

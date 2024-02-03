@@ -1,11 +1,6 @@
 // Shader To compute a shadow pass for point light shadows (Supports 5 more lights)
 
-float4 TESR_ShadowLightPosition6;
-float4 TESR_ShadowLightPosition7;
-float4 TESR_ShadowLightPosition8;
-float4 TESR_ShadowLightPosition9;
-float4 TESR_ShadowLightPosition10;
-float4 TESR_ShadowLightPosition11;
+float4 TESR_ShadowLightPosition[12];
 float4 TESR_ShadowFade;
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -52,13 +47,13 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	float4 normal = float4(GetWorldNormal(uv), 1);
 
 	float Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).r;
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer6, world_pos, TESR_ShadowLightPosition6, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer7, world_pos, TESR_ShadowLightPosition7, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer8, world_pos, TESR_ShadowLightPosition8, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer9, world_pos, TESR_ShadowLightPosition9, normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer10, world_pos, TESR_ShadowLightPosition10, normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer6, world_pos, TESR_ShadowLightPosition[6], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer7, world_pos, TESR_ShadowLightPosition[7], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer8, world_pos, TESR_ShadowLightPosition[8], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer9, world_pos, TESR_ShadowLightPosition[9], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer10, world_pos, TESR_ShadowLightPosition[10], normal);
 	// Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer11, world_pos, TESR_ShadowLightPosition11, normal);
-	Shadow += GetPointLightContribution(world_pos, TESR_ShadowLightPosition11, normal);
+	Shadow += GetPointLightContribution(world_pos, TESR_ShadowLightPosition[11], normal);
 
 
 	Shadow = saturate(Shadow);
