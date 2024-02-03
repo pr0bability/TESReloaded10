@@ -116,7 +116,7 @@ float4 getLightTravel(float3 refractedDepth, float4 shallowColor, float4 deepCol
 }
 
 float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float4 waterVolume, float sunLuma, float4 color){
-    float turbidity = max(0.00001, waterVolume.z); // clamp minimum value to avoid division by 0
+    float turbidity = waterVolume.z;
 
     float depth = pows(refractedDepth.x, turbidity);
 
@@ -142,9 +142,11 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
 // float4 getReflections(float3 surfaceNormal, eyeDirection, float4 reflection, float4 color){
     float fresnelCoeff = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
     float reflectionLuma = luma(reflection);
+    float lumaDiff = saturate(reflectionLuma - luma(color));
 
-    float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma * VarAmounts.y) * 0.7;
-	float3 result = lerp(color.rgb, reflection.rgb , saturate(fresnelCoeff * reflectivity * reflectionLuma));
+    //float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma * VarAmounts.y) * 0.7;
+    float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma) * 0.7;
+	float3 result = lerp(color.rgb, reflection.rgb , saturate((fresnelCoeff + lumaDiff) / 2 * reflectivity));
     return float4(result, 1);
 }
 
@@ -175,7 +177,7 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 
         //return color + getSpecular(surfaceNormal, normalize(lightDir), eyeDirection, specColor * atten, color);
 		float3 H = normalize(normalize(lightDir) + eyeDirection);
-		color.rgb += pows(shades(H, normalize(surfaceNormal)), TESR_DebugVar.w) * specColor * TESR_DebugVar.z * atten;
+		color.rgb += pows(shades(H, surfaceNormal), TESR_DebugVar.w) * specColor * TESR_DebugVar.z * atten;
 		// color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
         return color;
 }

@@ -80,7 +80,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, 0.5, TESR_WaterSettings, color);
    	color = getTurbidityFog(refractedDepth, linShallowColor, TESR_WaterVolume, sunLuma, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linFogColor, TESR_WaveParams.w, color);
+    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color);
 
 	for (int i= 0; i< 12; i++){
 	    color = getPointLightSpecular(surfaceNormal, TESR_ShadowLightPosition[i], position, eyeDirection, TESR_LightColor[i].rgb * TESR_LightColor[i].w, color);
