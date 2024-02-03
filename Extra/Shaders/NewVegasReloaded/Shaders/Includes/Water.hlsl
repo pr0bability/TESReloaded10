@@ -39,6 +39,7 @@ struct PS_INPUT {
     float4 LTEXCOORD_5 : TEXCOORD5_centroid;     // modelviewproj matrix 4th row 
     float4 LTEXCOORD_6 : TEXCOORD6;              // displacement sampling position
     float2 LTEXCOORD_7 : TEXCOORD7;              // waves sampling position
+    float4 WorldPosition : TEXCOORD8;
 };
 
 struct PS_OUTPUT {
@@ -56,13 +57,13 @@ float4 getScreenpos(PS_INPUT IN){
     return screenPos;
 }
 
-float4 getWaveTexture(PS_INPUT IN, float distance) {
+float4 getWaveTexture(PS_INPUT IN, float distance, float4 waveParams) {
 
     float2 texPos = IN.LTEXCOORD_7;
 
-	float waveWidth = TESR_WaveParams.y;
-    float choppiness = TESR_WaveParams.x;
-    float speed = TESR_GameTime.x * 0.002 * TESR_WaveParams.z;
+	float waveWidth = waveParams.y;
+    float choppiness = waveParams.x;
+    float speed = TESR_GameTime.x * 0.002 * waveParams.z;
     float smallScale = 0.5;
     float bigScale = 2;
     float4 waveTexture = expand(tex2D(TESR_samplerWater, texPos * smallScale * waveWidth + normalize(float2(1, 4)) * speed));
@@ -106,22 +107,18 @@ float3 getDisplacement(PS_INPUT IN, float blendRadius, float3 surfaceNormal){
     return surfaceNormal;
 }
 
-float4 getLightTravel(float3 refractedDepth, float4 shallowColor, float4 deepColor, float sunLuma, float4 color){
+float4 getLightTravel(float3 refractedDepth, float4 shallowColor, float4 deepColor, float sunLuma, float4 waterSettings, float4 color){
     float4 waterColor = lerp(shallowColor, deepColor, refractedDepth.y); 
     //float4 waterColor = shallowColor; 
-    float depthDarknessPower = saturate(pows((1 - TESR_WaterSettings.y), 3)); // high darkness means low values
-    // return color * waterColor * sunLuma / TESR_WaterSettings.y; saturate(sunLuma) * 
-
-    //float3 result = lerp(waterColor, 1, depthDarknessPower);
-
+    float depthDarknessPower = saturate(pows((1 - waterSettings.y), 3)); // high darkness means low values
     float3 result = color.rgb * lerp(0.7, lerp(waterColor.rgb * depthDarknessPower, 1, depthDarknessPower) , refractedDepth.x) ; //never reach 1 so that water is always absorbing some light
     return float4(result, 1);
 }
 
-float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float sunLuma, float4 color){
-    float turbidity = max(0.00001, TESR_WaterVolume.z); // clamp minimum value to avoid division by 0
+float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float4 waterVolume, float sunLuma, float4 color){
+    float turbidity = max(0.00001, waterVolume.z); // clamp minimum value to avoid division by 0
 
-    float depth = pow(refractedDepth.x, turbidity);
+    float depth = pows(refractedDepth.x, turbidity);
 
     float fogCoeff = 1 - saturate((FogParam.z - (refractedDepth.x * FogParam.z)) / FogParam.w);
     float3 fog = shallowColor.rgb * sunLuma;
@@ -141,39 +138,53 @@ float4 getDiffuse(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, fl
     return float4(result, 1);
 }
 
-float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, float4 color){
-    float reflectivity = TESR_WaveParams.w;
-
+float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, float reflectivity, float4 color){
+// float4 getReflections(float3 surfaceNormal, eyeDirection, float4 reflection, float4 color){
     float fresnelCoeff = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
+    float reflectionLuma = luma(reflection);
 
-    float4 reflectionColor = lerp (luma(reflection) * linearize(ReflectionColor), reflection, VarAmounts.y) * 0.7;
-	float3 result = lerp(color.rgb, reflection.rgb , saturate(fresnelCoeff * reflectivity));
+    float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma * VarAmounts.y) * 0.7;
+	float3 result = lerp(color.rgb, reflection.rgb , saturate(fresnelCoeff * reflectivity * reflectionLuma));
     return float4(result, 1);
 }
 
 float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float3 specColor, float4 color){
-    float2 scatteringConst = {-0.569999993, 0.819999993}; //scattering to simulate water coming through the waves
-    float specularBoost = 5;
+    float specularBoost = 10;
     float glossiness = 10000;
 
-    // phong blinn specular with fresnel modulation
+    // phong blinn specular
 	float3 halfwayDir = normalize(lightDir + eyeDirection);
-    //float fresnel = saturate(pow(1 - dot(eyeDirection, surfaceNormal), 5));
-	float specular = pow(shades(halfwayDir, normalize(surfaceNormal).xyz), glossiness);// * (fresnel);
+	// float specular = pow(shades(halfwayDir, normalize(surfaceNormal).xyz), glossiness);
+	float specular = pows(shades(halfwayDir, normalize(surfaceNormal).xyz), glossiness);
 
     // float specular = pow(abs(shades(reflect(-eyeDirection, surfaceNormal), lightDir)), VarAmounts.x);
-    float scattering = 0;//pow(abs(saturate(dot(surfaceNormal.xz, scatteringConst))), glossiness) * 0.03; 
-    float3 result = color.rgb + (specular + scattering) * specColor.rgb * specularBoost;
+    float3 result = color.rgb + specular * specColor.rgb * specularBoost;
 
     return float4(result, 1);
 }
 
+float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor, float4 color){
+        if (lightPosition.w == 0) return color;
 
-float4 getShoreFade(PS_INPUT IN, float depth, float4 color){
+        float3 lightDir = lightPosition.xyz - worldPosition;
+		float distance = length(lightDir) / lightPosition.w;
+
+        	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
+	    float s = saturate(distance * distance); 
+	    float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
+
+        //return color + getSpecular(surfaceNormal, normalize(lightDir), eyeDirection, specColor * atten, color);
+		float3 H = normalize(normalize(lightDir) + eyeDirection);
+		color.rgb += pows(shades(H, normalize(surfaceNormal)), TESR_DebugVar.w) * specColor * TESR_DebugVar.z * atten;
+		// color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
+        return color;
+}
+
+
+float4 getShoreFade(PS_INPUT IN, float depth, float shoreSpeed, float shoreFactor, float4 color){
     float scale = 20;
-    float speed = TESR_WaterShorelineParams.x;
-    float shoreAnimation = sin(IN.LTEXCOORD_1.x/scale - TESR_GameTime.x * speed) * 0.4 + 0.8; //reframe sin() from -1/1 to 0.2/1.2 to ensure some fading happens 
-    color.a = 1 - pow(saturate(1 - depth), TESR_WaterVolume.y * 10) * saturate(shoreAnimation);
+    float shoreAnimation = sin(IN.LTEXCOORD_1.x/scale - TESR_GameTime.x * shoreSpeed) * 0.4 + 0.8; //reframe sin() from -1/1 to 0.2/1.2 to ensure some fading happens 
+    color.a = 1 - pow(saturate(1 - depth), shoreFactor * 10) * saturate(shoreAnimation);
     return color;
 }
 

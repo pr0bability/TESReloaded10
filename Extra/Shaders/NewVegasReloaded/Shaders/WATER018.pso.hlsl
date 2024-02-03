@@ -15,14 +15,14 @@ float2 DepthFalloff : register(c11);
 float4 SunDir : register(c12);
 float4 SunColor : register(c13);
 
-float4 TESR_WaveParams : register(c14); // x: choppiness, y:wave width, z: wave speed, w: reflectivity?
-float4 TESR_WaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
-float4 TESR_WaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
+float4 TESR_PlacedWaveParams : register(c14); // x: choppiness, y:wave width, z: wave speed, w: reflectivity?
+float4 TESR_PlacedWaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
+float4 TESR_PlacedWaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
 float4 TESR_GameTime : register(c17);
 float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
 float4 TESR_WetWorldData : register(c20);
-float4 TESR_WaterShorelineParams : register(c21);
+float4 TESR_PlacedWaterShorelineParams : register(c21);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);
@@ -39,10 +39,10 @@ sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitati
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = pows(SunColor,2.2); //linearise
-    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
-    float4 linDeepColor = pows(DeepColor,2.2); //linearise
-    float4 linHorizonColor = pows(TESR_HorizonColor,2.2); //linearise
+    float4 linSunColor = linearize(SunColor); //linearise
+    float4 linShallowColor = linearize(ShallowColor); //linearise
+    float4 linDeepColor = linearize(DeepColor); //linearise
+    float4 linHorizonColor = linearize(TESR_HorizonColor); //linearise
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
@@ -50,8 +50,8 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float depth = length(eyeVector);                    // depth distance to eye
 
 	float sunLuma = luma(linSunColor);
-	float placedWaterRefractionModifier = 0.7;		// reduce refraction because of the way placed depth is encoded
-	float placedWaterDepthModifier = 0.7;			// reduce depth value for fog because of the way placed depth is encoded
+	float placedWaterRefractionModifier = 0.1;		// reduce refraction because of the way placed depth is encoded
+	float placedWaterDepthModifier = 0.1;			// reduce depth value for fog because of the way placed depth is encoded
 
     // calculate fog coeffs
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
@@ -62,7 +62,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float2 depths = float2(fadedDepth.y + depth, depth); // deepfog
     depths = saturate((FogParam.x - depths) / FogParam.y); 
 
-    float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
+    float3 surfaceNormal = getWaveTexture(IN, distance, TESR_PlacedWaveParams).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x);
     surfaceNormal = getDisplacement(IN, BlendRadius.w, surfaceNormal);
     
@@ -74,10 +74,10 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * placedWaterDepthModifier;
 
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
-    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
+    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_PlacedWaterSettings, color);
     //color = getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color);
     color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, TESR_PlacedWaveParams.w, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
 
     color = delinearize(color); //delinearise

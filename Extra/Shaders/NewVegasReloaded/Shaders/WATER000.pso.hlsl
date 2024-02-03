@@ -20,26 +20,26 @@ float4 TESR_SunDirection : register(c19);
 float4 TESR_ReciprocalResolution : register(c20);
 float4 TESR_WetWorldData : register(c21);
 float4 TESR_WaterShorelineParams : register(c22);
+float4 TESR_DebugVar : register(c23);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);
 sampler2D NoiseMap : register(s2);
 sampler2D DisplacementMap : register(s3); //unused
 sampler2D DepthMap : register(s4);
-sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; ADDRESSW = WRAP; MAGFILTER = ANISOTROPIC; MINFILTER = ANISOTROPIC; MIPFILTER = ANISOTROPIC; } ;
+sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; ADDRESSW = WRAP; MAGFILTER = ANISOTROPIC; MINFILTER = LINEAR; MIPFILTER = LINEAR; } ;
 sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitations\ripples.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Water.hlsl"
-//#include "../Effects/Includes/Depth.hlsl"
 
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = pows(SunColor,2.2); //linearise
-    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
-    float4 linDeepColor = pows(DeepColor,2.2); //linearise
-    float4 linHorizonColor = pows(TESR_HorizonColor,2.2); //linearise
+    float4 linSunColor = linearize(SunColor);
+    float4 linShallowColor = linearize(ShallowColor);
+    float4 linDeepColor = linearize(DeepColor);
+    float4 linHorizonColor = linearize(TESR_HorizonColor);
 
     // float2 UVCoord = (PixelPos+0.5)*TESR_ReciprocalResolution.xy;
     // float4 worldPos = reconstructWorldPosition(UVCoord);
@@ -50,7 +50,6 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
     float distance = length(eyeVector.xy);              // surface distance to eye
     float depth = length(eyeVector);                    // depth distance to eye
-
 
     // calculate fog coeffs
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
@@ -67,7 +66,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float exteriorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 
-    float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
+    float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x);
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
@@ -82,15 +81,14 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     // float4 floorNormal = float4(normalize(float4(ddx(water), ddy(water), 1, 1).rgb) + eyeDirection.rgb, 1);
 
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
-    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, color);
-    color = lerp(getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color), float4(linShallowColor.rgb * sunLuma, 1), LODfade); // fade to full fog to hide LOD seam
+    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_WaterSettings, color);
+    color = lerp(getTurbidityFog(refractedDepth, linShallowColor, TESR_WaterVolume, sunLuma, color), float4(linShallowColor.rgb * sunLuma, 1), LODfade); // fade to full fog to hide LOD seam
     //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
+    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb * dot(TESR_SunDirection.rgb, float3(0, 0, 1)), color);
-    color = getShoreFade(IN, waterDepth.x, color);
+    color = getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color);
 
     color = delinearize(color);
     OUT.color_0 = color;
-    // OUT.color_0.a = lerp(color.a, 1, LODfade); // fade to full opacity to hide LOD seam
     return OUT;
 };

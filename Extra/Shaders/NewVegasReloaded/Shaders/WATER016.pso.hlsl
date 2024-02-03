@@ -67,7 +67,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float sunLuma = luma(linSunColor.rgb);
     float exteriorRefractionModifier = 0.5;		// reduce refraction because of the way interior depth is encoded
 
-    float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
+    float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x) * -1;
 
     float4 refractionPos = getReflectionSamplePosition(IN, surfaceNormal, exteriorRefractionModifier);

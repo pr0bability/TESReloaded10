@@ -10,11 +10,16 @@ public:
 		D3DXVECTOR4		waveParams;
 		D3DXVECTOR4		waterVolume;
 		D3DXVECTOR4		waterSettings;
-		D3DXVECTOR4		deepColor;
-		D3DXVECTOR4		shallowColor;
 		D3DXVECTOR4		shorelineParams;
 	};
-	WaterStruct	Constants;
+
+	struct WaterConstants {
+		WaterStruct		Default;
+		WaterStruct		Placed;
+		D3DXVECTOR4		deepColor;
+		D3DXVECTOR4		shallowColor;
+	};
+	WaterConstants		Constants;
 
 	float	causticsStrength;
 
