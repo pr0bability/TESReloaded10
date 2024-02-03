@@ -22,6 +22,11 @@ float4 TESR_GameTime : register(c17);
 float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
 float4 TESR_WaterShorelineParams : register(c20);
+float4 TESR_CameraPosition : register(c21);
+float4 TESR_DebugVar : register(c22);
+float4 TESR_ShadowLightPosition[12] : register(c23);
+float4 TESR_LightPosition[12] : register(c35);
+float4 TESR_LightColor[24] : register(c47);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);
@@ -29,7 +34,7 @@ sampler2D NormalMap : register(s2);
 sampler2D DisplacementMap : register(s3);
 sampler2D DepthMap : register(s4);
 
-sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\watercalm_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; ADDRESSW = WRAP; MAGFILTER = ANISOTROPIC; MINFILTER = ANISOTROPIC; MIPFILTER = ANISOTROPIC; } ;
+sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; ADDRESSW = WRAP; MAGFILTER = ANISOTROPIC; MINFILTER = LINEAR; MIPFILTER = LINEAR; } ;
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Water.hlsl"
@@ -38,16 +43,17 @@ sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\waterc
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
-    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
-    float4 linDeepColor = pows(DeepColor,2.2); //linearise
-    float4 linFogColor = pows(FogColor,2.2); //linearise
+    float4 linShallowColor = linearize(ShallowColor); //linearise
+    float4 linDeepColor = linearize(DeepColor); //linearise
+    float4 linFogColor = linearize(FogColor); 
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
     float distance = length(eyeVector.xy);              // surface distance to eye
     float depth = length(eyeVector);                    // depth distance to eye
+	float3 position = IN.WorldPosition.xyz;             // world position
 
-	float3 lightDir = normalize(float3(0.2, 0.2, 1));
+	//float3 lightDir = normalize(float3(0.2, 0.2, 1));
 	float sunLuma = 0.3;
 	float interiorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
 	float interiorDepthModifier = 0.5;			// reduce depth value for fog because of the way interior depth is encoded
@@ -61,7 +67,8 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float2 depths = float2(fadedDepth.y + depth, depth); // deepfog
     depths = saturate((FogParam.x - depths) / FogParam.y); 
 
-    float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
+    float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
+	surfaceNormal = normalize(surfaceNormal);
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * interiorRefractionModifier );
@@ -71,13 +78,18 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * interiorDepthModifier;
 
     float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
-    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, 0.5, color);
-    color = getTurbidityFog(refractedDepth, linShallowColor, sunLuma, color);
-    color = getDiffuse(surfaceNormal, lightDir, eyeDirection, distance, linFogColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linFogColor, color);
-    color = getSpecular(surfaceNormal, lightDir, eyeDirection, float3(0.1, 0.1, 0.1), color);
+    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, 0.5, TESR_WaterSettings, color);
+   	color = getTurbidityFog(refractedDepth, linShallowColor, TESR_WaterVolume, sunLuma, color);
+    color = getFresnel(surfaceNormal, eyeDirection, linFogColor, TESR_WaveParams.w, color);
 
+	for (int i= 0; i< 12; i++){
+	    color = getPointLightSpecular(surfaceNormal, TESR_ShadowLightPosition[i], position, eyeDirection, TESR_LightColor[i].rgb * TESR_LightColor[i].w, color);
+	    color = getPointLightSpecular(surfaceNormal, TESR_LightPosition[i], position, eyeDirection,  TESR_LightColor[ 12 + i].rgb * TESR_LightColor[ 12 + i].w, color);
+	}
+
+    color.a = 1;
     color = delinearize(color); //delinearise
+	
     OUT.color_0 = color;
     return OUT;
 

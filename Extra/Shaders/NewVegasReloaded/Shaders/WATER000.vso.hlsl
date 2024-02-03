@@ -8,6 +8,7 @@ row_major float4x4 WorldMat : register(c4);
 float TexScale : register(c8);
 float4 QPosAdjust : register(c9);
 float ObjectUV : register(c10);
+float4 TESR_CameraPosition : register(c11);
 
 // Registers:
 //
@@ -23,6 +24,7 @@ float ObjectUV : register(c10);
 //   ObjectUV      const_10      1
 //
 
+#include "Includes/Helpers.hlsl"
 
 // Structures:
 
@@ -41,6 +43,7 @@ struct VS_OUTPUT {
     float4 texcoord_5 : TEXCOORD5; // modelviewproj matrix 4th row
     float4 texcoord_6 : TEXCOORD6;
     float4 texcoord_7 : TEXCOORD7;
+    float4 worldPosition : TEXCOORD8; // world position of surface point
 };
 
 // Code:
@@ -76,6 +79,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     r0.x = (-(sqr(ObjectUV.x)) < sqr(ObjectUV.x) ? 1.0 : 0.0);
     OUT.texcoord_7.zw = 0;
     OUT.texcoord_7.xy = (r0.x * ((IN.LTEXCOORD_0.xy / (r0.y * TexScale.x)) - q4.xy)) + q4.xy;
+    
+    OUT.worldPosition = mul(WorldMat, IN.LPOSITION) + TESR_CameraPosition;
+
     return OUT;
 	
 };

@@ -10,14 +10,15 @@ float4 FogParam : register(c9);
 float4 FogColor : register(c10);
 float4 SunDir : register(c12);
 float4 SunColor : register(c13);
+
 float4 TESR_WaveParams : register(c14);
 float4 TESR_WaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
 float4 TESR_WaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
-
 float4 TESR_GameTime : register(c17);
 float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
 float4 TESR_WaterShorelineParams : register(c20);
+float4 TESR_DebugVar : register(c21);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1); //unused
@@ -63,14 +64,14 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
     float sunLuma = luma(linSunColor);
 
-    float3 surfaceNormal = getWaveTexture(IN, distance).xyz;
+    float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     float refractionCoeff = ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff);
     float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
 
     float4 color = linShallowColor * sunLuma;
     //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, reflection, color);
+    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb* dot(TESR_SunDirection.rgb, float3(0, 0, 1)), color);
     color.a = 1;
 
