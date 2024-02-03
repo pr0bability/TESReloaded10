@@ -72,7 +72,7 @@ ShadowRenderPass::ShadowRenderPass() {
 
 
 bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
-	if (!Geo->geomData->BuffData) return false; // discard objects without buffer data
+	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
