@@ -215,14 +215,14 @@ float3 VTLottes(float3 color, float contrast, float b, float c, float shoulder, 
     peak *= 1.0 + 1.666 * max(0, (peak - lum) / peak);
 
     float3 z = pows(peak, contrast);
-    peak = z / (pows(z, b) * shoulder + c);
+    peak = z / (pows(z, shoulder) * b + c);
 
     crosstalk = max(1.0,crosstalk); // controls amount of channel crosstalk
     float saturation = contrast; // crosstalk saturation
     float crossSaturation = contrast * (64.0 / crosstalk); // crosstalk saturation
     // wrap crosstalk in transform
     ratio = pows(abs(ratio + 0.11) * 0.90909, saturation / crossSaturation);
-    ratio = lerp(ratio, 1.0, pows(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
+    ratio = lerp(ratio, 1.0, pows(peak, max(float3(1.0, 1.0, 1.0), float3(4.0, 3.0, 3.0) * crosstalk) * 1.0 / peak));
     ratio = pows(min(1.0, ratio), crossSaturation);
 
     return peak * ratio;
@@ -259,33 +259,34 @@ float3 Lottes(float3 x, float contrast, float midOut, float midIn, float hdrMax,
     // return z / (pows(z, shoulder) * b + c);
 }
 
+float UchimuraChannel(float x, float P, float a, float m, float l, float c, float b)
+{
+    float l0 = ((P - m) * l) / a;
+    float S0 = m + l0;
+    float S1 = m + a * l0;
+    float C2 = (a * P) / (P - S1);
+    
+    float L = m + a * (x - m);
+    float T = m * pow(x / m, c);
+    float S = P - (P - S1) * exp(-C2 * (x - S0) / P);
+    float w0 = 1 - smoothstep(0.0f, m, x);
+    float w2 = (x < m + l0) ? 0 : 1;
+    float w1 = 1 - w0 - w2;
+    return (float) (T * w0 + L * w1 + S * w2);
+
+}
+
 // Uchimura GT Tonemapper
 float3 Uchimura(float3 x, float contrast, float brightness, float midIn, float hdrMax, float shoulder)
 {
     float P = 1.0 * brightness; // brightness
     float a = 1.0 * contrast; // contrast
-    float m = 0.05 * midIn; // linear section start
-    float l = 0.05 * hdrMax; // linear section length
-    float3 c = 1.0 + (0.333 * shoulder); // black
+    float m = 0.22 * midIn; // linear section start
+    float l = 0.4 * hdrMax; // linear section length
+    float c = 1.0 + (0.333 * shoulder); // black
     float b = 0.0; // pedestal
     
-    float l0 = ((P - m) * l) / a;
-    float L0 = m - m / a;
-    float L1 = m + (1.0 - m) / a;
-    float S0 = m + l0;
-    float S1 = m + a * l0;
-    float C2 = (a * P) / (P - S1);
-    float CP = (-C2) / P;
-    
-    float3 w0 = float3(1.0 - smoothstep(0.0, m, x));
-    float3 w2 = float3(step(m + l0, x));
-    float3 w1 = float3(1.0 - w0 - w2);
-    
-    float3 T = float3(m * pows(x / m, c + b));
-    float3 S = float3(P - (P - S1) * exp(CP * (x - S0)));
-    float3 L = float3(m + a * (x - m));
-    
-    return T * w0 + L * w1 + S * w2;
+    return float3(UchimuraChannel(x.r, P, a, m, l, c, b), UchimuraChannel(x.g, P, a, m, l, c, b), UchimuraChannel(x.b, P, a, m, l, c, b));
 }
 
 
@@ -326,7 +327,7 @@ float3 tonemap(float3 color)
     }
     else if (TESR_HDRData.x == 8)
     {
-        return Uchimura(color, TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w);
+        return max(0.0, Uchimura(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w));
     }
     else if (TESR_HDRData.x == 9)
     {
