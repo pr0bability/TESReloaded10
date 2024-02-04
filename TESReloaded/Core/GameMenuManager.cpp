@@ -168,15 +168,22 @@ void GameMenuManager::HandleInput() {
 			else if (IsKeyPressed(MenuSettings.KeyRight)) {
 				SelectedRow[SelectedColumn] = min(SelectedRow[SelectedColumn] + 1, Rows[SelectedColumn]);
 			}
+			else if (IsKeyPressed(MenuSettings.KeyUp)) {
+				SelectedColumn = COLUMNS::CATEGORY;
+				SelectedRow[SelectedColumn] = Rows[SelectedColumn];
+			}
 			SelectedPage[COLUMNS::CATEGORY] = SelectedPage[COLUMNS::SECTION] = SelectedPage[COLUMNS::SETTINGS] = 0;
 		}
 		else {
 			// handle navigation
 			if (IsKeyPressed(MenuSettings.KeyUp)) {
-				if (SelectedColumn == COLUMNS::CATEGORY && SelectedRow[SelectedColumn] == 0)
-					SelectedColumn = COLUMNS::HEADER;  // go to header
+				if (SelectedRow[SelectedColumn] == 0)
+					if (SelectedColumn == COLUMNS::CATEGORY && SelectedRow[COLUMNS::CATEGORY] == 0)
+						SelectedColumn = COLUMNS::HEADER;  // go to header
+					else
+						 SelectedRow[SelectedColumn] = Rows[SelectedColumn];
 				else
-					SelectedRow[SelectedColumn] = max(SelectedRow[SelectedColumn] - 1, 0);
+					SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] - 1;
 
 				if (SelectedColumn < COLUMNS::SETTINGS) {
 					// reset selected rows for columns further than current one
@@ -186,7 +193,11 @@ void GameMenuManager::HandleInput() {
 				}
 			}
 			else if (IsKeyPressed(MenuSettings.KeyDown)) {
-				SelectedRow[SelectedColumn] = min(SelectedRow[SelectedColumn] + 1, Rows[SelectedColumn]);
+				if (SelectedRow[SelectedColumn] == Rows[SelectedColumn])
+					SelectedRow[SelectedColumn] = 0;
+				else
+					SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] + 1;
+
 				if (SelectedColumn < COLUMNS::SETTINGS) {
 					// reset selected rows for columns further than current one
 					for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
