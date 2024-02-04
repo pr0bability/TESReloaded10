@@ -137,9 +137,7 @@ float4 Godrays( VSOUT IN) : COLOR0 {
 		color += getCaustics(samplingUV) * rayColor * samplingDepthFade * samplingDistanceFade * (distance < depth);
 	}
 
-	// return float4(color.rgb, 1); // clamp the values to increase the strength and improve blending
 	return float4(smoothstep(0.1, 0.4, color).rgb, 1); // clamp the values to increase the strength and improve blending
-	// return float4(smoothstep(0.1, 0.4, color).rgb, 1); // clamp the values to increase the strength and improve blending
 }
 
 
@@ -173,7 +171,7 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float3 skyColor = getSkyColor(eyeDirection, sunColor);
 
 	// interpolate fog color between shallow and deep water based on viewing angle. Shallow waters get tinted with the sky
-	float verticalFade = saturate(compress(dot(eyeDirection, up) * 3)); // fade from deep to shallow based on viewing angle
+	float verticalFade = saturate(compress(dot(eyeDirection, up) * 1.5)); // fade from deep to shallow based on viewing angle
 	float sunDirFade = compress(dot(eyeDirection.xyz, TESR_SunDirection.xyz)); // fade based on proximity to the sun angle
 
 	float3 fogColor = lerp(waterDeepColor, waterShallowColor + skyColor * 0.2, verticalFade); // mix in some sky color into shallow fog
@@ -190,8 +188,8 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	color.rgb += color * pows(caustics, 2.0) * sunColor * depthFade * floorAngle * distanceFade * sunLuma * causticsStrength * 100;
 
 	// blend fog layers colors
-	color.rgb *= lerp(1, waterDeepColor, fogAmount); // surface light absorption
-	color.rgb = lerp(color.rgb, fogColor * scattering, linearFog); // scattering absorption
+	color.rgb *= lerp(1, waterDeepColor, saturate(fogAmount * pows(depthDarkness, 0.5))); // surface light absorption
+	color.rgb = lerp(color.rgb, fogColor * scattering, pows(linearFog,  saturate( 2 - pows(turbidity, 0.5) * 2))); // scattering absorption
 	color.rgb = lerp(color.rgb, fogColor, saturate(pow(linearFog, 10))); // lod hiding
 
 	// blend in godrays

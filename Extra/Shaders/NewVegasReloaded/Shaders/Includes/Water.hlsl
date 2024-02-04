@@ -146,7 +146,7 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
 
     //float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma * VarAmounts.y) * 0.7;
     float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma) * 0.7;
-	float3 result = lerp(color.rgb, reflection.rgb , saturate((fresnelCoeff + lumaDiff) / 2 * reflectivity));
+	float3 result = lerp(color.rgb, reflection.rgb , saturate((fresnelCoeff * 0.8 + 0.2 * lumaDiff) * reflectivity));
     return float4(result, 1);
 }
 
