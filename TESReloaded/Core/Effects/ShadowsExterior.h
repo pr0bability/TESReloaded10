@@ -34,6 +34,7 @@ public:
 	
 		D3DXMATRIXA16	ShadowWorld;
 		D3DXMATRIX		ShadowViewProj;
+		D3DXMATRIX		ShadowCameraToLight[4];
 		D3DXVECTOR4		ShadowCubeMapLightPosition;
 		D3DXVECTOR4		ShadowLightPosition[ShadowCubeMapsMax];
 		D3DXVECTOR4		ShadowCubeMapBlend;

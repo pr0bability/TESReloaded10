@@ -153,18 +153,6 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[MapOrtho].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition", (D3DXVECTOR4*)&Constants.ShadowLightPosition);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition0", &Constants.ShadowLightPosition[0]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition1", &Constants.ShadowLightPosition[1]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition2", &Constants.ShadowLightPosition[2]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition3", &Constants.ShadowLightPosition[3]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition4", &Constants.ShadowLightPosition[4]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition5", &Constants.ShadowLightPosition[5]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition6", &Constants.ShadowLightPosition[6]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition7", &Constants.ShadowLightPosition[7]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition8", &Constants.ShadowLightPosition[8]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition8", &Constants.ShadowLightPosition[9]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition10", &Constants.ShadowLightPosition[10]);
-	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition11", &Constants.ShadowLightPosition[11]);
 }
 
 void ShadowsExteriorEffect::RegisterTextures() {
