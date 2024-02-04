@@ -17,7 +17,7 @@ float4 SunColor : register(c13);
 
 float4 TESR_PlacedWaveParams : register(c14); // x: choppiness, y:wave width, z: wave speed, w: reflectivity?
 float4 TESR_PlacedWaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
-float4 TESR_PlacedWaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
+float4 TESR_PlacedWaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: refraction, z: caustic strength S ?
 float4 TESR_GameTime : register(c17);
 float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
@@ -54,7 +54,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float depth = length(eyeVector);                    // depth distance to eye
 
 	float sunLuma = luma(linSunColor);
-	float placedWaterRefractionModifier = 0.2;		// reduce refraction because of the way placed depth is encoded
+	float placedWaterRefractionModifier = TESR_PlacedWaterSettings.w;		// reduce refraction because of the way placed depth is encoded
 	float placedWaterDepthModifier = 0.2;			// reduce depth value for fog because of the way placed depth is encoded
 
     // calculate fog coeffs

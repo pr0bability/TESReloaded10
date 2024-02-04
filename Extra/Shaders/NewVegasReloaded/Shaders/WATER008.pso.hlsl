@@ -55,7 +55,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
 	//float3 lightDir = normalize(float3(0.2, 0.2, 1));
 	float sunLuma = 0.3;
-	float interiorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
+	float interiorRefractionModifier = TESR_WaterSettings.w;		// reduce refraction because of the way interior depth is encoded
 	float interiorDepthModifier = 0.5;			// reduce depth value for fog because of the way interior depth is encoded
 
     // calculate fog coeffs

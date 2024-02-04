@@ -77,6 +77,8 @@ void WaterShaders::UpdateSettings() {
 	Constants.Default.waterVolume.z = TheSettingManager->GetSettingF(sectionName, "turbidity");
 	Constants.Default.waterVolume.w = TheSettingManager->GetSettingF(sectionName, "causticsStrengthS");
 	Constants.Default.shorelineParams.x = TheSettingManager->GetSettingF(sectionName, "shoreMovement");
+	Constants.Default.waterSettings.w = TheSettingManager->GetSettingF(sectionName, "refractionPower");
+
 
 	Constants.Placed.waveParams.x = TheSettingManager->GetSettingF("Shaders.Water.Placed", "choppiness");
 	Constants.Placed.waveParams.y = TheSettingManager->GetSettingF("Shaders.Water.Placed", "waveWidth");
@@ -87,4 +89,5 @@ void WaterShaders::UpdateSettings() {
 	Constants.Placed.waterVolume.z = TheSettingManager->GetSettingF("Shaders.Water.Placed", "turbidity");
 	Constants.Placed.waterVolume.w = TheSettingManager->GetSettingF("Shaders.Water.Placed", "causticsStrengthS");
 	Constants.Placed.shorelineParams.x = TheSettingManager->GetSettingF("Shaders.Water.Placed", "shoreMovement");
+	Constants.Placed.waterSettings.w = TheSettingManager->GetSettingF("Shaders.Water.Placed", "refractionPower");
 }

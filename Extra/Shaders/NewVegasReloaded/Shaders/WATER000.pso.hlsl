@@ -13,7 +13,7 @@ float4 SunDir : register(c12);
 float4 SunColor : register(c13);
 float4 TESR_WaveParams : register(c14); // x: choppiness, y:wave width, z: wave speed, w: reflectivity?
 float4 TESR_WaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
-float4 TESR_WaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
+float4 TESR_WaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: refraction, z: caustic strength S ?
 float4 TESR_GameTime : register(c17);
 float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
@@ -63,7 +63,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
     float sunLuma = luma(linSunColor);
-    float exteriorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
+    float exteriorRefractionModifier = TESR_WaterSettings.w;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
