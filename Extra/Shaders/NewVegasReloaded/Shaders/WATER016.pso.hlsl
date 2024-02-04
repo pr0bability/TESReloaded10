@@ -16,8 +16,8 @@ float4 TESR_WaveParams : register(c14); // x: choppiness, y:wave width, z: wave 
 float4 TESR_WaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
 float4 TESR_WaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
 float4 TESR_GameTime : register(c17);
-float4 TESR_SkyLowColor : register(c18);
-float4 TESR_SkyColor : register(c19);
+float4 TESR_HorizonColor : register(c18);
+float4 TESR_SkyLowColor : register(c19);
 float4 TESR_SunDirection : register(c20);
 float4 TESR_ReciprocalResolution : register(c21);
 float4 TESR_WetWorldData : register(c22);
@@ -46,8 +46,8 @@ float4 getFresnelBelowWater(float3 surfaceNormal, float3 eyeDirection, float4 re
 }
 
 float4 skyColor(float3 eyeDirection, float4 sunColor){
-    float3 skyColor = lerp(linearize(TESR_SkyLowColor), linearize(TESR_SkyColor), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
-    skyColor = lerp(skyColor, sunColor.rgb,  pow(shades(eyeDirection, -TESR_SunDirection.xyz), 20)) * 10;
+    float3 skyColor = lerp(linearize(TESR_HorizonColor), linearize(TESR_SkyLowColor), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
+    skyColor += sunColor.rgb * 5 * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 20);
     return float4(skyColor, 1);
 }
 
@@ -62,7 +62,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float distance = length(eyeVector.xy);              // surface distance to eye
 
     // calculate fog coeffs
-    float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
+    //float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
 
     float sunLuma = luma(linSunColor.rgb);
     float exteriorRefractionModifier = TESR_WaterSettings.w;	// reduce refraction because of the way interior depth is encoded
