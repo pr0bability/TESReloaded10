@@ -51,7 +51,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float depth = length(eyeVector);                    // depth distance to eye
 
 	float sunLuma = luma(linSunColor);
-	float placedWaterRefractionModifier = 0.1;		// reduce refraction because of the way placed depth is encoded
+	float placedWaterRefractionModifier = TESR_PlacedWaterSettings.w;		// reduce refraction because of the way placed depth is encoded
 	float placedWaterDepthModifier = 0.1;			// reduce depth value for fog because of the way placed depth is encoded
 
     // calculate fog coeffs

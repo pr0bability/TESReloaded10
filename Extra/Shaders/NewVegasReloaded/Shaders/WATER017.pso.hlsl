@@ -64,7 +64,7 @@ PS_OUTPUT main(PS_INPUT IN) {
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
     float sunLuma = luma(linSunColor);
-    float exteriorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
+    float exteriorRefractionModifier = TESR_WaterSettings.w;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);

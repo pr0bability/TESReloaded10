@@ -16,7 +16,7 @@ float4 TESR_WaveParams : register(c14); // x: choppiness, y:wave width, z: wave 
 float4 TESR_WaterVolume : register(c15); // x: caustic strength, y:shoreFactor, w: turbidity, z: caustic strength S ?
 float4 TESR_WaterSettings : register(c16); // x: caustic strength, y:depthDarkness, w: turbidity, z: caustic strength S ?
 float4 TESR_GameTime : register(c17);
-float4 TESR_HorizonColor : register(c18);
+float4 TESR_SkyLowColor : register(c18);
 float4 TESR_SkyColor : register(c19);
 float4 TESR_SunDirection : register(c20);
 float4 TESR_ReciprocalResolution : register(c21);
@@ -24,6 +24,7 @@ float4 TESR_WetWorldData : register(c22);
 float4 TESR_WaterShorelineParams : register(c23);
 float4 TESR_SunColor : register(c24);
 float4 TESR_CameraPosition : register(c25);
+float4 TESR_DebugVar : register(c26);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);
@@ -44,18 +45,17 @@ float4 getFresnelBelowWater(float3 surfaceNormal, float3 eyeDirection, float4 re
     return lerp(color, reflectionColor, pow(saturate(fresnelCoeff), 5));
 }
 
-
 float4 skyColor(float3 eyeDirection, float4 sunColor){
-    float3 skyColor = lerp(pows(TESR_HorizonColor.rgb, 2.2), pows(TESR_SkyColor.rgb, 2.2), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
-    skyColor += sunColor.rgb * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 12);
+    float3 skyColor = lerp(linearize(TESR_SkyLowColor), linearize(TESR_SkyColor), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
+    skyColor = lerp(skyColor, sunColor.rgb,  pow(shades(eyeDirection, -TESR_SunDirection.xyz), 20)) * 10;
     return float4(skyColor, 1);
 }
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = pows(SunColor,2.2); //linearise
-    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
+    float4 linSunColor = linearize(TESR_SunColor);
+    float4 linShallowColor = linearize(ShallowColor);
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
@@ -65,7 +65,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
 
     float sunLuma = luma(linSunColor.rgb);
-    float exteriorRefractionModifier = 0.5;		// reduce refraction because of the way interior depth is encoded
+    float exteriorRefractionModifier = TESR_WaterSettings.w;	// reduce refraction because of the way interior depth is encoded
 
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x) * -1;
@@ -78,7 +78,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 refractions = linearize(tex2Dproj(RefractionMap, refractionPos)) * smoothstep(200, 0, depth) + sky; // mix & fade refraction with depth because vanilla refractions suck
 
     float4 color = sky;
-    color = getFresnelBelowWater(surfaceNormal, eyeDirection, (color * 0.3) + (linShallowColor+sky) / 2 * sunLuma, color);
+    color = getFresnelBelowWater(surfaceNormal, eyeDirection, linShallowColor * sunLuma, color);
     color +=  2 * pow(dot(surfaceNormal, eyeDirection), 2) * (refractions); // highlight
 
     color = delinearize(color); //delinearise

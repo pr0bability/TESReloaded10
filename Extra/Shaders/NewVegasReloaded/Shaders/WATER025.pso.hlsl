@@ -53,7 +53,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
 	float3 lightDir = normalize(float3(0.2, 0.2, 1));
 	float sunLuma = 0.3;
-	float interiorRefractionModifier = 0.2;		// reduce refraction because of the way interior depth is encoded
+	float interiorRefractionModifier = TESR_WaterSettings.w;		// reduce refraction because of the way interior depth is encoded
 	float interiorDepthModifier = 0.5;			// reduce depth value for fog because of the way interior depth is encoded
 
     // calculate fog coeffs
@@ -80,7 +80,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, 0.5, TESR_WaterSettings, color);
     color = getTurbidityFog(refractedDepth, linShallowColor, TESR_WaterVolume, sunLuma, color);
     //color = getDiffuse(surfaceNormal, lightDir, eyeDirection, distance, linFogColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linFogColor, TESR_WaveParams.w, color);
+    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color);
 
 	for (int i= 0; i< 12; i++){
 	    color = getPointLightSpecular(surfaceNormal, TESR_ShadowLightPosition[i], position, eyeDirection, TESR_LightColor[i].rgb * TESR_LightColor[i].w, color);
