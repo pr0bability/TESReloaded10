@@ -150,8 +150,8 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float3 floorNormal = GetWorldNormal(IN.UVCoord);
 
 	// float3 blurredColor = tex2D(TESR_RenderedBuffer, IN.UVCoord/2 + 1).rgb;
-	float3 color = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
-	color = pows(color,2.2); //linearise
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	if (TESR_CameraPosition.z > TESR_WaterSettings.x - 5 && worldPos.z > TESR_WaterSettings.x - 2) return color;
 
 	//vertical exponential depth fog used to darken bottom
 	float density = 0.08;
@@ -199,9 +199,17 @@ float4 Water( VSOUT IN ) : COLOR0 {
 }
 
 float4 WaterDistortion( VSOUT IN ) : COLOR0 {
+
+	float depth = readDepth(IN.UVCoord);
+    float3 eyeVector = toWorld(IN.UVCoord);
+	float3 eyeDirection = normalize(eyeVector);
+    float3 worldPos = TESR_CameraPosition.xyz + eyeVector * depth;
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	if (TESR_CameraPosition.z > TESR_WaterSettings.x - 5 && worldPos.z > TESR_WaterSettings.x - 2) return color;
+
 	IN.UVCoord.x += sin(frame * 3 + IN.UVCoord.x * 60) * 0.001f;
 	IN.UVCoord.y += cos(frame * 3 + IN.UVCoord.y * 60) * 0.001f;
-	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	color.a = 1;
     return color;
 }
