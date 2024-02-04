@@ -167,6 +167,8 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
 
 float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor, float4 color){
         if (lightPosition.w == 0) return color;
+        float specularBoost = 10;
+        float glossiness = 20;
 
         float3 lightDir = lightPosition.xyz - worldPosition;
 		float distance = length(lightDir) / lightPosition.w;
@@ -177,7 +179,7 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 
         //return color + getSpecular(surfaceNormal, normalize(lightDir), eyeDirection, specColor * atten, color);
 		float3 H = normalize(normalize(lightDir) + eyeDirection);
-		color.rgb += pows(shades(H, surfaceNormal), TESR_DebugVar.w) * specColor * TESR_DebugVar.z * atten;
+		color.rgb += pows(shades(H, surfaceNormal), glossiness) * specColor * specularBoost * atten;
 		// color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
         return color;
 }
