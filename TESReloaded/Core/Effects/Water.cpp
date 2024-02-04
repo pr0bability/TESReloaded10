@@ -63,10 +63,10 @@ void WaterShaders::UpdateSettings() {
 		//	sws = TheSettingManager->GetSettingsWater(currentWorldSpace->GetEditorName());
 	}
 
-	//Constants.Default.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
-	//Constants.Default.waterCoefficients.y = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_G");
-	//Constants.Default.waterCoefficients.z = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_B");
-	//Constants.Default.waterCoefficients.w = TheSettingManager->GetSettingF(sectionName, "inScattCoeff");
+	Constants.Default.waterCoefficients.x = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_R");
+	Constants.Default.waterCoefficients.y = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_G");
+	Constants.Default.waterCoefficients.z = TheSettingManager->GetSettingF(sectionName, "inExtCoeff_B");
+	Constants.Default.waterCoefficients.w = TheSettingManager->GetSettingF(sectionName, "inScattCoeff");
 	causticsStrength = TheSettingManager->GetSettingF(sectionName, "causticsStrength"); // later modified by current sunglare
 	Constants.Default.waveParams.x = TheSettingManager->GetSettingF(sectionName, "choppiness");
 	Constants.Default.waveParams.y = TheSettingManager->GetSettingF(sectionName, "waveWidth");
