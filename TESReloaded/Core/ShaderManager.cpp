@@ -71,18 +71,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterConstant("TESR_OcclusionWorldViewProjTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.OcclusionMap.OcclusionWorldViewProj);
 	TheShaderManager->RegisterConstant("TESR_LightPosition", (D3DXVECTOR4*) &TheShaderManager->LightPosition);
 	TheShaderManager->RegisterConstant("TESR_LightColor", (D3DXVECTOR4*) &TheShaderManager->LightColor);
-	TheShaderManager->RegisterConstant("TESR_LightPosition0", &TheShaderManager->LightPosition[0]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition1", &TheShaderManager->LightPosition[1]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition2", &TheShaderManager->LightPosition[2]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition3", &TheShaderManager->LightPosition[3]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition4", &TheShaderManager->LightPosition[4]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition5", &TheShaderManager->LightPosition[5]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition6", &TheShaderManager->LightPosition[6]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition7", &TheShaderManager->LightPosition[7]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition8", &TheShaderManager->LightPosition[8]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition9", &TheShaderManager->LightPosition[9]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition10", &TheShaderManager->LightPosition[10]);
-	TheShaderManager->RegisterConstant("TESR_LightPosition11", &TheShaderManager->LightPosition[11]);
 	TheShaderManager->RegisterConstant("TESR_ViewSpaceLightDir", &TheShaderManager->ShaderConst.ViewSpaceLightDir);
 	TheShaderManager->RegisterConstant("TESR_ScreenSpaceLightDir", &TheShaderManager->ShaderConst.ScreenSpaceLightDir);
 	TheShaderManager->RegisterConstant("TESR_ReciprocalResolution", &TheShaderManager->ShaderConst.ReciprocalResolution);
@@ -528,19 +516,19 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 		}
 		else {
 			// set null values if number of lights in the scene becomes lower than previous iteration
-			if (LightIndex < TrackedLightsMax) {
-				//Logger::Log("clearing light at index %i", LightIndex);
-				LightsList[LightIndex] = NULL;
-				LightPosition[LightIndex] = Empty;
-				LightColor[LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
-				LightIndex++;
-			}
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
 				ShadowLightsList[ShadowIndex] = NULL;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = Empty;
-				LightColor[ShadowCubeMapsMax + ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
+				LightColor[ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
 				ShadowIndex++;
+			}
+			if (LightIndex < TrackedLightsMax) {
+				//Logger::Log("clearing light at index %i", LightIndex);
+				LightsList[LightIndex] = NULL;
+				LightPosition[LightIndex] = Empty;
+				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
+				LightIndex++;
 			}
 		}
 	}
