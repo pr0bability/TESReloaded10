@@ -84,7 +84,7 @@ bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
 
 void ShadowRenderPass::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowWorldTransform", (D3DXVECTOR4*)&TheShaderManager->ShaderConst.ShadowWorld);
-	TheTextureManager->RegisterTexture("TESR_DiffuseMap", &Constants.DiffuseMap);
+	//TheTextureManager->RegisterTexture("TESR_DiffuseMap", &Constants.DiffuseMap);
 }
 
 
@@ -194,13 +194,13 @@ SpeedTreeShadowRenderPass::SpeedTreeShadowRenderPass() {
 
 
 void SpeedTreeShadowRenderPass::RegisterConstants() {
-	TheShaderManager->RegisterConstant("TESR_BillboardRight", Constants.BillboardRight);
-	TheShaderManager->RegisterConstant("TESR_BillboardUp", Constants.BillboardUp);
-	TheShaderManager->RegisterConstant("TESR_RockParams", (D3DXVECTOR4*)Pointers::ShaderParams::RockParams);
-	TheShaderManager->RegisterConstant("TESR_RustleParams", (D3DXVECTOR4*)Pointers::ShaderParams::RustleParams);
-	TheShaderManager->RegisterConstant("TESR_WindMatrices", (D3DXVECTOR4*)Pointers::ShaderParams::WindMatrixes);
-	TheShaderManager->RegisterConstant("TESR_LeafBase", Constants.LeafBase);
-	TheTextureManager->RegisterTexture("TESR_LeafDiffuseMap", &Constants.DiffuseMap);
+	//TheShaderManager->RegisterConstant("TESR_BillboardRight", Constants.BillboardRight);
+	//TheShaderManager->RegisterConstant("TESR_BillboardUp", Constants.BillboardUp);
+	//TheShaderManager->RegisterConstant("TESR_RockParams", (D3DXVECTOR4*)Pointers::ShaderParams::RockParams);
+	//TheShaderManager->RegisterConstant("TESR_RustleParams", (D3DXVECTOR4*)Pointers::ShaderParams::RustleParams);
+	//TheShaderManager->RegisterConstant("TESR_WindMatrices", (D3DXVECTOR4*)Pointers::ShaderParams::WindMatrixes);
+	//TheShaderManager->RegisterConstant("TESR_LeafBase", Constants.LeafBase);
+	//TheTextureManager->RegisterTexture("TESR_LeafDiffuseMap", &Constants.DiffuseMap);
 }
 
 

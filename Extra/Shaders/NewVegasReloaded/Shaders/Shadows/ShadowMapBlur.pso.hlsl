@@ -1,5 +1,5 @@
 float4 TESR_ReciprocalResolution  : register(c0);
-float4 TESR_BlurDirection  : register(c1);
+float4 BlurDirection  : register(c1);
 sampler2D SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 struct VSOUT
@@ -62,5 +62,5 @@ float4 Blur(uniform float2 OffsetMask, uniform float2 uv)
 
 float4 main(VSOUT IN) : COLOR0
 {
-	return Blur(TESR_BlurDirection.xy, IN.UVCoord);
+	return Blur(BlurDirection.xy, IN.UVCoord);
 }

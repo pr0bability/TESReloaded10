@@ -1,7 +1,7 @@
 
 float4 TESR_ShadowData : register(c0);
-sampler2D TESR_DiffuseMap : register(s0) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
-sampler2D TESR_LeafDiffuseMap : register(s1) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
+sampler2D DiffuseMap : register(s0) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
+sampler2D LeafDiffuseMap : register(s1) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
 
 struct VS_OUTPUT {
     float4 texcoord_0 : TEXCOORD0;
@@ -21,7 +21,7 @@ PS_OUTPUT main(VS_OUTPUT IN) {
 	float depth;
 
 	if (TESR_ShadowData.y == 1.0f) { // Leaves (Speedtrees) or alpha is required
-		r0.rgba = (TESR_ShadowData.x == 2.0f)?tex2D(TESR_LeafDiffuseMap, IN.texcoord_1.xy):tex2D(TESR_DiffuseMap, IN.texcoord_1.xy);
+		r0.rgba = (TESR_ShadowData.x == 2.0f)?tex2D(LeafDiffuseMap, IN.texcoord_1.xy):tex2D(DiffuseMap, IN.texcoord_1.xy);
 		if (r0.a < 0.5f) discard;
 	}
 	depth = IN.texcoord_0.z / IN.texcoord_0.w;
