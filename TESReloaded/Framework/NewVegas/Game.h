@@ -4304,82 +4304,80 @@ public:
 	virtual void		Fn_00(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, UInt32 arg5);
 	
 	void				PurgeCells() {}
-	float				GetWaterHeight(TESObjectREFR* Ref, SceneGraph* WorldSceneGraph) {
-//							Logger::Log("Get Water Height");
-							TESObjectCELL* Cell = Ref->parentCell;
-							float r = worldSpace->defaultWaterHeight;
 
-							if (Cell && Cell->flags0 & TESObjectCELL::kFlags0_HasWater) {
-								if (Ref->renderData) {
-									r = Ref->renderData->waterHeight;
-//									Logger::Log("Ref->renderData %f", r);
-								}
-								else {
-									r = Cell->GetWaterHeight();
-//									Logger::Log("Cell %f", r);
-								}
-							}
-//							Logger::Log("default %f", r);
-							float height = r; // default value uses the cell default waterheight
+	/*
+	* Fills the last 3 parameters with info while detecting the closest most important water plane/group/form based on the given ref
+	*/
+	float	GetWaterHeight(TESObjectREFR* Ref, SceneGraph* WorldSceneGraph, TESWaterForm** waterForm) {
 
-							DList<WaterGroup> watergroups = waterManager->waterGroups;
-							DNode<WaterGroup>* water = watergroups.first;
-							D3DXVECTOR4 playerPosition, waterPosition;
+		TESObjectCELL* Cell = Ref->parentCell;
+		if (Cell) *waterForm = Cell->GetWaterForm();
 
-							playerPosition.x = Ref->pos.x;
-							playerPosition.y = Ref->pos.y;
-							playerPosition.z = Ref->pos.z;
-							playerPosition.w = 1.0;
+		D3DXVECTOR3 playerPosition, waterPosition;
 
-							NiCamera* Camera = WorldSceneGraph->camera;
-							D3DXVECTOR4 CameraForward;
-							if (Camera) {
-								NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
-								CameraForward.x = WorldRotate->data[0][0];
-								CameraForward.y = WorldRotate->data[1][0];
-								CameraForward.z = WorldRotate->data[2][0];
-								CameraForward.w = 1.0;
-							}
+		playerPosition = Ref->pos.toD3DXVEC3();
+		float height = Cell->GetWaterHeight();
 
-							float distance = 1000000;
-							float inFront = -1;
+		NiCamera* Camera = WorldSceneGraph->camera;
+		D3DXVECTOR3 CameraForward;
+		if (!Camera) return height;
 
-							// look at all water planes in nearby scene
-							for (UInt32 i = 0; i < watergroups.count; i++) {
-								DList<TESObjectREFR> waterplanes = water->data->waterPlanes;
-								DNode<TESObjectREFR>* plane = waterplanes.first;
+		DList<WaterGroup> watergroups = waterManager->waterGroups;
 
-								for (UInt32 j = 0; j < waterplanes.count; j++) {
-									NiNode* node = plane->data->GetNode();
-									NiBound* bounds = node->GetWorldBound();
+		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
+		CameraForward.x = WorldRotate->data[0][0];
+		CameraForward.y = WorldRotate->data[1][0];
+		CameraForward.z = WorldRotate->data[2][0];
 
-									waterPosition.x = bounds->Center.x;
-									waterPosition.y = bounds->Center.y;
-									waterPosition.z = bounds->Center.z;
-									waterPosition.x = 1.0f;
+		// look at all water planes in nearby scene
+		DNode<WaterGroup>* water = watergroups.first;
+		
+		if (watergroups.count == 0) return height;
 
-									float waterDistance = node->GetDistance(&Ref->pos) - bounds->Radius;
-									D3DXVECTOR4 waterVector = waterPosition - playerPosition;
-									D3DXVec4Normalize(&waterVector, &waterVector);
-									float waterInFront = D3DXVec4Dot(&waterVector, &CameraForward);
+		WaterGroup*	waterGroup = water->data;
+		waterForm = &water->data->waterForm;
 
-									// player currently inside a water plane, stop looking further
-									//if (waterDistance < 0) return bounds->Center.z;
+		float distance = 1000000;
+		float inFront = -1;
+		for (UInt32 i = 0; i < watergroups.count; i++) {
 
-									// select water that is the closest in front of the player
-									if (waterDistance < 0 || (waterInFront > 0 && waterDistance < distance)) {
-										distance = waterDistance;
-										inFront = waterInFront;
-										height = bounds->Center.z;
-									}
-									plane = plane->next;
-								}
-								water = water->next;
-							}
+			DList<TESObjectREFR> waterplanes = water->data->waterPlanes;
+			DNode<TESObjectREFR>* plane = waterplanes.first;
 
-							return height;
-						}
-	TESWaterForm*		GetWaterForm() { return currentCell ? currentCell->GetWaterForm() : NULL; }
+			for (UInt32 j = 0; j < waterplanes.count; j++) {
+				NiNode* node = plane->data->GetNode();
+				NiBound* bounds = node->GetWorldBound();
+
+				float waterDistance = node->GetDistance(&Ref->pos) - bounds->Radius;
+
+				if (waterDistance < 0 && waterDistance < distance) {
+					// player is inside the plane, this is the best candidate
+					distance = waterDistance;
+					waterGroup = water->data;
+					waterForm = &waterGroup->waterForm;
+					height = bounds->Center.z;
+				}
+				else {
+					waterPosition = bounds->Center.toD3DXVEC3();
+					D3DXVECTOR3 waterVector = waterPosition - playerPosition;
+					D3DXVec3Normalize(&waterVector, &waterVector);
+					float waterInFront = D3DXVec3Dot(&waterVector, &CameraForward);
+
+					// select water that is the closest in front of the player
+					if ((waterInFront > 0.2 && waterDistance < distance)) {
+						waterGroup = water->data;
+						waterForm = &waterGroup->waterForm;
+						distance = waterDistance;
+						height = bounds->Center.z;
+					}
+				}
+				plane = plane->next;
+			}
+			water = water->next;
+		}
+
+		return height;
+	}
 
 	UInt32								unk04;				// 04
 	GridCellArray*						gridCellArray;		// 08
