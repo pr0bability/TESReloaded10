@@ -19,15 +19,18 @@ void WaterShaders::RegisterConstants() {
 
 void WaterShaders::UpdateConstants() {
 
+	TESWaterForm* currentWater = NULL;
+	float height = Tes->GetWaterHeight(Player, WorldSceneGraph, &currentWater);
+
 	// get water height based on player position
-	Constants.Default.waterSettings.x = Tes->GetWaterHeight(Player, WorldSceneGraph);
+	Constants.Default.waterSettings.x = height;
 	Constants.Default.waterSettings.z = TheShaderManager->GameState.isUnderwater;
 	Constants.Placed.waterSettings.x = Constants.Default.waterSettings.x;
 	Constants.Placed.waterSettings.z = Constants.Default.waterSettings.z;
 
-	TESWaterForm* currentWater = Player->parentCell->GetWaterForm();
-	RGBA* rgba = NULL;
+	//TESWaterForm* currentWater = Player->parentCell->GetWaterForm();
 
+	RGBA* rgba = NULL;
 	if (currentWater) {
 		rgba = currentWater->GetDeepColor();
 		Constants.deepColor.x = rgba->r / 255.0f;
