@@ -167,7 +167,7 @@ float4 Combine(VSOUT IN) : COLOR0
 	//uv /= TESR_ReciprocalResolution.xy;
 	//rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
-	color += rays;
+	color += rays * 5 * color + rays * 0.2;
 	color = delinearize(color);
 	return float4(color.rgb, 1);
 }
