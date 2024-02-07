@@ -16,6 +16,7 @@ public:
 	struct WaterConstants {
 		WaterStruct		Default;
 		WaterStruct		Placed;
+		D3DXVECTOR4		Fog;
 		D3DXVECTOR4		deepColor;
 		D3DXVECTOR4		shallowColor;
 	};
