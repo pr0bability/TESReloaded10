@@ -4363,8 +4363,11 @@ public:
 									D3DXVec4Normalize(&waterVector, &waterVector);
 									float waterInFront = D3DXVec4Dot(&waterVector, &CameraForward);
 
-									// select water that is the closest and the most in front
-									if (waterDistance < 0 || (waterInFront > inFront && waterDistance < distance)) {
+									// player currently inside a water plane, stop looking further
+									//if (waterDistance < 0) return bounds->Center.z;
+
+									// select water that is the closest in front of the player
+									if (waterDistance < 0 || (waterInFront > 0 && waterDistance < distance)) {
 										distance = waterDistance;
 										inFront = waterInFront;
 										height = bounds->Center.z;
