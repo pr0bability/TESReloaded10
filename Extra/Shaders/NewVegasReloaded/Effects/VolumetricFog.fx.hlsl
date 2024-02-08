@@ -170,8 +170,8 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	fogColor = fogWithSun(pureFogColor, fogDepth/farZ, skyColor, SimpleFogSkyColor, sunColor, sunAmount, isDayTime); 
 
 	// use luminance to color bright parts of the night sky, simulating light within the fog
-	float lumaDiff = 1.0 - saturate(luma(fogColor) / luma(linearColor));
-	fogColor = lerp(fogColor, luma(fogColor) * color.rgb, lumaDiff * (1.0 - isDayTime));
+	//float lumaDiff = 1.0 - saturate(luma(fogColor) / luma(linearColor));
+	//fogColor = lerp(fogColor, luma(fogColor) * color.rgb, lumaDiff * (1.0 - isDayTime));
 
 	height = saturate(exp( -initialHeight/ SimpleFogHeight)); // fade with height
 	distance = pows(preDist, FogPower * 3.0) * pow(height,2.0);
