@@ -21,3 +21,7 @@ void AmbientOcclusionEffect::UpdateSettings() {
 	Constants.Data.z = TheSettingManager->GetSettingF(sectionName, "BlurDropThreshold");
 	Constants.Data.w = TheSettingManager->GetSettingF(sectionName, "BlurRadiusMultiplier");
 }
+
+bool AmbientOcclusionEffect::ShouldRender() {
+	return Constants.Enabled;
+}
