@@ -21,7 +21,7 @@ float GetPointLightAtten(float3 LightDir, float Distance, float4 normal) {
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
 	LightDir = normalize(LightDir); // normalize
-	float diffuse = dot(LightDir, normal.xyz);
+	float diffuse = lerp(1, dot(LightDir, normal.xyz), smoothstep(0, 0.2, Distance)); // add some light bleeding at very short distance
 
 	return saturate(diffuse * atten);
 }
