@@ -47,8 +47,9 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 
 	float Shadow = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
 	Shadow = lerp(Shadow, 1.0, invlerps(300, MAXDISTANCE, uniformDepth)); // fade shadows with distance
-    float darkness = saturate(1 - TESR_ShadowData.y * TESR_ShadowFade.y); // shadowFade.y is set to 0 when shadows are disabled
-	
+	float darkness = scaledReinhard(TESR_ShadowData.y, 5.0);
+    darkness = saturate(1 - darkness * TESR_ShadowFade.y); // shadowFade.y is set to 0 when shadows are disabled
+
 	Shadow = saturate(lerp(darkness, 1, Shadow)); // shadow darkness to apply in the scene - 0 is full shadow 1 is full light
 	float shadowPower = 1 - Shadow; // 1 is full shadow, useful for scaling effect
 
