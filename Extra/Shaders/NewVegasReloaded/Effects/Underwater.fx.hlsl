@@ -199,7 +199,8 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	color.rgb *= lerp(1, waterDeepColor, saturate(fogAmount * pows(depthDarkness, 0.5)) * ((1 - shadows.g * distanceFade))); // surface light absorption
 
 	float fogThickness = saturate( 2 - pows(turbidity, 0.5) * 2);
-	color.rgb = lerp(color.rgb, fogColor, saturate(scattering * pows(linearFog, fogThickness))); // scattering absorption
+	float turbidPower = (turbidity * 3) / (1 +  3 * turbidity);
+	color.rgb = lerp(color.rgb, fogColor, saturate(scattering * pows(linearFog, fogThickness) * turbidPower)); // scattering absorption
 
 	// blend in godrays
 	color.rgb += tex2D(TESR_RenderedBuffer, IN.UVCoord / 2).r * sunColor * godraysStrength * color.rgb;

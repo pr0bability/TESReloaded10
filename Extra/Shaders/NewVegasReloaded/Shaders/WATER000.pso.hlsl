@@ -84,7 +84,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_WaterSettings, color);
     color = lerp(getTurbidityFog(refractedDepth, linShallowColor, TESR_WaterVolume, sunLuma, color), float4(linShallowColor.rgb * sunLuma, 1), LODfade); // fade to full fog to hide LOD seam
     //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color);
+    color = lerp(color, getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color), smoothstep(0, TESR_DebugVar.y, refractedDepth.x)); // reduce fresnel in low depths
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
     color = getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color);
 

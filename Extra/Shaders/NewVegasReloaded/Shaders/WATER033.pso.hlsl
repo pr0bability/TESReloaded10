@@ -19,6 +19,7 @@ float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
 float4 TESR_WaterShorelineParams : register(c20);
 float4 TESR_DebugVar : register(c21);
+float4 TESR_WaterShallowColor : register(c22);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1); //unused
@@ -51,9 +52,10 @@ sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = pows(SunColor,2.2); //linearise
-    float4 linShallowColor = pows(ShallowColor,2.2); //linearise
-    float4 linHorizonColor = pows(TESR_HorizonColor,2.2); //linearise
+    float4 linSunColor = linearize(SunColor); //linearise
+    float4 linShallowColor = linearize(ShallowColor); //linearise
+    // float4 linShallowColor = linearize(TESR_WaterShallowColor); //linearise
+    float4 linHorizonColor = linearize(TESR_HorizonColor); //linearise
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
