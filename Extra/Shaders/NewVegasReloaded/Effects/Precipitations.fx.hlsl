@@ -111,14 +111,15 @@ float4 Rain( VSOUT IN ) : COLOR0
 	}
 
 	// a rain tint color that scales with the sun direction
-	float4 rainColor = lerp(float(0.5).xxxx, linearize(TESR_SunColor) * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
+	float4 sunColor = linearize(TESR_SunColor);
+	float4 rainColor = lerp(float(0.5).xxxx, sunColor * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
 
 	// sample the bloom buffer and the source buffer with refracted UV to shade the rain with
 	float2 refractedUV = IN.UVCoord + float2(totalRain * TESR_RainAspect.x, -totalRain * TESR_RainAspect.x);
 	float4 refractedColor = linearize(tex2D(TESR_SourceBuffer, refractedUV));
 	refractedColor += tex2D(TESR_RenderedBuffer, refractedUV);
 
-	return delinearize(lerp(color, refractedColor + rainColor * TESR_RainAspect.y, totalRain* TESR_RainData.w));
+	return delinearize(lerp(color, refractedColor + rainColor * TESR_RainAspect.y * 0.02, totalRain* TESR_RainData.w));
 }
 
 // places the different things to blur separately into separate quadrants of the screen
@@ -149,7 +150,8 @@ float4 BoxBlur (VSOUT IN, uniform float2 offsetMask, uniform float scaleFactor) 
 
 float4 Bloom(VSOUT IN ):COLOR0{
 	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
-	return color * smoothstep(min(TESR_RainAspect.z / luma(TESR_SunColor), luma(color)), 1, luma(color)) * 3;
+	float colorLuma = luma(color);
+	return color * smoothstep(min(TESR_RainAspect.z / luma(max(0.5, linearize(TESR_SunColor))), colorLuma), 1, colorLuma) * 3;
 }
 
 technique
