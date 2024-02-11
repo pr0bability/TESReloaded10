@@ -179,7 +179,7 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 
         //return color + getSpecular(surfaceNormal, normalize(lightDir), eyeDirection, specColor * atten, color);
 		float3 H = normalize(normalize(lightDir) + eyeDirection);
-		color.rgb += pows(shades(H, surfaceNormal), glossiness) * specColor * specularBoost * atten;
+		color.rgb += pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)).rgb * specularBoost * atten;
 		// color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
         return color;
 }
