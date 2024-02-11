@@ -144,7 +144,7 @@ public:
 	GameStateStruct			GameState;
 	ShaderConstants			ShaderConst;
 	CustomConstants			CustomConst;
-	std::map<const char*, D3DXVECTOR4*>	ConstantsTable;
+	std::map<std::string, D3DXVECTOR4*>	ConstantsTable;
 	IDirect3DVertexBuffer9*	FrameVertex;
 	NiD3DVertexShader*		WaterVertexShaders[51];
 	NiD3DPixelShader*		WaterPixelShaders[51];
