@@ -9,8 +9,10 @@ sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP;
 sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-static const float decreaseRate = -TESR_ExposureData.z * 0.001; // max value for adaptation speed towards darker screens
-static const float increaseRate = TESR_ExposureData.w * 0.001; // max value for adaptation speed towards brighter screens
+static const float decreaseRate = -TESR_ExposureData.z; // max value for adaptation speed towards darker screens
+// static const float decreaseRate = -TESR_ExposureData.z * 0.001; // max value for adaptation speed towards darker screens
+static const float increaseRate = TESR_ExposureData.w; // max value for adaptation speed towards brighter screens
+// static const float increaseRate = TESR_ExposureData.w * 0.001; // max value for adaptation speed towards brighter screens
 static const float2 center = float2(0.5, 0.5); // this shader is to be applied on a 1x1 texture so we sample at the center
 
 #include "Includes/Helpers.hlsl"
@@ -88,21 +90,29 @@ float getFocalDistance() {
 
 float4 AvgLuma(VSOUT IN) : COLOR0
 {	
+	float2 oldLuma = tex2D(TESR_AvgLumaBuffer, center).rg;
+
 	// samples 100 different locations around the screen to calculate an average
 	float4 color = float4(0, 0, 0, 0);
-	for (float i=0.05; i<1; i+=0.1){
-		for (float j=0.05; j<1; j+=0.1){
-			color += tex2D(TESR_RenderedBuffer, float2(i, j));
+	float total = 0;
+	for (float i = 0.05; i < 1; i+= 0.1){
+		for (float j = 0.05; j < 1; j+= 0.1){
+			color += linearize(tex2D(TESR_RenderedBuffer, float2(i, j)));
+			total++;
 		}
 	}
-	color *= 0.01;
+	for (i= 0 ; i < 12; i++){
+		color += linearize(tex2D(TESR_RenderedBuffer, center + taps[i]));
+		total++;
+	}
+	color /= total;
+	float newLuma = (luma(color) + (7 * oldLuma.r)) / 8; // average over 8 frames
 
 	// gradually change average luma
-	float oldLuma = tex2D(TESR_AvgLumaBuffer, center).g;
-	float newLuma = luma(color);
+	float animatedLuma = stepTo(oldLuma.g, newLuma, TESR_GameTime.w * decreaseRate, TESR_GameTime.w * increaseRate);
 
 	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
-	return float4(newLuma, stepTo(oldLuma, newLuma, decreaseRate/TESR_GameTime.w, increaseRate/TESR_GameTime.w), getFocalDistance(), 1);
+	return float4(newLuma, animatedLuma, getFocalDistance(), 1);
 }
  
 technique
