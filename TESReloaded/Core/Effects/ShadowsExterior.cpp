@@ -51,6 +51,7 @@ void ShadowsExteriorEffect::UpdateConstants() {
 }
 
 void ShadowsExteriorEffect::UpdateSettings() {
+
 	Constants.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Enabled;
 	Constants.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
 	Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
@@ -134,7 +135,20 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Interiors.PlayerShadowThirdPerson = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "PlayerShadowThirdPerson");
 
 	TheSettingManager->GetFormList("Shaders.ShadowsInteriors.ExcludedFormID", &Settings.Interiors.ExcludedForms);
+
+	bool isExterior = TheShaderManager->GameState.isExterior;
+
+	// if the effect was turned off the buffer must be cleared
+	if (!Enabled || (isExterior && !Settings.Exteriors.Enabled) || (!isExterior && !Settings.Interiors.Enabled)) clearShadowsBuffer();
 }
+
+
+void ShadowsExteriorEffect::clearShadowsBuffer() {
+	// clear shadows buffer
+	TheRenderManager->device->SetRenderTarget(0, Textures.ShadowPassSurface);
+	TheRenderManager->device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 255, 0, 0), 1.0f, 0L);
+}
+
 
 void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowData", &Constants.Data);
