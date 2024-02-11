@@ -130,6 +130,7 @@ public:
 	};
 	ShadowTextures	Textures;
 
+	void		clearShadowsBuffer();
 	void		UpdateConstants();
 	void		UpdateSettings();
 	void		RegisterConstants();
