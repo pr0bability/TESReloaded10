@@ -325,17 +325,18 @@ void ShaderTextureValue::GetTextureRecord() {
 * Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
 */
 void ShaderFloatValue::GetValueFromConstantTable() {
-	for (auto const& imap : TheShaderManager->ConstantsTable) {
-		if (!strcmp(imap.first, Name)) {
-			Value = TheShaderManager->ConstantsTable.at(imap.first);
-			return;
-		}
-	}
+	std::string constantName = Name;
+	std::map<std::string, D3DXVECTOR4*>::iterator iter = TheShaderManager->ConstantsTable.find(constantName);
 
-	Logger::Log("Custom constant found: %s", Name);
-	D3DXVECTOR4 v; v.x = v.y = v.z = v.w = 0.0f;
-	TheShaderManager->CustomConst[Name] = v;
-	Value = &TheShaderManager->CustomConst[Name];
+	if (iter != TheShaderManager->ConstantsTable.end()) {
+		Value = TheShaderManager->ConstantsTable.at(Name);
+	}
+	else {
+		Logger::Log("Custom constant found: %s", Name);
+		D3DXVECTOR4 v; v.x = v.y = v.z = v.w = 0.0f;
+		TheShaderManager->CustomConst[Name] = v;
+		Value = &TheShaderManager->CustomConst[Name];
+	}
 }
 
 
@@ -375,7 +376,12 @@ void ShaderRecord::SetCT() {
 	ShaderFloatValue* Constant;
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
 		Constant = &FloatShaderValues[c];
+
 		if (Constant->Value == nullptr) Constant->GetValueFromConstantTable();
+		if (Constant->Value == nullptr) {
+			Logger::Log("[Error] %s : Couldn't get value for Constant %s", Name, Constant->Name);
+			continue;
+		}
 
 		SetShaderConstantF(Constant->RegisterIndex, Constant->Value, Constant->RegisterCount); // TODO: for matrices, rows and columns are inverted because of the way this works.
 	}

@@ -211,6 +211,11 @@ void EffectRecord::SetCT() {
 	for (UInt32 c = 0; c < FloatShaderValuesCount; c++) {
 		Constant = &FloatShaderValues[c];
 		if (Constant->Value == nullptr)  Constant->GetValueFromConstantTable();
+		if (Constant->Value == nullptr) {
+			Logger::Log("[Error] %s : Couldn't get value for Constant %s", Name, Constant->Name);
+			continue;
+		}
+
 		if (Constant->Type == (D3DXPARAMETER_TYPE)D3DXPC_VECTOR) {
 			if (Constant->RegisterCount > 1)
 				Effect->SetVectorArray((D3DXHANDLE)Constant->RegisterIndex, Constant->Value, Constant->RegisterCount);
