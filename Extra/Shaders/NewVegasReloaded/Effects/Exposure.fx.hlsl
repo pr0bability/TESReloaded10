@@ -2,7 +2,8 @@
 #define debug 0
 
 float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
-float4 TESR_FrameTime; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
+float4 TESR_DebugVar; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
+//float4 TESR_FrameTime; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -35,20 +36,24 @@ VSOUT FrameVS(VSIN IN)
 
 float4 Exposure(VSOUT IN) : COLOR0
 {
-	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	float4 color = linearize(tex2D(TESR_RenderedBuffer, IN.UVCoord));
 	float averageLuma = tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).g;
 
-	float negativeLumaDiff = invlerps(minBrightness, 0, averageLuma) * minBrightness;
-	float additiveLumaDiff = invlerps(maxBrightness, 1, averageLuma) * (1 - maxBrightness) * 2;
-	float lumaDiff = additiveLumaDiff - negativeLumaDiff;
+	float negativeLumaDiff = max(log(minBrightness / averageLuma), 0) + 1;
+	float additiveLumaDiff = max(log(averageLuma / minBrightness), 0) + 1;
+
+	//float additiveLumaDiff = invlerps(maxBrightness, 1, averageLuma) * (1 - maxBrightness) * 2;
+	float lumaDiff = additiveLumaDiff / negativeLumaDiff;
+	// float lumaDiff = invlerps(minBrightness, maxBrightness, averageLuma);
+
 
 #if debug
 	if (IN.UVCoord.x > 0.7 && IN.UVCoord.x < 0.8 && IN.UVCoord.y>0.7 && IN.UVCoord.y<0.8) return averageLuma;
-	if (IN.UVCoord.x > 0.7 && IN.UVCoord.x < 0.8 && IN.UVCoord.y>0.8 && IN.UVCoord.y<0.9) return float4(lumaDiff, -lumaDiff, 0, 1);
+	if (IN.UVCoord.x > 0.7 && IN.UVCoord.x < 0.8 && IN.UVCoord.y>0.8 && IN.UVCoord.y<0.9) return float4(additiveLumaDiff, negativeLumaDiff, 0, 1);
 #endif
 
-	color = pows(color, (1 + lumaDiff));
-	return float4(color.rgb, 1);
+	// color = pows(color, (1 + lumaDiff));
+	return delinearize(float4(lerp(color.rgb, color.rgb / lumaDiff, maxBrightness), 1));
 }
 
 technique
