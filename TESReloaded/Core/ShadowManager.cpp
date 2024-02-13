@@ -341,10 +341,12 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 				continue;
 
 			// Also skip viewmodel due to issues, and render player's model only in 3rd person
-			if (!Player->isThirdPerson && !Settings->PlayerShadowFirstPerson && (isFirstPerson || isThirdPerson))
+			if (isFirstPerson) continue;
+
+			if (!Player->isThirdPerson && !Settings->PlayerShadowFirstPerson && isThirdPerson)
 				continue;
 				
-			if (Player->isThirdPerson && !Settings->PlayerShadowThirdPerson && (isFirstPerson || isThirdPerson))
+			if (Player->isThirdPerson && !Settings->PlayerShadowThirdPerson && isThirdPerson)
 				continue;
 
 			if (skinnedGeoPass->AccumObject(geo)) {}
