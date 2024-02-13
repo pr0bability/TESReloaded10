@@ -3,7 +3,7 @@
 class RenderManager: public RenderManagerBase {
 public:
 	void				Initialize();
-	void				ResolveDepthBuffer();
+	void				ResolveDepthBuffer(IDirect3DTexture9* Buffer);
 	void				CreateD3DMatrix(D3DMATRIX* Matrix, NiTransform* Transform);
 	void				GetScreenSpaceBoundSize(NiPoint2* BoundSize, NiBound* Bound, float ZeroTolerance = 1e-5f);
 	void				UpdateSceneCameraData();

@@ -22,6 +22,7 @@ public:
 	IDirect3DTexture9* 		BloomTexture;
 	IDirect3DSurface9*		BloomSurface;
 	IDirect3DTexture9*		DepthTexture;
+	IDirect3DTexture9*		DepthTextureViewModel;
 	IDirect3DTexture9*		DepthTextureINTZ;
 	IDirect3DSurface9*		DepthSurface;
 	TextureList				TextureCache;
