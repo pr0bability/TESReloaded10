@@ -110,8 +110,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\TESReloaded\Core\Effects\CombineDepth.cpp" />
     <ClCompile Include="..\TESReloaded\Core\RenderPass.cpp" />
     <ClCompile Include="..\TESReloaded\Core\EffectRecord.cpp" />
+    <ClInclude Include="..\TESReloaded\Core\Effects\CombineDepth.h" />
     <ClInclude Include="..\TESReloaded\Core\RenderPass.h" />
     <ClInclude Include="..\TESReloaded\Core\BinkManager.h" />
     <ClInclude Include="..\TESReloaded\Core\CameraManager.h" />

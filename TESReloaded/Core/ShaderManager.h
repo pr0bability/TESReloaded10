@@ -83,6 +83,7 @@ public:
 		ColoringEffect*			Coloring;
 		CinemaEffect*			Cinema;
 		ExposureEffect*			Exposure;
+		CombineDepthEffect*		CombineDepth;
 		DepthOfFieldEffect*		DepthOfField;
 		DebugEffect*			Debug;
 		GodRaysEffect*			GodRays;

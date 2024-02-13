@@ -27,6 +27,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterEffect<BloomLegacyEffect>(&TheShaderManager->Effects.BloomLegacy);
 	TheShaderManager->RegisterEffect<ColoringEffect>(&TheShaderManager->Effects.Coloring);
 	TheShaderManager->RegisterEffect<CinemaEffect>(&TheShaderManager->Effects.Cinema);
+	TheShaderManager->RegisterEffect<CombineDepthEffect>(&TheShaderManager->Effects.CombineDepth);
 	TheShaderManager->RegisterEffect<DepthOfFieldEffect>(&TheShaderManager->Effects.DepthOfField);
 	TheShaderManager->RegisterEffect<DebugEffect>(&TheShaderManager->Effects.Debug);
 	TheShaderManager->RegisterEffect<ExposureEffect>(&TheShaderManager->Effects.Exposure);
@@ -586,6 +587,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->SetFVF(FrameFVF);
 
 	// render post process normals for use by shaders
+	RenderEffectToRT(Effects.CombineDepth->Textures.CombinedDepthSurface, Effects.CombineDepth, false);
 	RenderEffectToRT(Effects.Normals->Textures.NormalsSurface, Effects.Normals, false);
 
 	// render a shadow pass for point lights

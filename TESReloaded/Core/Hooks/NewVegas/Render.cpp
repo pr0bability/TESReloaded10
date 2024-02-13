@@ -66,15 +66,16 @@ HRESULT __fastcall SetSamplerStateHook(NiDX9RenderState* This, UInt32 edx, UInt3
 void (__thiscall* RenderWorldSceneGraph)(Main*, Sun*, UInt8, UInt8, UInt8) = (void (__thiscall*)(Main*, Sun*, UInt8, UInt8, UInt8))Hooks::RenderWorldSceneGraph;
 void __fastcall RenderWorldSceneGraphHook(Main* This, UInt32 edx, Sun* SkySun, UInt8 IsFirstPerson, UInt8 WireFrame, UInt8 Arg4) {
 	(*RenderWorldSceneGraph)(This, SkySun, IsFirstPerson, WireFrame, Arg4);
-	if (!IsFirstPerson) TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture);
+	if (!TheShaderManager->GameState.PipBoyIsOn) TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture);
+
 }
 
 void (__thiscall* RenderFirstPerson)(Main*, NiDX9Renderer*, NiGeometry*, Sun*, BSRenderedTexture*) = (void (__thiscall*)(Main*, NiDX9Renderer*, NiGeometry*, Sun*, BSRenderedTexture*))Hooks::RenderFirstPerson;
 void __fastcall RenderFirstPersonHook(Main* This, UInt32 edx, NiDX9Renderer* Renderer, NiGeometry* Geo, Sun* SkySun, BSRenderedTexture* RenderedTexture) {
 	
 	//(*RenderFirstPerson)(This, Renderer, Geo, SkySun, RenderedTexture);
-	TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture);
- //It is necessary otherwise gltiches when a vanilla DoF effect render on some player related node
+	//TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture);
+	// Clear the depth buffer to prevent clipping with world objects & other artefacts
 	TheRenderManager->Clear(NULL, NiRenderer::kClear_ZBUFFER);
 	ThisCall(0x00874C10, Global);
 	(*RenderFirstPerson)(This, Renderer, Geo, SkySun, RenderedTexture);

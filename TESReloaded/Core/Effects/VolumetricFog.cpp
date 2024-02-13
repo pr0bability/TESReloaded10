@@ -59,5 +59,5 @@ void VolumetricFogEffect::RegisterConstants(){
 
 bool VolumetricFogEffect::ShouldRender() 
 {
-	return !TheShaderManager->GameState.PipBoyIsOn && !TheShaderManager->GameState.isUnderwater;
+	return !TheShaderManager->GameState.isUnderwater;
 };

@@ -308,6 +308,9 @@
     <ClInclude Include="..\TESReloaded\Core\RenderPass.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\TESReloaded\Core\Effects\CombineDepth.h">
+      <Filter>Core\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -525,6 +528,9 @@
     </ClCompile>
     <ClCompile Include="..\TESReloaded\Core\RenderPass.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\TESReloaded\Core\Effects\CombineDepth.cpp">
+      <Filter>Core\Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
