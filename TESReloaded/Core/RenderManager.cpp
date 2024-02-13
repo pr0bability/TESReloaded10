@@ -287,7 +287,7 @@ void RenderManager::Initialize() {
 	BackBuffer = CreateHDRRenderTarget();
 }
 
-void RenderManager::ResolveDepthBuffer() {
+void RenderManager::ResolveDepthBuffer(IDirect3DTexture9* Buffer) {
 
 	if (RESZ) {
 		IDirect3DBaseTexture9 *pCurrTX = NULL;
@@ -316,7 +316,7 @@ void RenderManager::ResolveDepthBuffer() {
 		device->SetVertexShader(NULL);
 		device->SetPixelShader(NULL);
 		device->SetFVF(D3DFVF_XYZ);
-		device->SetTexture(0, TheTextureManager->DepthTexture);
+		device->SetTexture(0, Buffer);
 		device->SetRenderState(D3DRS_ZENABLE, FALSE);
 		device->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
 		device->SetRenderState(D3DRS_COLORWRITEENABLE, NULL);
@@ -352,12 +352,12 @@ void RenderManager::ResolveDepthBuffer() {
                 NvAPI_D3D9_RegisterResource(TheTextureManager->DepthSurface);
             }
             
-			NvAPI_D3D9_RegisterResource(TheTextureManager->DepthTexture);
+			NvAPI_D3D9_RegisterResource(Buffer);
 		}
 		if (TheTextureManager->DepthTextureINTZ)
-            NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthTextureINTZ, NULL, TheTextureManager->DepthTexture, NULL, D3DTEXF_NONE);
+            NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthTextureINTZ, NULL, Buffer, NULL, D3DTEXF_NONE);
         else 
-            NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthSurface, NULL, TheTextureManager->DepthTexture, NULL, D3DTEXF_NONE);
+            NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthSurface, NULL, Buffer, NULL, D3DTEXF_NONE);
 
 	}
 
