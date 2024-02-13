@@ -14,14 +14,12 @@ static const float Q = farZ/(farZ - nearZ);
 
 float readDepth(float2 coord)
 {
-	float Depth = tex2D(TESR_DepthBuffer, coord).x;
-    float ViewZ = (-nearZ *Q) / (Depth - Q);
-	return ViewZ;
+	return tex2D(TESR_DepthBuffer, coord).x * farZ;
 }
 
 float3 reconstructPosition(float2 uv)
 {
-    float4 screenpos = float4(uv * 2.0 - 1.0f, tex2D(TESR_DepthBuffer, uv).x, 1.0f);
+    float4 screenpos = float4(uv * 2.0 - 1.0f, tex2D(TESR_DepthBuffer, uv).y, 1.0f);
     screenpos.y = -screenpos.y;
     float4 viewpos = mul(screenpos, TESR_InvProjectionTransform);
     viewpos.xyz /= viewpos.w;
