@@ -195,7 +195,8 @@ void RenderManager::SetupSceneCamera() {
 		CameraPosition = WorldTranslate->toD3DXVEC4();
 
 		// depth reconstruction constants
-		DepthConstants.x = - nearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
+		//DepthConstants.x = - nearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
+		DepthConstants.x = TheShaderManager->Effects.CombineDepth->Constants.viewNearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
 		DepthConstants.y = (-farZ * Q) / (Q - 1.0f); // FarZ: (TESR_ProjectionTransform._33 * nearZ) / (TESR_ProjectionTransform._33 - 1.0f);
 		DepthConstants.z = DepthConstants.x * DepthConstants.y; // Zmult
 		DepthConstants.w = DepthConstants.y - DepthConstants.x; // Zdiff

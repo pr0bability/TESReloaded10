@@ -6,6 +6,27 @@
 
 extern "C" {
 
+	static void MessageHandler(NVSEMessagingInterface::Message* msg) {
+		switch (msg->type) {
+		case NVSEMessagingInterface::kMessage_DeferredInit:
+
+			if (!johnnyguitar) {
+				johnnyguitar = GetModuleHandle(L"johnnyguitar.dll");
+			}
+
+			if (johnnyguitar) {
+				Logger::Log("JG found, initializing functions");
+				JG_SetClipDist = (bool(__cdecl*)(float))GetProcAddress(johnnyguitar, "JGSetViewmodelClipDistance");
+				JG_GetClipDist = (float(__cdecl*)())GetProcAddress(johnnyguitar, "JGGetViewmodelClipDistance");
+			}
+			else {
+				Logger::Log("JG not found");
+			}
+
+			break;
+		}
+	}
+
 	bool NVSEPlugin_Query(const PluginInterface* Interface, PluginInfo* Info) {
 		
 		Info->InfoVersion = PluginInfo::kInfoVersion;
@@ -30,6 +51,8 @@ extern "C" {
 		CommandManager::Initialize(Interface);
 
 		if (!Interface->IsEditor) {
+			((NVSEMessagingInterface*)Interface->QueryInterface(kInterface_Messaging))->RegisterListener(Interface->GetPluginHandle(), "NVSE", MessageHandler);
+
 			PluginVersion::CreateVersionString();
 			SettingManager::Initialize();
 			TheSettingManager->LoadSettings();
@@ -40,3 +63,4 @@ extern "C" {
 	}
 
 };
+

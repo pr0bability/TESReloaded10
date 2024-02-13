@@ -6,6 +6,7 @@ public:
 	CombineDepthEffect() : EffectRecord("CombineDepth") {};
 
 	struct CombineDepthStruct {
+		float viewNearZ;
 	};
 	CombineDepthStruct	Constants;
 
@@ -15,6 +16,6 @@ public:
 	};
 	CombineDepthTextures	Textures;
 
-	void	UpdateConstants() {};
+	void	UpdateConstants();
 	void	RegisterTextures();
 };

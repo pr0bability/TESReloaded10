@@ -1,4 +1,4 @@
-float4 TESR_DebugVar;
+float4 TESR_DepthConstants;
 
 sampler2D TESR_DepthBufferWorld : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBufferViewModel : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -51,7 +51,7 @@ float4 CombineDepth(VSOUT IN) : COLOR0
 	float viewModelDepth = tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x;
 	
 	float linearWorldDepth = readDepth(worldDepth, nearZ, farZ);
-	float linearViewModelDepth = readDepth(viewModelDepth, TESR_DebugVar.x, farZ);
+	float linearViewModelDepth = readDepth(viewModelDepth, TESR_DepthConstants.x, farZ);
 
 	// return float4(min(linearWorldDepth, linearViewModelDepth), min(worldDepth, viewModelDepth), 1.0, 1.0) ;
 	float depth = min(linearWorldDepth, linearViewModelDepth);
