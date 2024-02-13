@@ -7,6 +7,7 @@
 #include "Effects/BloomLegacy.h"
 #include "Effects/Cinema.h"
 #include "Effects/Coloring.h"
+#include "Effects/CombineDepth.h"
 #include "Effects/DepthOfField.h"
 #include "Effects/Exposure.h"
 #include "Effects/Debug.h"
