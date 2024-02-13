@@ -173,7 +173,7 @@ float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blu
 	float WeightSum = 0.114725602f;
 	float4 color1 = tex2D(TESR_RenderedBuffer, IN.UVCoord) * WeightSum;
 	float3 normal = GetNormal(IN.UVCoord);
-	float depth = tex2D(TESR_DepthBuffer, IN.UVCoord).x;
+	float depth = tex2D(TESR_DepthBuffer, IN.UVCoord).y;
 
 	float depth1 = readDepth(IN.UVCoord);
 	clip(endFade - depth1);
