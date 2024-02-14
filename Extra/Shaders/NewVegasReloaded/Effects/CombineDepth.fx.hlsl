@@ -1,7 +1,11 @@
 float4 TESR_DepthConstants;
+float4 TESR_CameraData;
 
 sampler2D TESR_DepthBufferWorld : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBufferViewModel : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+
+static const float nearZ = TESR_CameraData.x;
+static const float farZ = TESR_CameraData.y;
 
 struct VSOUT
 {
@@ -23,13 +27,6 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-
-float4 TESR_CameraData;
-float4 TESR_CameraPosition;
-
-static const float nearZ = TESR_CameraData.x;
-static const float farZ = TESR_CameraData.y;
-
 // linearize depth
 float readDepth(float depth, float nearZ, float farZ)
 {
@@ -50,15 +47,14 @@ float4 CombineDepth(VSOUT IN) : COLOR0
 	float worldDepth = tex2D(TESR_DepthBufferWorld, IN.UVCoord).x;
 	float viewModelDepth = tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x;
 	
+	// convert depths to linear in order to combine them
 	float linearWorldDepth = readDepth(worldDepth, nearZ, farZ);
 	float linearViewModelDepth = readDepth(viewModelDepth, TESR_DepthConstants.x, farZ);
 
-	// return float4(min(linearWorldDepth, linearViewModelDepth), min(worldDepth, viewModelDepth), 1.0, 1.0) ;
-	float depth = min(linearWorldDepth, linearViewModelDepth);
-	float packedDepth = packDepth(depth, nearZ, farZ);
+	float depth = min(linearWorldDepth, linearViewModelDepth); // Get closest value from both depths
+	float packedDepth = packDepth(depth, nearZ, farZ); // encode back to non converted depth format for easier reconstruction using matrices
 	
-	return float4(depth / farZ, packedDepth, 1.0, 1.0) ;
-	// return float4(depth, packDepth(depth, nearZ, farZ), 1.0, 1.0) ;
+	return float4(depth / farZ, packedDepth, 1.0, 1.0) ;// scale values back to 0 - 1 to avoid overflow
 }
  
 technique
