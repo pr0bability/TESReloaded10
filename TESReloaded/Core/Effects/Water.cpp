@@ -3,6 +3,7 @@
 void WaterShaders::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_WaterDeepColor", &Constants.deepColor);
 	TheShaderManager->RegisterConstant("TESR_WaterShallowColor", &Constants.shallowColor);
+	TheShaderManager->RegisterConstant("TESR_WaterLODColor", &Constants.LODColor);
 	TheShaderManager->RegisterConstant("TESR_WaterFog", &Constants.Fog);
 	TheShaderManager->RegisterConstant("TESR_WaterCoefficients", &Constants.Default.waterCoefficients);
 	TheShaderManager->RegisterConstant("TESR_WaveParams", &Constants.Default.waveParams);
@@ -28,20 +29,16 @@ void WaterShaders::UpdateConstants() {
 	Constants.Placed.waterSettings.x = Constants.Default.waterSettings.x;
 	Constants.Placed.waterSettings.z = Constants.Default.waterSettings.z;
 
-	//TESWaterForm* currentWater = Player->parentCell->GetWaterForm();
+	TESWorldSpace* worldSpace = Player->GetWorldSpace();
+	if (worldSpace) {
+		TESWaterForm* LODWater = worldSpace->waterFormLast;
+		if (LODWater)
+			Constants.LODColor = LODWater->GetShallowColor()->toD3DXVECTOR4();
+	}
 
-	RGBA* rgba = NULL;
 	if (currentWater) {
-		rgba = currentWater->GetDeepColor();
-		Constants.deepColor.x = rgba->r / 255.0f;
-		Constants.deepColor.y = rgba->g / 255.0f;
-		Constants.deepColor.z = rgba->b / 255.0f;
-		Constants.deepColor.w = rgba->a / 255.0f;
-		rgba = currentWater->GetShallowColor();
-		Constants.shallowColor.x = rgba->r / 255.0f;
-		Constants.shallowColor.y = rgba->g / 255.0f;
-		Constants.shallowColor.z = rgba->b / 255.0f;
-		Constants.shallowColor.w = rgba->a / 255.0f;
+		Constants.deepColor = currentWater->GetDeepColor()->toD3DXVECTOR4();
+		Constants.shallowColor = currentWater->GetShallowColor()->toD3DXVECTOR4();
 		Constants.Fog.x = currentWater->properties.fogNearUW;
 		Constants.Fog.y = currentWater->properties.fogFarUW;
 		Constants.Fog.z = currentWater->properties.fogAmountUW;
