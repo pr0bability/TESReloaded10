@@ -23,7 +23,8 @@ float4 TESR_HorizonColor : register(c18);
 float4 TESR_SunDirection : register(c19);
 float4 TESR_WetWorldData : register(c20);
 float4 TESR_PlacedWaterShorelineParams : register(c21);
-float4 TESR_DebugVar : register(c22);
+float4 TESR_WaterLODColor : register(c22);
+float4 TESR_DebugVar : register(c23);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);

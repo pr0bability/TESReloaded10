@@ -255,6 +255,10 @@ public:
 	UInt8	g;
 	UInt8	b;
 	UInt8	a;
+
+	D3DXVECTOR4 toD3DXVECTOR4() {
+		return D3DXVECTOR4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
+	}
 };
 assert(sizeof(RGBA) == 0x004);
 

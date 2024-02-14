@@ -19,6 +19,7 @@ public:
 		D3DXVECTOR4		Fog;
 		D3DXVECTOR4		deepColor;
 		D3DXVECTOR4		shallowColor;
+		D3DXVECTOR4		LODColor;
 	};
 	WaterConstants		Constants;
 
