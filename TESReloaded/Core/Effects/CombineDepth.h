@@ -5,6 +5,10 @@ class CombineDepthEffect : public EffectRecord
 public:
 	CombineDepthEffect() : EffectRecord("CombineDepth") {};
 
+	HMODULE johnnyguitar = nullptr;
+	bool(__cdecl* JG_SetClipDist)(float) = nullptr;
+	float(__cdecl* JG_GetClipDist)() = nullptr;
+
 	struct CombineDepthStruct {
 		float viewNearZ;
 	};

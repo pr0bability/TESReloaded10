@@ -2,13 +2,15 @@
 
 
 void CombineDepthEffect::UpdateConstants() {
-	if (!johnnyguitar) {
-		Logger::Log("No JG present");
-		NiCamera* Camera = WorldSceneGraph->camera;
+	NiCamera* Camera = WorldSceneGraph->camera;
+
+	if (!johnnyguitar || !JG_GetClipDist) {
 		Constants.viewNearZ = Camera->Frustum.Near;
 	}
 	else {
-		Constants.viewNearZ = JG_GetClipDist();
+		float nearZ = JG_GetClipDist();
+
+		Constants.viewNearZ = nearZ ? max(nearZ, 0.3)  : Camera->Frustum.Near;
 	}
 }
 
