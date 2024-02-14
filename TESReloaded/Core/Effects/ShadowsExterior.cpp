@@ -38,7 +38,7 @@ void ShadowsExteriorEffect::UpdateConstants() {
 	}
 	else {
 		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
-		Constants.ShadowFade.y = Enabled;
+		Constants.ShadowFade.y = TheShaderManager->Effects.ShadowsInteriors->Enabled;
 		Constants.ShadowFade.z = 1; // z enables point lights
 		Constants.ShadowFade.w = Settings.Interiors.DrawDistance; //furthest distance for point lights shadows
 
