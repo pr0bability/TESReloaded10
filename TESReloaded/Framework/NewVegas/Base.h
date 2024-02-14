@@ -146,7 +146,3 @@ public:
 
 };
 
-static HMODULE johnnyguitar = nullptr;
-static bool(__cdecl* JG_SetClipDist)(float) = nullptr;
-static float(__cdecl* JG_GetClipDist)() = nullptr;
-

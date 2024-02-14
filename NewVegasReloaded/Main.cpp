@@ -9,15 +9,16 @@ extern "C" {
 	static void MessageHandler(NVSEMessagingInterface::Message* msg) {
 		switch (msg->type) {
 		case NVSEMessagingInterface::kMessage_DeferredInit:
+			CombineDepthEffect* depthEffect = TheShaderManager->Effects.CombineDepth;
 
-			if (!johnnyguitar) {
-				johnnyguitar = GetModuleHandle(L"johnnyguitar.dll");
+			if (!depthEffect->johnnyguitar) {
+				depthEffect->johnnyguitar = GetModuleHandle(L"johnnyguitar.dll");
 			}
 
-			if (johnnyguitar) {
+			if (depthEffect->johnnyguitar) {
 				Logger::Log("JG found, initializing functions");
-				JG_SetClipDist = (bool(__cdecl*)(float))GetProcAddress(johnnyguitar, "JGSetViewmodelClipDistance");
-				JG_GetClipDist = (float(__cdecl*)())GetProcAddress(johnnyguitar, "JGGetViewmodelClipDistance");
+				depthEffect->JG_SetClipDist = (bool(__cdecl*)(float))GetProcAddress(depthEffect->johnnyguitar, "JGSetViewmodelClipDistance");
+				depthEffect->JG_GetClipDist = (float(__cdecl*)())GetProcAddress(depthEffect->johnnyguitar, "JGGetViewmodelClipDistance");
 			}
 			else {
 				Logger::Log("JG not found");
