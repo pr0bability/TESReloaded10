@@ -44,6 +44,7 @@ public:
 	typedef std::vector<UInt32> ExcludedFormsList;
 
 	struct FormsStruct {
+		bool				AlphaEnabled;
 		bool				Activators;
 		bool				Actors;
 		bool				Apparatus;
@@ -71,7 +72,6 @@ public:
 		float					ShadowMapInverseResolution;
 		float					ShadowMapRadius;
 		float					ShadowMapNear;
-		bool					AlphaEnabled;
 	};
 
 	struct ExteriorsStruct {
