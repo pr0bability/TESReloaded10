@@ -223,8 +223,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	shadow.g = 1; // disable point light shadows for debug
 
 	for (int i = 0; i<12; i++){
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * (TESR_LightColor[i].rgb * TESR_LightColor[i].a) * pointLightsPower * shadow.g;
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * (TESR_LightColor[12 + i].rgb * TESR_LightColor[12 + i].a) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * linearize(float4(TESR_LightColor[i].rgb * TESR_LightColor[i].a, 1)) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * linearize(float4(TESR_LightColor[12 + i].rgb * TESR_LightColor[12 + i].a, 1)) * pointLightsPower * shadow.g;
 	}
 
 	// create a noisy pattern of accumulation over time

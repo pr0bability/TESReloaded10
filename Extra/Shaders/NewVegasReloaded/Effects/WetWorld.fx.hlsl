@@ -110,7 +110,7 @@ float3 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 	    float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
 		float3 H = normalize(normalize(lightDir) + eyeDirection);
-		return pows(shades(H, surfaceNormal), glossiness) * specColor * specularBoost * atten;
+		return pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)) * specularBoost * atten;
 }
 
 
