@@ -27,6 +27,19 @@ public:
 	ShadowRenderPass();
 
 	struct ConstantsStruct {
+	};
+	ConstantsStruct Constants;
+
+	bool AccumObject(NiGeometry* Geo);
+	void RegisterConstants();
+	void UpdateConstants(NiGeometry* Geo);
+};
+
+class AlphaShadowRenderPass : public RenderPass {
+public:
+	AlphaShadowRenderPass();
+
+	struct ConstantsStruct {
 		IDirect3DBaseTexture9* DiffuseMap;
 	};
 	ConstantsStruct Constants;
@@ -35,6 +48,7 @@ public:
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 };
+
 
 class SkinnedGeoShadowRenderPass : public RenderPass {
 public:

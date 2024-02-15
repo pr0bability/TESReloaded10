@@ -55,6 +55,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Constants.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Enabled;
 	Constants.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
 	Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
+	Constants.ScreenSpaceData.w = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "Darkness");
 
 	// Generic exterior shadows settings
 	Settings.Exteriors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Enabled");
@@ -93,7 +94,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 		}
 		ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
 
-		ShadowMap->AlphaEnabled = TheSettingManager->GetSettingI(sectionName, "AlphaEnabled");
+		ShadowMap->Forms.AlphaEnabled = TheSettingManager->GetSettingI(sectionName, "AlphaEnabled");
 		ShadowMap->Forms.Activators = TheSettingManager->GetSettingI(sectionName, "Activators");
 		ShadowMap->Forms.Actors = TheSettingManager->GetSettingI(sectionName, "Actors");
 		ShadowMap->Forms.Apparatus = TheSettingManager->GetSettingI(sectionName, "Apparatus");
@@ -106,6 +107,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 		ShadowMap->Forms.Terrain = TheSettingManager->GetSettingI(sectionName, "Terrain");
 		ShadowMap->Forms.Trees = TheSettingManager->GetSettingI(sectionName, "Trees");
 		ShadowMap->Forms.Lod = TheSettingManager->GetSettingI(sectionName, "Lod");
+		ShadowMap->Forms.MinRadius = TheSettingManager->GetSettingI(sectionName, "MinRadius");
 	};
 
 	// get the list of excluded formIDs

@@ -6,13 +6,8 @@ void RenderPass::RenderAccum() {
 
 	// Could add setup of device/renderstate/current shaders here
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
-
-	//if (RenderState->GetPixelShader() != PixelShader->ShaderHandle)
-		RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
-
-	//if (RenderState->GetVertexShader() != VertexShader->ShaderHandle)
-		RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
-
+	RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
+	RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
 
 	// Render normal geometry
 	while (!GeometryList.empty()) {
@@ -92,14 +87,44 @@ void ShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	ShadowConstants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	ShadowConstants->Data.y = 0.0f; // Alpha Control
+}
+
+
+
+AlphaShadowRenderPass::AlphaShadowRenderPass() {
+	PixelShader = TheShadowManager->ShadowMapPixel;
+	VertexShader = TheShadowManager->ShadowMapVertex;
+	RegisterConstants();
+}
+
+
+bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
-	if (!ShaderProperty || !AProp) return;
 
-	if (!(AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK) && !(AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK)) return;
-	
+	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
+	if (!AProp) return false;
+	if (!(AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK) && !(AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK)) return false;
+
+	GeometryList.push(Geo);
+	return true;
+}
+
+
+void AlphaShadowRenderPass::RegisterConstants() {
+}
+
+
+void AlphaShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
+	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
+	ShadowConstants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
+	ShadowConstants->Data.y = 0.0f; // Alpha Control
+
+	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
+
 	if (Texture && Texture->rendererData->dTexture) {
 
 		ShadowConstants->Data.y = 1.0f; // Alpha Control

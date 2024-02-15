@@ -15,8 +15,8 @@ public:
 
 
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
-	void					AccumChildren(NiAVObject* NiObject, float MinRadius);
-	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject);
+	void					AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, bool isLand);
+	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 	void					RenderAccums();
 	//void					RenderGeometry(NiGeometry* Geo);
 	//void					RenderSkinnedGeometry(NiGeometry* Geo);
@@ -30,6 +30,7 @@ public:
     void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 
 	ShadowRenderPass*				geometryPass;
+	AlphaShadowRenderPass*			alphaPass;
 	SkinnedGeoShadowRenderPass*		skinnedGeoPass;
 	SpeedTreeShadowRenderPass*		speedTreePass;
 
