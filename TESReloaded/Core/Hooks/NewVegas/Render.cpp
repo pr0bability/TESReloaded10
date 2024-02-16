@@ -68,16 +68,17 @@ void __fastcall RenderWorldSceneGraphHook(Main* This, UInt32 edx, Sun* SkySun, U
 	(*RenderWorldSceneGraph)(This, SkySun, IsFirstPerson, WireFrame, Arg4);
 	if (!InterfaceManager->getIsMenuOpen()) TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture); // disable updating the world buffer when pipboy is out
 
-	// Clear the depth buffer before rendering first person model to prevent clipping with world objects & other artefacts
-	TheRenderManager->Clear(NULL, NiRenderer::kClear_ZBUFFER); 
 	if (!IsFirstPerson) {
 		// clear the viewmodel depth buffer
+		TheRenderManager->Clear(NULL, NiRenderer::kClear_ZBUFFER);
 		TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTextureViewModel);
 	}
 }
 
 void (__thiscall* RenderFirstPerson)(Main*, NiDX9Renderer*, NiGeometry*, Sun*, BSRenderedTexture*) = (void (__thiscall*)(Main*, NiDX9Renderer*, NiGeometry*, Sun*, BSRenderedTexture*))Hooks::RenderFirstPerson;
 void __fastcall RenderFirstPersonHook(Main* This, UInt32 edx, NiDX9Renderer* Renderer, NiGeometry* Geo, Sun* SkySun, BSRenderedTexture* RenderedTexture) {
+	// Clear the depth buffer before rendering first person model to prevent clipping with world objects & other artefacts
+	TheRenderManager->Clear(NULL, NiRenderer::kClear_ZBUFFER);
 	ThisCall(0x00874C10, Global);
 	(*RenderFirstPerson)(This, Renderer, Geo, SkySun, RenderedTexture);
 	TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTextureViewModel);
