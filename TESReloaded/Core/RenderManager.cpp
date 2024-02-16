@@ -350,18 +350,19 @@ void RenderManager::ResolveDepthBuffer(IDirect3DTexture9* Buffer) {
 				NvAPI_D3D9_RegisterResource(TheTextureManager->DepthTextureINTZ);
 			}
 			else {
-                NvAPI_D3D9_RegisterResource(TheTextureManager->DepthSurface);
-            }
-            
-			NvAPI_D3D9_RegisterResource(Buffer);
+				NvAPI_D3D9_RegisterResource(TheTextureManager->DepthSurface);
+			}
 		}
+
+		NvAPI_D3D9_RegisterResource(Buffer);
+
 		if (TheTextureManager->DepthTextureINTZ)
-            NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthTextureINTZ, NULL, Buffer, NULL, D3DTEXF_NONE);
+			NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthTextureINTZ, NULL, Buffer, NULL, D3DTEXF_NONE);
         else 
-            NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthSurface, NULL, Buffer, NULL, D3DTEXF_NONE);
+			NvAPI_D3D9_StretchRectEx(device, TheTextureManager->DepthSurface, NULL, Buffer, NULL, D3DTEXF_NONE);
 
+		NvAPI_D3D9_UnregisterResource(Buffer);
 	}
-
 }
 
  
