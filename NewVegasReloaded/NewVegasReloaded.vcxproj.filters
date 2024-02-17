@@ -43,9 +43,6 @@
     <ClInclude Include="resource.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\BinkManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="..\Core\Device\Device.h">
       <Filter>Core\Device</Filter>
     </ClInclude>
@@ -518,6 +515,12 @@
     </ClCompile>
     <ClCompile Include="..\Core\TextureRecord.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Effects\Grass.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Effects\Underwater.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
