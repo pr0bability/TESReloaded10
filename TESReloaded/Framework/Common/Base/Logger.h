@@ -23,7 +23,7 @@ public:
 	std::chrono::system_clock::time_point start;
 	std::chrono::system_clock::time_point end;
 	TimeLogger();
-	virtual ~TimeLogger();
+	~TimeLogger();
 
 	float LogTime(const char* Name);
 };
