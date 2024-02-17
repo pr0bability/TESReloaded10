@@ -97,6 +97,8 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::
 
 // Detect which pass the object must be added to
 void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
+	auto timelog = TimeLogger();
+
 	if (!NiObject->IsGeometry()) {
 		containersAccum->push(NiObject);
 		return;
@@ -113,6 +115,8 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 	else if (speedTreePass->AccumObject(geo)) {}
 	else if (ShadowMap->Forms.AlphaEnabled && alphaPass->AccumObject(geo)) {}
 	else geometryPass->AccumObject(geo);
+
+	//timelog.LogTime("ShadowManager::AccumObject");
 }
 
 
@@ -155,7 +159,6 @@ void ShadowManager::RenderAccums() {
 
 
 void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj) {
-	auto timer = TimeLogger();
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
@@ -179,15 +182,6 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
-	geometryPass->VertexShader = ShadowMapVertex;
-	geometryPass->PixelShader = ShadowMapPixel;
-	alphaPass->VertexShader = ShadowMapVertex;
-	alphaPass->PixelShader = ShadowMapPixel;
-	skinnedGeoPass->VertexShader = ShadowMapVertex;
-	skinnedGeoPass->PixelShader = ShadowMapPixel;
-	speedTreePass->VertexShader = ShadowMapVertex;
-	speedTreePass->PixelShader = ShadowMapPixel;
-
 	//RenderState->SetVertexShader(ShadowMapVertex->ShaderHandle, false);
 	//RenderState->SetPixelShader(ShadowMapPixel->ShaderHandle, false);
 	Device->BeginScene();
@@ -206,8 +200,6 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	}
 
 	Device->EndScene();
-
-	shadowMapsRenderTime = timer.LogTime("ShadowManager::RenderShadowMap ");
 }
 
 
@@ -244,8 +236,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		return;
 	}
 
-	auto timer = TimeLogger();
-
 	//ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
@@ -277,15 +267,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
-
-	geometryPass->VertexShader = ShadowCubeMapVertex;
-	geometryPass->PixelShader = ShadowCubeMapPixel;
-	alphaPass->VertexShader = ShadowCubeMapVertex;
-	alphaPass->PixelShader = ShadowCubeMapPixel;
-	skinnedGeoPass->VertexShader = ShadowCubeMapVertex;
-	skinnedGeoPass->PixelShader = ShadowCubeMapPixel;
-	speedTreePass->VertexShader = ShadowCubeMapVertex;
-	speedTreePass->PixelShader = ShadowCubeMapPixel;
 
 	//RenderState->SetVertexShader(ShadowCubeMapVertex->ShaderHandle, false);
 	//RenderState->SetPixelShader(ShadowCubeMapPixel->ShaderHandle, false);
@@ -373,8 +354,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 		Device->EndScene();
 	}
-
-	timer.LogTime("RenderShadowCubeMap");
 }
 
 
@@ -493,25 +472,41 @@ void ShadowManager::RenderShadowMaps() {
 	At.y = PlayerNode->m_worldTransform.pos.y - TheRenderManager->CameraPosition.y;
 	At.z = PlayerNode->m_worldTransform.pos.z - TheRenderManager->CameraPosition.z;
 
-	CurrentVertex = ShadowMapVertex;
-	CurrentPixel = ShadowMapPixel;
-
 	// Render all shadow maps
 	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
+	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
+		geometryPass->VertexShader = ShadowMapVertex;
+		geometryPass->PixelShader = ShadowMapPixel;
+		alphaPass->VertexShader = ShadowMapVertex;
+		alphaPass->PixelShader = ShadowMapPixel;
+		skinnedGeoPass->VertexShader = ShadowMapVertex;
+		skinnedGeoPass->PixelShader = ShadowMapPixel;
+		speedTreePass->VertexShader = ShadowMapVertex;
+		speedTreePass->PixelShader = ShadowMapPixel;
+	}
+
 	if (isExterior && ExteriorEnabled && SunDir->z > 0.0f) {
 		ShadowData->z = 0; // set shader constant to identify other shadow maps
 		D3DXMATRIX View = GetViewMatrix(&At, SunDir);
+		auto shadowMapTimer = TimeLogger();
+
 		for (int i = MapNear; i < MapOrtho; i++) {
 			ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
 			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View);
 
 			RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 			if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
+
+			std::string message = "ShadowManager::RenderShadowMap ";
+			message += std::to_string(i);
+			shadowMapTimer.LogTime(message.c_str());
 		}
 	}
 
 	// render ortho map if one of the effects using ortho is active
 	if (isExterior && TheShaderManager->orthoRequired) {
+		auto shadowMapTimer = TimeLogger();
+
 		ShadowData->z = 1; // identify ortho map in shader constant
 		D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
 		D3DMATRIX View = GetViewMatrix(&At, &OrthoDir);
@@ -519,7 +514,10 @@ void ShadowManager::RenderShadowMaps() {
 
 		RenderShadowMap(&Shadows->ShadowMaps[MapOrtho], &Shadows->Constants.ShadowViewProj);
 		OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
+	
+		shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
 	}
+
 
 	// Render shadow maps for point lights
 	bool usePointLights = (TheShaderManager->GameState.isDayTime > 0.5) ? ShadowsExteriors->UsePointShadowsDay : ShadowsExteriors->UsePointShadowsNight;
@@ -530,13 +528,25 @@ void ShadowManager::RenderShadowMaps() {
 	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
-		CurrentVertex = ShadowCubeMapVertex;
-		CurrentPixel = ShadowCubeMapPixel;
 		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
+		geometryPass->VertexShader = ShadowCubeMapVertex;
+		geometryPass->PixelShader = ShadowCubeMapPixel;
+		alphaPass->VertexShader = ShadowCubeMapVertex;
+		alphaPass->PixelShader = ShadowCubeMapPixel;
+		skinnedGeoPass->VertexShader = ShadowCubeMapVertex;
+		skinnedGeoPass->PixelShader = ShadowCubeMapPixel;
+		speedTreePass->VertexShader = ShadowCubeMapVertex;
+		speedTreePass->PixelShader = ShadowCubeMapPixel;
 
 		// render the cubemaps for each light
+		auto shadowMapTimer = TimeLogger();
 		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
+
 			RenderShadowCubeMap(ShadowLights, i);
+
+			std::string message = "ShadowManager::RenderShadowCubeMap ";
+			message += std::to_string(i);
+			shadowMapTimer.LogTime(message.c_str());
 		}
 	}
 

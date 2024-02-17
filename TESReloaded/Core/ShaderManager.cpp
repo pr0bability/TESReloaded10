@@ -166,6 +166,8 @@ Updates the values of the constants that can be accessed from shader code, with 
 */
 void ShaderManager::UpdateConstants() {
 	
+	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
+
 	auto timer = TimeLogger();
 
 	bool IsThirdPersonView = !TheCameraManager->IsFirstPerson();
@@ -304,7 +306,9 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.fogDistance.y = ShaderConst.fogData.y;
 	ShaderConst.fogDistance.z = 1.0f;
 	ShaderConst.fogDistance.w = ShaderConst.sunGlare;
-	
+
+	timer.LogTime("ShaderManager::UpdateConstants for generic constants");
+
 	if (TheSettingManager->SettingsChanged) {
 		// update settings
 		for (const auto [Name, effect] : EffectsNames) {
@@ -317,14 +321,14 @@ void ShaderManager::UpdateConstants() {
 		// sky settings are used in several shaders whether the shader is active or not
 		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
 		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
+		timer.LogTime("ShaderManager::UpdateSettings for shaders & effects");
 	}
-
 
 	// update Constants
 	for (const auto [Name, shader] : ShaderNames) {
 		if ((*shader)->Enabled) (*shader)->UpdateConstants();
 	}
-	timer.LogTime("ShaderManager::UpdateConstants for shaders & generic constants");
+	timer.LogTime("ShaderManager::UpdateConstants for shaders");
 
 	for (const auto [Name, effect] : EffectsNames) {
 		if ((*effect)->Enabled) {
