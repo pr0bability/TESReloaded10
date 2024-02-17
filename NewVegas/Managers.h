@@ -21,18 +21,18 @@ class MenuInterfaceManager; extern MenuInterfaceManager*	InterfaceManager;
 class QueuedModelLoader;	extern QueuedModelLoader*		ModelLoader;
 class ShadowSceneNode;		extern ShadowSceneNode*			SceneNode;
 
-#include "SettingManager.h"
-#include "CommandManager.h"
-#include "TextureRecord.h"
-#include "ShaderManager.h"
-#include "TextureManager.h"
-#include "RenderManager.h"
-#include "FrameRateManager.h"
-#include "GameEventManager.h"
-#include "GameMenuManager.h"
-#include "RenderPass.h"
-#include "ShadowManager.h"
-#include "CameraManager.h"
-#include "BinkManager.h"
+#include "../Core/SettingManager.h"
+#include "../Core/CommandManager.h"
+#include "../Core/TextureRecord.h"
+#include "../Core/ShaderManager.h"
+#include "../Core/TextureManager.h"
+#include "../Core/RenderManager.h"
+#include "../Core/FrameRateManager.h"
+#include "../Core/GameEventManager.h"
+#include "../Core/GameMenuManager.h"
+#include "../Core/RenderPass.h"
+#include "../Core/ShadowManager.h"
+#include "../Core/CameraManager.h"
+#include "../Core/BinkManager.h"
 
 void InitializeManagers();

@@ -1,7 +1,7 @@
 #pragma once
-//#include <../lib/tomlplusplus/include/toml++/toml.h>
+
 #define TOML11_PRESERVE_COMMENTS_BY_DEFAULT
-#include <../lib/toml11/toml.hpp>
+#include "../TESReloaded/lib/toml11/toml.hpp"
 
 
 struct SettingsMainStruct {
