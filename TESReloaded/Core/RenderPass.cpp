@@ -14,8 +14,6 @@ void RenderPass::RenderAccum() {
 		NiGeometry* Geo = GeometryList.top();
 		if (!Geo) continue;
 
-		TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
-
 		UpdateConstants(Geo);
 		PixelShader->SetCT();
 		VertexShader->SetCT();
@@ -87,6 +85,7 @@ void ShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	ShadowConstants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	ShadowConstants->Data.y = 0.0f; // Alpha Control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 }
 
 
@@ -121,6 +120,7 @@ void AlphaShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	ShadowConstants->Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	ShadowConstants->Data.y = 0.0f; // Alpha Control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
@@ -178,6 +178,7 @@ void SkinnedGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	Constants->Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	Constants->Data.y = 0.0f; // Alpha control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 }
 
 
@@ -250,6 +251,7 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 
 	ShadowConstants->Data.x = 2.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	ShadowConstants->Data.y = 0.0f; // Alpha control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 
 	//Constants.BillboardRight = (D3DXVECTOR4*)&TheShadowManager->BillboardRight;
 	//Constants.BillboardUp = (D3DXVECTOR4*)&TheShadowManager->BillboardUp;
