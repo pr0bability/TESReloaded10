@@ -37,15 +37,17 @@ xcopy "%PROJECT%\Release\%PROJECT%.dll" "build\%PROJECT%\%FOLDER%\Plugins\" /y /
 xcopy "%PROJECT%\Release\%PROJECT%.pdb" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
 
 @REM Copy config
-xcopy "Extra\%PROJECT%.dll.config" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
-xcopy "Extra\%PROJECT%.dll.defaults.toml" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
-echo F|xcopy "Extra\%PROJECT%.dll.defaults.toml" "build\%PROJECT%\%FOLDER%\Plugins\%PROJECT%.dll.toml" /y /d
+xcopy "resources\%PROJECT%.dll.config" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
+xcopy "resources\%PROJECT%.dll.defaults.toml" "build\%PROJECT%\%FOLDER%\Plugins\" /y /d
+echo F|xcopy "resources\%PROJECT%.dll.defaults.toml" "build\%PROJECT%\%FOLDER%\Plugins\%PROJECT%.dll.toml" /y /d
 
 @REM Copy Shaders
-robocopy /mir .\Extra\Shaders\%PROJECT%\ .\build\%PROJECT%\Shaders\%PROJECT%\
+set GAME=%PROJECT:Reloaded=""%
+robocopy /mir .\%GAME%\Shaders .\build\%PROJECT%\Shaders\%PROJECT%\Shaders
+robocopy /mir .\%GAME%\Effects .\build\%PROJECT%\Shaders\%PROJECT%\Effects
 
 @REM Copy Textures
-robocopy /mir .\Extra\Textures\ .\build\%PROJECT%\Textures\
+robocopy /mir .\resources\Textures\ .\build\%PROJECT%\Textures\
 
 @REM Copy to deploy if 2nd arg was passed
 if "%DEPLOY_LOCATION%" NEQ "" (
