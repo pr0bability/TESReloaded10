@@ -4,6 +4,7 @@
 #include "ShadowsExterior.h"
 #include "AvgLuma.h"
 #include "BloodLens.h"
+#include "Bloom.h"
 #include "BloomLegacy.h"
 #include "Cinema.h"
 #include "Coloring.h"
