@@ -1,8 +1,8 @@
 #define WaitForDebugger 0
 #define HookDevice 0
 
-#include "../NewVegas/Hooks/Hooks.h"
-#include "../Core/Device/Hook.h"
+#include "../src/NewVegas/Hooks/Hooks.h"
+#include "../src/core/Device/Hook.h"
 
 extern "C" {
 
