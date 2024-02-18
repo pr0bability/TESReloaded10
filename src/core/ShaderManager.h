@@ -79,6 +79,7 @@ public:
 		AmbientOcclusionEffect*	AmbientOcclusion;
 		AvgLumaEffect*			AvgLuma;
 		BloodLensEffect*		BloodLens;
+		BloomEffect*			Bloom;
 		BloomLegacyEffect*		BloomLegacy;
 		ColoringEffect*			Coloring;
 		CinemaEffect*			Cinema;

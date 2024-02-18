@@ -304,6 +304,9 @@
     <ClInclude Include="..\src\NewVegas\nvse\GameNi.h">
       <Filter>NewVegas\nvse</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\effects\Bloom.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -521,6 +524,9 @@
     </ClCompile>
     <ClCompile Include="..\src\NewVegas\nvse\GameNi.cpp">
       <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Bloom.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
