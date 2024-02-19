@@ -44,6 +44,7 @@ public:
 
 	void				GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32 Index);
 	void				GetTextureRecord();
+	void				SaveToFile();
 
 	std::string			SamplerString;
 	std::string			TexturePath;
