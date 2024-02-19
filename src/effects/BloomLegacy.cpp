@@ -32,6 +32,6 @@ void BloomLegacyEffect::UpdateSettings() {
 }
 
 void BloomLegacyEffect::RegisterConstants() {
-	TheShaderManager->RegisterConstant("TESR_BloomData", &Constants.Data);
-	TheShaderManager->RegisterConstant("TESR_BloomValues", &Constants.Values);
+	TheShaderManager->RegisterConstant("TESR_BloomLegacyData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_BloomLegacyValues", &Constants.Values);
 }
