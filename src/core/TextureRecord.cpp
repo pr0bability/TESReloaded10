@@ -56,6 +56,9 @@ void TextureRecord::GetSamplerStates(std::string samplerStateSubstring) {
 	WordTextureFilterType["POINT"] = D3DTEXF_POINT;
 	WordTextureFilterType["LINEAR"] = D3DTEXF_LINEAR;
 	WordTextureFilterType["ANISOTROPIC"] = D3DTEXF_ANISOTROPIC;
+	WordTextureFilterType["PYRAMIDALQUAD"] = D3DTEXF_PYRAMIDALQUAD;
+	WordTextureFilterType["GAUSSIANQUAD"] = D3DTEXF_GAUSSIANQUAD;
+	WordTextureFilterType["CONVOLUTIONMONO"] = D3DTEXF_CONVOLUTIONMONO;
 
 	std::map<std::string, int> WordSRGBType;
 	WordSRGBType["FALSE"] = 0;
