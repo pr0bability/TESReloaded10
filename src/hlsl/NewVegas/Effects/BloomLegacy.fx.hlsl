@@ -3,8 +3,8 @@
 #define viewbloom 0
 
 float4 TESR_ReciprocalResolution;
-float4 TESR_BloomData;
-float4 TESR_BloomValues;
+float4 TESR_BloomLegacyData;
+float4 TESR_BloomLegacyValues;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -79,8 +79,8 @@ float4 BloomPass(VSOUT IN) : COLOR0
 {
     float3 Color = tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb;
 
-    Color *= TESR_BloomData.y / (TESR_BloomData.x + 0.001);
-    Color *= (1 + (Color / (TESR_BloomData.z * TESR_BloomData.z)));
+    Color *= TESR_BloomLegacyData.y / (TESR_BloomLegacyData.x + 0.001);
+    Color *= (1 + (Color / (TESR_BloomLegacyData.z * TESR_BloomLegacyData.z)));
     Color -= 5;
     Color /= (10 + max(Color, 0));
 
@@ -104,8 +104,8 @@ float4 CombinePass(VSOUT IN) : COLOR0
 	float3 bloomColor = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb);
 	float3 originalColor = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
 	
-	bloomColor = AdjustSaturation(bloomColor, TESR_BloomValues.z) * TESR_BloomValues.x;
-	originalColor = AdjustSaturation(originalColor, TESR_BloomValues.w) * TESR_BloomValues.y;
+	bloomColor = AdjustSaturation(bloomColor, TESR_BloomLegacyValues.z) * TESR_BloomLegacyValues.x;
+	originalColor = AdjustSaturation(originalColor, TESR_BloomLegacyValues.w) * TESR_BloomLegacyValues.y;
 	originalColor *= (1 - saturate(bloomColor));
 	
 	#if viewbloom
