@@ -13,13 +13,13 @@ float4 TESR_ShadowRadius;
 float4 TESR_LightPosition[12];
 float4 TESR_ShadowLightPosition[12];
 
-
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_AvgLumaBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_PointShadowBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_BloomBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 
 
 struct VSOUT {
@@ -63,6 +63,11 @@ float4 displayShadows(float4 color, float2 uv, float2 bufferPosition, float2 buf
 	return Shadows.rrrr * 0.5 + Shadows.gggg;
 }
 
+float4 displayBloom(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize, sampler2D buffer){
+	float2 lowerCorner = bufferPosition + bufferSize;
+	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
+	return delinearize(tex2D(buffer, float2(invlerp(bufferPosition, lowerCorner, uv))));
+}
 
 float4 showLightInfluence(float4 color, float2 uv, float3 position, float4 lightPos, float4 tint){
 	float3 eyeDir = normalize(toWorld(uv));
@@ -121,6 +126,7 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	color = displayBuffer(color, IN.UVCoord, float2(0.1, 0.05), float2(0.15, 0.15), TESR_NormalsBuffer);
 	color = displayDepth(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15));
 	color = displayShadows(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15));
+	color = displayBloom(color, IN.UVCoord, float2(0.7, 0.05), float2(0.15, 0.15), TESR_BloomBuffer);
 
     return float4(color.rgb, 1);
 }
