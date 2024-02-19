@@ -321,6 +321,26 @@ void ShaderTextureValue::GetTextureRecord() {
 	timer.LogTime("ShaderTextureValue::GetTextureRecord");
 }
 
+
+/*
+* Debug function to save the texture from the sampler into a "Test" folder
+*/
+void ShaderTextureValue::SaveToFile() {
+	IDirect3DSurface9* Surface = nullptr;
+	((IDirect3DTexture9*)(Texture->Texture))->GetSurfaceLevel(0, &Surface);
+	char path[32] = ".\\Test\\";
+	strcat(path, Name);
+	strcat(path, ".jpg");
+	if (Surface) {
+		D3DXSaveSurfaceToFileA(path, D3DXIFF_JPG, Surface, NULL, NULL);
+		Surface->Release();
+		Surface = nullptr;
+	}
+	else {
+		Logger::Log("Surface is null for %s", Name);
+	}
+}
+
 /*
 * Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
 */
@@ -358,8 +378,8 @@ void ShaderRecord::SetCT() {
 		if (Sampler->Texture->Texture == nullptr) {
 			Sampler->Texture->BindTexture(Sampler->Name);
 
-			//if (Sampler->Texture->Texture) Logger::Log("%s : Texture %s Succesfully bound", Name, Sampler->Name);
-			//else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
+			if (Sampler->Texture->Texture) Logger::Log("%s : Texture %s Successfully bound", Name, Sampler->Name);
+			else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
 		}
 
 		if (Sampler->Texture->Texture != nullptr) {
@@ -369,6 +389,9 @@ void ShaderRecord::SetCT() {
 				if (TheRenderManager->renderState->GetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i) != Sampler->Texture->SamplerStates[i])
 					TheRenderManager->SetSamplerState(Sampler->RegisterIndex, (D3DSAMPLERSTATETYPE)i, Sampler->Texture->SamplerStates[i]);
 			}
+		}
+		else {
+			Logger::Log("%s : Texture %s was not bound", Name, Sampler->Name);
 		}
 	}
 
