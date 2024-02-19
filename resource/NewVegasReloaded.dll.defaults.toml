@@ -154,6 +154,17 @@ Time = 900.0
 [_Shaders.BloodLens.Status]
 Enabled = false
 
+[_Shaders.Bloom]
+
+[_Shaders.Bloom.Main]
+Treshold = 1.0                          # treshold value above which lights will bloom
+Scale = 1.0                             # scale the brightness of the bloom
+Strength = 1.0                          # power of the bloom when applied
+
+[_Shaders.Bloom.Status]
+Enabled = true                          # Replace the vanilla bloom
+
+
 [_Shaders.BloomLegacy.Exteriors]
 BloomIntensity = 1.4
 BloomSaturation = 1.2
