@@ -5,6 +5,7 @@ float4 TESR_SunColor;
 float4 TESR_SunAmount;
 float4 TESR_LensData; // x: lens strength, y: luma threshold
 float4 TESR_DebugVar; // used for the luma threshold used for bloom
+float4 TESR_BloomData; // used for the luma threshold used for bloom
 
 sampler2D TESR_BloomBuffer : register(s0) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = ANISOTROPIC; MINFILTER = ANISOTROPIC; MIPFILTER = ANISOTROPIC; };
 sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = ANISOTROPIC; MINFILTER = ANISOTROPIC; MIPFILTER = ANISOTROPIC; };
@@ -65,9 +66,9 @@ float4 Bloom(VSOUT IN ):COLOR0{
 	color += linearize(tex2D(TESR_SourceBuffer, uv + float2(1, 1) * TESR_ReciprocalResolution.xy / 2));
 	color /= 4;
 
-	float threshold = TESR_DebugVar.y;
+	float threshold = TESR_BloomData.x;
 	float brightness = max(0.000001, luma(color));
-	float bloomScale = TESR_DebugVar.x; 
+	float bloomScale = TESR_BloomData.y; 
 
 	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
 
