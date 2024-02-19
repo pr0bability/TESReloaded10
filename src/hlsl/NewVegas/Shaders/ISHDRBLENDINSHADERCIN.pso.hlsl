@@ -3,9 +3,6 @@
 //#define	ScreenSpace	Src0
 // Parameters:
 
-sampler2D Src0 : register(s0);
-sampler2D DestBlend : register(s1);    // base non tonemapped image
-
 float4 HDRParam : register(c1);
 float3 BlurScale : register(c2);
 float4 Cinematic : register(c19); // x:saturation, y:avgluma, z:brightness, w: contrast
@@ -17,6 +14,12 @@ float4 TESR_HDRBloomData : register(c25); //
 float4 TESR_HDRData : register(c27); //
 float4 TESR_LotteData : register(c28); //
 float4 TESR_ToneMapping : register(c29); //
+float4 TESR_ReciprocalResolution : register(c30); //
+float4 TESR_BloomData : register(c31); //
+
+sampler2D Src0 : register(s0);
+sampler2D DestBlend : register(s1);    // base non tonemapped image
+sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
 
 // Registers:
 //
@@ -39,6 +42,7 @@ float4 TESR_ToneMapping : register(c29); //
 struct VS_INPUT {
     float2 ScreenOffset : TEXCOORD0;
     float2 texcoord_1 : TEXCOORD1;
+    float2 pos : VPOS;
 };
 
 struct VS_OUTPUT {
@@ -51,11 +55,14 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
     float gammaCorrection = max(1.0, TESR_ToneMapping.w);
     
+    float4 NVRbloom = tex2D(TESR_BloomBuffer, IN.texcoord_1.xy);
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
+    NVRbloom.rgb = pows(NVRbloom.rgb, gammaCorrection) * TESR_BloomData.z; // linearize bloom
     bloom.rgb = pows(bloom.rgb, gammaCorrection); // linearize bloom
     final.rgb = pows(final.rgb, gammaCorrection); // linearize color
     
+    bloom = lerp(bloom, NVRbloom, TESR_BloomData.w) + bloom * TESR_DebugVar.x;
     // scale bloom while maintaining color
     bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0.0), TESR_HDRBloomData.y);
     
