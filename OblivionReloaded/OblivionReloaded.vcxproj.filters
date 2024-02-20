@@ -5,346 +5,600 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Framework">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Main">
       <UniqueIdentifier>{d824b335-cb77-4743-b092-330dbd2a3180}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Oblivion">
-      <UniqueIdentifier>{069685f5-86cc-4240-81cf-83822043d2a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common">
-      <UniqueIdentifier>{135259df-2a9e-4ef7-9f9c-91d5c23c81d8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common\Lib">
-      <UniqueIdentifier>{b7c99412-bfdd-4954-9abc-ce9d30463377}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common\Lib\Detours">
-      <UniqueIdentifier>{79014e6e-8607-4262-b126-a6ecb7025746}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common\Base">
-      <UniqueIdentifier>{a7e2dfbf-6f70-4169-9770-30913f9e9554}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Hooks">
       <UniqueIdentifier>{a6515936-5dae-4b77-ab06-300bcbd940a7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\Oblivion">
-      <UniqueIdentifier>{9448ea77-c579-44fe-a667-297e2132562e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Core\Device">
       <UniqueIdentifier>{22e573de-0c2f-4f02-ae27-75f9b3283a9a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Framework\Common\Lib\Nvidia">
+    <Filter Include="lib">
+      <UniqueIdentifier>{da34717c-06e6-44d4-9805-a523e4b93a45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oblivion">
+      <UniqueIdentifier>{4941a242-73da-4c2c-aa98-7250eca8f2a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oblivion\Hooks">
+      <UniqueIdentifier>{a80fd605-66fa-42ab-a01a-2de9ea4dfab3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Oblivion\obse">
+      <UniqueIdentifier>{e92a05fb-147b-428f-9dcf-e247e06c0917}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Base">
+      <UniqueIdentifier>{18116edc-10c6-4ad9-b54c-ef4e3a7eaa77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Effects">
+      <UniqueIdentifier>{80466f7a-3a6e-4025-8879-138da4f8bc73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Nvidia">
       <UniqueIdentifier>{6014aac5-643c-4efa-bae3-fe9c795a5ba7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Detours">
+      <UniqueIdentifier>{79014e6e-8607-4262-b126-a6ecb7025746}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\TESReloaded\Core\CameraManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\CommandManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\EquipmentManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\GameEventManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\RenderManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\ScriptManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\SettingManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\ShaderManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\ShadowManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\TextureManager.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\OcclusionManager.h">
+    <ClInclude Include="..\src\core\CameraManager.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h">
+    <ClInclude Include="..\src\core\CommandManager.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\Game.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\EquipmentManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\GameHavok.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\FrameRateManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\GameNi.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\GameEventManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\Framework.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\GameMenuManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.h">
-      <Filter>Framework\Common\Lib\Detours</Filter>
+    <ClInclude Include="..\src\core\OcclusionManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\Base.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\RenderManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\Defines.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\RenderPass.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\Logger.h">
-      <Filter>Framework\Common\Base</Filter>
+    <ClInclude Include="..\src\core\ScriptManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\SafeWrite.h">
-      <Filter>Framework\Common\Base</Filter>
+    <ClInclude Include="..\src\core\SettingManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\Types.h">
-      <Filter>Framework\Common\Base</Filter>
+    <ClInclude Include="..\src\core\ShaderCollection.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\Plugin.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\ShaderManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\PluginVersion.h">
-      <Filter>Framework\Common\Base</Filter>
+    <ClInclude Include="..\src\core\ShaderRecord.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Oblivion\Managers.h">
-      <Filter>Framework\Oblivion</Filter>
+    <ClInclude Include="..\src\core\ShadowManager.h">
+      <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Device\Hook.h">
+    <ClInclude Include="..\src\core\TextureManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\TextureRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Animation.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Camera.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Dodge.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Equipment.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Events.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\FlyCam.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Forms.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\FrameRate.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Game.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Grass.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Hooks.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Memory.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Mounted.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Occlusion.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Render.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Settings.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\ShaderIO.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Shadows.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Sleeping.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Hooks\Texture.h">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\obse\Game.h">
+      <Filter>Oblivion\obse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\obse\GameHavok.h">
+      <Filter>Oblivion\obse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\obse\GameNi.h">
+      <Filter>Oblivion\obse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Base.h">
+      <Filter>Oblivion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Defines.h">
+      <Filter>Oblivion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Framework.h">
+      <Filter>Oblivion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Managers.h">
+      <Filter>Oblivion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Oblivion\Plugin.h">
+      <Filter>Oblivion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\AmbientOcclusion.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Animator.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\AvgLuma.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\BloodLens.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Bloom.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\BloomLegacy.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Cinema.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Coloring.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\CombineDepth.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Debug.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\DepthOfField.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Effects.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Exposure.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ExtraShaders.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\GodRays.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Grass.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ImageAdjust.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Lens.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\LowHF.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\MotionBlur.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Normals.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\PointShadows.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\PointShadows2.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\POM.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Rain.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ShadowsExterior.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ShadowsInteriors.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Sharpening.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Skin.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Sky.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Snow.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SnowAccumulation.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Specular.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SunShadows.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Terrain.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Tonemapping.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Underwater.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\VolumetricFog.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Water.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\WaterLens.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\WetWorld.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\Logger.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\PluginVersion.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\SafeWrite.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\Types.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\Utils.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\Nvidia\nvapi.h">
+      <Filter>lib\Nvidia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\Hooks\FormsCommon.h">
+      <Filter>Core\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\Hooks\GameCommon.h">
+      <Filter>Core\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\Hooks\Script.h">
+      <Filter>Core\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\Hooks\SleepingCommon.h">
+      <Filter>Core\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\Device\Device.h">
       <Filter>Core\Device</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Device\Device.h">
+    <ClInclude Include="..\src\core\Device\Hook.h">
       <Filter>Core\Device</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Nvidia\nvapi.h">
-      <Filter>Framework\Common\Lib\Nvidia</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Hooks.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Animation.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Dodge.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Forms.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Texture.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\FrameRate.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\ShaderIO.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Sleeping.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Game.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Settings.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Occlusion.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Camera.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Memory.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Mounted.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Shadows.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Render.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Grass.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Events.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\FlyCam.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Oblivion\Equipment.h">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\FormsCommon.h">
-      <Filter>Core\Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\GameCommon.h">
-      <Filter>Core\Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\Script.h">
-      <Filter>Core\Hooks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\SleepingCommon.h">
-      <Filter>Core\Hooks</Filter>
+    <ClInclude Include="..\lib\Detours\detours.h">
+      <Filter>lib\Detours</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\TESReloaded\Core\CameraManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\CommandManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\EquipmentManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\GameEventManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\GameMenuManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\RenderManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\ScriptManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\ShaderManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\ShadowManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\TextureManager.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\OcclusionManager.cpp">
+    <ClCompile Include="..\src\core\CameraManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\FrameRateManager.cpp">
+    <ClCompile Include="..\src\core\CommandManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.cpp">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\disasm.cpp">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\modules.cpp">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Base\Logger.cpp">
-      <Filter>Framework\Common\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Base\SafeWrite.cpp">
-      <Filter>Framework\Common\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Base\PluginVersion.cpp">
-      <Filter>Framework\Common\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\SettingManager.cpp">
+    <ClCompile Include="..\src\core\EquipmentManager.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Oblivion\Managers.cpp">
-      <Filter>Framework\Oblivion</Filter>
+    <ClCompile Include="..\src\core\GameEventManager.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Device\Device.cpp">
+    <ClCompile Include="..\src\core\FrameRateManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\GameMenuManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\OcclusionManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\RenderManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\RenderPass.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ScriptManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\SettingManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShaderCollection.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShaderManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShaderRecord.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShadowManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\TextureManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\TextureRecord.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Animation.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Camera.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Dodge.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Equipment.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Events.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\FlyCam.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Forms.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\FrameRate.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Game.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Hooks.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Memory.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Mounted.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Occlusion.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Render.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Settings.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\ShaderIO.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Shadows.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Sleeping.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Hooks\Texture.cpp">
+      <Filter>Oblivion\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Oblivion\Managers.cpp">
+      <Filter>Oblivion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\AmbientOcclusion.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Animator.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\AvgLuma.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\BloodLens.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Bloom.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\BloomLegacy.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Cinema.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Coloring.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\CombineDepth.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Debug.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\DepthOfField.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Exposure.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\GodRays.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Grass.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\ImageAdjust.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Lens.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\LowHF.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\MotionBlur.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Normals.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\POM.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Rain.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\ShadowsExterior.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\ShadowsInteriors.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Sharpening.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Skin.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Sky.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Snow.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\SnowAccumulation.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Specular.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Terrain.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Tonemapping.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Underwater.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\VolumetricFog.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Water.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\WaterLens.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\WetWorld.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\Logger.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\PluginVersion.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\SafeWrite.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\Detours\detours.cpp">
+      <Filter>lib\Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\Detours\disasm.cpp">
+      <Filter>lib\Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\Detours\modules.cpp">
+      <Filter>lib\Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\Hooks\FormsCommon.cpp">
+      <Filter>Core\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\Hooks\GameCommon.cpp">
+      <Filter>Core\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\Hooks\Script.cpp">
+      <Filter>Core\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\Hooks\SleepingCommon.cpp">
+      <Filter>Core\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\Device\Device.cpp">
       <Filter>Core\Device</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Device\Hook.cpp">
+    <ClCompile Include="..\src\core\Device\Hook.cpp">
       <Filter>Core\Device</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Hooks.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Animation.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Dodge.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Forms.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Texture.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\FrameRate.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\ShaderIO.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Sleeping.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Game.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Settings.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Occlusion.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Memory.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Camera.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Mounted.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Shadows.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Render.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Grass.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Events.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\FlyCam.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Oblivion\Equipment.cpp">
-      <Filter>Core\Hooks\Oblivion</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp">
-      <Filter>Core\Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\GameCommon.cpp">
-      <Filter>Core\Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\SleepingCommon.cpp">
-      <Filter>Core\Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\Script.cpp">
-      <Filter>Core\Hooks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
