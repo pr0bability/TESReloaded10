@@ -42,6 +42,8 @@ void RenderPass::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT vertices
 	for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 		TheRenderManager->device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
 	}
+
+	if (!GeoData->IB) return; // breaks on hand models for some reason? TODO: figure out what breaks for hands
 	TheRenderManager->device->SetIndices(GeoData->IB);
 	if (GeoData->FVF)
 		TheRenderManager->renderState->SetFVF(GeoData->FVF, false);
