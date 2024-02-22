@@ -127,3 +127,23 @@ void TextureManager::SetWaterReflectionMap(IDirect3DBaseTexture9* WaterReflectio
 	}
 }
 
+
+
+/*
+* Debug function to save the texture from the sampler into a "Test" folder
+*/
+void TextureManager::DumpToFile (IDirect3DTexture9* Texture, const char*  Name) {
+	IDirect3DSurface9* Surface = nullptr;
+	Texture->GetSurfaceLevel(0, &Surface);
+	char path[32] = ".\\Test\\";
+	strcat(path, Name);
+	strcat(path, ".jpg");
+	if (Surface) {
+		D3DXSaveSurfaceToFileA(path, D3DXIFF_JPG, Surface, NULL, NULL);
+		Surface->Release();
+		Surface = nullptr;
+	}
+	else {
+		Logger::Log("Surface is null for %s", Name);
+	}
+}

@@ -323,25 +323,6 @@ void ShaderTextureValue::GetTextureRecord() {
 
 
 /*
-* Debug function to save the texture from the sampler into a "Test" folder
-*/
-void ShaderTextureValue::SaveToFile() {
-	IDirect3DSurface9* Surface = nullptr;
-	((IDirect3DTexture9*)(Texture->Texture))->GetSurfaceLevel(0, &Surface);
-	char path[32] = ".\\Test\\";
-	strcat(path, Name);
-	strcat(path, ".jpg");
-	if (Surface) {
-		D3DXSaveSurfaceToFileA(path, D3DXIFF_JPG, Surface, NULL, NULL);
-		Surface->Release();
-		Surface = nullptr;
-	}
-	else {
-		Logger::Log("Surface is null for %s", Name);
-	}
-}
-
-/*
 * Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
 */
 void ShaderFloatValue::GetValueFromConstantTable() {

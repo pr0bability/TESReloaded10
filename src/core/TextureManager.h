@@ -14,6 +14,7 @@ public:
 	IDirect3DBaseTexture9*	GetFileTexture(std::string TexturePath, TextureRecord::TextureRecordType type);
 	IDirect3DBaseTexture9* 	GetCachedTexture(std::string& pathS);
 	IDirect3DBaseTexture9*	GetTextureByName(std::string& Name);
+	void					DumpToFile(IDirect3DTexture9* Texture, const char* Name);
 
 	IDirect3DTexture9*		SourceTexture;
 	IDirect3DSurface9*		SourceSurface;
