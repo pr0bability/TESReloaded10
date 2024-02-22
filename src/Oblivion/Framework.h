@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stack>
+#include <string>
 #include <unordered_map>
 #include <sstream>
 #include <fstream>
@@ -25,7 +27,7 @@
 #include "../../src/base/SafeWrite.h"
 #include "../../src/base/PluginVersion.h"
 #include "Plugin.h"
-#include "obse/Game.h"
+#include "obse/GameNi.h"
 #include "obse/GameHavok.h"
 #include "obse/Game.h"
 #include "Defines.h"
