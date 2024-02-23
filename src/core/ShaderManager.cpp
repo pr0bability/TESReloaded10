@@ -612,8 +612,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
-	Effects.Bloom->Render(Device, RenderTarget, Effects.Bloom->Textures.BloomSurface, 0, true, SourceSurface);
-	Device->StretchRect(RenderedSurface, NULL, RenderTarget, NULL, D3DTEXF_NONE);
+	Effects.Bloom->RenderBloomBuffer(RenderTarget);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }

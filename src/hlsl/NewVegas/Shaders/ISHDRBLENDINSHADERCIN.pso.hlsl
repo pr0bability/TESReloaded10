@@ -58,11 +58,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 NVRbloom = tex2D(TESR_BloomBuffer, IN.texcoord_1.xy);
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
-    NVRbloom.rgb = pows(NVRbloom.rgb, gammaCorrection) * TESR_BloomData.z; // linearize bloom
+    NVRbloom.rgb = pows(NVRbloom.rgb, gammaCorrection); // linearize bloom
     bloom.rgb = pows(bloom.rgb, gammaCorrection); // linearize bloom
     final.rgb = pows(final.rgb, gammaCorrection); // linearize color
     
-    bloom = lerp(bloom, NVRbloom, TESR_BloomData.w) + bloom * TESR_DebugVar.x;
+    // bloom = lerp(bloom, NVRbloom, TESR_BloomData.w) + bloom;
+    bloom = lerp(bloom, NVRbloom, TESR_BloomData.w);
     // scale bloom while maintaining color
     bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0.0), TESR_HDRBloomData.y);
     
