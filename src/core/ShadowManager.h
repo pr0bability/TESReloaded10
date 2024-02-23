@@ -18,10 +18,6 @@ public:
 	void					AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, bool isLand);
 	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 	void					RenderAccums();
-	//void					RenderGeometry(NiGeometry* Geo);
-	//void					RenderSkinnedGeometry(NiGeometry* Geo);
-	//void					RenderSpeedTreeGeometry(NiGeometry* Geo);
-//	void					DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
 	D3DXMATRIX				GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir);
 	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj);
 	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
