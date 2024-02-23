@@ -262,7 +262,7 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 	}
 
 	auto timer = TimeLogger();
-	if (SourceBuffer) Device->StretchRect(RenderTarget, NULL, SourceBuffer, NULL, D3DTEXF_NONE);
+	if (SourceBuffer) Device->StretchRect(RenderTarget, NULL, SourceBuffer, NULL, D3DTEXF_LINEAR);
 
 	try {
 		D3DXHANDLE technique = Effect->GetTechnique(techniqueIndex);
@@ -275,7 +275,7 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 			Effect->BeginPass(p);
 			Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 			Effect->EndPass();
-			Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
+			if (RenderedSurface) Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_LINEAR); // copy the result from the pass into the texture
 		}
 		Effect->End();
 	}
