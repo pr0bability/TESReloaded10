@@ -544,24 +544,6 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 }
 
-//
-///*
-//* Deletes an Effect based on the Effect Record effect type. 
-//*/
-//void ShaderManager::DisposeEffect(EffectRecord** Effect) {
-//	*Effect = NULL;
-//	delete* Effect;
-//
-//	//	case EffectRecord::EffectRecordType::Extra:
-//	//		ExtraEffectsList::iterator v = ExtraEffects.begin();
-//	//		while (v != ExtraEffects.end()) {
-//	//			delete v->second;
-//	//			v++;
-//	//		}
-//	//		ExtraEffects.clear();
-//	//		break;
-//	//}
-//}
 
 /*
 * Renders a given effect to an arbitrary render target
@@ -744,12 +726,6 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		IsMenuSwitch = false;
 		return;
 	}
-
-	//bool enable = !TheSettingManager->GetMenuShaderEnabled(Name);
-	//DisposeShader(Name);
-	//if (enable) CreateShader(Name);
-	//TheSettingManager->SetMenuShaderEnabled(Name, enable);
-
 
 	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
 	//	EffectsSettings->Extra = !EffectsSettings->Extra;
