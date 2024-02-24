@@ -5,8 +5,16 @@ class BloomEffect : public EffectRecord
 public:
 	BloomEffect() : EffectRecord("Bloom") {};
 
+	struct BloomSettings {
+		float Treshold;
+		float Scale;
+		float Strength;
+	};
 	struct BloomSettingsStruct {
 		D3DXVECTOR4		Resolution[8];
+		BloomSettings	Main;
+		BloomSettings	Night;
+		BloomSettings	Interiors;
 	};
 	BloomSettingsStruct Settings;
 

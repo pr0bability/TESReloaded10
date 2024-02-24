@@ -63,7 +63,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = pows(final.rgb, gammaCorrection); // linearize color
     
     // bloom = lerp(bloom, NVRbloom, TESR_BloomData.w) + bloom;
-    bloom = lerp(bloom, NVRbloom, TESR_BloomData.w);
+    bloom = lerp(bloom, NVRbloom * max(0, TESR_BloomData.z), TESR_BloomData.w);
     // scale bloom while maintaining color
     bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0.0), TESR_HDRBloomData.y);
     

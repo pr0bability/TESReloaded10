@@ -157,7 +157,17 @@ Enabled = false
 [_Shaders.Bloom]
 
 [_Shaders.Bloom.Main]
-Treshold = 1.0                          # treshold value above which lights will bloom
+Treshold = 2.0                          # treshold value above which lights will bloom
+Scale = 0.01                            # scale the brightness of the bloom
+Strength = 0.4                          # power of the bloom when applied
+
+[_Shaders.Bloom.Night]
+Treshold = 0.4                          # treshold value above which lights will bloom
+Scale = 2.0                             # scale the brightness of the bloom
+Strength = 1.1                          # power of the bloom when applied
+
+[_Shaders.Bloom.Interiors]
+Treshold = 0.01                         # treshold value above which lights will bloom
 Scale = 1.0                             # scale the brightness of the bloom
 Strength = 1.0                          # power of the bloom when applied
 

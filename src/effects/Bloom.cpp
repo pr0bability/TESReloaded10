@@ -24,13 +24,23 @@ void BloomEffect::RegisterTextures() {
 };
 
 void BloomEffect::UpdateSettings() {
-	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Treshold");
-	Constants.Data.y = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Scale");
-	Constants.Data.z = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Strength");
+	Settings.Main.Treshold = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Treshold");
+	Settings.Main.Scale = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Scale");
+	Settings.Main.Strength = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Strength");
+	Settings.Night.Treshold = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "Treshold");
+	Settings.Night.Scale = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "Scale");
+	Settings.Night.Strength = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "Strength");
+	Settings.Interiors.Treshold = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Treshold");
+	Settings.Interiors.Scale = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Scale");
+	Settings.Interiors.Strength = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Strength");
 	Constants.Data.w = Enabled;
 };
 
-void BloomEffect::UpdateConstants() {};
+void BloomEffect::UpdateConstants() {
+	Constants.Data.x = TheShaderManager->GetTransitionValue(Settings.Main.Treshold, Settings.Night.Treshold, Settings.Interiors.Treshold);
+	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.Main.Scale, Settings.Night.Scale, Settings.Interiors.Scale);
+	Constants.Data.z = TheShaderManager->GetTransitionValue(Settings.Main.Strength, Settings.Night.Strength, Settings.Interiors.Strength);
+};
 
 
 void BloomEffect::RenderBloomBuffer(IDirect3DSurface9* RenderTarget) {
@@ -41,23 +51,31 @@ void BloomEffect::RenderBloomBuffer(IDirect3DSurface9* RenderTarget) {
 	Constants.Resolution = Settings.Resolution[0];
 	Render(Device, Textures.BloomSurface[0], NULL, 0, false, NULL);
 	//TheTextureManager->DumpToFile(Textures.BloomTexture[0], "bloom");
+
 	int multiple = 1;
 	int passNumber = 1;
 	for (int i = 1; i <= 5; i++) {
 		multiple *= 2;
 		//std::string name = bufferName + std::to_string(multiple);
+		Constants.Resolution = Settings.Resolution[i];
 		//Logger::Log("rendering bloom pass %i to buffer %i : %s", passNumber, i, name);
+
 		Device->SetRenderTarget(0, Textures.BloomSurface[i]);
 		Render(Device, Textures.BloomSurface[i], NULL, passNumber, false, NULL);
 		//TheTextureManager->DumpToFile(Textures.BloomTexture[i], name.c_str());
+		passNumber++;
 	}
 
 	for (int i = 4; i >= 0; i--) {
 		multiple /= 2;
 		//std::string name = (i> 0 ? bufferName + std::to_string(multiple) : bufferName) + "up";
+		//Logger::Log("rendering bloom pass %i to buffer %i : %s", passNumber, i, name);
+
+		Constants.Resolution = Settings.Resolution[i];
 		Device->SetRenderTarget(0, Textures.BloomSurface[i]);
 		Render(Device, Textures.BloomSurface[i], NULL, passNumber, false, NULL);
 		//TheTextureManager->DumpToFile(Textures.BloomTexture[i], name.c_str());
+		passNumber++;
 	}
 
 	Device->SetRenderTarget(0, RenderTarget);
