@@ -11,7 +11,7 @@ public:
 		float Strength;
 	};
 	struct BloomSettingsStruct {
-		D3DXVECTOR4		Resolution[8];
+		D3DXVECTOR4		Resolution[6];
 		BloomSettings	Main;
 		BloomSettings	Night;
 		BloomSettings	Interiors;
@@ -25,8 +25,8 @@ public:
 	BloomStruct		Constants;
 
 	struct BloomTexturesStruct {
-		IDirect3DTexture9* BloomTexture[8];
-		IDirect3DSurface9* BloomSurface[8];
+		IDirect3DTexture9* BloomTexture[6];
+		IDirect3DSurface9* BloomSurface[6];
 	};
 	BloomTexturesStruct		Textures;
 
