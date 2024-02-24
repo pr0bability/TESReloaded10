@@ -9,7 +9,7 @@ void BloomEffect::RegisterTextures() {
 	std::string bufferName = "TESR_BloomBuffer";
 	int multiple = 1;
 	for (int i = 0; i < 6; i++) {
-		const char* name = i>0?(bufferName + std::to_string(multiple)).c_str():bufferName.c_str();
+		std::string name = (i>0?bufferName + std::to_string(multiple):bufferName);
 		//Logger::Log("creating %s multiple %i %i:%i", name, multiple, TheRenderManager->width / multiple, TheRenderManager->height / multiple);
 		multiple *= 2;
 
@@ -19,7 +19,7 @@ void BloomEffect::RegisterTextures() {
 			1.0f / (float)(TheRenderManager->width / multiple), 
 			1.0f / (float)(TheRenderManager->height / multiple)
 		);
-		TheTextureManager->InitTexture(name, &Textures.BloomTexture[i], &Textures.BloomSurface[i], Settings.Resolution[i].x, Settings.Resolution[i].y, D3DFMT_A16B16G16R16F);
+		TheTextureManager->InitTexture(name.c_str(), &Textures.BloomTexture[i], &Textures.BloomSurface[i], Settings.Resolution[i].x, Settings.Resolution[i].y, D3DFMT_A16B16G16R16F);
 	}
 };
 
