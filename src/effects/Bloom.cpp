@@ -45,6 +45,8 @@ void BloomEffect::UpdateConstants() {
 
 
 void BloomEffect::RenderBloomBuffer(IDirect3DSurface9* RenderTarget) {
+	if (!Enabled) return; // skip rendering if the effect is disabled
+
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	std::string bufferName = "TESR_BloomBuffer";
 

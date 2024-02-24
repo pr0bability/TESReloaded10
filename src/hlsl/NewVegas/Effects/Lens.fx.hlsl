@@ -42,11 +42,15 @@ float4 Lens(VSOUT IN) : COLOR0
 {
 	float2 uv = IN.UVCoord;
     float4 color = linearize(tex2D(TESR_SourceBuffer, uv));
-    float4 dirtColor = tex2D(TESR_LensSampler, uv);
+    float4 dirtColor = pows(tex2D(TESR_LensSampler, uv), max(0, 3 - TESR_LensData.z));
 
     // Get the bloom mask to calculate areas where dirt lens will appear
 	float4 bloom = tex2D(TESR_BloomBuffer, IN.UVCoord);
-    color = color + color * saturate(dirtColor.r * bloom) * TESR_LensData.x;
+    float bloomLuma = luma(bloom);
+    bloom = pows(bloomLuma, TESR_LensData.y) * (bloom / bloomLuma);
+    // bloom = bloom/bloomLuma * (saturate(pows(bloomLuma, TESR_LensData.y)) + max(0, bloomLuma - 1));
+    // color += saturate(dirtColor.r * bloom) * TESR_LensData.x;
+    color += dirtColor.r * bloom * TESR_LensData.x;
 
     return delinearize(float4(color.rgb, 1));
 }

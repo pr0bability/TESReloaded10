@@ -5,10 +5,16 @@ class LensEffect : public EffectRecord
 public:
 	LensEffect() : EffectRecord("Lens") {};
 
+	struct LensSettingsStruct {
+		float bloomExponent;
+		float strength;
+		float smudginess;
+	};
+
 	struct LensSettings {
-		float MainThreshold;
-		float NightThreshold;
-		float InteriorThreshold;
+		LensSettingsStruct Main;
+		LensSettingsStruct Interiors;
+		LensSettingsStruct Night;
 	};
 	LensSettings	Settings;
 
