@@ -54,17 +54,18 @@ float4 sampleBox(float2 uv, sampler2D buffer, float offset) {
 // downsample/upsample a part of the screen given by the scaleFactor
 float4 ScaleDown(VSOUT IN, uniform sampler2D buffer) : COLOR0
 {
-	float2 uv = IN.UVCoord - float2(0.0, 0.0) * TESR_BloomResolution.zw;
-	return sampleBox(uv, buffer, 0.5);
+	float2 uv = IN.UVCoord;
+	return sampleBox(uv, buffer, 1.0);
 }
 
 // downsample/upsample a part of the screen given by the scaleFactor
 float4 ScaleUp(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer) : COLOR0
 {
-	float2 uv = IN.UVCoord + float2(1.0, 1.0) * 0.95 * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
+	// float2 uv = IN.UVCoord + float2(1.0, 1.0) * 0.95 * TESR_DebugVar.x * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
+	float2 uv = IN.UVCoord + float2(1.0, 1.0) * 1.33 * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
 	float4 color = sampleBox(uv, buffer, 1);
 
-	float4 addColor = tex2D(addBuffer, uv);
+	float4 addColor = tex2D(addBuffer, IN.UVCoord + float2(0.001, 0.001)); // fix for slight grid effect happening at high brightness
 	return float4(color.rgb + addColor.rgb, 1);
 }
 
