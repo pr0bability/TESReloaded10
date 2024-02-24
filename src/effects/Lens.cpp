@@ -1,14 +1,21 @@
 #include "Lens.h"
 
 void LensEffect::UpdateConstants() {
-	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.MainThreshold, Settings.NightThreshold, Settings.InteriorThreshold);
+	Constants.Data.x = TheShaderManager->GetTransitionValue(Settings.Main.strength, Settings.Night.strength, Settings.Interiors.strength);
+	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.Main.bloomExponent, Settings.Night.bloomExponent, Settings.Interiors.bloomExponent);
+	Constants.Data.z = TheShaderManager->GetTransitionValue(Settings.Main.smudginess, Settings.Night.smudginess, Settings.Interiors.smudginess);
 }
 
 void LensEffect::UpdateSettings(){
-	Constants.Data.x = TheSettingManager->GetSettingF("Shaders.Lens.Main", "DirtLensAmount");
-	Settings.MainThreshold = TheSettingManager->GetSettingF("Shaders.Lens.Main", "ExteriorBloomTreshold");
-	Settings.NightThreshold = TheSettingManager->GetSettingF("Shaders.Lens.Main", "NightBloomTreshold");
-	Settings.InteriorThreshold = TheSettingManager->GetSettingF("Shaders.Lens.Main", "InteriorBloomTreshold");
+	Settings.Main.bloomExponent = TheSettingManager->GetSettingF("Shaders.Lens.Main", "BloomExponent");
+	Settings.Main.strength = TheSettingManager->GetSettingF("Shaders.Lens.Main", "Strength");
+	Settings.Main.smudginess = TheSettingManager->GetSettingF("Shaders.Lens.Main", "Smudginess");
+	Settings.Night.bloomExponent = TheSettingManager->GetSettingF("Shaders.Lens.Night", "BloomExponent");
+	Settings.Night.strength = TheSettingManager->GetSettingF("Shaders.Lens.Night", "Strength");
+	Settings.Night.smudginess = TheSettingManager->GetSettingF("Shaders.Lens.Night", "Smudginess");
+	Settings.Interiors.bloomExponent = TheSettingManager->GetSettingF("Shaders.Lens.Interiors", "BloomExponent");
+	Settings.Interiors.strength = TheSettingManager->GetSettingF("Shaders.Lens.Interiors", "Strength");
+	Settings.Interiors.smudginess = TheSettingManager->GetSettingF("Shaders.Lens.Interiors", "Smudginess");
 }
 
 void LensEffect::RegisterConstants() {

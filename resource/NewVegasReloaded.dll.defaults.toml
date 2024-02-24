@@ -443,10 +443,19 @@ Enabled = true                        # Basic Image adjustment controls.
 
 
 [_Shaders.Lens.Main]
-DirtLensAmount = 0.4                  # Global effect strength multiplier.
-ExteriorBloomTreshold = 0.7           # Treshold for the max brightness to trigger the effect in exteriors.
-NightBloomTreshold = 0.1              # Treshold for the max brightness to trigger the effect at night.
-InteriorBloomTreshold = 0.6           # Treshold for the max brightness to trigger the effect in interiors.
+Strength = 0.4                  # Global effect strength multiplier.
+BloomExponent = 0.7             # Determins how far from the light source the dirt particles are lit 
+Smudginess = 0.0                # Scales the texture so that more of the screen is affected 
+
+[_Shaders.Lens.Night]
+Strength = 0.4                  # Global effect strength multiplier.
+BloomExponent = 0.7             # Determins how far from the light source the dirt particles are lit
+Smudginess = 0.4                # Scales the texture so that more of the screen is affected
+
+[_Shaders.Lens.Interiors]
+Strength = 0.05                 # Global effect strength multiplier.
+BloomExponent = 0.6             # Determins how far from the light source the dirt particles are lit
+Smudginess = 0.2                # Scales the texture so that more of the screen is affected
 
 [_Shaders.Lens.Status]
 Enabled = true                        # Simulates lens smudges refracting light around brightest areas of the screen.
