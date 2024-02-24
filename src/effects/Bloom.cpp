@@ -8,9 +8,9 @@ void BloomEffect::RegisterConstants() {
 void BloomEffect::RegisterTextures() {
 	std::string bufferName = "TESR_BloomBuffer";
 	int multiple = 1;
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < 6; i++) {
 		const char* name = i>0?(bufferName + std::to_string(multiple)).c_str():bufferName.c_str();
-		Logger::Log("creating %s multiple %i %i:%i", name, multiple, TheRenderManager->width / multiple, TheRenderManager->height / multiple);
+		//Logger::Log("creating %s multiple %i %i:%i", name, multiple, TheRenderManager->width / multiple, TheRenderManager->height / multiple);
 		multiple *= 2;
 
 		Settings.Resolution[i] = D3DXVECTOR4(
@@ -36,6 +36,7 @@ void BloomEffect::UpdateSettings() {
 	Constants.Data.w = Enabled;
 };
 
+
 void BloomEffect::UpdateConstants() {
 	Constants.Data.x = TheShaderManager->GetTransitionValue(Settings.Main.Treshold, Settings.Night.Treshold, Settings.Interiors.Treshold);
 	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.Main.Scale, Settings.Night.Scale, Settings.Interiors.Scale);
@@ -50,31 +51,25 @@ void BloomEffect::RenderBloomBuffer(IDirect3DSurface9* RenderTarget) {
 	Device->SetRenderTarget(0, Textures.BloomSurface[0]);
 	Constants.Resolution = Settings.Resolution[0];
 	Render(Device, Textures.BloomSurface[0], NULL, 0, false, NULL);
-	//TheTextureManager->DumpToFile(Textures.BloomTexture[0], "bloom");
 
 	int multiple = 1;
 	int passNumber = 1;
+
+	//progressively blur & downsample
 	for (int i = 1; i <= 5; i++) {
 		multiple *= 2;
-		//std::string name = bufferName + std::to_string(multiple);
 		Constants.Resolution = Settings.Resolution[i];
-		//Logger::Log("rendering bloom pass %i to buffer %i : %s", passNumber, i, name);
-
 		Device->SetRenderTarget(0, Textures.BloomSurface[i]);
 		Render(Device, Textures.BloomSurface[i], NULL, passNumber, false, NULL);
-		//TheTextureManager->DumpToFile(Textures.BloomTexture[i], name.c_str());
 		passNumber++;
 	}
 
+	//progressively blur & upsample and combine
 	for (int i = 4; i >= 0; i--) {
 		multiple /= 2;
-		//std::string name = (i> 0 ? bufferName + std::to_string(multiple) : bufferName) + "up";
-		//Logger::Log("rendering bloom pass %i to buffer %i : %s", passNumber, i, name);
-
 		Constants.Resolution = Settings.Resolution[i];
 		Device->SetRenderTarget(0, Textures.BloomSurface[i]);
 		Render(Device, Textures.BloomSurface[i], NULL, passNumber, false, NULL);
-		//TheTextureManager->DumpToFile(Textures.BloomTexture[i], name.c_str());
 		passNumber++;
 	}
 

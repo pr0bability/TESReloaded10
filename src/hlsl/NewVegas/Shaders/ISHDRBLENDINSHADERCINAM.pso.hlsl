@@ -4,6 +4,7 @@
 // Parameters:
 sampler2D Src0 : register(s0);
 sampler2D DestBlend : register(s1);
+sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
 
 float4 HDRParam : register(c1);
 float3 BlurScale : register(c2);
@@ -17,6 +18,8 @@ float4 TESR_HDRBloomData : register(c25);
 float4 TESR_HDRData : register(c27);
 float4 TESR_LotteData : register(c28);
 float4 TESR_ToneMapping : register(c29);
+float4 TESR_BloomData : register(c30); //
+
 
 
 // Registers:
@@ -54,12 +57,14 @@ VS_OUTPUT main(VS_INPUT IN) {
     float gammaCorrection = max(1.0, TESR_ToneMapping.w);
 
     float4 background = tex2D(DestBlend, IN.ScreenOffset.xy); // sdr image (already tonemapped) displayed within the mask
+    float4 NVRbloom = tex2D(TESR_BloomBuffer, IN.texcoord_1.xy);
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
     bloom.rgb = pows(bloom.rgb, gammaCorrection); // linearize bloom
     final.rgb = pows(final.rgb, gammaCorrection); // linearize color
     
     // scale bloom while maintaining color
+    bloom = lerp(bloom, NVRbloom * max(0, TESR_BloomData.z), TESR_BloomData.w);
     bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0.0), TESR_HDRBloomData.y);
 
     float cinematicScalar = TESR_HDRData.z;

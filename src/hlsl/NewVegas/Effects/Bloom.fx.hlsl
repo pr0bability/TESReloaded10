@@ -55,28 +55,22 @@ float4 sampleBox(float2 uv, sampler2D buffer, float offset) {
 float4 ScaleDown(VSOUT IN, uniform sampler2D buffer) : COLOR0
 {
 	float2 uv = IN.UVCoord - float2(0.0, 0.0) * TESR_BloomResolution.zw;
-	// float2 uv = IN.UVCoord;
 	return sampleBox(uv, buffer, 0.5);
 }
 
 // downsample/upsample a part of the screen given by the scaleFactor
 float4 ScaleUp(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer) : COLOR0
 {
-	float2 uv = IN.UVCoord + float2(1.0, 1.0)* 0.8 * TESR_BloomResolution.zw;
-	// float2 uv = IN.UVCoord;
+	float2 uv = IN.UVCoord + float2(1.0, 1.0) * 0.95 * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
 	float4 color = sampleBox(uv, buffer, 1);
 
 	float4 addColor = tex2D(addBuffer, uv);
 	return float4(color.rgb + addColor.rgb, 1);
 }
 
-float4 Transfert(VSOUT IN, uniform sampler2D buffer) : COLOR0
+
+float4 Bloom(VSOUT IN ):COLOR0
 {
-	return tex2D(buffer, IN.UVCoord);
-}
-
-float4 Bloom(VSOUT IN ):COLOR0{
-
 	// quick average lum with 4 samples at corner pixels
 	float4 color = linearize(sampleBox(IN.UVCoord, TESR_RenderedBuffer, 0.5));
 
