@@ -64,10 +64,8 @@ public:
 	void					GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[]);
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
-	ShaderCollection*		CreateCollection(const char* Name);
 	ShaderCollection*		GetShaderCollection(const char* Name);
 	float					GetTransitionValue(float Day, float Night, float Interior);
-	void					DisposeEffect(EffectRecord** Effect);  // unused?
 	void					RenderEffects(IDirect3DSurface9* RenderTarget);
 	void					RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget);
 	void					RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectRecord* Effect, bool clearRenderTarget);
@@ -84,6 +82,7 @@ public:
 		ColoringEffect*			Coloring;
 		CinemaEffect*			Cinema;
 		ExposureEffect*			Exposure;
+		FlashlightEffect*		Flashlight;
 		CombineDepthEffect*		CombineDepth;
 		DepthOfFieldEffect*		DepthOfField;
 		DebugEffect*			Debug;

@@ -145,6 +145,7 @@
     <ClCompile Include="..\src\effects\Debug.cpp" />
     <ClCompile Include="..\src\effects\DepthOfField.cpp" />
     <ClCompile Include="..\src\effects\Exposure.cpp" />
+    <ClCompile Include="..\src\effects\Flashlight.cpp" />
     <ClCompile Include="..\src\effects\GodRays.cpp" />
     <ClCompile Include="..\src\effects\Grass.cpp" />
     <ClCompile Include="..\src\effects\ImageAdjust.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="..\src\effects\Effects.h" />
     <ClInclude Include="..\src\effects\Exposure.h" />
     <ClInclude Include="..\src\effects\ExtraShaders.h" />
+    <ClInclude Include="..\src\effects\Flashlight.h" />
     <ClInclude Include="..\src\effects\GodRays.h" />
     <ClInclude Include="..\src\effects\Grass.h" />
     <ClInclude Include="..\src\effects\ImageAdjust.h" />

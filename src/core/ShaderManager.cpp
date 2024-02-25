@@ -32,6 +32,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterEffect<DepthOfFieldEffect>(&TheShaderManager->Effects.DepthOfField);
 	TheShaderManager->RegisterEffect<DebugEffect>(&TheShaderManager->Effects.Debug);
 	TheShaderManager->RegisterEffect<ExposureEffect>(&TheShaderManager->Effects.Exposure);
+	TheShaderManager->RegisterEffect<FlashlightEffect>(&TheShaderManager->Effects.Flashlight);
 	TheShaderManager->RegisterEffect<GodRaysEffect>(&TheShaderManager->Effects.GodRays);
 	TheShaderManager->RegisterEffect<ImageAdjustEffect>(&TheShaderManager->Effects.ImageAdjust);
 	TheShaderManager->RegisterEffect<LensEffect>(&TheShaderManager->Effects.Lens);
@@ -603,6 +604,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+
+	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {

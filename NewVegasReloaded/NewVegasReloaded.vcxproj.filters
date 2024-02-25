@@ -307,6 +307,9 @@
     <ClInclude Include="..\src\effects\Bloom.h">
       <Filter>Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\effects\Flashlight.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -526,6 +529,9 @@
       <Filter>NewVegas\nvse</Filter>
     </ClCompile>
     <ClCompile Include="..\src\effects\Bloom.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Flashlight.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
   </ItemGroup>
