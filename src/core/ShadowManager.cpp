@@ -96,7 +96,7 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::
 
 
 // Detect which pass the object must be added to
-void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
+void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms) {
 	auto timelog = TimeLogger();
 
 	if (!NiObject->IsGeometry()) {
@@ -113,7 +113,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 	if (skinnedGeoPass->AccumObject(geo)) {}
 	else if (speedTreePass->AccumObject(geo)) {}
-	else if (ShadowMap->Forms.AlphaEnabled && alphaPass->AccumObject(geo)) {}
+	else if (Forms->AlphaEnabled && alphaPass->AccumObject(geo)) {}
 	else geometryPass->AccumObject(geo);
 
 	//timelog.LogTime("ShadowManager::AccumObject");
@@ -121,13 +121,13 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 
 // go through the Object children and sort the ones that will be rendered based on their properties
-void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, bool isLand) {
+void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand) {
 	std::stack<NiAVObject*> containers;
 	NiAVObject* child;
 	NiAVObject* object;
 	NiNode* Node;
 
-	AccumObject(&containers, NiObject, ShadowMap); //list all objects contained, or sort the object if not a container
+	AccumObject(&containers, NiObject, Forms); //list all objects contained, or sort the object if not a container
 
 	// Gather geometry
 	while (!containers.empty()) {
@@ -136,15 +136,15 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::S
 
     	Node = object ? object->IsNiNode() : nullptr;
     	if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling containers
-		if (!isLand && Node->GetWorldBoundRadius() < ShadowMap->Forms.MinRadius) continue;
+		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 		for (int i = 0; i < Node->m_children.end; i++) {
 			child = Node->m_children.data[i];
 			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling children
-			if (!isLand && child->GetWorldBoundRadius() < ShadowMap->Forms.MinRadius) continue;
+			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
-			AccumObject(&containers, child, ShadowMap);
+			AccumObject(&containers, child, Forms);
 		}
 	}
 }
@@ -210,14 +210,14 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffec
 	if (ShadowMap->Forms.Terrain) {
 		NiNode* LandNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Land);
 		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
-		if (LandNode) AccumChildren((NiAVObject*)LandNode, ShadowMap, true);
+		if (LandNode) AccumChildren((NiAVObject*)LandNode, &ShadowMap->Forms, true);
 	}
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
 		if (TESObjectREFR* Ref = GetRef(Entry->item, &ShadowMap->Forms)) {
 			NiNode* RefNode = Ref->GetNode();
-			if (TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) AccumChildren(RefNode, ShadowMap, false);
+			if (TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) AccumChildren(RefNode, &ShadowMap->Forms, false);
 		}
 		Entry = Entry->next;
 	}
@@ -333,7 +333,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 			if (skinnedGeoPass->AccumObject(geo)) {}
 			else if (speedTreePass->AccumObject(geo)) {}
-			else if (Shadows->Settings.Interiors.AlphaEnabled && alphaPass->AccumObject(geo)) {}
+			else if (Settings->Forms.AlphaEnabled && alphaPass->AccumObject(geo)) {}
 			else geometryPass->AccumObject(geo);
 		}
 		
@@ -528,7 +528,7 @@ void ShadowManager::RenderShadowMaps() {
 	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
-		AlphaEnabled = ShadowsInteriors->AlphaEnabled;
+		AlphaEnabled = ShadowsInteriors->Forms.AlphaEnabled;
 		geometryPass->VertexShader = ShadowCubeMapVertex;
 		geometryPass->PixelShader = ShadowCubeMapPixel;
 		alphaPass->VertexShader = ShadowCubeMapVertex;
