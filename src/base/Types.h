@@ -25,3 +25,9 @@ inline UInt32 ThisCall(UInt32 Method, void* Instance) { class T {}; union { UInt
 inline float ThisCallF(UInt32 Method, void* Instance) { class T {}; union { UInt32 x; float(T::* m)(); } u = { Method }; return ((T*)Instance->*u.m)(); }
 
 inline double ThisCallD(UInt32 Method, void* Instance) { class T {}; union { UInt32 x; float(T::* m)(); } u = { Method }; return ((T*)Instance->*u.m)(); }
+
+template <typename T_Ret = void, typename ...Args>
+__forceinline T_Ret StdCall(UInt32 _addr, Args ...args)
+{
+	return ((T_Ret(__stdcall*)(Args...))_addr)(std::forward<Args>(args)...);
+}
