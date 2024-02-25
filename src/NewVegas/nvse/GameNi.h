@@ -77,6 +77,8 @@ class ImageSpaceManager;
 class ImageSpaceEffectParam;
 class ImageSpaceShaderParam;
 
+#define CREATE_OBJECT(CLASS, ADDRESS) static CLASS* CreateObject() { return StdCall<CLASS*>(ADDRESS); };
+
 struct NiRTTI {
 	const char* name;
 	NiRTTI*		parent;
@@ -658,6 +660,18 @@ public:
 	NiPoint3		direction;			// F0
 };
 assert(sizeof(NiDirectionalLight) == 0xFC);
+
+class NiSpotLight : public NiPointLight {
+public:
+
+	NiPoint3	direction;
+	float		OuterSpotAngle;
+	float		InnerSpotAngle;
+	float		SpotExponent;
+
+	CREATE_OBJECT(NiSpotLight, 0xA94E20);
+};
+assert(sizeof(NiSpotLight) == 0x114);
 
 class NiVBChip {
 public:
