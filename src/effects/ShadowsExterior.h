@@ -26,15 +26,16 @@ public:
 		MapOrtho = 4,
 	};
 
+	//Constants
 	struct ShadowStruct {
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		ScreenSpaceData;
 		D3DXVECTOR4		OrthoData;
 		D3DXVECTOR4		ShadowFade;
-	
 		D3DXMATRIXA16	ShadowWorld;
 		D3DXMATRIX		ShadowViewProj;
 		D3DXMATRIX		ShadowCameraToLight[4];
+		D3DXMATRIX		ShadowSpotlightCameraToLight[SpotLightsMax];
 		D3DXVECTOR4		ShadowCubeMapLightPosition;
 		D3DXVECTOR4		ShadowLightPosition[ShadowCubeMapsMax];
 		D3DXVECTOR4		ShadowCubeMapBlend;
@@ -43,6 +44,7 @@ public:
 
 	typedef std::vector<UInt32> ExcludedFormsList;
 
+	// Settings
 	struct FormsStruct {
 		bool				AlphaEnabled;
 		bool				Activators;
@@ -91,9 +93,8 @@ public:
 
 	struct InteriorsStruct {
 		bool				Enabled;
-		FormsStruct			Forms;
-		bool				AlphaEnabled;
 		bool				TorchesCastShadows;
+		FormsStruct			Forms;
 		int					LightPoints;
 		int					Quality;
 		int					ShadowCubeMapSize;
@@ -126,6 +127,8 @@ public:
 		IDirect3DSurface9* ShadowPassSurface;
 		IDirect3DCubeTexture9* ShadowCubeMapTexture[ShadowCubeMapsMax];
 		IDirect3DSurface9* ShadowCubeMapSurface[ShadowCubeMapsMax][6];
+		IDirect3DTexture9* ShadowSpotlightTexture[SpotLightsMax];
+		IDirect3DSurface9* ShadowSpotlightSurface[SpotLightsMax];
 		IDirect3DSurface9* ShadowCubeMapDepthSurface;
 	};
 	ShadowTextures	Textures;
