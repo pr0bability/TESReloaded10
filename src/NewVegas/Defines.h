@@ -12,6 +12,7 @@
 #define SamplerStatesMax 12
 #define ShadowCubeMapsMax 12
 #define TrackedLightsMax 12
+#define SpotLightsMax 1
 
 #define WordWaterHeightMapBuffer "TESR_WaterHeightMapBuffer"
 #define WordWaterReflectionMapBuffer "TESR_WaterReflectionMapBuffer"

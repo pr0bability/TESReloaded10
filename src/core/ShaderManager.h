@@ -153,6 +153,7 @@ public:
     bool                    IsMenuSwitch;
     bool                    orthoRequired;
     bool                    avglumaRequired;
+	D3DXMATRIX				SpotLightWorldToLightMatrix[SpotLightsMax];
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightColor[TrackedLightsMax + ShadowCubeMapsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];
