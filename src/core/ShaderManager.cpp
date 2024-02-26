@@ -471,6 +471,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 	// save only the n first lights (based on #define TrackedLightsMax)
 	memset(&TheShaderManager->LightPosition, 0, TrackedLightsMax * sizeof(D3DXVECTOR4)); // clear previous lights from array
+	//memset(&ShadowsConstants->ShadowLightPosition, 0, ShadowCubeMapsMax * sizeof(D3DXVECTOR4)); // clear previous lights from array
 	memset(&TheShaderManager->LightColor, 0, (TrackedLightsMax + ShadowCubeMapsMax) * sizeof(D3DXVECTOR4)); // clear previous lights from array
 
 	// get the data for all tracked lights
@@ -483,22 +484,48 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 #endif
 
 	D3DXVECTOR4 Empty = D3DXVECTOR4(0, 0, 0, 0);
+
+	// TEMP : get data for spotlights. Right now, is done manually since spotlights aren't implemented in the engine
+	SpotLightList[0] = TheShaderManager->Effects.Flashlight->SpotLight;
+
+	//Setting constants
+	if (SpotLightList[0] != nullptr) {
+		TheShaderManager->SpotLightPosition[0] = SpotLightList[0]->m_worldTransform.pos.toD3DXVEC4();
+		TheShaderManager->SpotLightPosition[0].w = SpotLightList[0]->Spec.r; // radius
+		TheShaderManager->SpotLightDirection[0] = D3DXVECTOR4(
+			SpotLightList[0]->m_worldTransform.rot.data[0][0],
+			SpotLightList[0]->m_worldTransform.rot.data[1][0], 
+			SpotLightList[0]->m_worldTransform.rot.data[2][0], 
+			SpotLightList[0]->OuterSpotAngle); // outside angle of the light cone
+		//TheShaderManager->SpotLightDirection[0].w = SpotLightList[0]->Spec.r; 
+		TheShaderManager->SpotLightColor[0] = D3DXVECTOR4(SpotLightList[0]->Diff.r, SpotLightList[0]->Diff.g, SpotLightList[0]->Diff.b, SpotLightList[0]->Dimmer);
+
+		Logger::Log("SpotlightPos %f %f %f %f", TheShaderManager->SpotLightPosition[0].x, TheShaderManager->SpotLightPosition[0].y, TheShaderManager->SpotLightPosition[0].z, TheShaderManager->SpotLightPosition[0].w);
+		Logger::Log("SpotLightDirection %f %f %f %f", TheShaderManager->SpotLightDirection[0].x, TheShaderManager->SpotLightDirection[0].y, TheShaderManager->SpotLightDirection[0].z, TheShaderManager->SpotLightDirection[0].w);
+		Logger::Log("SpotLightColor %f %f %f %f", TheShaderManager->SpotLightColor[0].x, TheShaderManager->SpotLightColor[0].y, TheShaderManager->SpotLightColor[0].z, TheShaderManager->SpotLightColor[0].w);
+	}
+	else {
+		TheShaderManager->SpotLightPosition[0] = Empty;
+		TheShaderManager->SpotLightDirection[0] = Empty;
+		TheShaderManager->SpotLightColor[0] = Empty;
+	}
+
 	std::map<int, ShadowSceneLight*>::iterator v = SceneLights.begin();
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
 		if (v == SceneLights.end()) {
-			// set null values if number of lights in the scene becomes lower than previous iteration
+			// set null values if number of lights in the scene is lower than max amount
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
 				ShadowLightsList[ShadowIndex] = NULL;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = Empty;
-				LightColor[ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
+				LightColor[ShadowIndex] = Empty;
 				ShadowIndex++;
 			}
 			if (LightIndex < TrackedLightsMax) {
 				//Logger::Log("clearing light at index %i", LightIndex);
 				LightsList[LightIndex] = NULL;
 				LightPosition[LightIndex] = Empty;
-				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
+				LightColor[ShadowCubeMapsMax + LightIndex] = Empty;
 				LightIndex++;
 			}
 
