@@ -13,6 +13,8 @@ public:
 	};
 	FlashlightStruct	Constants;
 
+	NiSpotLight* SpotLight;
+
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();
