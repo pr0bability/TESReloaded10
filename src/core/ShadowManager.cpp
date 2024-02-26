@@ -596,7 +596,8 @@ void ShadowManager::RenderShadowMaps() {
 	// track point lights for interiors and exteriors
 	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
 	NiPointLight* Lights[TrackedLightsMax] = { NULL };
-	TheShaderManager->GetNearbyLights(ShadowLights, Lights);
+	NiSpotLight* SpotLights[SpotLightsMax] = { NULL };
+	TheShaderManager->GetNearbyLights(ShadowLights, Lights, SpotLights);
 
 	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		AlphaEnabled = ShadowsInteriors->Forms.AlphaEnabled;

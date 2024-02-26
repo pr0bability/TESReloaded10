@@ -61,7 +61,7 @@ public:
 	void					CreateFrameVertex(UInt32 Width, UInt32 Height, IDirect3DVertexBuffer9** FrameVertex);
 	void					InitializeConstants();
 	void					UpdateConstants();
-	void					GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[]);
+	void					GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[], NiSpotLight* SpotLightList[]);
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
 	ShaderCollection*		GetShaderCollection(const char* Name);
@@ -153,6 +153,9 @@ public:
     bool                    IsMenuSwitch;
     bool                    orthoRequired;
     bool                    avglumaRequired;
+	D3DXVECTOR4				SpotLightPosition[SpotLightsMax];
+	D3DXVECTOR4				SpotLightColor[SpotLightsMax];
+	D3DXVECTOR4				SpotLightDirection[SpotLightsMax];
 	D3DXMATRIX				SpotLightWorldToLightMatrix[SpotLightsMax];
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightColor[TrackedLightsMax + ShadowCubeMapsMax];

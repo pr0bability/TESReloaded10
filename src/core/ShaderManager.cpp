@@ -426,8 +426,7 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 }
 
 
-
-void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[]) {
+void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[], NiSpotLight* SpotLightList[]) {
 	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
 	//Logger::Log(" ==== Getting lights ====");
 	auto timer = TimeLogger();
@@ -480,27 +479,46 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 #endif
 
 	D3DXVECTOR4 Empty = D3DXVECTOR4(0, 0, 0, 0);
-
 	std::map<int, ShadowSceneLight*>::iterator v = SceneLights.begin();
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
-		if (v != SceneLights.end()) {
-			NiPointLight* Light = v->second->sourceLight;
-			if (!Light || Light->EffectType != NiDynamicEffect::EffectTypes::POINT_LIGHT) {
-				v++;
-				continue;
+		if (v == SceneLights.end()) {
+			// set null values if number of lights in the scene becomes lower than previous iteration
+			if (ShadowIndex < ShadowCubeMapsMax) {
+				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
+				ShadowLightsList[ShadowIndex] = NULL;
+				ShadowsConstants->ShadowLightPosition[ShadowIndex] = Empty;
+				LightColor[ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
+				ShadowIndex++;
+			}
+			if (LightIndex < TrackedLightsMax) {
+				//Logger::Log("clearing light at index %i", LightIndex);
+				LightsList[LightIndex] = NULL;
+				LightPosition[LightIndex] = Empty;
+				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
+				LightIndex++;
 			}
 
+			continue;
+		}
+
+		NiPointLight* Light = v->second->sourceLight;
+		if (!Light) {
+			v++;
+			continue;
+		}
+
+		if (Light->EffectType == NiDynamicEffect::EffectTypes::POINT_LIGHT) {
 			// determin if light is a shadow caster
-			bool CastShadow = Settings->UseCastShadowFlag ? Light->CastShadows : true;
+			//bool CastShadow = Settings->UseCastShadowFlag ? Light->CastShadows : true; // Flag is broken by JIP
+			bool CastShadow = true;
 
 #if defined(OBLIVION)
 			// Oblivion exception for carried torch lights 
 			if (TorchOnBeltEnabled && Light->CanCarry == 2) {
 				HighProcessEx* Process = (HighProcessEx*)Player->process;
 				if (Process->OnBeltState == HighProcessEx::State::In) CastShadow = false;
-			}
+		}
 #endif
-
 			D3DXVECTOR4 LightPos = Light->m_worldTransform.pos.toD3DXVEC4();
 			LightPos.w = Light->Spec.r * Settings->LightRadiusMult;
 
@@ -519,26 +537,11 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				LightColor[ShadowCubeMapsMax + ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
 				LightIndex++;
 			};
-
-			v++;
 		}
-		else {
-			// set null values if number of lights in the scene becomes lower than previous iteration
-			if (ShadowIndex < ShadowCubeMapsMax) {
-				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
-				ShadowLightsList[ShadowIndex] = NULL;
-				ShadowsConstants->ShadowLightPosition[ShadowIndex] = Empty;
-				LightColor[ShadowIndex] = D3DXVECTOR4(0, 0, 0, 0);
-				ShadowIndex++;
-			}
-			if (LightIndex < TrackedLightsMax) {
-				//Logger::Log("clearing light at index %i", LightIndex);
-				LightsList[LightIndex] = NULL;
-				LightPosition[LightIndex] = Empty;
-				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(0, 0, 0, 0);
-				LightIndex++;
-			}
+		else if (Light->EffectType == NiDynamicEffect::EffectTypes::POINT_LIGHT) {
+			// Here will go the collecting of the spotlights and setting of constants
 		}
+		v++;
 	}
 
 	timer.LogTime("ShaderManager::GetNearbyLights");
