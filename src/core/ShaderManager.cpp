@@ -486,6 +486,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 	D3DXVECTOR4 Empty = D3DXVECTOR4(0, 0, 0, 0);
 
 	// TEMP : get data for spotlights. Right now, is done manually since spotlights aren't implemented in the engine
+	TheShaderManager->Effects.Flashlight->UpdateConstants();
 	SpotLightList[0] = TheShaderManager->Effects.Flashlight->SpotLight;
 
 	//Setting constants
@@ -499,10 +500,6 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			SpotLightList[0]->OuterSpotAngle); // outside angle of the light cone
 		//TheShaderManager->SpotLightDirection[0].w = SpotLightList[0]->Spec.r; 
 		TheShaderManager->SpotLightColor[0] = D3DXVECTOR4(SpotLightList[0]->Diff.r, SpotLightList[0]->Diff.g, SpotLightList[0]->Diff.b, SpotLightList[0]->Dimmer);
-
-		Logger::Log("SpotlightPos %f %f %f %f", TheShaderManager->SpotLightPosition[0].x, TheShaderManager->SpotLightPosition[0].y, TheShaderManager->SpotLightPosition[0].z, TheShaderManager->SpotLightPosition[0].w);
-		Logger::Log("SpotLightDirection %f %f %f %f", TheShaderManager->SpotLightDirection[0].x, TheShaderManager->SpotLightDirection[0].y, TheShaderManager->SpotLightDirection[0].z, TheShaderManager->SpotLightDirection[0].w);
-		Logger::Log("SpotLightColor %f %f %f %f", TheShaderManager->SpotLightColor[0].x, TheShaderManager->SpotLightColor[0].y, TheShaderManager->SpotLightColor[0].z, TheShaderManager->SpotLightColor[0].w);
 	}
 	else {
 		TheShaderManager->SpotLightPosition[0] = Empty;
