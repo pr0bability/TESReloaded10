@@ -243,7 +243,6 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
 	NiSpotLight* pNiLight = Lights[LightIndex];
-
 	LightPos = &pNiLight->m_worldTransform.pos;
 	Radius = pNiLight->Spec.r * Shadows->Settings.Interiors.LightRadiusMult;
 
@@ -260,20 +259,24 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
 	Shadows->Constants.ShadowCubeMapLightPosition.w = Radius;
 	Shadows->Constants.Data.z = Radius;
-	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle), 1.0f, 0.1f, Radius);
+	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle * 2), 1.0f, 0.1f, Radius);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
-	At = Eye + pNiLight->direction.toD3DXVEC3();
+	D3DXVECTOR3 direction = D3DXVECTOR3(pNiLight->m_worldTransform.rot.data[0][0], pNiLight->m_worldTransform.rot.data[1][0], pNiLight->m_worldTransform.rot.data[2][0]);
+	At = Eye + direction;
 
 	TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 	TESObjectREFR* Ref = NULL;
 	while (Entry) {
 		Ref = GetRef(Entry->item, &Settings->Forms);
-		if (!Ref) continue;
+		if (!Ref) {
+			Entry = Entry->next;
+			continue;
+		}
 
 		// Detect if the object is in front of the light in the direction of the current face
 		// TODO: improve to base on frustum
@@ -283,8 +286,9 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 		float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
+		if (inFront && RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, &Settings->Forms, false);
 
-		//if (inFront && RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, &Settings->Forms, false);
+		Entry = Entry->next;
 	}
 
 	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
@@ -506,6 +510,7 @@ void ShadowManager::RenderShadowMaps() {
 
 	// early out in case shadow rendering is not required
 	if (!ExteriorEnabled && !InteriorEnabled && !TheShaderManager->orthoRequired) return;
+	if (!Player->parentCell) return;
 
 	auto timer = TimeLogger();
 
@@ -617,6 +622,17 @@ void ShadowManager::RenderShadowMaps() {
 			RenderShadowCubeMap(ShadowLights, i);
 
 			std::string message = "ShadowManager::RenderShadowCubeMap ";
+			message += std::to_string(i);
+			shadowMapTimer.LogTime(message.c_str());
+		}
+
+		// render shadow maps for spotlights
+		for (int i = 0; i < SpotLightsMax; i++) {
+			if (SpotLights[i]->Spec.r == 0) continue; //bypass lights with no radius
+
+			RenderShadowSpotlight(SpotLights, i);
+
+			std::string message = "ShadowManager::RenderShadowSpotLight";
 			message += std::to_string(i);
 			shadowMapTimer.LogTime(message.c_str());
 		}
