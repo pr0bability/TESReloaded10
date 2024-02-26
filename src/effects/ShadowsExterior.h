@@ -38,7 +38,6 @@ public:
 		D3DXMATRIX		ShadowSpotlightCameraToLight[SpotLightsMax];
 		D3DXVECTOR4		ShadowCubeMapLightPosition;
 		D3DXVECTOR4		ShadowLightPosition[ShadowCubeMapsMax];
-		D3DXVECTOR4		ShadowCubeMapBlend;
 		D3DXVECTOR4		ShadowMapRadius;
 	};
 
