@@ -22,6 +22,7 @@ public:
 	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj);
 	void					RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex);
+	void					RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
     void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 

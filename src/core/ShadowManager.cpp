@@ -225,18 +225,89 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffec
 	RenderAccums();
 }
 
+
+void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex) {
+	if (Lights[LightIndex] == NULL) return; // No light at current index
+
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+	ShadowsExteriorEffect::InteriorsStruct* Settings = &Shadows->Settings.Interiors;
+
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	float Radius = 0.0f;
+	float MinRadius = Settings->Forms.MinRadius;
+	NiPoint3* LightPos = NULL;
+	D3DXMATRIX View, Proj;
+	D3DXVECTOR3 Eye, At, Up, CameraDirection;
+
+	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
+
+	NiSpotLight* pNiLight = Lights[LightIndex];
+
+	LightPos = &pNiLight->m_worldTransform.pos;
+	Radius = pNiLight->Spec.r * Shadows->Settings.Interiors.LightRadiusMult;
+
+#if defined(OBLIVION)
+	if (pNiLight->CanCarry)
+		Radius = 256.0f;
+#endif
+
+	Eye.x = LightPos->x - TheRenderManager->CameraPosition.x;
+	Eye.y = LightPos->y - TheRenderManager->CameraPosition.y;
+	Eye.z = LightPos->z - TheRenderManager->CameraPosition.z;
+	Shadows->Constants.ShadowCubeMapLightPosition.x = Eye.x;
+	Shadows->Constants.ShadowCubeMapLightPosition.y = Eye.y;
+	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
+	Shadows->Constants.ShadowCubeMapLightPosition.w = Radius;
+	Shadows->Constants.Data.z = Radius;
+	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle), 1.0f, 0.1f, Radius);
+
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
+
+	At = Eye + pNiLight->direction.toD3DXVEC3();
+
+	TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
+	TESObjectREFR* Ref = NULL;
+	while (Entry) {
+		Ref = GetRef(Entry->item, &Settings->Forms);
+		if (!Ref) continue;
+
+		// Detect if the object is in front of the light in the direction of the current face
+		// TODO: improve to base on frustum
+		NiNode* RefNode = Ref->GetNode();
+		D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
+		D3DXVECTOR3 ObjectToLight = ObjectPos - Eye;
+
+		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
+		float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
+
+		//if (inFront && RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, &Settings->Forms, false);
+	}
+
+	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
+	Shadows->Constants.ShadowViewProj = View * Proj;
+	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = Shadows->Constants.ShadowViewProj;
+
+	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
+	Device->SetViewport(&ShadowCubeMapViewPort);
+	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
+	Device->BeginScene();
+
+	RenderAccums();
+
+	Device->EndScene();
+}
+
+
 void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex) {
 	if (Lights[LightIndex] == NULL) return; // No light at current index
 	
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	ShadowsExteriorEffect::InteriorsStruct* Settings = &Shadows->Settings.Interiors;
 
-	if (!Shadows->Textures.ShadowCubeMapDepthSurface) {
-		Logger::Log("ShadowCubemapDepth missing for light %i", LightIndex);
-		return;
-	}
-
-	//ShaderConstants::ShadowMapStruct* ShadowMap = &TheShaderManager->ShaderConst.ShadowMap;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	float Radius = 0.0f;
