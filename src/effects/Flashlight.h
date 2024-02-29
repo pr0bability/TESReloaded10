@@ -5,11 +5,15 @@ class FlashlightEffect : public EffectRecord
 public:
 	FlashlightEffect() : EffectRecord("Flashlight") {};
 
-	struct FlashlightSettingsStruct {};
+	struct FlashlightSettingsStruct {
+		NiColor		Color;
+		float		Dimmer;
+		float		ConeAngle;
+		float		Distance;
+	};
 	FlashlightSettingsStruct	Settings;
 
 	struct FlashlightStruct {
-		D3DXVECTOR4		Data;
 	};
 	FlashlightStruct	Constants;
 
