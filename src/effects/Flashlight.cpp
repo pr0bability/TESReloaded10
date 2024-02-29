@@ -37,32 +37,33 @@ void FlashlightEffect::UpdateConstants() {
 		}
 	}
 
-	UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
-	bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
+	if (SpotLight) {
+		//TODO: find a better place for this
+		UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
+		bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
 
-	bool pipLightActive = IsLightActive(GetPipboyManager());
+		bool pipLightActive = IsLightActive(GetPipboyManager());
 
-	if (pipLightActive) {
-		// find and disable pipboy light
-		NiNode* PlayerNode = Player->GetNode();
-		for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
-			NiAVObject* childNode = PlayerNode->m_children.data[i];
-			if (childNode) {
-				if (childNode->GetRTTI() == (void*)0x11F4A98) {
-					childNode->m_flags |= childNode->APP_CULLED;
+		if (pipLightActive) {
+			// find and disable pipboy light
+			NiNode* PlayerNode = Player->GetNode();
+			for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
+				NiAVObject* childNode = PlayerNode->m_children.data[i];
+				if (childNode) {
+					if (childNode->GetRTTI() == (void*)0x11F4A98) {
+						childNode->m_flags |= childNode->APP_CULLED;
+					}
 				}
 			}
 		}
-	}
 
-	if (SpotLight) {
 		SpotLight->Diff = Settings.Color;
 		SpotLight->Dimmer = Settings.Dimmer * pipLightActive;
 		SpotLight->m_worldTransform.pos = WeaponPos;
 		SpotLight->m_worldTransform.rot = WeaponRot;
 		SpotLight->m_worldTransform.scale = 1.0f;
 		SpotLight->OuterSpotAngle = Settings.ConeAngle;
-		SpotLight->Spec = NiColor(Settings.Distance, 0, 0); // radius in r channel
+		SpotLight->Spec = NiColor(Settings.Distance * pipLightActive, 0, 0); // radius in r channel
 	}
 
 };
