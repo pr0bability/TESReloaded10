@@ -305,7 +305,7 @@ class NiTArray {
 public:
 	UInt16			Add(T* Item);
 
-	void**	_vtbl;			// 00
+	virtual ~NiTArray();	// 00
 	T*		data;			// 04
 	UInt16	capacity;		// 08 - init'd to size of preallocation
 	UInt16	end;			// 0A - index of the first free entry in the block of free entries at the end of the array (or numObjs if full)
