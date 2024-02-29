@@ -259,15 +259,15 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
 	Shadows->Constants.ShadowCubeMapLightPosition.w = Radius;
 	Shadows->Constants.Data.z = Radius;
-	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle * 2), 1.0f, 0.1f, Radius);
+	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle * 2), 0.1, 1.0f, Radius);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
-	D3DXVECTOR3 direction = D3DXVECTOR3(pNiLight->m_worldTransform.rot.data[0][0], pNiLight->m_worldTransform.rot.data[1][0], pNiLight->m_worldTransform.rot.data[2][0]);
-	At = Eye + direction;
+	CameraDirection = D3DXVECTOR3(pNiLight->m_worldTransform.rot.data[0][0], pNiLight->m_worldTransform.rot.data[1][0], pNiLight->m_worldTransform.rot.data[2][0]);
+	At = Eye + CameraDirection;
 
 	TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 	TESObjectREFR* Ref = NULL;
@@ -286,14 +286,16 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 		float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
-		if (inFront && RefNode->GetDistance(LightPos) <= Radius * 1.2f) AccumChildren(RefNode, &Settings->Forms, false);
+		if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
+		//AccumChildren(RefNode, &Settings->Forms, false);
 
 		Entry = Entry->next;
 	}
 
 	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 	Shadows->Constants.ShadowViewProj = View * Proj;
-	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = Shadows->Constants.ShadowViewProj;
+
+	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = TheRenderManager->InvViewProjMatrix * (Shadows->Constants.ShadowViewProj);
 
 	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
 	Device->SetViewport(&ShadowCubeMapViewPort);
