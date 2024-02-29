@@ -299,6 +299,19 @@ Enabled = false                        # Not currently used. Enables loading of 
 [_Shaders.ExtraShaders.Status]
 Enabled = true                         # Enables loading of Shaders in ExtraShaders folder that are not natively handled. Use for compatibility with Realtime Reflections
 
+
+[_Shaders.Flashlight.Main]
+ColorR = 2.0                           # R Channel of the color of the flashlight
+ColorG = 2.0                           # G Channel of the color of the flashlight
+ColorB = 1.0                           # B Channel of the color of the flashlight
+Dimmer = 1.0                           # Dimmer for the color of the flashlight
+Angle = 30.0                           # Angle for the flashlight cone
+Distance = 1000                        # Distance radius for the light
+
+[_Shaders.Flashlight.Status]
+Enabled = true
+
+
 [_Shaders.Grass.Main]
 WindEnabled = false
 GrassDensity = 1
