@@ -3,6 +3,9 @@
 float4 TESR_ShadowLightPosition[12];
 float4 TESR_LightPosition[12];
 float4 TESR_ShadowFade;
+float4 TESR_SpotLightPosition;
+float4 TESR_SpotLightDirection;
+
 
 //sampler_state removed to avoid a artifact. TODO investigate
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -39,6 +42,26 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
+
+float GetSpotLightAmount(float4 worldPos, float4 spotLightPosition, float4 spotLightDirection, float4 normal){
+    float3 lightToWorld = spotLightPosition.rgb - worldPos.xyz;
+    float3 lightVector = normalize(lightToWorld);
+
+	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
+    float radius = spotLightPosition.w;
+    float Distance = length(lightToWorld)/radius;
+	float s = saturate(Distance * Distance); 
+	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
+
+	float angleCosMax = cos(radians(spotLightDirection.w));
+	float angleCosMin = cos(radians(spotLightDirection.w * 0.5));
+	float cone = pow(invlerps(angleCosMax, angleCosMin, shades(spotLightDirection, lightVector * -1)), 2.0);
+
+    float diffuse = shade(lightVector, normal.xyz);
+	return diffuse * cone * atten;
+}
+
+
 float4 Shadow( VSOUT IN ) : COLOR0 {
 
 	float2 uv = IN.UVCoord;
@@ -54,6 +77,8 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer3, world_pos, TESR_ShadowLightPosition[3], normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer4, world_pos, TESR_ShadowLightPosition[4], normal);
 	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer5, world_pos, TESR_ShadowLightPosition[5], normal);
+
+	Shadow += GetSpotLightAmount(world_pos, TESR_SpotLightPosition, TESR_SpotLightDirection, normal);
 	
 	for (int i = 0; i< 12; i++){
 		Shadow += GetPointLightContribution(world_pos, TESR_LightPosition[i], normal);
