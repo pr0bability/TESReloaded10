@@ -33,7 +33,7 @@ void BloomEffect::UpdateSettings() {
 	Settings.Interiors.Treshold = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Treshold");
 	Settings.Interiors.Scale = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Scale");
 	Settings.Interiors.Strength = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Strength");
-	Constants.Data.w = Enabled;
+	Constants.Data.w = Enabled && ShouldRender();
 };
 
 
@@ -41,6 +41,11 @@ void BloomEffect::UpdateConstants() {
 	Constants.Data.x = TheShaderManager->GetTransitionValue(Settings.Main.Treshold, Settings.Night.Treshold, Settings.Interiors.Treshold);
 	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.Main.Scale, Settings.Night.Scale, Settings.Interiors.Scale);
 	Constants.Data.z = TheShaderManager->GetTransitionValue(Settings.Main.Strength, Settings.Night.Strength, Settings.Interiors.Strength);
+};
+
+
+bool BloomEffect::ShouldRender() {
+	return !TheShaderManager->GameState.OverlayIsOn;
 };
 
 
