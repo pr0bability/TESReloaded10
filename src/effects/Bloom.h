@@ -34,6 +34,7 @@ public:
 	void	RegisterConstants();
 	void	RegisterTextures();
 	void	UpdateSettings();
+	bool	ShouldRender();
 
 	void	RenderBloomBuffer(IDirect3DSurface9* RenderTarget);
 };
