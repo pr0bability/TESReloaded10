@@ -693,16 +693,16 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Effects.BloomLegacy->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// screenspace coloring/blurring effects get rendered last
-	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.Coloring->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.DepthOfField->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.MotionBlur->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// lens effects
-	Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
-	Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
 	Effects.Cinema->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
@@ -711,7 +711,7 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// debug shader allows to display some of the buffers
-	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, 0, false, NULL);
+	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	//if (EffectsSettings->Extra) {
 	//	for (EffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
