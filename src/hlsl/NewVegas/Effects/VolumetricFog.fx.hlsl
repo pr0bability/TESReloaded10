@@ -7,6 +7,7 @@ float4 TESR_ReciprocalResolution;
 float4 TESR_SunDirection;
 float4 TESR_SunPosition;
 float4 TESR_SunColor;
+float4 TESR_SunDiskColor;
 float4 TESR_SunAmbient;
 float4 TESR_HorizonColor;
 float4 TESR_SkyLowColor;
@@ -139,7 +140,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
     float sunHeight = shade(TESR_SunPosition.xyz, up);
     float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
 	float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
-    float3 sunColor = GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
+    float3 sunColor = GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb);
 	float3 skyColor = GetSkyColor(0, 0.5, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 	// calculate sun color area
     float sunAmount = pows(dot(max(eyeDirection, TESR_SunDirection.xyz), 0.0),8.0);

@@ -14,6 +14,7 @@ float4 TESR_DebugVar: register(c12);
 float4 TESR_SunPosition: register(c13);
 float4 TESR_SunsetColor: register(c14); // sunsetColor.w is sky strength multiplier
 float4 TESR_HDRBloomData: register(c15);
+float4 TESR_SunDiskColor: register(c16);
 
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
@@ -59,7 +60,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunDir = dot(eyeDir, TESR_SunPosition.xyz);
     float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
 
-    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
+    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb);
     float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
     // draw the sun procedurally
