@@ -23,6 +23,7 @@ float4 TESR_WetWorldData : register(c20);
 float4 TESR_WaterShorelineParams : register(c21);
 float4 TESR_WaterLODColor : register(c22);
 float4 TESR_DebugVar : register(c23);
+float4 TESR_SunAmount : register(c24);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1);
@@ -64,7 +65,8 @@ PS_OUTPUT main(PS_INPUT IN) {
     normalize(surfaceNormal);
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
-    float sunLuma = luma(linSunColor);
+    float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
+    float sunLuma = luma(linSunColor) * isDayTime;
     float exteriorRefractionModifier = TESR_WaterSettings.w;		// reduce refraction because of the way interior depth is encoded
     float exteriorDepthModifier = 1;			// reduce depth value for fog because of the way interior depth is encoded
 

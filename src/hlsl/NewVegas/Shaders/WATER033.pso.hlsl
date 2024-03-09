@@ -20,6 +20,7 @@ float4 TESR_SunDirection : register(c19);
 float4 TESR_WaterShorelineParams : register(c20);
 float4 TESR_DebugVar : register(c21);
 float4 TESR_WaterShallowColor : register(c22);
+float4 TESR_SunAmount : register(c23);
 
 sampler2D ReflectionMap : register(s0);
 sampler2D RefractionMap : register(s1); //unused
@@ -64,7 +65,8 @@ PS_OUTPUT main(PS_INPUT IN) {
 
     // calculate fog coeffs
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
-    float sunLuma = luma(linSunColor);
+    float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
+    float sunLuma = luma(linSunColor) * isDayTime;
 
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     float refractionCoeff = ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
