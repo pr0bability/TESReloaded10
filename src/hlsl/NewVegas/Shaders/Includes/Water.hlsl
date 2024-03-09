@@ -185,10 +185,19 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 }
 
 
+
 float4 getShoreFade(PS_INPUT IN, float depth, float shoreSpeed, float shoreFactor, float4 color){
-    float scale = 20;
-    float shoreAnimation = sin(IN.LTEXCOORD_1.x/scale - TESR_GameTime.x * shoreSpeed) * 0.4 + 0.8; //reframe sin() from -1/1 to 0.2/1.2 to ensure some fading happens 
-    color.a = 1 - pow(saturate(1 - depth), shoreFactor * 10) * saturate(shoreAnimation);
+    float scale = 0.07;
+    shoreSpeed *= 0.1;
+    shoreFactor *= 0.1;
+
+    float shoreAnimation = sin(IN.LTEXCOORD_7.x/scale + TESR_GameTime.x * shoreSpeed);
+    shoreAnimation *= cos(IN.LTEXCOORD_7.y/scale + TESR_GameTime.x * shoreSpeed);
+    shoreAnimation = compress(shoreAnimation); // create a grid of gradient values from 0 to 1
+
+    float depthGradient = smoothstep(saturate(shoreFactor) * compress(sin(TESR_GameTime.x * shoreSpeed) * shoreAnimation), 0, depth);
+
+    color.a = 1 - depthGradient;
     return color;
 }
 

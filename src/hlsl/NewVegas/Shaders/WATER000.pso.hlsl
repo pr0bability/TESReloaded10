@@ -88,7 +88,6 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     color = lerp(color, getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color), smoothstep(0, 0.2, refractedDepth.x)); // reduce fresnel in low depths
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
     color = getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color);
-    color.a = 1;
 
     color = delinearize(color);
     OUT.color_0 = color;
