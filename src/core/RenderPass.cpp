@@ -70,7 +70,7 @@ bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
 	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-	if (!ShaderProperty || !(ShaderProperty->IsLightingProperty() || ShaderProperty->type == 29)) return false; // 29 is the type for parallax meshes somehow? No idea what enum that's taken from
+	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
 
 	GeometryList.push(Geo);
 	return true;
