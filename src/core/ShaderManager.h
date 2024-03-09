@@ -29,6 +29,7 @@ struct ShaderConstants {
 	D3DXVECTOR4				fogColor;
 	D3DXVECTOR4				horizonColor;
 	D3DXVECTOR4				skyLowColor;
+	D3DXVECTOR4				sunDiskColor;
 	D3DXVECTOR4				sunColor;
 	D3DXVECTOR4				sunAmbient;
 	D3DXVECTOR4				skyColor;

@@ -94,6 +94,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterConstant("TESR_FogDistance", &TheShaderManager->ShaderConst.fogDistance);
 	TheShaderManager->RegisterConstant("TESR_FogColor", &TheShaderManager->ShaderConst.fogColor);
 	TheShaderManager->RegisterConstant("TESR_SunColor", &TheShaderManager->ShaderConst.sunColor);
+	TheShaderManager->RegisterConstant("TESR_SunDiskColor", &TheShaderManager->ShaderConst.sunDiskColor);
 	TheShaderManager->RegisterConstant("TESR_SunAmbient", &TheShaderManager->ShaderConst.sunAmbient);
 	TheShaderManager->RegisterConstant("TESR_SkyColor", &TheShaderManager->ShaderConst.skyColor);
 	TheShaderManager->RegisterConstant("TESR_SkyLowColor", &TheShaderManager->ShaderConst.skyLowColor);
@@ -269,6 +270,11 @@ void ShaderManager::UpdateConstants() {
 	GameState.isDayTime = smoothStep(0, 1, GameState.isDayTime); // smooth daytime progression
 	ShaderConst.SunAmount.x = GameState.isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
+
+	ShaderConst.sunDiskColor.x = WorldSky->SunColor.r;
+	ShaderConst.sunDiskColor.y = WorldSky->SunColor.g;
+	ShaderConst.sunDiskColor.z = WorldSky->SunColor.b;
+	ShaderConst.sunDiskColor.w = 1.0;
 
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
 	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
