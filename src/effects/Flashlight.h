@@ -3,7 +3,10 @@
 class FlashlightEffect : public EffectRecord
 {
 public:
-	FlashlightEffect() : EffectRecord("Flashlight") {};
+	FlashlightEffect() : EffectRecord("Flashlight") {
+		spotLightActive = false;
+		SpotLight = nullptr;
+	};
 
 	struct FlashlightSettingsStruct {
 		NiColor		Color;
@@ -18,6 +21,7 @@ public:
 	FlashlightStruct	Constants;
 
 	NiSpotLight* SpotLight;
+	bool	spotLightActive;
 
 	void	UpdateConstants();
 	void	RegisterConstants();

@@ -20,6 +20,14 @@ void FlashlightEffect::UpdateSettings() {
 
 void FlashlightEffect::UpdateConstants() {
 
+	//TODO: find a better place for this
+	UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
+	bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
+
+	//spotLightActive = IsLightActive(GetPipboyManager());
+
+	spotLightActive = true; // debug
+
 	NiPoint3 WeaponPos;
 	NiMatrix33 WeaponRot;
 	if (Player->isThirdPerson) {
@@ -38,13 +46,7 @@ void FlashlightEffect::UpdateConstants() {
 	}
 
 	if (SpotLight) {
-		//TODO: find a better place for this
-		UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
-		bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
-
-		bool pipLightActive = IsLightActive(GetPipboyManager());
-
-		if (pipLightActive) {
+		if (spotLightActive) {
 			// find and disable pipboy light
 			NiNode* PlayerNode = Player->GetNode();
 			for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
