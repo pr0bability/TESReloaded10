@@ -509,7 +509,6 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			SpotLightList[0]->m_worldTransform.rot.data[1][0], 
 			SpotLightList[0]->m_worldTransform.rot.data[2][0], 
 			SpotLightList[0]->OuterSpotAngle); // outside angle of the light cone
-		//TheShaderManager->SpotLightDirection[0].w = SpotLightList[0]->Spec.r; 
 		TheShaderManager->SpotLightColor[0] = D3DXVECTOR4(SpotLightList[0]->Diff.r, SpotLightList[0]->Diff.g, SpotLightList[0]->Diff.b, SpotLightList[0]->Dimmer);
 	}
 	else {

@@ -1,7 +1,12 @@
 #include "Flashlight.h"
 
 
-void FlashlightEffect::RegisterConstants() {};
+void FlashlightEffect::RegisterConstants() {
+	TheShaderManager->RegisterConstant("TESR_FlashLightViewProjTransform", (D3DXVECTOR4*)&Constants.FlashlightViewProj);
+	TheShaderManager->RegisterConstant("TESR_FlashLightPosition", (D3DXVECTOR4*)&Constants.FlashlightViewProj);
+	TheShaderManager->RegisterConstant("TESR_FlashLightDirection", (D3DXVECTOR4*)&Constants.FlashlightViewProj);
+	TheShaderManager->RegisterConstant("TESR_FlashLightColor", (D3DXVECTOR4*)&Constants.FlashlightViewProj);
+};
 
 void FlashlightEffect::UpdateSettings() {
 
@@ -24,6 +29,7 @@ void FlashlightEffect::UpdateConstants() {
 	UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
 	bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
 
+	//spotLightActive = IsLightActive(GetPipboyManager());
 	spotLightActive = IsLightActive(GetPipboyManager());
 
 	NiPoint3 WeaponPos;
@@ -59,16 +65,34 @@ void FlashlightEffect::UpdateConstants() {
 
 		SpotLight->Diff = Settings.Color;
 		SpotLight->Dimmer = Settings.Dimmer * spotLightActive;
-		//SpotLight->Dimmer = Settings.Dimmer;
 		SpotLight->m_worldTransform.pos = WeaponPos;
 		SpotLight->m_worldTransform.rot = WeaponRot;
 		SpotLight->m_worldTransform.scale = 1.0f;
 		SpotLight->OuterSpotAngle = Settings.ConeAngle;
 		SpotLight->Spec = NiColor(Settings.Distance * spotLightActive, 0, 0); // radius in r channel
-		//SpotLight->Spec = NiColor(Settings.Distance, 0, 0); // radius in r channel
+
+		GetFlashlightViewProj();
+
 	}
 
 };
 
-bool FlashlightEffect::ShouldRender() { return true; };
+bool FlashlightEffect::ShouldRender() { return SpotLight && spotLightActive; };
+
+
+void FlashlightEffect::GetFlashlightViewProj() {
+	if (!SpotLight) return;
+	
+	D3DXVECTOR3 Up = D3DXVECTOR3(0, 0, 1);
+	D3DXVECTOR3 Eye = SpotLight->m_worldTransform.pos.toD3DXVEC3();
+	D3DXVECTOR3 Direction = D3DXVECTOR3(SpotLight->m_worldTransform.rot.data[0][0], SpotLight->m_worldTransform.rot.data[1][0], SpotLight->m_worldTransform.rot.data[2][0]);
+	D3DXVECTOR3 At = Eye + Direction;
+
+	float Radius = SpotLight->Spec.r;
+	D3DXMATRIX View, Proj;
+	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(SpotLight->OuterSpotAngle * 2), 1.0f, 0.1f, Radius);
+	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
+
+	Constants.FlashlightViewProj = View * Proj;
+}
 
