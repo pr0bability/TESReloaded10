@@ -360,7 +360,7 @@ void ShaderRecord::SetCT() {
 			Sampler->Texture->BindTexture(Sampler->Name);
 
 			if (Sampler->Texture->Texture) Logger::Log("%s : Texture %s Successfully bound", Name, Sampler->Name);
-			else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
+			//else Logger::Log("[ERROR] : Could not bind texture %s for shader %s", Sampler->Name, Name);
 		}
 
 		if (Sampler->Texture->Texture != nullptr) {
