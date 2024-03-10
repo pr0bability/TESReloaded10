@@ -1,5 +1,4 @@
-float4x4 TESR_WorldViewProjectionTransform;
-float4x4 TESR_SpotLightToWorldTransform;
+float4x4 TESR_FlashLightViewProjTransform;
 float4 TESR_CameraForward;
 float4 TESR_SpotLightPosition;
 float4 TESR_SpotLightColor;
@@ -78,7 +77,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	float s = saturate(Distance * Distance); 
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
-	float4 lightSpaceCoord = ScreenCoordToTexCoord(mul(float4(worldPos, 1), TESR_SpotLightToWorldTransform));
+	float4 lightSpaceCoord = ScreenCoordToTexCoord(mul(float4(worldPos, 1), TESR_FlashLightViewProjTransform));
 	float shadowDepth =	tex2D(TESR_ShadowSpotlightBuffer0, lightSpaceCoord.xy);
 	float isShadow = shadowDepth < lightSpaceCoord.z;
 
@@ -98,7 +97,6 @@ float4 Flashlight(VSOUT IN) : COLOR0
 #endif	
 
 	color.rgb += color.rgb * light;
-
 
 	//color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
 

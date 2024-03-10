@@ -501,6 +501,13 @@ void ShadowManager::RenderShadowMaps() {
 	bool ExteriorEnabled = isExterior && TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
 	bool InteriorEnabled = !isExterior && TheShaderManager->Effects.ShadowsInteriors->Enabled;
 
+	// track point lights for interiors and exteriors
+	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
+	NiPointLight* Lights[TrackedLightsMax] = { NULL };
+	NiSpotLight* SpotLights[SpotLightsMax] = { NULL };
+
+	TheShaderManager->GetNearbyLights(ShadowLights, Lights, SpotLights);
+
 	// early out in case shadow rendering is not required
 	if (!ExteriorEnabled && !InteriorEnabled && !TheShaderManager->orthoRequired) return;
 	if (!Player->parentCell) return;
@@ -591,12 +598,6 @@ void ShadowManager::RenderShadowMaps() {
 	// Render shadow maps for point lights
 	bool usePointLights = (TheShaderManager->GameState.isDayTime > 0.5) ? ShadowsExteriors->UsePointShadowsDay : ShadowsExteriors->UsePointShadowsNight;
 
-	// track point lights for interiors and exteriors
-	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
-	NiPointLight* Lights[TrackedLightsMax] = { NULL };
-	NiSpotLight* SpotLights[SpotLightsMax] = { NULL };
-	TheShaderManager->GetNearbyLights(ShadowLights, Lights, SpotLights);
-
 	AlphaEnabled = ShadowsInteriors->Forms.AlphaEnabled;
 	geometryPass->VertexShader = ShadowCubeMapVertex;
 	geometryPass->PixelShader = ShadowCubeMapPixel;
@@ -622,6 +623,7 @@ void ShadowManager::RenderShadowMaps() {
 
 	if (TheShaderManager->Effects.Flashlight->Enabled && TheShaderManager->Effects.Flashlight->spotLightActive) {
 		// render shadow maps for spotlights
+		
 		for (int i = 0; i < SpotLightsMax; i++) {
 			if (!SpotLights[i] || SpotLights[i]->Spec.r == 0) continue; //bypass lights with no radius
 

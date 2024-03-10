@@ -17,6 +17,10 @@ public:
 	FlashlightSettingsStruct	Settings;
 
 	struct FlashlightStruct {
+		D3DXMATRIX	FlashlightViewProj;
+		D3DXVECTOR4	Position;
+		D3DXVECTOR4	Direction;
+		D3DXVECTOR4	Color;
 	};
 	FlashlightStruct	Constants;
 
@@ -27,4 +31,6 @@ public:
 	void	RegisterConstants();
 	void	UpdateSettings();
 	bool	ShouldRender();
+
+	void	GetFlashlightViewProj();
 };
