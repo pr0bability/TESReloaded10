@@ -24,9 +24,7 @@ void FlashlightEffect::UpdateConstants() {
 	UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
 	bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
 
-	//spotLightActive = IsLightActive(GetPipboyManager());
-
-	spotLightActive = true; // debug
+	spotLightActive = IsLightActive(GetPipboyManager());
 
 	NiPoint3 WeaponPos;
 	NiMatrix33 WeaponRot;
@@ -60,12 +58,14 @@ void FlashlightEffect::UpdateConstants() {
 		}
 
 		SpotLight->Diff = Settings.Color;
-		SpotLight->Dimmer = Settings.Dimmer * pipLightActive;
+		SpotLight->Dimmer = Settings.Dimmer * spotLightActive;
+		//SpotLight->Dimmer = Settings.Dimmer;
 		SpotLight->m_worldTransform.pos = WeaponPos;
 		SpotLight->m_worldTransform.rot = WeaponRot;
 		SpotLight->m_worldTransform.scale = 1.0f;
 		SpotLight->OuterSpotAngle = Settings.ConeAngle;
-		SpotLight->Spec = NiColor(Settings.Distance * pipLightActive, 0, 0); // radius in r channel
+		SpotLight->Spec = NiColor(Settings.Distance * spotLightActive, 0, 0); // radius in r channel
+		//SpotLight->Spec = NiColor(Settings.Distance, 0, 0); // radius in r channel
 	}
 
 };
