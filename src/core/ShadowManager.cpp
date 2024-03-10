@@ -227,34 +227,28 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffec
 
 
 void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex) {
-	if (Lights[LightIndex] == NULL) return; // No light at current index
+	NiSpotLight* pNiLight = Lights[LightIndex];
+	if (pNiLight == NULL) return;
 
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	ShadowsExteriorEffect::InteriorsStruct* Settings = &Shadows->Settings.Interiors;
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
-	float Radius = 0.0f;
-	float MinRadius = Settings->Forms.MinRadius;
-	NiPoint3* LightPos = NULL;
 	D3DXMATRIX View, Proj;
-	D3DXVECTOR3 Eye, At, Up, CameraDirection;
 
 	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
-	NiSpotLight* pNiLight = Lights[LightIndex];
-	LightPos = &pNiLight->m_worldTransform.pos;
-	Radius = pNiLight->Spec.r * Shadows->Settings.Interiors.LightRadiusMult;
+	NiPoint3* LightPos = &pNiLight->m_worldTransform.pos;
+	float Radius = pNiLight->Spec.r * Shadows->Settings.Interiors.LightRadiusMult;
 
 #if defined(OBLIVION)
 	if (pNiLight->CanCarry)
 		Radius = 256.0f;
 #endif
 
-	Eye.x = LightPos->x - TheRenderManager->CameraPosition.x;
-	Eye.y = LightPos->y - TheRenderManager->CameraPosition.y;
-	Eye.z = LightPos->z - TheRenderManager->CameraPosition.z;
-	Up = D3DXVECTOR3(0, 0, 1);
+	D3DXVECTOR3 Eye = LightPos->toD3DXVEC3();
+	D3DXVECTOR3 Up = D3DXVECTOR3(0, 0, 1);
 	Shadows->Constants.ShadowCubeMapLightPosition.x = Eye.x;
 	Shadows->Constants.ShadowCubeMapLightPosition.y = Eye.y;
 	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
@@ -267,8 +261,8 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
-	CameraDirection = D3DXVECTOR3(pNiLight->m_worldTransform.rot.data[0][0], pNiLight->m_worldTransform.rot.data[1][0], pNiLight->m_worldTransform.rot.data[2][0]);
-	At = Eye + CameraDirection;
+	D3DXVECTOR3 CameraDirection = D3DXVECTOR3(pNiLight->m_worldTransform.rot.data[0][0], pNiLight->m_worldTransform.rot.data[1][0], pNiLight->m_worldTransform.rot.data[2][0]);
+	D3DXVECTOR3 At = Eye + CameraDirection;
 
 	TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 	TESObjectREFR* Ref = NULL;
@@ -288,7 +282,6 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 		float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
 		if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
-		//AccumChildren(RefNode, &Settings->Forms, false);
 
 		Entry = Entry->next;
 	}
@@ -296,7 +289,7 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 	Shadows->Constants.ShadowViewProj = View * Proj;
 
-	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = TheRenderManager->InvViewProjMatrix * (Shadows->Constants.ShadowViewProj);
+	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = (Shadows->Constants.ShadowViewProj);
 
 	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
 	Device->SetViewport(&ShadowCubeMapViewPort);
@@ -381,6 +374,8 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 		// Since this is pure geometry, getting reference data will be difficult (read: slow)
 		auto iter = Lights[LightIndex]->kGeometryList.start;
+		if (!iter) Logger::Log("[ERROR] Light %i has no geometry data", LightIndex);
+
 		while (iter) {
 			NiGeometry* geo = iter->data;
 			iter = iter->next;
@@ -417,11 +412,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		Shadows->Constants.ShadowViewProj = View * Proj;
-
-		if (!Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]) {
-			Logger::Log("ShadowCubemapSurface missing for light %i, face %i", LightIndex, Face);
-			continue;
-		}
 
 		Device->SetRenderTarget(0, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]);
 		Device->SetViewport(&ShadowCubeMapViewPort);
@@ -607,19 +597,19 @@ void ShadowManager::RenderShadowMaps() {
 	NiSpotLight* SpotLights[SpotLightsMax] = { NULL };
 	TheShaderManager->GetNearbyLights(ShadowLights, Lights, SpotLights);
 
-	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
-		AlphaEnabled = ShadowsInteriors->Forms.AlphaEnabled;
-		geometryPass->VertexShader = ShadowCubeMapVertex;
-		geometryPass->PixelShader = ShadowCubeMapPixel;
-		alphaPass->VertexShader = ShadowCubeMapVertex;
-		alphaPass->PixelShader = ShadowCubeMapPixel;
-		skinnedGeoPass->VertexShader = ShadowCubeMapVertex;
-		skinnedGeoPass->PixelShader = ShadowCubeMapPixel;
-		speedTreePass->VertexShader = ShadowCubeMapVertex;
-		speedTreePass->PixelShader = ShadowCubeMapPixel;
+	AlphaEnabled = ShadowsInteriors->Forms.AlphaEnabled;
+	geometryPass->VertexShader = ShadowCubeMapVertex;
+	geometryPass->PixelShader = ShadowCubeMapPixel;
+	alphaPass->VertexShader = ShadowCubeMapVertex;
+	alphaPass->PixelShader = ShadowCubeMapPixel;
+	skinnedGeoPass->VertexShader = ShadowCubeMapVertex;
+	skinnedGeoPass->PixelShader = ShadowCubeMapPixel;
+	speedTreePass->VertexShader = ShadowCubeMapVertex;
+	speedTreePass->PixelShader = ShadowCubeMapPixel;
 
+	auto shadowMapTimer = TimeLogger();
+	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
 		// render the cubemaps for each light
-		auto shadowMapTimer = TimeLogger();
 		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
 
 			RenderShadowCubeMap(ShadowLights, i);
@@ -628,10 +618,12 @@ void ShadowManager::RenderShadowMaps() {
 			message += std::to_string(i);
 			shadowMapTimer.LogTime(message.c_str());
 		}
+	}
 
+	if (TheShaderManager->Effects.Flashlight->Enabled && TheShaderManager->Effects.Flashlight->spotLightActive) {
 		// render shadow maps for spotlights
 		for (int i = 0; i < SpotLightsMax; i++) {
-			if (SpotLights[i]->Spec.r == 0) continue; //bypass lights with no radius
+			if (!SpotLights[i] || SpotLights[i]->Spec.r == 0) continue; //bypass lights with no radius
 
 			RenderShadowSpotlight(SpotLights, i);
 

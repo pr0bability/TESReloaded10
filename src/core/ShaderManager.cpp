@@ -577,14 +577,13 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				LightIndex++;
 			};
 		}
-		else if (Light->EffectType == NiDynamicEffect::EffectTypes::POINT_LIGHT) {
+		else if (Light->EffectType == NiDynamicEffect::EffectTypes::SPOT_LIGHT) {
 			// Here will go the collecting of the spotlights and setting of constants
 		}
 		v++;
 	}
 
 	timer.LogTime("ShaderManager::GetNearbyLights");
-
 }
 
 
