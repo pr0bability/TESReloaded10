@@ -3,6 +3,8 @@ float4 TESR_CameraForward;
 float4 TESR_SpotLightPosition;
 float4 TESR_SpotLightColor;
 float4 TESR_SpotLightDirection;
+float4 TESR_SunColor;
+float4 TESR_SunDirection;
 float4 TESR_DebugVar;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -83,7 +85,8 @@ float4 Flashlight(VSOUT IN) : COLOR0
 
 	float lightTexture = tex2D(TESR_SpotLightTexture, lightSpaceCoord.xy).r;
 
-    float3 lightColor = TESR_SpotLightColor.rgb * TESR_SpotLightColor.w;
+	float sunLuma = 1 / max(0.05, luma(TESR_SunColor));
+    float3 lightColor = TESR_SpotLightColor.rgb * TESR_SpotLightColor.w * sunLuma;
     float4 color = linearize(tex2D(TESR_RenderedBuffer, IN.UVCoord));
 	
 	float angleCosMax = cos(radians(TESR_SpotLightDirection.w));
@@ -98,6 +101,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 
 	color.rgb += color.rgb * light;
 
+	// if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light, 1);
 	//color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
 
     return delinearize(color);

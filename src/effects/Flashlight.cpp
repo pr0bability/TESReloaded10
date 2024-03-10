@@ -64,7 +64,7 @@ void FlashlightEffect::UpdateConstants() {
 		}
 
 		SpotLight->Diff = Settings.Color;
-		SpotLight->Dimmer = Settings.Dimmer * spotLightActive;
+		SpotLight->Dimmer = Settings.Dimmer * 10.0 * spotLightActive;
 		SpotLight->m_worldTransform.pos = WeaponPos;
 		SpotLight->m_worldTransform.rot = WeaponRot;
 		SpotLight->m_worldTransform.scale = 1.0f;
