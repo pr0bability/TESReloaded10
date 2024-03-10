@@ -254,12 +254,13 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Eye.x = LightPos->x - TheRenderManager->CameraPosition.x;
 	Eye.y = LightPos->y - TheRenderManager->CameraPosition.y;
 	Eye.z = LightPos->z - TheRenderManager->CameraPosition.z;
+	Up = D3DXVECTOR3(0, 0, 1);
 	Shadows->Constants.ShadowCubeMapLightPosition.x = Eye.x;
 	Shadows->Constants.ShadowCubeMapLightPosition.y = Eye.y;
 	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
 	Shadows->Constants.ShadowCubeMapLightPosition.w = Radius;
 	Shadows->Constants.Data.z = Radius;
-	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle * 2), 0.1, 1.0f, Radius);
+	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(pNiLight->OuterSpotAngle * 2), 1.0f, 0.1f, Radius);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);

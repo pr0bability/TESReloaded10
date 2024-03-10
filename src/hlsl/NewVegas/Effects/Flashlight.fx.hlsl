@@ -80,9 +80,11 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
 	float4 pos = mul(float4(worldPos, 1), TESR_WorldViewProjectionTransform);
-	float4 lightSpaceCoord = mul(ScreenCoordToTexCoord(pos), TESR_SpotLightToWorldTransform);
+	float4 lightSpaceCoord = ScreenCoordToTexCoord(mul(pos, TESR_SpotLightToWorldTransform));
 	float shadowDepth =	tex2D(TESR_ShadowSpotlightBuffer0, lightSpaceCoord.xy);
 	float isShadow = shadowDepth < lightSpaceCoord.z;
+
+	float lightTexture = tex2D(TESR_SpotLightTexture, lightSpaceCoord.xy).r;
 
     float3 lightColor = TESR_SpotLightColor.rgb * TESR_SpotLightColor.w;
     float4 color = linearize(tex2D(TESR_RenderedBuffer, IN.UVCoord));
@@ -91,13 +93,16 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	float angleCosMin = cos(radians(TESR_SpotLightDirection.w * 0.5));
 	float cone = pow(invlerps(angleCosMax, angleCosMin, shades(lightDir, lightVector * -1)), 2.0);
 
-    float3 light = (diffuse + specular) * lightColor * cone * atten * TESR_DebugVar.x * isShadow;
+    // float3 light = (diffuse + specular) * lightColor * cone * atten * lightTexture;
+    float3 light = (diffuse + specular) * cone * atten * lightTexture;
 
 #if Debug
 	return float4(light, 1);
 #endif	
 
-	color.rgb += color.rgb * light;
+	// color.rgb += color.rgb * light;
+
+	if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light, 1);
 
 	//color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
 

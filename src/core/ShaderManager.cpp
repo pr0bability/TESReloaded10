@@ -77,7 +77,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterConstant("TESR_SpotLightPosition", (D3DXVECTOR4*) &TheShaderManager->SpotLightPosition);
 	TheShaderManager->RegisterConstant("TESR_SpotLightColor", (D3DXVECTOR4*) &TheShaderManager->SpotLightColor);
 	TheShaderManager->RegisterConstant("TESR_SpotLightDirection", (D3DXVECTOR4*) &TheShaderManager->SpotLightDirection);
-	TheShaderManager->RegisterConstant("TESR_SpotLightToWorldTransform", (D3DXVECTOR4*) &TheShaderManager->SpotLightWorldToLightMatrix);
+	TheShaderManager->RegisterConstant("TESR_SpotLightToWorldTransform", (D3DXVECTOR4*) &TheShaderManager->SpotLightWorldToLightMatrix[0]);
 	TheShaderManager->RegisterConstant("TESR_ViewSpaceLightDir", &TheShaderManager->ShaderConst.ViewSpaceLightDir);
 	TheShaderManager->RegisterConstant("TESR_ScreenSpaceLightDir", &TheShaderManager->ShaderConst.ScreenSpaceLightDir);
 	TheShaderManager->RegisterConstant("TESR_ReciprocalResolution", &TheShaderManager->ShaderConst.ReciprocalResolution);
@@ -493,7 +493,12 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 	// TEMP : get data for spotlights. Right now, is done manually since spotlights aren't implemented in the engine
 	TheShaderManager->Effects.Flashlight->UpdateConstants();
-	SpotLightList[0] = TheShaderManager->Effects.Flashlight->SpotLight;
+	if (TheShaderManager->Effects.Flashlight->Enabled && TheShaderManager->Effects.Flashlight->spotLightActive) {
+		SpotLightList[0] = TheShaderManager->Effects.Flashlight->SpotLight;
+	}
+	else {
+		SpotLightList[0] = nullptr;
+	}
 
 	//Setting constants
 	if (SpotLightList[0] != nullptr) {
@@ -629,6 +634,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
+	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+
 	if (GameState.isExterior) 
 		Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	else 
@@ -641,8 +648,6 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
-
-	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
