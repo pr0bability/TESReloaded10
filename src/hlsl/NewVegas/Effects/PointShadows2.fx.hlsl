@@ -1,6 +1,7 @@
 // Shader To compute a shadow pass for point light shadows (Supports 5 more lights)
 
 float4 TESR_ShadowLightPosition[12];
+float4 TESR_LightColor[24];
 float4 TESR_ShadowFade;
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -47,11 +48,11 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	float4 normal = float4(GetWorldNormal(uv), 1);
 
 	float Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).r;
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer6, world_pos, TESR_ShadowLightPosition[6], normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer7, world_pos, TESR_ShadowLightPosition[7], normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer8, world_pos, TESR_ShadowLightPosition[8], normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer9, world_pos, TESR_ShadowLightPosition[9], normal);
-	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer10, world_pos, TESR_ShadowLightPosition[10], normal);
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer6, world_pos, TESR_ShadowLightPosition[6], normal) * luma(TESR_LightColor[6].rgb) * TESR_LightColor[6].w;
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer7, world_pos, TESR_ShadowLightPosition[7], normal) * luma(TESR_LightColor[7].rgb) * TESR_LightColor[7].w;
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer8, world_pos, TESR_ShadowLightPosition[8], normal) * luma(TESR_LightColor[8].rgb) * TESR_LightColor[8].w;
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer9, world_pos, TESR_ShadowLightPosition[9], normal) * luma(TESR_LightColor[9].rgb) * TESR_LightColor[9].w;
+	Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer10, world_pos, TESR_ShadowLightPosition[10], normal) * luma(TESR_LightColor[10].rgb) * TESR_LightColor[10].w;
 	// Shadow += GetPointLightAmount(TESR_ShadowCubeMapBuffer11, world_pos, TESR_ShadowLightPosition11, normal);
 	Shadow += GetPointLightContribution(world_pos, TESR_ShadowLightPosition[11], normal);
 
