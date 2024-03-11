@@ -39,6 +39,7 @@ sampler2D TESR_RippleSampler : register(s3) < string ResourceName = "Precipitati
 sampler2D TESR_OrthoMapBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_PointShadowBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBufferViewModel : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 
 //------------------------------------------------------
@@ -180,6 +181,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float waterTreshold = (depth/farZ) * 200;
 	float isWaterSurface = (dot(normal, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
     if (depth > DrawD || floorAngle == 0 || isWaterSurface) return baseColor;
+	if (tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x < 0.9) return baseColor; // filter out viewmodel
 
 	float LODfade = smoothstep(DrawD, 0, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
@@ -210,7 +212,10 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 Z = lerp(1, float4(Ripple1.z, Ripple2.z, Ripple3.z, Ripple4.z), Weights);
 	float3 ripple = float3( Weights.x * Ripple1.xy + Weights.y * Ripple2.xy + Weights.z * Ripple3.xy + Weights.w * Ripple4.xy, Z.x * Z.y * Z.z * Z.w);
 	float3 ripnormal = normalize(ripple);
-	float3 combinedNormals = float3(ripnormal.xy * aboveGround * belowGround * LODfade, ripnormal.z); //only add ripple to surfaces that match ortho depth
+	// float3 combinedNormals = float3(ripnormal.xy, ripnormal.z); //only add ripple to surfaces that match ortho depth
+	float3 combinedNormals = ripnormal; //only add ripple to surfaces that match ortho depth
+
+	combinedNormals = lerp(blue.xyz, combinedNormals, aboveGround * LODfade);
 
 	// refract image through ripple normals
 	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
