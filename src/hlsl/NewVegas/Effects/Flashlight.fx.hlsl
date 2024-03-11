@@ -77,6 +77,10 @@ float4 Shadows(VSOUT IN) : COLOR0
 	return float4(1, 1, 1, 1);
 }
 
+float4 NoShadow(VSOUT IN) : COLOR0
+{
+	return float4(1, 1, 1, 1);
+}
 
 float4 Flashlight(VSOUT IN) : COLOR0
 {
@@ -116,14 +120,27 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	float cone = pow(invlerps(angleCosMax, angleCosMin, shades(lightDir, lightVector * -1)), 2.0);
 
     float3 light = (diffuse + specular) * lightColor * cone * atten * lightTexture * isShadow;
-    // float3 light = (diffuse + specular) * lightColor * cone * atten * lightTexture;
 
 	color.rgb += color.rgb * light;
 
-	//if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light.xxx, 1);
-	// color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_RenderedBuffer);
+	// if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light.xxx, 1);
+	// color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
 
     return delinearize(color);
+}
+
+technique {
+
+	pass {
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 NoShadow();
+	}
+
+	pass {
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Flashlight();
+	}
+
 }
 
 

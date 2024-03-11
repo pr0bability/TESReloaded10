@@ -519,8 +519,8 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 	std::map<int, ShadowSceneLight*>::iterator v = SceneLights.begin();
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
+		// set null values if number of lights in the scene is lower than max amount
 		if (v == SceneLights.end()) {
-			// set null values if number of lights in the scene is lower than max amount
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
 				ShadowLightsList[ShadowIndex] = NULL;
@@ -632,7 +632,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, Effects.Flashlight->selectedPass, true, SourceSurface);
 
 	if (GameState.isExterior) 
 		Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
