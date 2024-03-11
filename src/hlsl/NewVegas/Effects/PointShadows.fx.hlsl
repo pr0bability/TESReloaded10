@@ -57,7 +57,7 @@ float GetSpotLightAmount(float4 worldPos, float4 spotLightPosition, float4 spotL
 
 	float angleCosMax = cos(radians(spotLightDirection.w));
 	float angleCosMin = cos(radians(spotLightDirection.w * 0.5));
-	float cone = pow(invlerps(angleCosMax, angleCosMin, shades(spotLightDirection, lightVector * -1)), 2.0);
+	float cone = pow(invlerps(angleCosMax, angleCosMin, shades(spotLightDirection.xyz, lightVector * -1)), 2.0);
 
     float diffuse = shade(lightVector, normal.xyz);
 	return diffuse * cone * atten;

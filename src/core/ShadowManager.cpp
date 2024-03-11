@@ -228,7 +228,7 @@ void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffec
 
 void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex) {
 	NiSpotLight* pNiLight = Lights[LightIndex];
-	if (pNiLight == NULL) return;
+	if (pNiLight == NULL || !pNiLight->CastShadows) return;
 
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	ShadowsExteriorEffect::InteriorsStruct* Settings = &Shadows->Settings.Interiors;

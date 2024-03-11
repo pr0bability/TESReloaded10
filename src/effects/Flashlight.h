@@ -13,6 +13,8 @@ public:
 		float		Dimmer;
 		float		ConeAngle;
 		float		Distance;
+		bool		renderShadows;
+		NiPoint3	Offset;
 	};
 	FlashlightSettingsStruct	Settings;
 
@@ -26,6 +28,7 @@ public:
 
 	NiSpotLight* SpotLight;
 	bool	spotLightActive;
+	int		selectedPass;
 
 	void	UpdateConstants();
 	void	RegisterConstants();

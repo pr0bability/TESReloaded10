@@ -10,6 +10,15 @@ void FlashlightEffect::RegisterConstants() {
 
 void FlashlightEffect::UpdateSettings() {
 
+	Settings.renderShadows = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "RenderShadows");
+	selectedPass = Settings.renderShadows;
+
+	Settings.Offset = NiPoint3(
+		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "OffsetX"),
+		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "OffsetY"),
+		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "OffsetZ")
+	);
+
 	Settings.Color = NiColor(
 		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "ColorR"),
 		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "ColorG"),
@@ -29,8 +38,7 @@ void FlashlightEffect::UpdateConstants() {
 	UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
 	bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
 
-	//spotLightActive = IsLightActive(GetPipboyManager());
-	spotLightActive = IsLightActive(GetPipboyManager());
+	spotLightActive = Enabled && IsLightActive(GetPipboyManager());
 
 	NiPoint3 WeaponPos;
 	NiMatrix33 WeaponRot;
@@ -49,7 +57,14 @@ void FlashlightEffect::UpdateConstants() {
 		}
 	}
 
+	// rotate offset in the direction of the cone
+	NiPoint3 offset = WeaponRot * Settings.Offset;
+	WeaponPos.x += offset.x;
+	WeaponPos.y += offset.y;
+	WeaponPos.z += offset.z;
+
 	if (SpotLight) {
+
 		if (spotLightActive) {
 			// find and disable pipboy light
 			NiNode* PlayerNode = Player->GetNode();
@@ -63,6 +78,7 @@ void FlashlightEffect::UpdateConstants() {
 			}
 		}
 
+		SpotLight->CastShadows = Settings.renderShadows;
 		SpotLight->Diff = Settings.Color;
 		SpotLight->Dimmer = Settings.Dimmer * 10.0 * spotLightActive;
 		SpotLight->m_worldTransform.pos = WeaponPos;
@@ -95,4 +111,3 @@ void FlashlightEffect::GetFlashlightViewProj() {
 
 	Constants.FlashlightViewProj = View * Proj;
 }
-
