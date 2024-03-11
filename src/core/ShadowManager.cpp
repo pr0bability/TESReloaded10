@@ -240,15 +240,18 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
 	NiPoint3* LightPos = &pNiLight->m_worldTransform.pos;
-	float Radius = pNiLight->Spec.r * Shadows->Settings.Interiors.LightRadiusMult;
+	float Radius = pNiLight->Spec.r;
 
 #if defined(OBLIVION)
 	if (pNiLight->CanCarry)
 		Radius = 256.0f;
 #endif
 
-	D3DXVECTOR3 Eye = LightPos->toD3DXVEC3();
 	D3DXVECTOR3 Up = D3DXVECTOR3(0, 0, 1);
+	D3DXVECTOR3 Eye = LightPos->toD3DXVEC3();
+	Eye.x -= TheRenderManager->CameraPosition.x;
+	Eye.y -= TheRenderManager->CameraPosition.y;
+	Eye.z -= TheRenderManager->CameraPosition.z;
 	Shadows->Constants.ShadowCubeMapLightPosition.x = Eye.x;
 	Shadows->Constants.ShadowCubeMapLightPosition.y = Eye.y;
 	Shadows->Constants.ShadowCubeMapLightPosition.z = Eye.z;
@@ -277,7 +280,7 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 		// TODO: improve to base on frustum
 		NiNode* RefNode = Ref->GetNode();
 		D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
-		D3DXVECTOR3 ObjectToLight = ObjectPos - Eye;
+		D3DXVECTOR3 ObjectToLight = ObjectPos - LightPos->toD3DXVEC3();
 
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 		float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
