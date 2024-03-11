@@ -64,7 +64,6 @@ void FlashlightEffect::UpdateConstants() {
 	WeaponPos.z += offset.z;
 
 	if (SpotLight) {
-
 		if (spotLightActive) {
 			// find and disable pipboy light
 			NiNode* PlayerNode = Player->GetNode();

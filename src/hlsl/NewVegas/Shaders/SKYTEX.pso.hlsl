@@ -32,7 +32,7 @@ float4 TESR_SunDiskColor : register(c17);
 
 
 static const float UseNormals = TESR_CloudData.x;
-static const float SphericalNormals = TESR_CloudData.y;
+static const float SphericalNormals = 1;//TESR_CloudData.y;
 static const float SUNINFLUENCE = 1/TESR_SkyData.y;
 
 // Structures:

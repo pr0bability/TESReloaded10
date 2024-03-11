@@ -8,6 +8,7 @@ float4 TESR_GameTime;
 float4 TESR_DebugVar;
 float4 TESR_SkyData;
 float4 TESR_ReciprocalResolution;
+float4 TESR_CloudData;
 
 // Registers:
 //
@@ -69,7 +70,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float starFlicker = 0.05;
     float noiseScale = 4;
-    float flickerSpeed = 0.1;
+    float flickerSpeed = 0.1 * TESR_CloudData.y;
 
     float3 eyeDir = normalize(IN.location);
   
