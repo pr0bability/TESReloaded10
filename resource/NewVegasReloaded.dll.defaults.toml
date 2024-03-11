@@ -687,6 +687,7 @@ ReplaceSun = false                  # Replaces vanilla sun by a procedural sun f
 SunsetR = 0.5                       # Color boost for sunset/sunrise sun color (Red)
 SunsetG = 0.0                       # Color boost for sunset/sunrise sun color (Green)
 SunsetB = 0.03                      # Color boost for sunset/sunrise sun color (Blue)
+StarTwinkle = 1.0                   # Speed of the star twinkling
 
 
 [_Shaders.Sky.Clouds]
