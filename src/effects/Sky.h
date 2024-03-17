@@ -17,6 +17,7 @@ public:
 		D3DXVECTOR4		CloudData;
 	};
 	SkyStruct Constants;
+	bool useSunDiskColor;
 
 	void	UpdateConstants();
 	void	RegisterConstants();
