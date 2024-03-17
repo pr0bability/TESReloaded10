@@ -48,8 +48,6 @@ float4 Lens(VSOUT IN) : COLOR0
 	float4 bloom = tex2D(TESR_BloomBuffer, IN.UVCoord);
     float bloomLuma = luma(bloom);
     bloom = pows(bloomLuma, TESR_LensData.y) * (bloom / bloomLuma);
-    // bloom = bloom/bloomLuma * (saturate(pows(bloomLuma, TESR_LensData.y)) + max(0, bloomLuma - 1));
-    // color += saturate(dirtColor.r * bloom) * TESR_LensData.x;
     color += dirtColor.r * bloom * TESR_LensData.x;
 
     return delinearize(float4(color.rgb, 1));
