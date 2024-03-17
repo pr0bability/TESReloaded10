@@ -19,7 +19,7 @@ float4 TESR_BloomData : register(c31); //
 
 sampler2D Src0 : register(s0);
 sampler2D DestBlend : register(s1);    // base non tonemapped image
-sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
+sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 // Registers:
 //
@@ -51,19 +51,45 @@ struct VS_OUTPUT {
 
 // Code:
 
+static const float3 offsets[9] = {
+	float3(0, 0, 4), 
+	float3(1, 0, 2), 
+	float3(-1, 0, 2), 
+	float3(0, 1, 2), 
+	float3(0, -1, 2), 
+	float3(-1, -1, 1), 
+	float3(1, -1, 1), 
+	float3(-1, 1, 1), 
+	float3(1, 1, 1)
+};
+
+float4 sampleBox(sampler2D buffer, float2 uv, float offset){
+    float4 color = float4(0, 0, 0, 0);
+    float total = 0;
+
+    for (int i = 0; i < 9; i ++){
+        float2 coords = uv + TESR_ReciprocalResolution.xy * offsets[i].xy * offset;
+        float2 safety = TESR_ReciprocalResolution.xy * TESR_DebugVar.xy;
+        float isValid = (coords.x > safety.x && coords.x < 1 - safety.x && coords.y > safety.y && coords.y < 1 - safety.y) * offsets[i].z;
+        color += tex2D(buffer, coords) * isValid;
+        total += isValid;
+    }
+    color /= total;
+
+    return color;
+}
+
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
     float gammaCorrection = max(1.0, TESR_ToneMapping.w);
     
-    float4 NVRbloom = tex2D(TESR_BloomBuffer, IN.texcoord_1.xy);
+    float4 NVRbloom = sampleBox(TESR_BloomBuffer, IN.texcoord_1.xy, 1.0); // already linear
     float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
+
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
-    //NVRbloom.rgb = pows(NVRbloom.rgb, gammaCorrection); // linearize bloom
     bloom.rgb = pows(bloom.rgb, gammaCorrection); // linearize bloom
     final.rgb = pows(final.rgb, gammaCorrection); // linearize color
     
-    // bloom = lerp(bloom, NVRbloom, TESR_BloomData.w) + bloom;
-    bloom = lerp(bloom, NVRbloom * max(0, TESR_BloomData.z), TESR_BloomData.w);
     // scale bloom while maintaining color
     bloom.rgb = TESR_HDRBloomData.x * pows(max(bloom.rgb, 0.0), TESR_HDRBloomData.y);
     
@@ -71,8 +97,15 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = lerp(luma(final.rgb).xxx, final.rgb, Cinematic.x * cinematicScalar); // saturation
     final.rgb = lerp(final.rgb, Tint.rgb * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     
-    float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x, brights cutoff
-    final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
+    float4 lens = final;
+    if (TESR_BloomData.w){
+        // NVR bloom
+        final.rgb = lerp(final.rgb, NVRbloom.rgb, TESR_HDRBloomData.x * 0.15); 
+    }else{
+        // vanilla bloom
+        float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x, brights cutoff
+        final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
+    }
     
     final.rgb = lerp(final.rgb, final.rgb * Cinematic.w, cinematicScalar); // apply brightness from Cinematic
     final.rgb = tonemap(final.rgb * TESR_HDRData.y); // exposure & tonemap using provided tonemapper
