@@ -14,8 +14,8 @@ sampler2D TESR_BloomBuffer4 : register(s2) = sampler_state { ADDRESSU = CLAMP; A
 sampler2D TESR_BloomBuffer8 : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_BloomBuffer16 : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_BloomBuffer32 : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_RenderedBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_BloomBuffer64 : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_RenderedBuffer : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 static const float scale = 0.5;
 
@@ -42,14 +42,36 @@ VSOUT FrameVS(VSIN IN)
 #include "Includes/Helpers.hlsl"
 #include "Includes/Blur.hlsl"
 
+static const float3 offsets[9] = {
+	float3(0, 0, 4), 
+	float3(1, 0, 2), 
+	float3(-1, 0, 2), 
+	float3(0, 1, 2), 
+	float3(0, -1, 2), 
+	float3(-1, -1, 1), 
+	float3(1, -1, 1), 
+	float3(-1, 1, 1), 
+	float3(1, 1, 1)
+};
 
-float4 sampleBox(float2 uv, sampler2D buffer, float offset) {
-	float4 color = tex2D(buffer, uv + float2(-1, -1) * offset * TESR_BloomResolution.zw);
-	color += tex2D(buffer, uv + float2(-1, 1) * offset * TESR_BloomResolution.zw);
-	color += tex2D(buffer, uv + float2(1, -1) * offset * TESR_BloomResolution.zw);
-	color += tex2D(buffer, uv + float2(1, 1) * offset * TESR_BloomResolution.zw);
-	return float4(color.rgb * 0.25, 1);
+float4 sampleBox(float2 uv, sampler2D buffer, float offset){
+    float4 color = float4(0, 0, 0, 0);
+    float total = 0;
+
+    // float2 offsets[5] = {float2(0, 0), float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1)};
+
+    for (int i = 0; i < 9; i ++){
+        float2 coords = uv + TESR_BloomResolution.zw * offsets[i].xy * offset;
+        float2 safety = TESR_ReciprocalResolution.xy * TESR_DebugVar.xy;
+        float isValid = (coords.x > safety.x && coords.x < 1 - safety.x && coords.y > safety.y && coords.y < 1 - safety.y) * offsets[i].z;
+		color += tex2D(buffer, coords) * isValid;
+        total += isValid;
+    }
+    color /= total;
+
+    return color;
 }
+
 
 // downsample/upsample a part of the screen given by the scaleFactor
 float4 ScaleDown(VSOUT IN, uniform sampler2D buffer) : COLOR0
@@ -62,10 +84,10 @@ float4 ScaleDown(VSOUT IN, uniform sampler2D buffer) : COLOR0
 float4 ScaleUp(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer) : COLOR0
 {
 	// float2 uv = IN.UVCoord + float2(1.0, 1.0) * 0.95 * TESR_DebugVar.x * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
-	float2 uv = IN.UVCoord + float2(1.0, 1.0) * 1.33 * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
-	float4 color = sampleBox(uv, buffer, 1);
+	float2 uv = IN.UVCoord; // adjust the sampling coordinate to compensate for the buffer size difference
+	float4 color = sampleBox(uv, buffer, 1.0);
 
-	float4 addColor = tex2D(addBuffer, IN.UVCoord + float2(0.001, 0.001)); // fix for slight grid effect happening at high brightness
+	float4 addColor = tex2D(addBuffer, IN.UVCoord);
 	return float4(color.rgb + addColor.rgb, 1);
 }
 
@@ -73,7 +95,7 @@ float4 ScaleUp(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer) 
 float4 Bloom(VSOUT IN ):COLOR0
 {
 	// quick average lum with 4 samples at corner pixels
-	float4 color = linearize(sampleBox(IN.UVCoord, TESR_RenderedBuffer, 0.5));
+	float4 color = linearize(sampleBox(IN.UVCoord, TESR_RenderedBuffer, 1.0f));
 
 	float threshold = TESR_BloomData.x;
 	float brightness = max(0.000001, luma(color));
@@ -137,6 +159,25 @@ technique // 5
 		PixelShader = compile ps_3_0 ScaleDown(TESR_BloomBuffer16); // output to BloomBuffer32
 	}	
 }
+
+technique // 5
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 ScaleDown(TESR_BloomBuffer32); // output to BloomBuffer64
+	}	
+}
+
+technique // 6
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 ScaleUp(TESR_BloomBuffer64, TESR_BloomBuffer32); // output to BloomBuffer32
+	}	
+}
+
 
 technique // 6
 {

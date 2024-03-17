@@ -8,17 +8,17 @@ void BloomEffect::RegisterConstants() {
 void BloomEffect::RegisterTextures() {
 	std::string bufferName = "TESR_BloomBuffer";
 	int multiple = 1;
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 7; i++) {
 		std::string name = (i>0?bufferName + std::to_string(multiple):bufferName);
 		//Logger::Log("creating %s multiple %i %i:%i", name, multiple, TheRenderManager->width / multiple, TheRenderManager->height / multiple);
-		multiple *= 2;
-
 		Settings.Resolution[i] = D3DXVECTOR4(
 			TheRenderManager->width / multiple, 
 			TheRenderManager->height / multiple, 
 			1.0f / (float)(TheRenderManager->width / multiple), 
 			1.0f / (float)(TheRenderManager->height / multiple)
 		);
+		multiple *= 2;
+
 		TheTextureManager->InitTexture(name.c_str(), &Textures.BloomTexture[i], &Textures.BloomSurface[i], Settings.Resolution[i].x, Settings.Resolution[i].y, D3DFMT_A16B16G16R16F);
 	}
 };
@@ -53,30 +53,20 @@ void BloomEffect::RenderBloomBuffer(IDirect3DSurface9* RenderTarget) {
 	if (!Enabled) return; // skip rendering if the effect is disabled
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
-	std::string bufferName = "TESR_BloomBuffer";
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
-	Device->SetRenderTarget(0, Textures.BloomSurface[0]);
-	Constants.Resolution = Settings.Resolution[0];
-	Render(Device, Textures.BloomSurface[0], NULL, 0, false, NULL);
-
-	int multiple = 1;
-	int passNumber = 1;
-
+	int passNumber = 0;
 	//progressively blur & downsample
-	for (int i = 1; i <= 5; i++) {
-		multiple *= 2;
+	for (int i = 0; i <= 6; i++) {
 		Constants.Resolution = Settings.Resolution[i];
-		Device->SetRenderTarget(0, Textures.BloomSurface[i]);
-		Render(Device, Textures.BloomSurface[i], NULL, passNumber, false, NULL);
+		Render(Device, RenderTarget, Textures.BloomSurface[i], passNumber, true, NULL);
 		passNumber++;
 	}
 
 	//progressively blur & upsample and combine
-	for (int i = 4; i >= 0; i--) {
-		multiple /= 2;
+	for (int i = 5; i >= 0; i--) {
 		Constants.Resolution = Settings.Resolution[i];
-		Device->SetRenderTarget(0, Textures.BloomSurface[i]);
-		Render(Device, Textures.BloomSurface[i], NULL, passNumber, false, NULL);
+		Render(Device, RenderTarget, Textures.BloomSurface[i], passNumber, false, NULL);
 		passNumber++;
 	}
 
