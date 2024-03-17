@@ -15,6 +15,7 @@ public:
 	void	UpdateConstants();
 	void	RegisterConstants();
 	void	UpdateSettings();
+	bool	ShouldRender();
 
 	float dayMult;
 	float nightMult;
