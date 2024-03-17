@@ -4,7 +4,7 @@ void ShadowsExteriorEffect::UpdateConstants() {
 
 	Constants.ShadowFade.x = 0; // Fade 1.0 == no shadows
 	if (TheShaderManager->GameState.isExterior) {
-		Constants.ShadowFade.x = smoothStep(0.3, 0, abs(TheShaderManager->GameState.dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
+		Constants.ShadowFade.x = smoothStep(0.5, 0.1, abs(TheShaderManager->GameState.dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
 
 		TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
 		float DaysPassed = GameTimeGlobals->GameDaysPassed ? GameTimeGlobals->GameDaysPassed->data : 1.0f;
