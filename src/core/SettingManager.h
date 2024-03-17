@@ -19,6 +19,7 @@ struct SettingsMainStruct {
         bool    RenderPreTonemapping;
 		UInt8	AnisotropicFilter;
 		UInt16	ScreenshotKey;
+		bool	HDRScreenshot;
 		float	FarPlaneDistance;
 	};
 	

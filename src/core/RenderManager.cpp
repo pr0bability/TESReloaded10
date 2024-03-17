@@ -367,7 +367,7 @@ void RenderManager::ResolveDepthBuffer(IDirect3DTexture9* Buffer) {
 
  
 
-void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget){
+void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget, bool HDR){
 	if (Global->OnKeyDown(TheSettingManager->SettingsMain.Main.ScreenshotKey)) {
 		char Filename[MAX_PATH];
 		char Name[80];
@@ -378,8 +378,12 @@ void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget){
 		if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES) CreateDirectoryA(Filename, NULL);
 		strftime(Name, 80, "\\%Y%m%d %H.%M.%S", localtime(&CurrentTime));
 		strcat(Filename, Name);
-		strcat(Filename, ".jpg");
-		D3DXSaveSurfaceToFileA(Filename, D3DXIFF_JPG, RenderTarget, NULL, NULL);
+		strcat(Filename, HDR?".hdr":".jpg");
+		if (HDR)
+			D3DXSaveSurfaceToFileA(Filename, D3DXIFF_HDR, RenderTarget, NULL, NULL);
+		else
+			D3DXSaveSurfaceToFileA(Filename, D3DXIFF_JPG, RenderTarget, NULL, NULL);
+
 		InterfaceManager->ShowMessage("Screenshot taken!");
 	}
 /*	if (Global->OnKeyDown(0x17)) {
