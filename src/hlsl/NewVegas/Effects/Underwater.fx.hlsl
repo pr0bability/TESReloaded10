@@ -220,7 +220,7 @@ float4 WaterDistortion( VSOUT IN ) : COLOR0 {
 	float3 eyeDirection = normalize(eyeVector);
     float3 worldPos = TESR_CameraPosition.xyz + eyeVector * depth;
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	if (TESR_CameraPosition.z > TESR_WaterSettings.x + 4.0 && worldPos.z > TESR_WaterSettings.x - 10.0) return color;
+	if (TESR_CameraPosition.z + 4.0 > TESR_WaterSettings.x && worldPos.z > TESR_WaterSettings.x - 10.0) return color;
 
 	IN.UVCoord.x += sin(frame * 3 + IN.UVCoord.x * 60) * 0.001f;
 	IN.UVCoord.y += cos(frame * 3 + IN.UVCoord.y * 60) * 0.001f;
