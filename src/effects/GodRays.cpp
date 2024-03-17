@@ -31,3 +31,7 @@ void GodRaysEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_GodRaysRayColor", &Constants.RayColor);
 	TheShaderManager->RegisterConstant("TESR_GodRaysData", &Constants.Data);
 }
+
+bool GodRaysEffect::ShouldRender() {
+	return TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater;
+}
