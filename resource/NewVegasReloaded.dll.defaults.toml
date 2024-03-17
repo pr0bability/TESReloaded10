@@ -56,6 +56,7 @@ RenderEffects = true        # Toggle rendering of all effects.
 RenderPreTonemapping = true # Toggle rendering of some effects in HDR before the game image space effects (can cause glitches).
 ReplaceIntro = false        # Controls rendering of the main menu custom video.
 ScreenshotKey = 87          # Keycode for custom screenshot hotkey (removes HUD and saves as jpg).
+HDRScreenshot = false       # Save screenshots in fbx (use with DXVK HDR)
 
 [_Main.Main.Precipitations]
 RemovePrecipitations = false   # Disables vanilla rain and other precipitations.

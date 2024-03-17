@@ -373,6 +373,7 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Main.AnisotropicFilter = GetSettingI("Main.Main.Misc", "AnisotropicFilter");
 	SettingsMain.Main.FarPlaneDistance = GetSettingF("Main.Main.Misc", "FarPlaneDistance");
 	SettingsMain.Main.ScreenshotKey = GetSettingI("Main.Main.Misc", "ScreenshotKey");
+	SettingsMain.Main.HDRScreenshot = GetSettingI("Main.Main.Misc", "HDRScreenshot");
 	SettingsMain.Main.ReplaceIntro = GetSettingI("Main.Main.Misc", "ReplaceIntro");
 	SettingsMain.Main.ForceMSAA = GetSettingI("Main.Main.Misc", "ForceMSAA");
 	SettingsMain.Main.SkipFog = GetSettingI("Main.Main.Misc", "SkipFog");
