@@ -660,8 +660,9 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	}
 
 	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-
 	Effects.Bloom->RenderBloomBuffer(RenderTarget);
+
+	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
@@ -710,7 +711,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing

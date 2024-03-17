@@ -1,12 +1,14 @@
 #include "Lens.h"
 
 void LensEffect::UpdateConstants() {
-	Constants.Data.x = TheShaderManager->GetTransitionValue(Settings.Main.strength, Settings.Night.strength, Settings.Interiors.strength);
+	Constants.Data.x = TheShaderManager->GetTransitionValue(Settings.Main.strength, Settings.Night.strength, Settings.Interiors.strength) * (!TheShaderManager->GameState.isUnderwater); // cancel out if underwater;
 	Constants.Data.y = TheShaderManager->GetTransitionValue(Settings.Main.bloomExponent, Settings.Night.bloomExponent, Settings.Interiors.bloomExponent);
 	Constants.Data.z = TheShaderManager->GetTransitionValue(Settings.Main.smudginess, Settings.Night.smudginess, Settings.Interiors.smudginess);
 }
 
 void LensEffect::UpdateSettings(){
+	if (!Enabled) Constants.Data.x = 0; // cancel out if disabled
+
 	Settings.Main.bloomExponent = TheSettingManager->GetSettingF("Shaders.Lens.Main", "BloomExponent");
 	Settings.Main.strength = TheSettingManager->GetSettingF("Shaders.Lens.Main", "Strength");
 	Settings.Main.smudginess = TheSettingManager->GetSettingF("Shaders.Lens.Main", "Smudginess");
@@ -22,7 +24,6 @@ void LensEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_LensData", &Constants.Data);
 }
 
-bool LensEffect::ShouldRender() 
-{
-	return !TheShaderManager->GameState.isUnderwater && Constants.Data.x > 0;
+bool LensEffect::ShouldRender() { 
+	return !TheShaderManager->GameState.isUnderwater && (Constants.Data.x > 0);
 };
