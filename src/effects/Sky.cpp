@@ -15,6 +15,8 @@ void SkyShaders::UpdateConstants() {
 
 void SkyShaders::UpdateSettings() {
 
+	useSunDiskColor = TheSettingManager->GetSettingF("Shaders.Sky.Main", "UseSunDiskColor");
+
 	Settings.SkyMultiplierDay = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "SkyMultiplier");
 	Settings.SkyMultiplierNight = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "SkyMultiplier");
 

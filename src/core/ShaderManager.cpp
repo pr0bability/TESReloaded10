@@ -271,15 +271,21 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunAmount.x = GameState.isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 
-	ShaderConst.sunDiskColor.x = WorldSky->SunColor.r;
-	ShaderConst.sunDiskColor.y = WorldSky->SunColor.g;
-	ShaderConst.sunDiskColor.z = WorldSky->SunColor.b;
-	ShaderConst.sunDiskColor.w = 1.0;
-
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
 	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
 	ShaderConst.sunColor.z = WorldSky->sunDirectional.b;
 	ShaderConst.sunColor.w = ShaderConst.sunGlare;
+
+	if (Shaders.Sky->useSunDiskColor) {
+		// experimental color used for more sky tinting capabilities
+		ShaderConst.sunDiskColor.x = WorldSky->SunColor.r;
+		ShaderConst.sunDiskColor.y = WorldSky->SunColor.g;
+		ShaderConst.sunDiskColor.z = WorldSky->SunColor.b;
+		ShaderConst.sunDiskColor.w = 1.0;
+	}
+	else {
+		ShaderConst.sunDiskColor = ShaderConst.sunColor; // override with the color of the lighting
+	}
 
 	ShaderConst.windSpeed = WorldSky->windSpeed;
 
