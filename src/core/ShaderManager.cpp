@@ -238,10 +238,10 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunTiming.w = WorldSky->GetSunsetColorEnd();
 
 	// fake sunset time tracking with more time given before sunrise/sunset
-	float sunRiseLight = step(SunriseStart - 1.0f, SunriseEnd, GameHour); // 0 at night to 1 after sunrise
-	float sunSetLight = step(SunsetEnd + 1.0f, SunsetStart, GameHour);  // 1 before sunset to 0 at night
+	float sunRiseLight = step(SunriseStart - 1.0f, SunriseEnd - 1.0f, GameHour); // 0 at night to 1 after sunrise
+	float sunSetLight = step(SunsetEnd + 1.0f, SunsetStart + 1.0f, GameHour);  // 1 before sunset to 0 at night
 	float newDayLight = sunRiseLight * sunSetLight;
-	GameState.transitionCurve = smoothStep(0.0f, 0.6f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
+	GameState.transitionCurve = smoothStep(0.0f, 1.0f, newDayLight); // a curve for day/night transitions that occurs mostly during second half of sunset
 
 	GameState.isDayTimeChanged = (newDayLight != GameState.dayLight);  // allow effects to fire settings update during sunset/sunrise transitions
 	GameState.dayLight = newDayLight;
@@ -256,7 +256,7 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
-	if (GameState.isExterior && GameState.isDayTime > 0.5) ShaderConst.SunDir = ShaderConst.SunPosition;
+	if (GameState.isExterior && GameState.dayLight > 0.5) ShaderConst.SunDir = ShaderConst.SunPosition;
 
 	// expose the light vector in view space for screen space lighting
 	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);
@@ -267,7 +267,7 @@ void ShaderManager::UpdateConstants() {
 
 	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5f;
 
-	GameState.isDayTime = smoothStep(0, 1, GameState.isDayTime); // smooth daytime progression
+	GameState.isDayTime = smoothStep(0, 1, GameState.dayLight); // smooth daytime progression
 	ShaderConst.SunAmount.x = GameState.isDayTime;
 	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 
