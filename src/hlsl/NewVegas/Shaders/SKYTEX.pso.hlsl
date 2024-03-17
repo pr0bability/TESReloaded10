@@ -153,11 +153,11 @@ VS_OUTPUT main(VS_INPUT IN) {
         // finalColor.rgb = selectColor(TESR_DebugVar.x, finalColor, ambient, diffuse, fresnel, bounce, scattering, sunColor, skyColor, normal, float3(IN.TexUV, 1));
     } else {
         // simply tint the clouds
-        float3 cloudTint = lerp(pows(TESR_SkyColor.rgb, 5.0), sunColor, 1 - saturate(sunInfluence)).rgb;
-        cloudTint = lerp(cloudTint, white.rgb, sunHeight * isDayTime); // tint the clouds less when the sun is high in the sky
+        float3 cloudTint = lerp(pows(TESR_SkyColor.rgb * 0.5, 5.0), sunColor, 1 - saturate(sunInfluence)).rgb;
+        cloudTint = lerp(white.rgb, cloudTint * TESR_CloudData.w * 1.333, (1 - sunHeight) * isDayTime); // tint the clouds less when the sun is high in the sky and at night
 
-        finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.333, isDayTime); // cancel tint at night
-        finalColor.rgb += scattering * 4.0;
+        finalColor.rgb *= cloudTint;
+        finalColor.rgb += lerp(black.rgb, scattering * 4.0, (1 - sunHeight) * isDayTime);
     }
     finalColor = float4(finalColor.rgb * color.rgb * Params.y, saturate(finalColor.w * IN.color_0.a * TESR_CloudData.z));
     
