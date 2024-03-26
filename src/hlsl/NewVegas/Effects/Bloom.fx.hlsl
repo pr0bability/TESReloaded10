@@ -42,25 +42,32 @@ VSOUT FrameVS(VSIN IN)
 #include "Includes/Helpers.hlsl"
 #include "Includes/Blur.hlsl"
 
-static const float3 offsets[9] = {
-	float3(0, 0, 4), 
-	float3(1, 0, 2), 
-	float3(-1, 0, 2), 
-	float3(0, 1, 2), 
-	float3(0, -1, 2), 
+// static const float3 offsets[9] = {
+// 	float3(0, 0, 4), 
+// 	float3(1, 0, 2), 
+// 	float3(-1, 0, 2), 
+// 	float3(0, 1, 2), 
+// 	float3(0, -1, 2), 
+// 	float3(-1, -1, 1), 
+// 	float3(1, -1, 1), 
+// 	float3(-1, 1, 1), 
+// 	float3(1, 1, 1)
+// };
+
+static const float3 offsets[5] = {
+	float3(0, 0, 1), 
 	float3(-1, -1, 1), 
 	float3(1, -1, 1), 
 	float3(-1, 1, 1), 
 	float3(1, 1, 1)
 };
 
+
 float4 sampleBox(float2 uv, sampler2D buffer, float offset){
     float4 color = float4(0, 0, 0, 0);
     float total = 0;
 
-    // float2 offsets[5] = {float2(0, 0), float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1)};
-
-    for (int i = 0; i < 9; i ++){
+    for (int i = 0; i < 5; i ++){
         float2 coords = uv + TESR_BloomResolution.zw * offsets[i].xy * offset;
         float2 safety = TESR_ReciprocalResolution.xy * TESR_DebugVar.xy;
         float isValid = (coords.x > safety.x && coords.x < 1 - safety.x && coords.y > safety.y && coords.y < 1 - safety.y) * offsets[i].z;
@@ -77,15 +84,14 @@ float4 sampleBox(float2 uv, sampler2D buffer, float offset){
 float4 ScaleDown(VSOUT IN, uniform sampler2D buffer) : COLOR0
 {
 	float2 uv = IN.UVCoord;
-	return sampleBox(uv, buffer, 1.0);
+	return sampleBox(uv, buffer, 0.5);
 }
 
 // downsample/upsample a part of the screen given by the scaleFactor
 float4 ScaleUp(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer) : COLOR0
 {
-	// float2 uv = IN.UVCoord + float2(1.0, 1.0) * 0.95 * TESR_DebugVar.x * TESR_BloomResolution.zw; // adjust the sampling coordinate to compensate for the buffer size difference
-	float2 uv = IN.UVCoord; // adjust the sampling coordinate to compensate for the buffer size difference
-	float4 color = sampleBox(uv, buffer, 1.0);
+	float2 uv = IN.UVCoord;
+	float4 color = sampleBox(uv, buffer, 0.5);
 
 	float4 addColor = tex2D(addBuffer, IN.UVCoord);
 	return float4(color.rgb + addColor.rgb, 1);
@@ -160,7 +166,7 @@ technique // 5
 	}	
 }
 
-technique // 5
+technique // 6
 {
 	pass
 	{
@@ -169,7 +175,7 @@ technique // 5
 	}	
 }
 
-technique // 6
+technique // 7
 {
 	pass
 	{
@@ -179,7 +185,7 @@ technique // 6
 }
 
 
-technique // 6
+technique // 8
 {
 	pass
 	{
@@ -188,7 +194,7 @@ technique // 6
 	}	
 }
 
-technique // 7
+technique // 9
 {
 	pass
 	{
@@ -197,7 +203,7 @@ technique // 7
 	}	
 }
 
-technique // 8
+technique // 10
 {
 	pass
 	{
@@ -206,7 +212,7 @@ technique // 8
 	}	
 }
 
-technique // 9
+technique // 11
 {
 	pass
 	{
@@ -215,7 +221,7 @@ technique // 9
 	}	
 }
 
-technique // 10
+technique // 12
 {
 	pass
 	{

@@ -10,6 +10,7 @@ void BloomEffect::RegisterTextures() {
 	int multiple = 1;
 	for (int i = 0; i < 7; i++) {
 		std::string name = (i>0?bufferName + std::to_string(multiple):bufferName);
+		multiple *= 2;
 		//Logger::Log("creating %s multiple %i %i:%i", name, multiple, TheRenderManager->width / multiple, TheRenderManager->height / multiple);
 		Settings.Resolution[i] = D3DXVECTOR4(
 			TheRenderManager->width / multiple, 
@@ -17,7 +18,6 @@ void BloomEffect::RegisterTextures() {
 			1.0f / (float)(TheRenderManager->width / multiple), 
 			1.0f / (float)(TheRenderManager->height / multiple)
 		);
-		multiple *= 2;
 
 		TheTextureManager->InitTexture(name.c_str(), &Textures.BloomTexture[i], &Textures.BloomSurface[i], Settings.Resolution[i].x, Settings.Resolution[i].y, D3DFMT_A16B16G16R16F);
 	}
