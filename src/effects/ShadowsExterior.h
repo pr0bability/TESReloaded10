@@ -80,6 +80,8 @@ public:
 		bool                BlurShadowMaps;
 		int					Quality;
 		int					ShadowMapResolution;
+		int					OrthoMapResolution;
+		float				OrthoRadius;
 		float				ShadowRadius;
 		float				Darkness;
 		float				NightMinDarkness;

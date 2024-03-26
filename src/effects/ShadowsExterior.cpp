@@ -63,7 +63,9 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.Darkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "Darkness");
 	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
 	Settings.Exteriors.ShadowRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowsRadius");
+	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
 	Settings.Exteriors.ShadowMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMapResolution");
+	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
 	Settings.Exteriors.ShadowMapFarPlane = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowMapFarPlane");
 	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
 	Settings.Exteriors.BlurShadowMaps = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "BlurShadowMaps");
@@ -170,7 +172,6 @@ void ShadowsExteriorEffect::RegisterConstants() {
 }
 
 void ShadowsExteriorEffect::RegisterTextures() {
-	int ShadowMapSize;
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
 	// initialize cascade shadowmaps
@@ -179,16 +180,28 @@ void ShadowsExteriorEffect::RegisterTextures() {
 		"TESR_ShadowMapBufferMiddle",
 		"TESR_ShadowMapBufferFar",
 		"TESR_ShadowMapBufferLod",
-		"TESR_OrthoMapBuffer",
 	};
-	for (int i = 0; i <= ShadowManager::ShadowMapTypeEnum::MapOrtho; i++) {
+	for (int i = 0; i <= MapLod; i++) {
 		// create one texture per Exterior ShadowMap type
-		float multiple = (i == ShadowManager::ShadowMapTypeEnum::MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
-		ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
+		float multiple = (i == MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
+		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
 
 		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
 		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
+		
+		// initialize the frame vertices for future shadow blurring
+		TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
+		ShadowMaps[i].ShadowMapViewPort = { 0, 0, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+		ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 	}
+
+	// ortho texture
+	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
+	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMaps[MapOrtho].ShadowMapTexture, &ShadowMaps[MapOrtho].ShadowMapSurface, orthoMapRes, orthoMapRes, D3DFMT_G32R32F);
+	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[MapOrtho].ShadowMapDepthSurface, NULL);
+	ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
+	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
+
 
 	// initialize spot lights maps
 	for (int i = 0; i < SpotLightsMax; i++) {
@@ -209,15 +222,6 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	// Create the stencil surface used for rendering cubemaps
 	TheRenderManager->device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowCubeMapDepthSurface, NULL);
 
-	// initialize the frame vertices for future shadow blurring
-	for (int i = 0; i <= MapOrtho; i++) {
-		float multiple = (i == ShadowManager::ShadowMapTypeEnum::MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
-		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
-
-		if (i != MapOrtho) TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
-		ShadowMaps[i].ShadowMapViewPort = { 0, 0, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
-		ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
-	}
 	//TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
 	//memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
 
@@ -259,7 +263,7 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius;
 
 	// ortho distance render
-	ShadowMaps[MapOrtho].ShadowMapRadius = ShadowMaps[MapFar].ShadowMapRadius;
+	ShadowMaps[MapOrtho].ShadowMapRadius = Settings.Exteriors.OrthoRadius;
 }
 
 

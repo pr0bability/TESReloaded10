@@ -535,7 +535,7 @@ VerticalScale = 1.0                  # Multiplier for the length of the drops/st
 Enabled = true                       # Rain effect that is blocked by objects above and refracts light.
 
 [_Shaders.ShadowsExteriors.Far]
-Activators = false                   # Wether to include objects with "Activator" flag when rendering shadowmaps.
+Activators = false                   # Wether to include objects with "Activator" flag when rendering ps.
 Actors = true                        # Wether to include objects with "Actors" flag when rendering shadowmaps.
 AlphaEnabled = true                  # Wether to take into account alpha of objects when rendering shadowmaps.
 Apparatus = false                    # Wether to include objects with "Apparatus" flag when rendering shadowmaps.
@@ -569,14 +569,16 @@ Trees = true                         # Wether to include Trees when rendering sh
 [_Shaders.ShadowsExteriors.Main]
 PostProcess = true                   # Wether to render shadows as a post process effect. Currently the only supported mode.
 BlurShadowMaps = true                # Blur shadow maps for soft shadows.
-Darkness = 0.65                       # Darkness of shadows.
+Darkness = 0.65                      # Darkness of shadows.
 Enabled = true                       # Enable sun shadows using rendered shadow maps.
-NightMinDarkness = 0.35               # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
+NightMinDarkness = 0.35              # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
 Quality = 2                          # Not used.
 ShadowMapFarPlane = 32768            # Used for shadow frustum. Don't change this value.
 ShadowMapResolution = 1024           # Resolution of the texture used to store the shadow maps. LOD map is twice this value. Needs restart to take effect.
+OrthoMapResolution = 1024            # Resolution of the texture used to store the ortho map.
 ShadowMode = 1                       # Shadow algorithm used. 1: Variance Shadow Maps, 2: unfiltered Exponenial Shadow Map, 3: filtered ESM.
 ShadowsRadius = 8000                 # Max distance for rendering of shadow from the camera.
+OrthoRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Wether to cast shadows from point lights. Requires a slight darkening of the entire screen.
 UsePointShadowsNight = true          # Wether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
 
