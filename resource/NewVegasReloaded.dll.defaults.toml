@@ -320,6 +320,7 @@ OffsetX = 0.0                          # X coordinate offset for the position of
 OffsetY = 0.0                          # Y coordinate offset for the position of the light relative to the weapon position
 OffsetZ = 0.0                          # Z coordinate offset for the position of the light relative to the weapon position
 RenderShadows = true                   # Wether to use rendered shadows in the flashlight cone
+AttachToWeapon = true                  # The flashlight will move with the weapon instead of being fixed to the camera
 
 [_Shaders.Flashlight.Status]
 Enabled = true                         # Replace the pipboy light with a post process flashlight attached to the weapon

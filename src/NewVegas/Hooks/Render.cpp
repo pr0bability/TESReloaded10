@@ -155,7 +155,7 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 		OutputSurface = TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface;
 		if (!TheSettingManager->SettingsMain.Main.RenderPreTonemapping) TheShaderManager->RenderEffectsPreTonemapping(OutputSurface);
 		TheShaderManager->RenderEffects(OutputSurface);
-		TheRenderManager->CheckAndTakeScreenShot(OutputSurface);
+		TheRenderManager->CheckAndTakeScreenShot(OutputSurface, TheSettingManager->SettingsMain.Main.HDRScreenshot);
 	}
 
 	if (GameSurface) GameSurface->Release();
