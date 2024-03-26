@@ -104,6 +104,10 @@ float4 Bloom(VSOUT IN ):COLOR0
 	float4 color = linearize(sampleBox(IN.UVCoord, TESR_RenderedBuffer, 1.0f));
 
 	float threshold = TESR_BloomData.x;
+	if (threshold == 0) {
+		return color; // cancel out tresholding if treshold is set to 0
+	}
+
 	float brightness = max(0.000001, luma(color));
 	float bloomScale = TESR_BloomData.y; 
 
@@ -111,6 +115,7 @@ float4 Bloom(VSOUT IN ):COLOR0
 
 	return float4(saturate(bloom) * color.rgb, 1);
 }
+
 
 technique // 0
 {
