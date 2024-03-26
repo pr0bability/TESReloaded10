@@ -15,6 +15,7 @@ public:
 		float		Distance;
 		bool		renderShadows;
 		NiPoint3	Offset;
+		bool		attachToWeapon;
 	};
 	FlashlightSettingsStruct	Settings;
 
