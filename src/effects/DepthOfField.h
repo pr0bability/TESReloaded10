@@ -10,7 +10,7 @@ public:
 		float DistantBlurStartRange;
 		float DistantBlurEndRange;
 		float BaseBlurRadius;
-		float BlurFallOff;
+		float focusDistance;
 		float Radius;
 		float DiameterRange;
 		float NearBlurCutOff;
