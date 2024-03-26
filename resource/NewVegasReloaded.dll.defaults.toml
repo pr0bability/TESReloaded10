@@ -122,7 +122,7 @@ Enabled = false
 AngleBias = 1.6                         # Value to increase the contribution of closer samples for more detail in creases.
 BlurDropThreshold = 8.0                 # Distance cutoff for areas that shouldn't be blurred together (edge aware denoise).
 BlurRadiusMultiplier = 2.0              # Blur radius to denoise AO.
-ClampStrength = 0.25                     # Lower limit to AO darkness (0 for pure black and 1 for pure white).
+ClampStrength = 0.25                    # Lower limit to AO darkness (0 for pure black and 1 for pure white).
 Enabled = true                          # Enable Ambient occlusion in exteriors.
 LumThreshold = 0.7                      # Treshold to reduce AO strength on bright surfaces.
 Range = 30.0                            # Distance for sampling. Larger values create a softer AO, smaller creates sharper details.
@@ -163,19 +163,25 @@ Enabled = false
 Treshold = 2.0                          # treshold value above which lights will bloom
 Scale = 0.31                            # scale the brightness of the bloom
 Strength = 0.1                          # power of the bloom when applied
+Blending = 0.15                         # How much of the bloom is visible
+BloomExponent = 0.7                     # Makes the bloom more spread out or more focused
 
 [_Shaders.Bloom.Night]
 Treshold = 0.4                          # treshold value above which lights will bloom
 Scale = 2.0                             # scale the brightness of the bloom
 Strength = 0.5                          # power of the bloom when applied
+Blending = 0.5                          # How much of the bloom is visible
+BloomExponent = 1.0                     # Makes the bloom more spread out or more focused
 
 [_Shaders.Bloom.Interiors]
 Treshold = 0.0                          # treshold value above which lights will bloom
 Scale = 0.61                            # scale the brightness of the bloom
 Strength = 2.3                          # power of the bloom when applied
+Blending = 0.3                          # How much of the bloom is visible
+BloomExponent = 0.9                     # Makes the bloom more spread out or more focused
 
 [_Shaders.Bloom.Status]
-Enabled = true                          # Replace the vanilla bloom
+Enabled = true                          # Replace the vanilla bloom. Requires tonemapping shader to be applied. Also impacts Dirt Lens and Rain shaders
 
 
 [_Shaders.BloomLegacy.Exteriors]
