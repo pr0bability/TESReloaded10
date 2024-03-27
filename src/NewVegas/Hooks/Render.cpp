@@ -108,9 +108,7 @@ float (__thiscall* GetWaterHeightLOD)(TESWorldSpace*) = (float (__thiscall*)(TES
 float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 	
 	float r = This->waterHeight;
-	if (TheSettingManager->SettingsMain.Main.ForceReflections) {
-		if (*(void**)This == (void*)0x0103195C) r = TheShaderManager->Shaders.Water->Constants.Default.waterSettings.x;
-	}
+	if (*(void**)This == (void*)0x0103195C) r = TheShaderManager->Shaders.Water->Constants.Default.waterSettings.x;
 	return r;
 
 }

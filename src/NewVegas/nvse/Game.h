@@ -4312,7 +4312,7 @@ public:
 	/*
 	* Fills the last 3 parameters with info while detecting the closest most important water plane/group/form based on the given ref
 	*/
-	float	GetWaterHeight(TESObjectREFR* Ref, SceneGraph* WorldSceneGraph, TESWaterForm** waterForm) {
+	float	GetWaterHeight(PlayerCharacter* Ref, SceneGraph* WorldSceneGraph, TESWaterForm** waterForm) {
 
 		TESObjectCELL* Cell = Ref->parentCell;
 		if (Cell) *waterForm = Cell->GetWaterForm();
@@ -4354,7 +4354,7 @@ public:
 
 				float waterDistance = node->GetDistance(&Ref->pos) - bounds->Radius;
 
-				if (waterDistance < 0 && waterDistance < distance) {
+				if (Ref->inWater && waterDistance < 0) {
 					// player is inside the plane, this is the best candidate
 					distance = waterDistance;
 					waterGroup = water->data;
