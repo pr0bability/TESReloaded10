@@ -27,9 +27,9 @@ void AttachHooks() {
 	DetourAttach(&(PVOID&)SetShaders, &SetShadersHook);
 	DetourAttach(&(PVOID&)SetSamplerState, &SetSamplerStateHook);
 
+	DetourAttach(&(PVOID&)GetWaterHeightLOD, &GetWaterHeightLODHook);
 	if (SettingsMain->Main.ForceReflections) {
 		DetourAttach(&(PVOID&)RenderReflections, &RenderReflectionsHook);
-		DetourAttach(&(PVOID&)GetWaterHeightLOD, &GetWaterHeightLODHook);
 	}
 
 	DetourAttach(&(PVOID&)RenderPipboy, &RenderPipboyHook);
