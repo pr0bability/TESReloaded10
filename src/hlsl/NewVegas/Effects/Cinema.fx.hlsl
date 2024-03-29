@@ -9,8 +9,7 @@ float4 TESR_CinemaSettings; //x: dirtlens opacity, y:grainAmount, z:chromatic ab
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_SourceBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_BlueNoiseSampler : register(s3) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_BlueNoiseSampler : register(s2) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 
 static const float time = TESR_GameTime.z * 25; // Simulate cinema noise by using cinema framerate
 
@@ -86,9 +85,9 @@ float4 Cinema(VSOUT IN) : COLOR0
 	float2 posToCenter = float2(0, 0) - expand(IN.UVCoord);
 
 	// shift each channel with an offset based on vector to center to simulate lens distortion
-    float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-    color.r = tex2D(TESR_SourceBuffer, IN.UVCoord + posToCenter * chromaShift).r;
-    color.b = tex2D(TESR_SourceBuffer, IN.UVCoord - posToCenter * chromaShift).b;
+    float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+    color.r = tex2D(TESR_RenderedBuffer, IN.UVCoord + posToCenter * chromaShift).r;
+    color.b = tex2D(TESR_RenderedBuffer, IN.UVCoord - posToCenter * chromaShift).b;
 
 	//Film grain 
 	//--------------------------------------------------
