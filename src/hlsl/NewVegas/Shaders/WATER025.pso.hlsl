@@ -87,6 +87,8 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 	    color = getPointLightSpecular(surfaceNormal, TESR_LightPosition[i], position, eyeDirection,  TESR_LightColor[ 12 + i].rgb * TESR_LightColor[ 12 + i].w, color);
 	}
 
+    color = getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color);
+
     color = delinearize(color); //delinearise
     OUT.color_0 = color;
     return OUT;
