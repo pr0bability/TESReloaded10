@@ -69,7 +69,7 @@ float4 sampleBox(float2 uv, sampler2D buffer, float offset){
 
     for (int i = 0; i < 5; i ++){
         float2 coords = uv + TESR_BloomResolution.zw * offsets[i].xy * offset;
-        float2 safety = TESR_ReciprocalResolution.xy * TESR_DebugVar.xy;
+        float2 safety = TESR_ReciprocalResolution.xy * float2(0.5, 0.5);
         float isValid = (coords.x > safety.x && coords.x < 1 - safety.x && coords.y > safety.y && coords.y < 1 - safety.y) * offsets[i].z;
 		color += tex2D(buffer, coords) * isValid;
         total += isValid;
