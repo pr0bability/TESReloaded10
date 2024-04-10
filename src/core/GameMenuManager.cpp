@@ -59,7 +59,7 @@ void GameMenuManager::HandleInput() {
 #ifdef debugMenuInput
 	if (TheShaderManager->GameState.isExterior) Logger::Log("====Exterior====");
 	else Logger::Log("====Interior====");
-	Logger::Log("Menu key %i is down? %i", MenuSettings->KeyEnable, menuKeyDown);
+	Logger::Log("Menu key %i is down? %i", MenuSettings.KeyEnable, menuKeyDown);
 #endif
 
 	// check for menu key to toggle display of the menu
@@ -89,7 +89,7 @@ void GameMenuManager::HandleInput() {
 	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
 
 	//handle entry using numpad keys or number row keys depending on setting
-	int startEntry = useNumpad ? MenuSettings.KeyEditing : 13;
+	int toggleEntry = useNumpad ? MenuSettings.KeyEditing : 13;
 	int key0 = useNumpad ? 82 : 11;
 	int key1 = useNumpad ? 79 : 2;
 	int key2 = useNumpad ? 80 : 3;
@@ -104,17 +104,13 @@ void GameMenuManager::HandleInput() {
 	int keyMinus = useNumpad ? 74 : 12;
 
 	// value editing mode toggle (disabled in Status sections because it's more complex to deal with switching effects)
-	if (Global->OnKeyDown(startEntry) && SelectedColumn == 3 && !isStatusSection) {
-		if (!EditingMode) {
-			// start editing, copy the current value to the edited string
-			strcpy(EditingValue, SelectedNode.Value);
-		}
-		else {
-			// finished editing, sets the value. 
-			TheSettingManager->SetSettingF(SelectedNode.Section, SelectedNode.Key, atof(EditingValue));
-		}
-
+	if (Global->OnKeyDown(toggleEntry) && SelectedColumn == 3 && !isStatusSection) {
 		EditingMode = !EditingMode;
+		
+		if (EditingMode)
+			strcpy(EditingValue, SelectedNode.Value); 								// start editing, copy the current value to the edited string
+		else
+			TheSettingManager->SetSettingF(SelectedNode.Section, SelectedNode.Key, atof(EditingValue));			// finished editing, sets the value. 
 	}
 
 	if (EditingMode) {
@@ -145,119 +141,135 @@ void GameMenuManager::HandleInput() {
 			strcat(EditingValue, "-");
 		if (strlen(EditingValue) > 0 && IsKeyPressed(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
 	}
-	else if (SelectedNode.Section) { //SelectedNode.Section is empty the first time the menu renders
+	else if (!SelectedNode.Section) {
+		return; //SelectedNode.Section is empty the first time the menu renders
+	}
 
 #ifdef debugMenuInput
-		Logger::Log("Selected column: %i, selected row: %i, ", 1, SelectedRow[SelectedColumn]);
-		Logger::Log("Selected setting: %s.%s ", SelectedNode.Section, SelectedNode.Key);
+	Logger::Log("Selected column: %i, selected row: %i, Selected page: %i", SelectedColumn, SelectedRow[SelectedColumn], SelectedPage[SelectedColumn]);
+	Logger::Log("Selected setting: %s.%s ", SelectedNode.Section, SelectedNode.Key);
 #endif
 
-		// handle other types of user input
-		if (Global->OnKeyDown(MenuSettings.KeySave)) {
-			TheSettingManager->SaveSettings();
-			InterfaceManager->ShowMessage("Settings saved.");
-		}
-		else if (SelectedColumn == COLUMNS::HEADER) {
-			// header is a column tilted to the side (column 0). Left and Right change rows and Down moves to column 1 (or the actual menu)
-			if (IsKeyPressed(MenuSettings.KeyDown)) {
-				SelectedColumn = COLUMNS::CATEGORY;
-			}
-			else if (IsKeyPressed(MenuSettings.KeyLeft)) {
-				SelectedRow[SelectedColumn] = max(0, SelectedRow[SelectedColumn] - 1);
-			}
-			else if (IsKeyPressed(MenuSettings.KeyRight)) {
-				SelectedRow[SelectedColumn] = min(SelectedRow[SelectedColumn] + 1, Rows[SelectedColumn]);
-			}
-			else if (IsKeyPressed(MenuSettings.KeyUp)) {
-				SelectedColumn = COLUMNS::CATEGORY;
-				SelectedRow[SelectedColumn] = Rows[SelectedColumn];
-			}
-			SelectedPage[COLUMNS::CATEGORY] = SelectedPage[COLUMNS::SECTION] = SelectedPage[COLUMNS::SETTINGS] = 0;
-		}
-		else {
-			// handle navigation
-			if (IsKeyPressed(MenuSettings.KeyUp)) {
-				if (SelectedRow[SelectedColumn] == 0)
-					if (SelectedColumn == COLUMNS::CATEGORY && SelectedRow[COLUMNS::CATEGORY] == 0)
-						SelectedColumn = COLUMNS::HEADER;  // go to header
-					else
-						 SelectedRow[SelectedColumn] = Rows[SelectedColumn];
-				else
-					SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] - 1;
+	// handle other types of user input
+	if (Global->OnKeyDown(MenuSettings.KeySave)) {
+		TheSettingManager->SaveSettings();
+		InterfaceManager->ShowMessage("Settings saved.");
+	}
+	else if (SelectedColumn == COLUMNS::HEADER) {
+		// header is a column tilted to the side (column 0). Left and Right change rows and Down moves to column 1 (or the actual menu)
+		SelectedPage[COLUMNS::CATEGORY] = SelectedPage[COLUMNS::SECTION] = SelectedPage[COLUMNS::SETTINGS] = 0;
 
-				if (SelectedColumn < COLUMNS::SETTINGS) {
-					// reset selected rows for columns further than current one
-					for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
-						SelectedRow[i] = 0; 
-					}
-				}
-			}
-			else if (IsKeyPressed(MenuSettings.KeyDown)) {
-				if (SelectedRow[SelectedColumn] == Rows[SelectedColumn])
-					SelectedRow[SelectedColumn] = 0;
-				else
-					SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] + 1;
-
-				if (SelectedColumn < COLUMNS::SETTINGS) {
-					// reset selected rows for columns further than current one
-					for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
-						SelectedRow[i] = 0; 
-					}
-				}
-			}
-			else if (IsKeyPressed(MenuSettings.KeyLeft)) {
-				if (SelectedColumn == COLUMNS::CATEGORY) {
-					SelectedRow[SelectedColumn] = 0;
+		if (IsKeyPressed(MenuSettings.KeyDown)) {
+			SelectedColumn = COLUMNS::CATEGORY;
+		}
+		else if (IsKeyPressed(MenuSettings.KeyLeft)) {
+			SelectedRow[SelectedColumn] = max(0, SelectedRow[SelectedColumn] - 1);
+		}
+		else if (IsKeyPressed(MenuSettings.KeyRight)) {
+			SelectedRow[SelectedColumn] = min(SelectedRow[SelectedColumn] + 1, Rows[SelectedColumn]);
+		}
+		else if (IsKeyPressed(MenuSettings.KeyUp)) {
+			SelectedColumn = COLUMNS::CATEGORY;
+			SelectedRow[SelectedColumn] = Rows[SelectedColumn];
+			SelectedPage[SelectedColumn] = Pages[SelectedColumn];
+		}
+	}
+	else {
+		// handle navigation
+		if (IsKeyPressed(MenuSettings.KeyUp)) {
+			if (SelectedRow[SelectedColumn] == 0)
+				if (SelectedColumn == COLUMNS::CATEGORY && SelectedRow[COLUMNS::CATEGORY] == 0)
 					SelectedColumn = COLUMNS::HEADER;  // go to header
+				else {
+					SelectedRow[SelectedColumn] = Rows[SelectedColumn]; // go to the end
+					SelectedPage[SelectedColumn] = Pages[SelectedColumn];
 				}
-				else 
-					SelectedColumn = max(SelectedColumn - 1, 0);
+			else {
+				SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] - 1;
+				if (SelectedRow[SelectedColumn] < SelectedPage[SelectedColumn] * RowsPerPage) {
+					SelectedPage[SelectedColumn] = SelectedPage[SelectedColumn] - 1;
+				}
 			}
-			else if (IsKeyPressed(MenuSettings.KeyRight)) {
-				SelectedColumn = min(SelectedColumn + 1, COLUMNS::SETTINGS);
+
+			if (SelectedColumn < COLUMNS::SETTINGS) {
+				// reset selected rows for columns further than current one
+				for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
+					SelectedRow[i] = 0; 
+				}
 			}
-			else if (IsKeyPressed(MenuSettings.KeyPageUp)) {
-				SelectedPage[SelectedColumn] = max(SelectedPage[SelectedColumn] - 1, 0);
+		}
+		else if (IsKeyPressed(MenuSettings.KeyDown)) {
+
+			if (SelectedRow[SelectedColumn] >= Rows[SelectedColumn]) {
+				// if we're on the last row, we cycle to the top
 				SelectedRow[SelectedColumn] = 0;
+				SelectedPage[SelectedColumn] = 0; // Go to first page
 			}
-			else if (IsKeyPressed(MenuSettings.KeyPageDown)) {
-				SelectedPage[SelectedColumn] = min(SelectedPage[SelectedColumn] + 1, Pages[SelectedColumn]);
+			else {
+				SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] + 1;
+				if (SelectedRow[SelectedColumn] >= (SelectedPage[SelectedColumn] + 1) * RowsPerPage) {
+					SelectedPage[SelectedColumn] = SelectedPage[SelectedColumn] + 1; // Go to next page
+				}
+			}
+
+			if (SelectedColumn < COLUMNS::SETTINGS) {
+				// reset selected rows for columns further than current one
+				for (int i = SelectedColumn + 1; i <= COLUMNS::SETTINGS; i++) {
+					SelectedRow[i] = 0; 
+				}
+			}
+		}
+		else if (IsKeyPressed(MenuSettings.KeyLeft)) {
+			if (SelectedColumn == COLUMNS::CATEGORY) {
 				SelectedRow[SelectedColumn] = 0;
+				SelectedColumn = COLUMNS::HEADER;  // go to header
 			}
-			else if (IsKeyPressed(MenuSettings.KeyAdd)) {
-				// handle value add/subtract keys
+			else 
+				SelectedColumn = max(SelectedColumn - 1, 0);
+		}
+		else if (IsKeyPressed(MenuSettings.KeyRight)) {
+			SelectedColumn = min(SelectedColumn + 1, COLUMNS::SETTINGS);
+		}
+		else if (IsKeyPressed(MenuSettings.KeyPageUp)) {
+			SelectedPage[SelectedColumn] = max(SelectedPage[SelectedColumn] - 1, 0);
+			SelectedRow[SelectedColumn] = SelectedPage[SelectedColumn] * RowsPerPage;
+		}
+		else if (IsKeyPressed(MenuSettings.KeyPageDown)) {
+			SelectedPage[SelectedColumn] = min(SelectedPage[SelectedColumn] + 1, Pages[SelectedColumn]);
+			SelectedRow[SelectedColumn] = SelectedPage[SelectedColumn] * RowsPerPage;
+		}
+		else if (IsKeyPressed(MenuSettings.KeyAdd)) {
+			// handle value add/subtract keys
+			//Logger::Log("Add for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i",SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
 
-				//Logger::Log("Add for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i",SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
-
-				// react to user key input to reduce the value of the setting
-				if (isShaderSection && (SelectedColumn == COLUMNS::CATEGORY || (SelectedColumn == COLUMNS::SETTINGS && isStatusSection))) {
-					// enable shaders and effects
-					bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
-					if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
-				}
-				else if (SelectedColumn == COLUMNS::CATEGORY && isWeatherSection) {
-					TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(SelectedNode.MidSection, TESForm::FormType::kFormType_Weather);
-					Tes->sky->ForceWeather(Weather);
-				}
-				else if (SelectedColumn == COLUMNS::SETTINGS) {
-					TheSettingManager->Increment(SelectedNode.Section, SelectedNode.Key);
-				}
-				TheSettingManager->LoadSettings(); //update constants stored in Settings structs
+			// react to user key input to reduce the value of the setting
+			if (isShaderSection && (SelectedColumn == COLUMNS::CATEGORY || (SelectedColumn == COLUMNS::SETTINGS && isStatusSection))) {
+				// enable shaders and effects
+				bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
+				if (!ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
 			}
-			else if (IsKeyPressed(MenuSettings.KeySubtract)) {
-				//Logger::Log("Subtract for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i", SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
-
-				// react to user key input to reduce the value of the setting
-				if (isShaderSection && (SelectedColumn == COLUMNS::CATEGORY || (SelectedColumn == COLUMNS::SETTINGS && isStatusSection))) {
-					// disable shaders and effects
-					bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
-					if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
-				}
-				else if (SelectedColumn == COLUMNS::SETTINGS) {
-					TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);
-				}
-				TheSettingManager->LoadSettings(); //update constants stored in Settings structs
+			else if (SelectedColumn == COLUMNS::CATEGORY && isWeatherSection) {
+				TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(SelectedNode.MidSection, TESForm::FormType::kFormType_Weather);
+				Tes->sky->ForceWeather(Weather);
 			}
+			else if (SelectedColumn == COLUMNS::SETTINGS) {
+				TheSettingManager->Increment(SelectedNode.Section, SelectedNode.Key);
+			}
+			TheSettingManager->LoadSettings(); //update constants stored in Settings structs
+		}
+		else if (IsKeyPressed(MenuSettings.KeySubtract)) {
+			//Logger::Log("Subtract for %s.%s, isShader Section? %i, isStatusSection? %i, Column %i", SelectedNode.Section, SelectedNode.Key, isShaderSection, isStatusSection, SelectedColumn);
+
+			// react to user key input to reduce the value of the setting
+			if (isShaderSection && (SelectedColumn == COLUMNS::CATEGORY || (SelectedColumn == COLUMNS::SETTINGS && isStatusSection))) {
+				// disable shaders and effects
+				bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
+				if (ShaderEnabled) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
+			}
+			else if (SelectedColumn == COLUMNS::SETTINGS) {
+				TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);
+			}
+			TheSettingManager->LoadSettings(); //update constants stored in Settings structs
 		}
 	}
 }
@@ -411,7 +423,7 @@ void GameMenuManager::Render() {
 		ID3DXFont* Font = FontNormal;
 		D3DXCOLOR textColor = TextColorNormal;
 
-		if (SelectedRow[CurrentColumn] == i) {
+		if (SelectedRow[CurrentColumn] == i) { // row is selected
 			strcat(SelectedNode.Section, ".");
 			strcat(SelectedNode.Section, Sections[i].c_str());
 
@@ -442,7 +454,7 @@ void GameMenuManager::Render() {
 		strcat(SettingText, " = ");
 
 
-		if (SelectedRow[CurrentColumn] == i) {
+		if (SelectedRow[CurrentColumn] == i) { // row is selected
 			memcpy((void*)&SelectedNode, Setting._Ptr, sizeof(SettingManager::Configuration::ConfigNode));
 
 			if (SelectedColumn == CurrentColumn) {
