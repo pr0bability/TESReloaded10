@@ -314,9 +314,17 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.skyColor.z = WorldSky->skyUpper.b;
 	ShaderConst.skyColor.w = 1.0f;
 
-	// for near plane, ensure that far > near
-	ShaderConst.fogData.x = WorldSky->fogFarPlane > WorldSky->fogNearPlane ? WorldSky->fogNearPlane : WorldSky->fogFarPlane * 0.7;
+	// replicate vanilla behavior of enforcing max fog distance in interiors
 	ShaderConst.fogData.y = WorldSky->fogFarPlane;
+	if (!GameState.isExterior && (WorldSky->fogFarPlane < 0 || WorldSky->fogFarPlane > 163840)) {
+		ShaderConst.fogData.y = 163840;
+	}
+
+	// for near plane, ensure that far > near
+	ShaderConst.fogData.x = WorldSky->fogNearPlane;
+	if (WorldSky->fogNearPlane < 0 || ShaderConst.fogData.y < WorldSky->fogNearPlane)
+		ShaderConst.fogData.x = ShaderConst.fogData.y * 0.17;
+
 	ShaderConst.fogData.z = ShaderConst.sunGlare;
 	ShaderConst.fogData.w = WorldSky->fogPower;
 
