@@ -121,7 +121,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 
     float3 light = (diffuse + specular) * lightColor * cone * atten * lightTexture * isShadow;
 
-	color.rgb += color.rgb * light;
+	color.rgb += color.rgb * max(0.0, luma(exp(-color.rgb * 3.5)) * light); // modulate light with base color brightness to compensate for the post process aspect
 
 	// if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light.xxx, 1);
 	// color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
