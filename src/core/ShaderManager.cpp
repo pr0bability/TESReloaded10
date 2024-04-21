@@ -267,9 +267,9 @@ void ShaderManager::UpdateConstants() {
 
 	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5f;
 
-	GameState.isDayTime = smoothStep(0, 1, GameState.dayLight); // smooth daytime progression
+	ShaderConst.SunAmount.y = GameState.isDayTime; // accurate 0 - 1 value based on weather transition times
+	GameState.isDayTime = smoothStep(0, 1, GameState.dayLight); // smooth daytime progression -- more accurate to light changes
 	ShaderConst.SunAmount.x = GameState.isDayTime;
-	ShaderConst.SunAmount.y = ShaderConst.sunGlare;
 
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
 	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
