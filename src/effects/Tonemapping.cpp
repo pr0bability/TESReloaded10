@@ -89,10 +89,10 @@ void TonemappingShaders::UpdateSettings() {
 	Settings.Night.Saturation = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "Saturation");
 	Settings.Night.Gamma = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "Gamma");
 
-	Settings.Night.TonemapContrast = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "TonemapContrast");
-	Settings.Night.TonemapBrightness = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "TonemapBrightness");
-	Settings.Night.TonemapMidpoint = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "TonemapMidpoint");
-	Settings.Night.TonemapShoulder = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "TonemapShoulder");
+	Settings.Night.TonemapContrast = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "TonemapContrast");
+	Settings.Night.TonemapBrightness = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "TonemapBrightness");
+	Settings.Night.TonemapMidpoint = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "TonemapMidpoint");
+	Settings.Night.TonemapShoulder = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "TonemapShoulder");
 
 	Settings.Interiors.HighlightSaturation = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "HighlightSaturation");
 	Settings.Interiors.WeatherContrast = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "WeatherContrast");
