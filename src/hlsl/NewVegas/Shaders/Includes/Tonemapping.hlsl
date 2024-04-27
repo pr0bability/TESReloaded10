@@ -228,35 +228,64 @@ float3 VTLottes(float3 color, float contrast, float b, float c, float shoulder, 
     return peak * ratio;
 }
 
-// https://gpuopen.com/wp-content/uploads/2016/03/GdcVdrLottes.pdf
-// Adjusted NVR Lottes, initial algorithm
-float3 Lottes(float3 x, float contrast, float midOut, float midIn, float hdrMax, float shoulder)
+float ColToneB(float hdrMax, float contrast, float shoulder, float midIn, float midOut) 
 {
-    hdrMax = max(1.0, hdrMax * 100.0);
-    contrast = max(0.01, contrast * 1.35);
+    return
+        -((-pow(midIn, contrast) + (midOut*(pow(hdrMax, contrast*shoulder)*pow(midIn, contrast) -
+            pow(hdrMax, contrast)*pow(midIn, contrast*shoulder)*midOut)) /
+            (pow(hdrMax, contrast*shoulder)*midOut - pow(midIn, contrast*shoulder)*midOut)) /
+            (pow(midIn, contrast*shoulder)*midOut));
+}
+
+// General tonemapping operator, build 'c' term.
+float ColToneC(float hdrMax, float contrast, float shoulder, float midIn, float midOut) 
+{
+    return (pow(hdrMax, contrast*shoulder)*pow(midIn, contrast) - pow(hdrMax, contrast)*pow(midIn, contrast*shoulder)*midOut) /
+        (pow(hdrMax, contrast*shoulder)*midOut - pow(midIn, contrast*shoulder)*midOut);
+}
+float ColTone(float x, float4 p) 
+{ 
+    float z = pow(x, p.x); 
+    return z / (pow(z, p.y)*p.z + p.w); 
+}
+
+// https://gpuopen.com/wp-content/uploads/2016/03/GdcVdrLottes.pdf
+float3 Lottes(float3 color, float contrast, float midOut, float midIn, float hdrMax, float shoulder)
+{
+    hdrMax = max(1.0, hdrMax * 50.0);
+    contrast = max(0.01, contrast * 1.25);
     shoulder = saturate(shoulder * 0.993); // shoulder should not! exceed 1.0
     midIn = max(0.01, midIn * 0.18);
-    midOut = max(0.01, midOut * 0.18);
-
-    // shape of the curve
-    float3 z = pows(x, contrast); // toe (lower part of curve)
-
-    // curve anchor (mid point)
-    float2 e = float2(midIn, hdrMax);
-    float2 exp = float2(contrast * shoulder, contrast);
-    float4 f = pows(e.xyxy, exp.xxyy);
-
-    // clipping/white point
-    float b = -((-f.z + (midOut * (f.y * f.z - f.w * f.z * midOut)) / (f.y * midOut - f.x * midOut)) / (f.x * midOut));
+    midOut = max(0.01, midOut * 0.1818);
     
-    // midOut
-    float c = (f.y * f.z - f.w * f.x * midOut) / (f.y * midOut - f.x * midOut);
+    float b = ColToneB(hdrMax, contrast, shoulder, midIn, midOut);
+    float c = ColToneC(hdrMax, contrast, shoulder, midIn, midOut);
 
-    // test to tonemap color/brighness separately
-    float peak = max(z.r, max(z.g, z.b));
-    float3 ratio = z / peak;
-    return ratio * (peak / (pows(peak, shoulder) * b + c));
-    // return z / (pows(z, shoulder) * b + c);
+    float3 peak = max(color.r, max(color.g, color.b));
+    peak = min(CMAX, max(EPS, peak));
+
+    float3 ratio = min(CMAX, color / peak);
+
+    float lum = dot(color, float3(0.5, 0.4, 0.33));
+    float gray = min(color.r, min(color.g, color.b));
+	gray = max(0.0, gray);
+    peak += min(peak, gray);
+    peak *= 0.5;
+    peak *= 1.0 + 1.666 * max(0, (peak - lum) / peak);
+
+    peak = ColTone(peak, float4(contrast, shoulder, b, c) );
+
+    float saturation = contrast; // crosstalk saturation
+    float crossSaturation = contrast * 64.0; // crosstalk saturation
+
+    float3 rgb = 1.0;
+
+    // wrap crosstalk in transform
+    ratio = pows(abs(ratio + 0.11) * 0.90909, saturation / crossSaturation);
+    ratio = lerp(ratio, rgb, pow(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
+    ratio = pows(min(1.0, ratio), crossSaturation);
+
+    return peak * ratio;
 }
 
 float UchimuraChannel(float x, float P, float a, float m, float l, float c, float b)
@@ -287,6 +316,32 @@ float3 Uchimura(float3 x, float contrast, float brightness, float midIn, float h
     float b = 0.0; // pedestal
     
     return float3(UchimuraChannel(x.r, P, a, m, l, c, b), UchimuraChannel(x.g, P, a, m, l, c, b), UchimuraChannel(x.b, P, a, m, l, c, b));
+}
+
+float rangeCompressPow(float x, float fPow /*= 1.0f*/)
+{
+    return 1.0 - pow(exp(-x), fPow);
+}
+
+float lumaCompress(float val, float fMaxValue, float fShoulderStart, float fPow /*= 1.0f*/)
+{
+    float v2 = fShoulderStart + (fMaxValue - fShoulderStart) * rangeCompressPow((val - fShoulderStart) / (fMaxValue - fShoulderStart), fPow);
+    return val <= fShoulderStart ? val : v2;
+}
+
+// DICE Tonemapper
+float3 DICE(float3 color, float contrast, float brightness, float hdrMax, float shoulder)
+{
+    float HIGHLIGHTS_SHOULDER_START_ALPHA = shoulder * 0.01;
+    float HIGHLIGHTS_SHOULDER_POW = contrast;
+    float sRGB_max_nits = brightness;
+
+    float HDRLuminance = luma(color);
+    float maxOutputLuminance = hdrMax / sRGB_max_nits;
+    float highlightsShoulderStart = HIGHLIGHTS_SHOULDER_START_ALPHA * maxOutputLuminance;
+    float compressedHDRLuminance = lumaCompress(HDRLuminance, maxOutputLuminance, highlightsShoulderStart, HIGHLIGHTS_SHOULDER_POW);
+    
+    return color * (compressedHDRLuminance / HDRLuminance);
 }
 
 
@@ -332,6 +387,10 @@ float3 tonemap(float3 color)
     else if (TESR_HDRData.x == 9)
     {
         return agx(color);
+    }
+    else if (TESR_HDRData.x == 10)
+    {
+        return max(0.0, DICE(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_HDRBloomData.w, TESR_LotteData.w));
     }
     else
     {
