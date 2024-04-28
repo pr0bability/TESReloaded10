@@ -100,7 +100,7 @@ float3 getNormal(float2 partial, float3 eyeDir){
 * Shades the sun, moon and sunglare textures
 */
 float4 ShadeSun(SunValues Sun, float4 texColor, float4 vertexColor){
-    Sun.isDayTime = smoothstep(0.49, 0.52, TESR_SunAmount.x);
+    Sun.isDayTime = smoothstep(0.48, 0.52, TESR_SunAmount.x);
 
     float sunTexLuma = luma(texColor.rgb); 
     // detect sundisk texture using full alpha and brightness, as well as daytime (to differentiate with the moon)
@@ -134,13 +134,13 @@ float4 ShadeClouds(float4 finalColor, float4 vertexColor, float3 skyColor, SunVa
     if (!UseNormals){
         // simply tint the clouds
         // greyScale = (greyScale - 0.5) * TESR_DebugVar.x + 0.5; // tests for increasing cloud contrast before shading
-        float3 cloudTint = lerp(pows(TESR_SkyColor.rgb * 0.5, 5.0), Sun.sunColor * 5, (1 - saturate(Sun.sunInfluence * 0.7)) * greyScale).rgb;
+        greyScale = (greyScale - 0.5) * 1.5 + 0.5; // tests for increasing cloud contrast before shading
+        float3 cloudTint = lerp(pows(TESR_SkyColor.rgb * 0.5, 5.0), Sun.sunColor * 5, (1 - saturate(Sun.sunInfluence * TESR_SunAmount.w)) * greyScale).rgb;
         cloudTint = lerp(white.rgb, cloudTint * TESR_CloudData.w * 1.333, (1 - Sun.sunHeight) * Sun.isDayTime); // tint the clouds less when the sun is high in the sky and at night
 
         // finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.333, isDayTime); // cancel tint at night
         finalColor.rgb *= cloudTint;
         finalColor.rgb += lerp(black.rgb, scattering * 4.0, (1 - Sun.sunHeight) * Sun.isDayTime);
-
     } else {
         // Tests for normals lit cloud
         float2 normal2D = finalColor.xy; // normal x and y are in red and green, blue is reconstructed
@@ -156,7 +156,7 @@ float4 ShadeClouds(float4 finalColor, float4 vertexColor, float3 skyColor, SunVa
         // finalColor.rgb = selectColor(TESR_DebugVar.x, finalColor, ambient, diffuse, fresnel, bounce, scattering, sunColor, skyColor, normal, float3(IN.TexUV, 1));
     }
 
-    finalColor = float4(finalColor.rgb * vertexColor.rgb * Params.y, pows(saturate(finalColor.w * vertexColor.a), 1/TESR_CloudData.z));
+    finalColor = float4(finalColor.rgb * vertexColor.rgb * Params.y, pows(saturate(finalColor.w * vertexColor.a), 1/TESR_CloudData.z)); // scale alpha with setting
 
     return delinearize(float4(finalColor.rgb * SkyMultiplier * TESR_CloudData.a, finalColor.a));
 }
