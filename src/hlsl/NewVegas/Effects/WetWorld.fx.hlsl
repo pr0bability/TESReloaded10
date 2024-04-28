@@ -28,6 +28,7 @@ float4 TESR_WetWorldData; // x: current rain amount, y: max rain amount, z: pudd
 float4 TESR_SunPosition;
 float4 TESR_SkyData;
 float4 TESR_SkyLowColor;
+float4 TESR_SunAmount;
 float4 TESR_LightPosition[12];
 float4 TESR_ShadowLightPosition[12];
 float4 TESR_LightColor[24];
