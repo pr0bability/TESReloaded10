@@ -12,8 +12,6 @@
 #define blendnormals(a, b)   float3(a.xy + b.xy, a.z)
 #define rand(s)              (frac(sin(dot(s, float2(12.9898, 78.233))) * 43758.5453)) // pseudo random from https://gist.github.com/keijiro/ee7bc388272548396870
 #define pows(a, b)           (pow(abs(a), b) * sign(a)) // no more pow/abs warning!
-#define linearize(color)     (float4(pows(color.rgb, 2.2), color.a))
-#define delinearize(color)   (float4(max(0.0, pows(color.rgb, 1.0/2.2)), color.a))
 #define bend(a, b)           (a * (1 + b) / (1 + a * b)) //bends the response curve in a symetric way 
 #define scaledReinhard(a, b) ((a * b) / (1 + a * b)) // curve that reaches a maximum of 1 with a speed b
 
@@ -26,6 +24,19 @@ static const float4 blue = float4 (0, 0, 1, 1);
 static const float4 yellow = float4 (1, 1, 0, 1);
 static const float4 cyan = float4 (0, 1, 1, 1);
 static const float4 magenta = float4 (1, 0, 1, 1);
+
+float3 linearize(float3 color) {
+    return pows(color, 2.2);
+}
+float4 linearize(float4 color) {
+    return float4(pows(color.rgb, 2.2), color.a);
+}
+float4 delinearize(float4 color) {
+    return float4(max(0.0, pows(color.rgb, 1.0/2.2)), color.a);
+}
+float3 delinearize(float3 color) {
+    return max(0.0, pows(color.rgb, 1.0/2.2));
+}
 
 float4 selectColor(float selector, float4 color0, float4 color1, float4 color2, float4 color3, float4 color4, float4 color5, float4 color6, float4 color7, float4 color8, float4 color9){
     if (selector == 0.0) return color0;

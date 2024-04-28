@@ -14,6 +14,7 @@ float4 TESR_WaterShallowColor; // Shallow color used by the game for water
 float4 TESR_WaterDeepColor; // Deep color used by the game for water
 float4 TESR_DebugVar;
 float4 TESR_HorizonColor;
+float4 TESR_SunAmount;
 float4 TESR_SkyColor;
 
 #include "Includes/Helpers.hlsl"
