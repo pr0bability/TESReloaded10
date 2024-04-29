@@ -33,6 +33,105 @@ void GameMenuManager::Initialize() {
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontSelected);
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
 
+	TheGameMenuManager->Keys[1] = "Esc";
+	TheGameMenuManager->Keys[2] = "1";
+	TheGameMenuManager->Keys[3] = "2";
+	TheGameMenuManager->Keys[4] = "3";
+	TheGameMenuManager->Keys[5] = "4";
+	TheGameMenuManager->Keys[6] = "5";
+	TheGameMenuManager->Keys[7] = "6";
+	TheGameMenuManager->Keys[8] = "7";
+	TheGameMenuManager->Keys[9] = "8";
+	TheGameMenuManager->Keys[10] = "9";
+	TheGameMenuManager->Keys[11] = "0";
+	TheGameMenuManager->Keys[12] = "-";
+	TheGameMenuManager->Keys[13] = "=";
+	TheGameMenuManager->Keys[14] = "Backspace";
+	TheGameMenuManager->Keys[15] = "Tab";
+	TheGameMenuManager->Keys[16] = "Q";
+	TheGameMenuManager->Keys[17] = "W";
+	TheGameMenuManager->Keys[18] = "E";
+	TheGameMenuManager->Keys[19] = "R";
+	TheGameMenuManager->Keys[20] = "T";
+	TheGameMenuManager->Keys[21] = "Y";
+	TheGameMenuManager->Keys[22] = "U";
+	TheGameMenuManager->Keys[23] = "I";
+	TheGameMenuManager->Keys[24] = "O";
+	TheGameMenuManager->Keys[25] = "P";
+	TheGameMenuManager->Keys[26] = "[";
+	TheGameMenuManager->Keys[27] = "]";
+	TheGameMenuManager->Keys[28] = "Enter";
+	TheGameMenuManager->Keys[29] = "Left Ctrl";
+	TheGameMenuManager->Keys[30] = "A";
+	TheGameMenuManager->Keys[31] = "S";
+	TheGameMenuManager->Keys[32] = "D";
+	TheGameMenuManager->Keys[33] = "F";
+	TheGameMenuManager->Keys[34] = "G";
+	TheGameMenuManager->Keys[35] = "H";
+	TheGameMenuManager->Keys[36] = "J";
+	TheGameMenuManager->Keys[37] = "K";
+	TheGameMenuManager->Keys[38] = "L";
+	TheGameMenuManager->Keys[39] = ";";
+	TheGameMenuManager->Keys[40] = "'";
+	TheGameMenuManager->Keys[41] = "`";
+	TheGameMenuManager->Keys[42] = "Left Shift";
+	TheGameMenuManager->Keys[43] = "\\";
+	TheGameMenuManager->Keys[44] = "Z";
+	TheGameMenuManager->Keys[45] = "X";
+	TheGameMenuManager->Keys[46] = "C";
+	TheGameMenuManager->Keys[47] = "V";
+	TheGameMenuManager->Keys[48] = "B";
+	TheGameMenuManager->Keys[49] = "N";
+	TheGameMenuManager->Keys[50] = "M";
+	TheGameMenuManager->Keys[51] = ",";
+	TheGameMenuManager->Keys[52] = ".";
+	TheGameMenuManager->Keys[53] = "/";
+	TheGameMenuManager->Keys[54] = "Right Shift";
+	TheGameMenuManager->Keys[55] = "Keypad *";
+	TheGameMenuManager->Keys[56] = "Left Alt";
+	TheGameMenuManager->Keys[57] = "Spacebar";
+	TheGameMenuManager->Keys[58] = "Caps Lock";
+	TheGameMenuManager->Keys[59] = "F1";
+	TheGameMenuManager->Keys[60] = "F2";
+	TheGameMenuManager->Keys[61] = "F3";
+	TheGameMenuManager->Keys[62] = "F4";
+	TheGameMenuManager->Keys[63] = "F5";
+	TheGameMenuManager->Keys[64] = "F6";
+	TheGameMenuManager->Keys[65] = "F7";
+	TheGameMenuManager->Keys[66] = "F8";
+	TheGameMenuManager->Keys[67] = "F9";
+	TheGameMenuManager->Keys[68] = "F10";
+	TheGameMenuManager->Keys[69] = "Num Lock";
+	TheGameMenuManager->Keys[70] = "Scroll Lock";
+	TheGameMenuManager->Keys[71] = "Keypad 7";
+	TheGameMenuManager->Keys[72] = "Keypad 8";
+	TheGameMenuManager->Keys[73] = "Keypad 9";
+	TheGameMenuManager->Keys[74] = "Keypad -";
+	TheGameMenuManager->Keys[75] = "Keypad 4";
+	TheGameMenuManager->Keys[76] = "Keypad 5";
+	TheGameMenuManager->Keys[77] = "Keypad 6";
+	TheGameMenuManager->Keys[78] = "Keypad +";
+	TheGameMenuManager->Keys[79] = "Keypad 1";
+	TheGameMenuManager->Keys[80] = "Keypad 2";
+	TheGameMenuManager->Keys[81] = "Keypad 3";
+	TheGameMenuManager->Keys[82] = "Keypad 0";
+	TheGameMenuManager->Keys[83] = "Keypad .";
+	TheGameMenuManager->Keys[87] = "F11";
+	TheGameMenuManager->Keys[88] = "F12";
+	TheGameMenuManager->Keys[156] = "Keypad Enter";
+	TheGameMenuManager->Keys[157] = "Right Control";
+	TheGameMenuManager->Keys[181] = "Keypad /";
+	TheGameMenuManager->Keys[184] = "Right Alt";
+	TheGameMenuManager->Keys[199] = "Home";
+	TheGameMenuManager->Keys[200] = "Up Arrow";
+	TheGameMenuManager->Keys[201] = "PgUp";
+	TheGameMenuManager->Keys[203] = "Left Arrow";
+	TheGameMenuManager->Keys[205] = "Right Arrow";
+	TheGameMenuManager->Keys[207] = "End";
+	TheGameMenuManager->Keys[208] = "Down Arrow";
+	TheGameMenuManager->Keys[209] = "PgDown";
+	TheGameMenuManager->Keys[210] = "Insert";
+	TheGameMenuManager->Keys[211] = "Delete";
 }
 
 void GameMenuManager::MainMenuMessage() {
@@ -45,12 +144,14 @@ void GameMenuManager::MainMenuMessage() {
 	}
 
 	std::chrono::duration<double> elapsed_seconds = now - MainMenuStartTime;
-	if (elapsed_seconds.count() > 3.0) return; // only show message at the bottom of the screen for 3 seconds
+	if (elapsed_seconds.count() > 5.0) return; // only show message at the bottom of the screen for 5 seconds
+
+	std::string menuMessage = std::string(PluginVersion::VersionString) + " - Open the Config Menu by pressing the key " + Keys[MenuSettings.KeyEnable];
 
 	SetRect(&Rect, 0, TheRenderManager->height - MenuSettings.TextSize - 10, TheRenderManager->width, TheRenderManager->height + MenuSettings.TextSize);
 	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
-	FontNormal->DrawTextA(NULL, PluginVersion::VersionString, -1, &RectShadow, DT_CENTER, TextShadowColorNormal);
-	FontNormal->DrawTextA(NULL, PluginVersion::VersionString, -1, &Rect, DT_CENTER, TextColorNormal);
+	FontNormal->DrawTextA(NULL, menuMessage.c_str(), -1, &RectShadow, DT_CENTER, TextShadowColorNormal);
+	FontNormal->DrawTextA(NULL, menuMessage.c_str(), -1, &Rect, DT_CENTER, TextColorNormal);
 }
 
 void GameMenuManager::HandleInput() {
@@ -308,7 +409,6 @@ void GameMenuManager::Render() {
 	StringList Sections;
 	SettingManager::Configuration::SettingList Settings;
 
-	const char* Text = NULL;
 	int CurrentColumn = 0;
 	char TextShaderStatus[20];
 	size_t ListSize = 0;
@@ -322,10 +422,22 @@ void GameMenuManager::Render() {
 	if (!Enabled) return; // skip render if menu is disabled
 
 	DrawShadowedText(TitleMenu, 0, 0, TitleColumnSize, TextColorNormal, FontNormal, DT_LEFT);
+
+	if (TheSettingManager->hasUnsavedChanges)
+		DrawShadowedText("/!\\ You have unsaved changes. Save them using the Enter key.", MainItemColumnSize * 3, 0, MainItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
+
 	DrawLine(0, MenuSettings.TextSize + RowSpace, TitleColumnSize); 	// draw line under Title
 
+	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
+	int toggleEntry = useNumpad ? MenuSettings.KeyEditing : 13;
+
+	 std::string KeysInfo = "Keybinds: Enable/Increment: " + Keys[MenuSettings.KeyAdd] + ", Disable/Decrement: " + Keys[MenuSettings.KeySubtract] + ", Start Editing value: " + Keys[toggleEntry] + ", Save Settings: " + Keys[MenuSettings.KeySave];
+	DrawShadowedText(KeysInfo.c_str(), 0, MenuSettings.TextSize + RowSpace + 2, MainItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
+
+	DrawLine(0, MenuSettings.TextSize * 2 + RowSpace * 2 + 2, TitleColumnSize); 	// draw line under Keymap advice
+
 	// render header as horizontal column
-	int HeaderYPos = (MenuSettings.TextSize + RowSpace * 2 + 2);
+	int HeaderYPos = (MenuSettings.TextSize * 2 + RowSpace * 2 + 4);
 	TheSettingManager->FillMenuSections(&Sections, NULL);
 	ListSize = Sections.size();
 	Rows[COLUMNS::HEADER] = ListSize - 1;

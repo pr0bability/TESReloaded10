@@ -349,7 +349,7 @@ void SettingManager::Initialize() {
 
 	TheSettingManager->GameLoading = false;
 	TheSettingManager->SettingsChanged = true;
-
+	TheSettingManager->hasUnsavedChanges = false;
 }
 
 void SettingManager::LoadSettings() {
@@ -699,6 +699,7 @@ void SettingManager::SaveSettings() {
 	ConfigurationFile << Config.TomlConfig << std::endl;
 	ConfigurationFile.close();
 
+	hasUnsavedChanges = false;
 }
 
 int SettingManager::GetSettingI(const char* Section, const char* Key) {
@@ -818,6 +819,7 @@ void SettingManager::SetSettingF(const char* Section, const char* Key, float Val
 * Applies the changes made to the node value into the actual setting saving system
 */
 void SettingManager::SetSetting(Configuration::ConfigNode* Node) {
+	hasUnsavedChanges = true;
 
 	Config.SetValue(Node);
 }
