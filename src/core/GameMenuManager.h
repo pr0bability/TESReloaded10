@@ -1,5 +1,7 @@
 #pragma once
 
+typedef std::map<int, std::string> KeyCodes;
+
 class GameMenuManager { // Never disposed
 public:
 	static void Initialize();
@@ -26,6 +28,8 @@ public:
 	int 										SelectedRow[4];
 	int 										SelectedColumn;
 	char										EditingValue[20];
+	KeyCodes									Keys;
+
 	SettingManager::Configuration::ConfigNode	SelectedNode;
 	ID3DXFont*									FontSelected;
 	ID3DXFont*									FontNormal;

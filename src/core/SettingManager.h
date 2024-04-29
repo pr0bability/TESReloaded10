@@ -372,11 +372,10 @@ public:
 	static void									SplitString(const char* String, const char* Delimiter, StringList* Values);
 	template <typename T> static void			FillFromString(const char* String, const char* Delimiter, T* Values);
 
-
-				
 	Configuration					Config;
 	bool							GameLoading;
 	bool							SettingsChanged;
+	bool							hasUnsavedChanges;
 	SettingsMainStruct				SettingsMain;
 	SettingsWaterMap				SettingsWater;
 	SettingsColoringMap				SettingsColoring;
