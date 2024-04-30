@@ -14,6 +14,7 @@
 #define ItemColumnSize TheSettingManager->SettingsMain.Menu.ItemColumnSize
 #define RowSpace TheSettingManager->SettingsMain.Menu.RowSpace
 #define RowsPerPage TheSettingManager->SettingsMain.Menu.RowsPerPage
+#define LineThickness 2
 
 //#define debugMenuInput
 
@@ -32,6 +33,13 @@ void GameMenuManager::Initialize() {
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontNormal);
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontSelected);
 	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
+
+	// calculate menu dimensions based on screen
+	TheGameMenuManager->HeaderYPos = (MenuSettings.TextSize + RowSpace * 2 + LineThickness * 2);
+	TheGameMenuManager->MenuHeight = TheGameMenuManager->HeaderYPos + MenuSettings.TextSize + RowSpace * 3 + LineThickness;
+	TheGameMenuManager->rowHeight = MenuSettings.TextSize + RowSpace;
+	TheGameMenuManager->margins = PositionY * 3; // top/bottom margin + footer
+	TheGameMenuManager->pageSize = (TheRenderManager->height - TheGameMenuManager->MenuHeight - TheGameMenuManager->margins) / (TheGameMenuManager->rowHeight);
 
 	TheGameMenuManager->Keys[1] = "Esc";
 	TheGameMenuManager->Keys[2] = "1";
@@ -87,7 +95,7 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->Keys[52] = ".";
 	TheGameMenuManager->Keys[53] = "/";
 	TheGameMenuManager->Keys[54] = "Right Shift";
-	TheGameMenuManager->Keys[55] = "Keypad *";
+	TheGameMenuManager->Keys[55] = "Numpad *";
 	TheGameMenuManager->Keys[56] = "Left Alt";
 	TheGameMenuManager->Keys[57] = "Spacebar";
 	TheGameMenuManager->Keys[58] = "Caps Lock";
@@ -103,24 +111,24 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->Keys[68] = "F10";
 	TheGameMenuManager->Keys[69] = "Num Lock";
 	TheGameMenuManager->Keys[70] = "Scroll Lock";
-	TheGameMenuManager->Keys[71] = "Keypad 7";
-	TheGameMenuManager->Keys[72] = "Keypad 8";
-	TheGameMenuManager->Keys[73] = "Keypad 9";
-	TheGameMenuManager->Keys[74] = "Keypad -";
-	TheGameMenuManager->Keys[75] = "Keypad 4";
-	TheGameMenuManager->Keys[76] = "Keypad 5";
-	TheGameMenuManager->Keys[77] = "Keypad 6";
-	TheGameMenuManager->Keys[78] = "Keypad +";
-	TheGameMenuManager->Keys[79] = "Keypad 1";
-	TheGameMenuManager->Keys[80] = "Keypad 2";
-	TheGameMenuManager->Keys[81] = "Keypad 3";
-	TheGameMenuManager->Keys[82] = "Keypad 0";
-	TheGameMenuManager->Keys[83] = "Keypad .";
+	TheGameMenuManager->Keys[71] = "Numpad 7";
+	TheGameMenuManager->Keys[72] = "Numpad 8";
+	TheGameMenuManager->Keys[73] = "Numpad 9";
+	TheGameMenuManager->Keys[74] = "Numpad -";
+	TheGameMenuManager->Keys[75] = "Numpad 4";
+	TheGameMenuManager->Keys[76] = "Numpad 5";
+	TheGameMenuManager->Keys[77] = "Numpad 6";
+	TheGameMenuManager->Keys[78] = "Numpad +";
+	TheGameMenuManager->Keys[79] = "Numpad 1";
+	TheGameMenuManager->Keys[80] = "Numpad 2";
+	TheGameMenuManager->Keys[81] = "Numpad 3";
+	TheGameMenuManager->Keys[82] = "Numpad 0";
+	TheGameMenuManager->Keys[83] = "Numpad .";
 	TheGameMenuManager->Keys[87] = "F11";
 	TheGameMenuManager->Keys[88] = "F12";
-	TheGameMenuManager->Keys[156] = "Keypad Enter";
+	TheGameMenuManager->Keys[156] = "Numpad Enter";
 	TheGameMenuManager->Keys[157] = "Right Control";
-	TheGameMenuManager->Keys[181] = "Keypad /";
+	TheGameMenuManager->Keys[181] = "Numpad /";
 	TheGameMenuManager->Keys[184] = "Right Alt";
 	TheGameMenuManager->Keys[199] = "Home";
 	TheGameMenuManager->Keys[200] = "Up Arrow";
@@ -187,7 +195,7 @@ void GameMenuManager::HandleInput() {
 	bool isStatusSection = !memcmp(SelectedNode.Section + strlen(SelectedNode.Section) - 6, "Status", 6);
 	bool isWeatherSection = !memcmp(SelectedNode.Section, "Weathers", 8);
 
-	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
+	bool useNumpad = MenuSettings.UseNumpadForEditing;
 
 	//handle entry using numpad keys or number row keys depending on setting
 	int toggleEntry = useNumpad ? MenuSettings.KeyEditing : 13;
@@ -287,7 +295,7 @@ void GameMenuManager::HandleInput() {
 				}
 			else {
 				SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] - 1;
-				if (SelectedRow[SelectedColumn] < SelectedPage[SelectedColumn] * RowsPerPage) {
+				if (SelectedRow[SelectedColumn] < SelectedPage[SelectedColumn] * pageSize) {
 					SelectedPage[SelectedColumn] = SelectedPage[SelectedColumn] - 1;
 				}
 			}
@@ -308,7 +316,7 @@ void GameMenuManager::HandleInput() {
 			}
 			else {
 				SelectedRow[SelectedColumn] = SelectedRow[SelectedColumn] + 1;
-				if (SelectedRow[SelectedColumn] >= (SelectedPage[SelectedColumn] + 1) * RowsPerPage) {
+				if (SelectedRow[SelectedColumn] >= (SelectedPage[SelectedColumn] + 1) * pageSize) {
 					SelectedPage[SelectedColumn] = SelectedPage[SelectedColumn] + 1; // Go to next page
 				}
 			}
@@ -333,11 +341,11 @@ void GameMenuManager::HandleInput() {
 		}
 		else if (IsKeyPressed(MenuSettings.KeyPageUp)) {
 			SelectedPage[SelectedColumn] = max(SelectedPage[SelectedColumn] - 1, 0);
-			SelectedRow[SelectedColumn] = SelectedPage[SelectedColumn] * RowsPerPage;
+			SelectedRow[SelectedColumn] = SelectedPage[SelectedColumn] * pageSize;
 		}
 		else if (IsKeyPressed(MenuSettings.KeyPageDown)) {
 			SelectedPage[SelectedColumn] = min(SelectedPage[SelectedColumn] + 1, Pages[SelectedColumn]);
-			SelectedRow[SelectedColumn] = SelectedPage[SelectedColumn] * RowsPerPage;
+			SelectedRow[SelectedColumn] = SelectedPage[SelectedColumn] * pageSize;
 		}
 		else if (IsKeyPressed(MenuSettings.KeyAdd)) {
 			// handle value add/subtract keys
@@ -424,20 +432,11 @@ void GameMenuManager::Render() {
 	DrawShadowedText(TitleMenu, 0, 0, TitleColumnSize, TextColorNormal, FontNormal, DT_LEFT);
 
 	if (TheSettingManager->hasUnsavedChanges)
-		DrawShadowedText("/!\\ You have unsaved changes. Save them using the Enter key.", MainItemColumnSize * 3, 0, MainItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
+		DrawShadowedText(std::string("/!\\ You have unsaved changes. To avoid losing them, save them using the " + Keys[MenuSettings.KeySave] + " Key").c_str(), MainItemColumnSize * 3, 0, MainItemColumnSize * 2, TextColorEditing, FontNormal, DT_LEFT);
 
-	DrawLine(0, MenuSettings.TextSize + RowSpace, TitleColumnSize); 	// draw line under Title
-
-	bool useNumpad = TheSettingManager->GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
-	int toggleEntry = useNumpad ? MenuSettings.KeyEditing : 13;
-
-	 std::string KeysInfo = "Keybinds: Enable/Increment: " + Keys[MenuSettings.KeyAdd] + ", Disable/Decrement: " + Keys[MenuSettings.KeySubtract] + ", Start Editing value: " + Keys[toggleEntry] + ", Save Settings: " + Keys[MenuSettings.KeySave];
-	DrawShadowedText(KeysInfo.c_str(), 0, MenuSettings.TextSize + RowSpace + 2, MainItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
-
-	DrawLine(0, MenuSettings.TextSize * 2 + RowSpace * 2 + 2, TitleColumnSize); 	// draw line under Keymap advice
+	DrawLine(0, MenuSettings.TextSize + RowSpace, 3 * ItemColumnSize); 	// draw line under Title
 
 	// render header as horizontal column
-	int HeaderYPos = (MenuSettings.TextSize * 2 + RowSpace * 2 + 4);
 	TheSettingManager->FillMenuSections(&Sections, NULL);
 	ListSize = Sections.size();
 	Rows[COLUMNS::HEADER] = ListSize - 1;
@@ -462,18 +461,16 @@ void GameMenuManager::Render() {
 	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
 
 	// render left column (shaders/menu category names)
-	int MenuHeight = HeaderYPos + MenuSettings.TextSize + RowSpace * 3 + 2;
-	int rowHeight = MenuSettings.TextSize + RowSpace;
 
 	TheSettingManager->FillMenuSections(&Sections, SelectedNode.Section);
 	ListSize = Sections.size();
 	CurrentColumn = COLUMNS::CATEGORY;
 	Rows[CurrentColumn] = ListSize - 1;
-	Pages[CurrentColumn] = ListSize / RowsPerPage;
-	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
+	Pages[CurrentColumn] = ListSize / pageSize;
+	for (UInt32 i = pageSize * SelectedPage[CurrentColumn]; i < min(ListSize, pageSize * (SelectedPage[CurrentColumn] + 1)); i++) {
 		ID3DXFont* Font = FontNormal;
 		D3DXCOLOR textColor = TextColorNormal;
-		int lineYPos = MenuHeight + rowHeight * (i % RowsPerPage);
+		int lineYPos = MenuHeight + rowHeight * (i % pageSize);
 
 		if (SelectedRow[CurrentColumn] == i ) {
 			strcat(SelectedNode.Section, ".");
@@ -529,8 +526,8 @@ void GameMenuManager::Render() {
 	ListSize = Sections.size();
 	CurrentColumn = COLUMNS::SECTION;
 	Rows[CurrentColumn] = ListSize - 1;
-	Pages[CurrentColumn] = ListSize / RowsPerPage;
-	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
+	Pages[CurrentColumn] = ListSize / pageSize;
+	for (UInt32 i = pageSize * SelectedPage[CurrentColumn]; i < min(ListSize, pageSize * (SelectedPage[CurrentColumn] + 1)); i++) {
 		// Selected is true as long as we are deeper in the menu than current column
 		ID3DXFont* Font = FontNormal;
 		D3DXCOLOR textColor = TextColorNormal;
@@ -545,7 +542,7 @@ void GameMenuManager::Render() {
 			}
 		}
 
-		DrawShadowedText(Sections[i].c_str(), ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, Font, DT_LEFT);
+		DrawShadowedText(Sections[i].c_str(), ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % pageSize), ItemColumnSize, textColor, Font, DT_LEFT);
 	}
 
 	// render right column (settings name/value pairs)
@@ -553,10 +550,10 @@ void GameMenuManager::Render() {
 	ListSize = Settings.size();
 	CurrentColumn = COLUMNS::SETTINGS;
 	Rows[CurrentColumn] = ListSize - 1;
-	Pages[CurrentColumn] = ListSize / RowsPerPage;
+	Pages[CurrentColumn] = ListSize / pageSize;
 	SettingManager::Configuration::SettingList::iterator Setting = Settings.begin();
 
-	for (UInt32 i = RowsPerPage * SelectedPage[CurrentColumn]; i < min(ListSize, RowsPerPage * (SelectedPage[CurrentColumn] + 1)); i++) {
+	for (UInt32 i = pageSize * SelectedPage[CurrentColumn]; i < min(ListSize, pageSize * (SelectedPage[CurrentColumn] + 1)); i++) {
 		//SettingManager::Configuration::ConfigNode Setting = Settings[i];
 
 		D3DXCOLOR textColor = TextColorNormal;
@@ -587,7 +584,7 @@ void GameMenuManager::Render() {
 			strcat(SettingText, Setting->Value);
 		}
 	
-		DrawShadowedText(SettingText, ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % RowsPerPage), ItemColumnSize, textColor, FontNormal, DT_LEFT);
+		DrawShadowedText(SettingText, ItemColumnSize * (CurrentColumn - 1), MenuHeight + rowHeight * (i % pageSize), ItemColumnSize, textColor, FontNormal, DT_LEFT);
 		Setting++;
 	}
 
@@ -610,6 +607,15 @@ void GameMenuManager::Render() {
 
 	// render description
 	DrawShadowedText(DescriptionText, ItemColumnSize, HeaderYPos, ItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
+
+	// render footer with Keymap advice
+	DrawLine(0, HeaderYPos + (pageSize + 1) * rowHeight + RowSpace * 2, 3 * ItemColumnSize);
+	int toggleEntry = MenuSettings.UseNumpadForEditing ? MenuSettings.KeyEditing : 13;
+	std::string KeysInfo = "Page " + std::to_string(SelectedPage[COLUMNS::CATEGORY] + 1) + "/" + std::to_string(Pages[COLUMNS::CATEGORY] + 1) +
+		" | Keybinds: Enable/Increment: " + Keys[MenuSettings.KeyAdd] + ", Disable/Decrement: " + Keys[MenuSettings.KeySubtract] +
+		", Start Editing value: " + Keys[toggleEntry] + ", Save Settings: " + Keys[MenuSettings.KeySave];
+
+	DrawShadowedText(KeysInfo.c_str(), 0, HeaderYPos + (pageSize + 1) * rowHeight + RowSpace * 4 + LineThickness, MainItemColumnSize * 2, TextColorNormal, FontNormal, DT_LEFT);
 }
 
 

@@ -41,4 +41,9 @@ public:
 	std::chrono::system_clock::time_point		lastKeyPressed;
 	UInt16										keyDown;
 
+	int HeaderYPos;
+	int MenuHeight;
+	int rowHeight;
+	int margins;
+	int pageSize;
 };

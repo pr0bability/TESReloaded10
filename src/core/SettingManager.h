@@ -168,6 +168,7 @@ struct SettingsMainStruct {
 		int		ItemColumnSize;
 		int		RowSpace;
 		int		RowsPerPage;
+		bool	UseNumpadForEditing;
 	};
 
 	struct PurgerStruct {
