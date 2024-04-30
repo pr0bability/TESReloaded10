@@ -542,6 +542,7 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Menu.KeySubtract = GetSettingI("Main.Menu.Keys", "KeySubtract");
 	SettingsMain.Menu.KeySave = GetSettingI("Main.Menu.Keys", "KeySave");
 	SettingsMain.Menu.KeyEditing = GetSettingI("Main.Menu.Keys", "KeyEditing");
+	SettingsMain.Menu.UseNumpadForEditing = GetSettingI("Main.Menu.Keys", "EntryUseNumpad");
 
 	SettingsMain.Purger.Enabled = GetSettingI("Main.Purger.Main", "Enabled");
 	SettingsMain.Purger.Time = GetSettingI("Main.Purger.Main", "Time");
