@@ -22,8 +22,9 @@ float4 TESR_VolumetricFogBlend; // Blend factor for each Fog
 float4 TESR_VolumetricFogHeight; // Height of each Fog
 float4 TESR_VolumetricFogData; // General shader settings
 
-sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_RenderedBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 /*Height-based fog settings*/
 static const float FOG_GROUND =	-10000;
@@ -36,27 +37,27 @@ static const float SunGlare = TESR_FogData.z;
 static const float FogPower = TESR_FogData.w;
 
 // scale settings for easier tuning
-static const float LowFogDensity = TESR_VolumetricFogLow.x;
-static const float LowFogFalloff = TESR_VolumetricFogLow.y;
-static const float LowFogDist = TESR_VolumetricFogLow.z;
+static const float FogSaturation = TESR_VolumetricFogLow.x;
+static const float WeatherImpact = TESR_VolumetricFogLow.y;
+static const float DistantFogRange = TESR_VolumetricFogLow.z;
 static const float SunPower = TESR_VolumetricFogLow.w;
 
-static const float HeightFogDensity = TESR_VolumetricFogHigh.x;
-static const float HeightFogFalloff = TESR_VolumetricFogHigh.y;
+static const float HeightFogDensity = max(0, TESR_VolumetricFogHigh.x);
+static const float HeightFogFalloff = max(0, TESR_VolumetricFogHigh.y);
 static const float HeightFogDist = TESR_VolumetricFogHigh.z;
 static const float HeightFogSkyColor = 2 * TESR_VolumetricFogHigh.w;
 
-static const float LowFogHeight = TESR_VolumetricFogHeight.x;
+static const float DistantFogHeight = TESR_VolumetricFogHeight.x;
 static const float HeightFogHeight = TESR_VolumetricFogHeight.y;
 static const float SimpleFogHeight = TESR_VolumetricFogHeight.z * 1.5;
 static const float isExterior = TESR_VolumetricFogHeight.w; // 0 or 1 to activate/cancel fog in interiors
 
-static const float SimpleFogExtinction = max(0.0, TESR_VolumetricFogSimple.x) * 0.1;
-static const float SimpleFogInscattering = max(0.0, TESR_VolumetricFogSimple.y) * 0.1;
-static const float SimpleFogNight = 2.5 * TESR_VolumetricFogSimple.z;
+static const float Extinction = max(0.0, TESR_VolumetricFogSimple.x) * 0.1;
+static const float Inscattering = max(0.0, TESR_VolumetricFogSimple.y) * 0.1;
+static const float FogNight = max(0.0, TESR_VolumetricFogSimple.z);
 static const float SimpleFogSkyColor = TESR_VolumetricFogSimple.w;
 
-static const float LowFogBlend = TESR_VolumetricFogBlend.x;
+static const float DistantFogBlend = TESR_VolumetricFogBlend.x;
 static const float HeightFogBlend = TESR_VolumetricFogBlend.y;
 static const float HeightFogRolloff = TESR_VolumetricFogBlend.z;
 static const float SimpleFogBlend = TESR_VolumetricFogBlend.w;
@@ -135,10 +136,15 @@ float getAverageDepth(float2 uv, float distance){
 	return dot(average, float(0.25).xxxx);
 }
 
+float4 SkyMask(VSOUT IN) : COLOR0
+{
+	float2 uv = IN.UVCoord;
+	float4 color = linearize(tex2D(TESR_SourceBuffer, uv));
 
-float getIsSky(float2 uv){
 	float distance = 0.5 * TESR_ReciprocalResolution.xy;
-	uv -= distance;
+
+	float3 eyeVector = normalize(toWorld(IN.UVCoord));
+	distance *= 1;//lerp(TESR_DebugVar.x, TESR_DebugVar.y, compress(dot(eyeVector, TESR_SunPosition.xyz)));
 
 	float3 coeffs = float3(float2(1, -1) * distance, 0.9961);
     float depth = readDepth(uv) / farZ >= coeffs.z;
@@ -147,19 +153,29 @@ float getIsSky(float2 uv){
     float depth3 = readDepth(uv + coeffs.yx) / farZ >= coeffs.z;
     float depth4 = readDepth(uv + coeffs.yy) / farZ >= coeffs.z;
 
-	return (depth + depth1 + depth2 + depth3 + depth4) * 0.2;
+	float total = (depth || depth1 || depth2 || depth3 || depth4) * luma(color); // we scale the resutlt with the point luma since sky tends to be brighter
+
+	return saturate(total.xxxx);
 }
+
+// scale the fog color between sky, purefog, and sun contribution
+float4 fogColor (float4 skyColor, float4 pureFogColor, float fogStrength, float skyColorCoeff, float4 sunScattering, float saturation){
+	float4 fogColor = lerp(skyColor, pureFogColor, saturate(pows(fogStrength, skyColorCoeff)));   // modulate between sky and pure fog color if strength is high
+	fogColor += sunScattering;                              									   // add sun influence
+	fogColor = lerp(luma(fogColor), fogColor, saturation);                                         // boost fog color saturation
+	return fogColor;
+}
+
 
 float4 VolumetricFog(VSOUT IN) : COLOR0 
 {
-	float4 color = linearize(tex2D(TESR_RenderedBuffer, IN.UVCoord));
+	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
 	float4 pureFogColor = linearize(TESR_FogColor);
 
-	// get the min value of 9 neighbors to reduce dithering
     float depth = readDepth(IN.UVCoord);
-    // float depth = getAverageDepth(IN.UVCoord, TESR_DebugVar.x);
-
-    float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
+    float isDayTime = smoothstep(0.4, 0.8, TESR_SunAmount.x);
+    float isDayTimeFog = smoothstep(0.1, 0.6, TESR_SunAmount.x);
+	float SunsetFog = sin(TESR_SunAmount.x * PI) * 0.01;
 
 	float3 eyeVector = toWorld(IN.UVCoord) * depth;
 	float3 worldPos = eyeVector + TESR_CameraPosition.xyz;
@@ -167,12 +183,10 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float3 eyeDirection = normalize(eyeVector);
 	depth = length(eyeVector); // make sure depth is the same at the center and edges of the screen
 
-	float fogPower = FogPower * lerp(0.5, 1.0, isDayTime); // boost fog power at night to allow it to show up better
-	float normalizedDepth = pows(depth / farZ, HeightFogRolloff * fogPower); // apply a curve to the distance to simulate pushing back fog
+	float fogPower = FogPower * lerp( 1/FogNight, HeightFogRolloff, isDayTimeFog); // boost fog power at night to allow it to show up better
+	float normalizedDepth = pows(depth / farZ, fogPower); // apply a curve to the distance to simulate pushing back fog
 	float multiplier = lerp(0.005, 1, isExterior);
 	float fogDepth = normalizedDepth * farZ / (HeightFogDist * multiplier); // scale distances > shorter distances = further out fog
-
-	float isSky = getIsSky(IN.UVCoord);
 
 	// calculate sun & sky color
 	float3 up = blue.xyz;
@@ -184,31 +198,38 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 	float4 skyColor = float4(GetSkyColor(0, 1, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor.rgb), 1) * TESR_SunsetColor.w;
 
-	float strength = (saturate(1 - farFog/farZ) + saturate(1 - nearFog/farZ)) * 0.6 / (fogPower * 4.0f * LowFogHeight); // deduce a strength of density from near/far and power values
+	float strength = (saturate(1 - farFog/farZ) + saturate(1 - nearFog/farZ)) * 0.6 / (fogPower * 4.0f * WeatherImpact) + SunsetFog; // deduce a strength of density from near/far and power values
 	// float strength = (saturate(1 - farFog/farZ) + saturate(1 - nearFog/farZ * 6.0f)) / (FogPower * 4.0f); // deduce a strength of density from near/far and power values
 	float density = (exp(strength) - 1) * 0.0001;                                 // scale density so that strength 0 = no fog and strength 1 = fully fogged scene
 	float heightFade = exp( -pointHeight / (80000 * SimpleFogHeight));            // height fade to ensure we don't shade the sky
 
 	// add sun influence/scattering. Influence is wider with distance to simulate scattering. Influence is stronger when the sun is low
-	float sunStrength = 1 / TESR_FogData.z;                                                        // scale sun contribution with sunglare param
-	sunStrength = lerp(sunStrength, max(sunStrength * 2, 10), normalizedDepth);                    // modulate sun strength with distance
-	float sunScattering = pows(compress(sunDir), 2 + sunStrength) * pow(1 - sunHeight, 1.5) * isDayTime ;       // more scattering when sun is low
-	float4 fogColor = lerp(skyColor, pureFogColor, saturate(pows(strength, HeightFogSkyColor)));   // modulate between sky and pure fog color if strength is high
-	fogColor += sunColor * sunScattering * SunPower * TESR_FogData.z;                              // add sun influence
-	// fogColor = lerp(fogColor * saturate(1 - SimpleFogNight), fogColor, isDayTime);
-	fogColor = lerp(luma(fogColor), fogColor, SimpleFogSkyColor);                                    // boost fog color saturation
+	float sunStrength = TESR_FogData.z / (1 + 2 * strength);                      // scale sun contribution with sunglare param and fog thickness
+	sunStrength = lerp(sunStrength, max(sunStrength * 2, 10), normalizedDepth);   // modulate sun strength with distance
+
+	float sunScattering = pows(compress(sunDir), 2 + sunStrength); 				  // more scattering looking towards the sun direction
+	sunScattering *= pow(1 - sunHeight, 2) * isDayTimeFog * TESR_FogData.z;       // more scattering when sun is low or sunglare is high
+	float4 sun = sunColor * sunScattering * SunPower * 100; 
+
+	float isSky = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 
 	// enforce some level of fog on the horizon to hide Z fighting & sky transition
-	float distantDepth = depth / farZ;
-	float distantFog = pows(invlerps((1 - 0.5 * LowFogDist), 0.99, distantDepth), 2.5);
-	float4 finalColor = isSky ? color:lerp (color, skyColor, saturate(distantFog));
+	float distantFog = saturate(pows(invlerps((1 - 0.5 * DistantFogRange), 0.99, depth / farZ), 2.5)); 					// simple curve between a custom distance and the horizon
+	float distantHeightFade = (DistantFogHeight == 0) ? (!isSky) : exp( -pointHeight / (80000 * DistantFogHeight)); 	// at HeightFade set to 0, filter out the sky
 
-	// float inScattering = luma(TESR_SunColor) * SimpleFogInscattering;
-	float3 simpleFog = mixFog(finalColor.rgb, fogColor.rgb, SimpleFogExtinction, SimpleFogInscattering, fogDepth, density * heightFade);
-	finalColor = lerp(finalColor, float4(simpleFog, 1), saturate(SimpleFogBlend));
+	float inScattering = Inscattering * lerp(1, 0.5, isSky) + SunsetFog;
+	float extinction = Extinction * (!isSky) * (1 - distantFog * isDayTimeFog); 	// only apply extinction on No sky zones, and not in the range of distant fog during the day
 
-	float3 heightFog = mixHeightFog(finalColor.rgb, fogColor.rgb, SimpleFogExtinction, SimpleFogInscattering, fogDepth, density * HeightFogDensity, HeightFogFalloff * ( 1.5 / fogPower), pointHeight, HeightFogHeight);
-	finalColor = isSky ? finalColor : lerp(finalColor, float4(heightFog, 1), saturate(HeightFogBlend));
+	float4 finalColor = color;
+	float4 simpleFogColor = fogColor(skyColor, pureFogColor, strength, SimpleFogSkyColor, black, FogSaturation);
+	float3 simpleFog = mixFog(finalColor.rgb, simpleFogColor.rgb, extinction, inScattering, fogDepth, density * heightFade);
+	finalColor = lerp(finalColor, float4(simpleFog, 1), saturate(SimpleFogBlend) * (1 - isSky));
+
+	finalColor = lerp (finalColor, skyColor, distantFog * saturate(DistantFogBlend) * distantHeightFade * isExterior);
+
+	float4 heightFogColor = fogColor(skyColor, pureFogColor, strength, HeightFogSkyColor, sun, FogSaturation);
+	float3 heightFog = mixHeightFog(finalColor.rgb, heightFogColor.rgb, extinction, inScattering, fogDepth, density * HeightFogDensity, 1.5 / (fogPower * HeightFogFalloff), pointHeight, HeightFogHeight);
+	finalColor = lerp(finalColor, float4(heightFog, 1), saturate(HeightFogBlend));
 
 	finalColor = lerp(color, finalColor, TESR_VolumetricFogData.z);
 	return delinearize(finalColor);
@@ -216,6 +237,12 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 technique
 {
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader  = compile ps_3_0 SkyMask();
+	}
+
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
