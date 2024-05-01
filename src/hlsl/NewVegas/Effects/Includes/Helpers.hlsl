@@ -15,15 +15,16 @@
 #define bend(a, b)           (a * (1 + b) / (1 + a * b)) //bends the response curve in a symetric way 
 #define scaledReinhard(a, b) ((a * b) / (1 + a * b)) // curve that reaches a maximum of 1 with a speed b
 
-static const float4 white = float4 (1, 1, 1, 1);
-static const float4 grey = float4 (0.5, 0.5, 0.5, 1);
-static const float4 black = float4 (0, 0, 0, 1);
-static const float4 red = float4 (1, 0, 0, 1);
-static const float4 green = float4 (0, 1, 0, 1);
-static const float4 blue = float4 (0, 0, 1, 1);
-static const float4 yellow = float4 (1, 1, 0, 1);
-static const float4 cyan = float4 (0, 1, 1, 1);
-static const float4 magenta = float4 (1, 0, 1, 1);
+#define PI 3.1415926538
+#define white     float4 (1, 1, 1, 1)
+#define grey      float4 (0.5, 0.5, 0.5, 1)
+#define black     float4 (0, 0, 0, 1)
+#define red       float4 (1, 0, 0, 1)
+#define green     float4 (0, 1, 0, 1)
+#define blue      float4 (0, 0, 1, 1)
+#define yellow    float4 (1, 1, 0, 1)
+#define cyan      float4 (0, 1, 1, 1)
+#define magenta   float4 (1, 0, 1, 1)
 
 float3 linearize(float3 color) {
     return pows(color, 2.2);
