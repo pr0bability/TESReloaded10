@@ -30,16 +30,7 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->EditingMode = false;
 	TheGameMenuManager->MainMenuOn = false;
 
-	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontNormal);
-	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontSelected);
-	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
-
-	// calculate menu dimensions based on screen
-	TheGameMenuManager->HeaderYPos = (MenuSettings.TextSize + RowSpace * 2 + LineThickness * 2);
-	TheGameMenuManager->MenuHeight = TheGameMenuManager->HeaderYPos + MenuSettings.TextSize + RowSpace * 3 + LineThickness;
-	TheGameMenuManager->rowHeight = MenuSettings.TextSize + RowSpace;
-	TheGameMenuManager->margins = PositionY * 3; // top/bottom margin + footer
-	TheGameMenuManager->pageSize = (TheRenderManager->height - TheGameMenuManager->MenuHeight - TheGameMenuManager->margins) / (TheGameMenuManager->rowHeight);
+	TheGameMenuManager->UpdateSettings();
 
 	TheGameMenuManager->Keys[1] = "Esc";
 	TheGameMenuManager->Keys[2] = "1";
@@ -142,6 +133,21 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->Keys[211] = "Delete";
 }
 
+void GameMenuManager::UpdateSettings() {
+	textSize = MenuSettings.TextSize * (TheRenderManager->height / 1080);  // scale fonts based on resolution (scale 1 -> 1920x1080)
+
+	D3DXCreateFontA(TheRenderManager->device, textSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontNormal);
+	D3DXCreateFontA(TheRenderManager->device, textSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontSelected);
+	D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus * (TheRenderManager->height / 1080), 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
+
+	// calculate menu dimensions based on screen
+	TheGameMenuManager->HeaderYPos = (textSize + RowSpace * 2 + LineThickness * 2);
+	TheGameMenuManager->MenuHeight = TheGameMenuManager->HeaderYPos + textSize + RowSpace * 3 + LineThickness;
+	TheGameMenuManager->rowHeight = textSize + RowSpace;
+	TheGameMenuManager->margins = PositionY * 3; // top/bottom margin + footer
+	TheGameMenuManager->pageSize = (TheRenderManager->height - TheGameMenuManager->MenuHeight - TheGameMenuManager->margins) / (TheGameMenuManager->rowHeight);
+}
+
 void GameMenuManager::MainMenuMessage() {
 	std::chrono::time_point now = std::chrono::system_clock::now();
 
@@ -156,7 +162,7 @@ void GameMenuManager::MainMenuMessage() {
 
 	std::string menuMessage = std::string(PluginVersion::VersionString) + " - Open the Config Menu by pressing the key " + Keys[MenuSettings.KeyEnable];
 
-	SetRect(&Rect, 0, TheRenderManager->height - MenuSettings.TextSize - 10, TheRenderManager->width, TheRenderManager->height + MenuSettings.TextSize);
+	SetRect(&Rect, 0, TheRenderManager->height - textSize - 10, TheRenderManager->width, TheRenderManager->height + textSize);
 	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
 	FontNormal->DrawTextA(NULL, menuMessage.c_str(), -1, &RectShadow, DT_CENTER, TextShadowColorNormal);
 	FontNormal->DrawTextA(NULL, menuMessage.c_str(), -1, &Rect, DT_CENTER, TextColorNormal);
@@ -398,7 +404,7 @@ int GameMenuManager::DrawShadowedText(const char* text, int x, int y, int width,
 	RECT rectangle;
 	RECT rectangleShadow;
 
-	SetRect(&rectangle, posX, posY, posX + width, posY + MenuSettings.TextSize);
+	SetRect(&rectangle, posX, posY, posX + width, posY + textSize);
 
 	if (Alignment == DT_LEFT)
 		Font->DrawTextA(NULL, text, -1, &rectangle, DT_CALCRECT, TextShadowColorNormal); // calculate rectangle
@@ -434,7 +440,7 @@ void GameMenuManager::Render() {
 	if (TheSettingManager->hasUnsavedChanges)
 		DrawShadowedText(std::string("/!\\ You have unsaved changes. To avoid losing them, save them using the " + Keys[MenuSettings.KeySave] + " Key").c_str(), MainItemColumnSize * 3, 0, MainItemColumnSize * 2, TextColorEditing, FontNormal, DT_LEFT);
 
-	DrawLine(0, MenuSettings.TextSize + RowSpace, 3 * ItemColumnSize); 	// draw line under Title
+	DrawLine(0, textSize + RowSpace, 3 * ItemColumnSize); 	// draw line under Title
 
 	// render header as horizontal column
 	TheSettingManager->FillMenuSections(&Sections, NULL);
@@ -456,7 +462,7 @@ void GameMenuManager::Render() {
 	}
 
 	// draw line under header
-	DrawLine(0, HeaderYPos + MenuSettings.TextSize + RowSpace, 3 * ItemColumnSize);
+	DrawLine(0, HeaderYPos + textSize + RowSpace, 3 * ItemColumnSize);
 
 	bool isShaderSection = !memcmp(SelectedNode.Section, "Shaders", 7);
 
@@ -516,7 +522,7 @@ void GameMenuManager::Render() {
 
 				//Logger::Log("%s render time: %s", Sections[i].c_str(), duration.c_str());
 
-				DrawShadowedText(duration.c_str(), 0, lineYPos, ItemColumnSize - MenuSettings.TextSize, TextColorNormal, FontNormal, DT_RIGHT);
+				DrawShadowedText(duration.c_str(), 0, lineYPos, ItemColumnSize - textSize, TextColorNormal, FontNormal, DT_RIGHT);
 			}
 		}
 	}

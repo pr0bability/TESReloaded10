@@ -336,6 +336,8 @@ void ShaderManager::UpdateConstants() {
 	timer.LogTime("ShaderManager::UpdateConstants for generic constants");
 
 	if (TheSettingManager->SettingsChanged) {
+		TheGameMenuManager->UpdateSettings();
+
 		// update settings
 		for (const auto [Name, effect] : EffectsNames) {
 			(*effect)->UpdateSettings();

@@ -16,6 +16,7 @@ public:
 	void					Render();
 	void					HandleInput();
 	void					MainMenuMessage();
+	void					UpdateSettings();
 	void					DrawLine(int x, int y, int length);
 	int 					DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font, int Alignment);
 	bool					IsKeyPressed(UInt16 KeyCode);
@@ -28,6 +29,7 @@ public:
 	int 										SelectedRow[4];
 	int 										SelectedColumn;
 	char										EditingValue[20];
+	int											textSize;
 	KeyCodes									Keys;
 
 	SettingManager::Configuration::ConfigNode	SelectedNode;
