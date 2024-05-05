@@ -27,7 +27,6 @@ static const float blurRadius = TESR_AmbientOcclusionData.w;
 static const int startFade = 2000;
 static const int endFade = 8000;
 static const float2 io = float2(1.0f, 0.0f);
-static const float PI = 3.14159265;
  
 struct VSOUT
 {
@@ -151,11 +150,9 @@ float4 Combine(VSOUT IN) : COLOR0
 	float ao = lerp(AOclamp, 1.0, tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
 
 	float luminance = luma(color);
-	float white = 1.0;
-	float black = 0.0;
 	float lt = luminance - AOlumThreshold;
-	luminance = clamp(max(black, lt) + max(black, lt) + max(black, lt), 0.0, 1.0);
-	ao = lerp(ao, white, luminance);
+	luminance = saturate(lt * 3.0);
+	ao = lerp(ao, 1.0, luminance);
 	color *= ao;
 
     #if viewao

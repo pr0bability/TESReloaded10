@@ -204,8 +204,6 @@ float4 getShoreFade(PS_INPUT IN, float depth, float shoreSpeed, float shoreFacto
 
 float3 ComputeRipple(sampler2D puddlesSampler, float2 UV, float CurrentTime, float Weight)
 {
-    float PI = 3.14159265;
-
     float4 Ripple = tex2D(puddlesSampler, UV);
     Ripple.yz = expand(Ripple.yz); // convert from 0/1 to -1/1 
 
