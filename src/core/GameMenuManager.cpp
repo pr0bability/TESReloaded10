@@ -145,7 +145,7 @@ void GameMenuManager::UpdateSettings() {
 	TheGameMenuManager->MenuHeight = TheGameMenuManager->HeaderYPos + textSize + RowSpace * 3 + LineThickness;
 	TheGameMenuManager->rowHeight = textSize + RowSpace;
 	TheGameMenuManager->margins = PositionY * 3; // top/bottom margin + footer
-	TheGameMenuManager->pageSize = (TheRenderManager->height - TheGameMenuManager->MenuHeight - TheGameMenuManager->margins) / (TheGameMenuManager->rowHeight);
+	TheGameMenuManager->pageSize = (TheRenderManager->height - (TheGameMenuManager->MenuHeight + TheGameMenuManager->margins)) / (TheGameMenuManager->rowHeight);
 }
 
 void GameMenuManager::MainMenuMessage() {
@@ -472,7 +472,7 @@ void GameMenuManager::Render() {
 	ListSize = Sections.size();
 	CurrentColumn = COLUMNS::CATEGORY;
 	Rows[CurrentColumn] = ListSize - 1;
-	Pages[CurrentColumn] = ListSize / pageSize;
+	Pages[CurrentColumn] = (ListSize - 1) / pageSize;
 	for (UInt32 i = pageSize * SelectedPage[CurrentColumn]; i < min(ListSize, pageSize * (SelectedPage[CurrentColumn] + 1)); i++) {
 		ID3DXFont* Font = FontNormal;
 		D3DXCOLOR textColor = TextColorNormal;
@@ -532,7 +532,7 @@ void GameMenuManager::Render() {
 	ListSize = Sections.size();
 	CurrentColumn = COLUMNS::SECTION;
 	Rows[CurrentColumn] = ListSize - 1;
-	Pages[CurrentColumn] = ListSize / pageSize;
+	Pages[CurrentColumn] = (ListSize - 1) / pageSize;
 	for (UInt32 i = pageSize * SelectedPage[CurrentColumn]; i < min(ListSize, pageSize * (SelectedPage[CurrentColumn] + 1)); i++) {
 		// Selected is true as long as we are deeper in the menu than current column
 		ID3DXFont* Font = FontNormal;
@@ -556,7 +556,7 @@ void GameMenuManager::Render() {
 	ListSize = Settings.size();
 	CurrentColumn = COLUMNS::SETTINGS;
 	Rows[CurrentColumn] = ListSize - 1;
-	Pages[CurrentColumn] = ListSize / pageSize;
+	Pages[CurrentColumn] = (ListSize - 1) / pageSize;
 	SettingManager::Configuration::SettingList::iterator Setting = Settings.begin();
 
 	for (UInt32 i = pageSize * SelectedPage[CurrentColumn]; i < min(ListSize, pageSize * (SelectedPage[CurrentColumn] + 1)); i++) {
