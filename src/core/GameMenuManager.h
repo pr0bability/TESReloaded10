@@ -48,4 +48,7 @@ public:
 	int rowHeight;
 	int margins;
 	int pageSize;
+	int TitleColumnWidth;
+	int MainColumnWidth;
+	int ItemColumnWidth;
 };
