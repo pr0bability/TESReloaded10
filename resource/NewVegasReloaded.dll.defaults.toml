@@ -761,9 +761,9 @@ Enabled = true                      # Post Process underwater fog/godrays/causti
 
 [_Shaders.VolumetricFog.Main]
 Amount = 1.0                        # Global multiplier for fog strength in exteriors
-AmountInterior = 1.0                # Global multiplier for fog strength in interiors
 SunPower = 1.0                      # Controls the influence of Sun Color when shining through fog
 FogSaturation = 1.0                 # Tune the saturation of the fog
+MinimumBaseFog = 1.0                # How much fog will be present as a base line when weather has no fog
 WeatherImpact = 1.0                 # How much the fog will scale with weather fog strength
 DistantFogRange = 1.0               # Range of the distance fog that blends moutains into the sky.
 DistantFogBlend = 1.0               # Blending power of the distant fog
@@ -781,6 +781,31 @@ FogNight = 1.0                      # Scales the fog distances at night.
 SimpleFogSkyColor = 1.0             # Strong fogs will use the weather fog color instead of the sky. This setting changes how strong the fog should be for that.
 SimpleFogHeight = 1.0               # Limit the sky influence/height rate of dissipation for simple fog.
 SimpleFogBlend = 1.0                # General strength of the impact of simple fog on the final look.
+
+
+[_Shaders.VolumetricFog.Interiors]
+Amount = 1.0                        # Global multiplier for fog strength in interiors
+SunPower = 1.0                      # Controls the influence of Sun Color when shining through fog
+FogSaturation = 1.0                 # Tune the saturation of the fog
+MinimumBaseFog = 1.0                # How much fog will be present as a base line when weather has no fog
+WeatherImpact = 1.0                 # How much the fog will scale with weather fog strength
+DistantFogRange = 1.0               # Range of the distance fog that blends moutains into the sky.
+DistantFogBlend = 1.0               # Blending power of the distant fog
+DistantFogHeight = 1.0              # Height limit for the distant fog. If set to 0, will use the sky as a mask.
+HeightFogDensity = 1.0              # Density multiplier for the general height fog
+HeightFogFalloff = 1.0              # Vertical falloff of atmospheric height fog,
+HeightFogDist = 1.0                 # Distance multiplier for Height fog. Pushes back the fog.
+HeightFogSkyColor = 1.0             # Strong fogs will use the weather fog color instead of the sky. This setting changes how strong the fog should be for that.
+HeightFogHeight = 1.0               # "Sea level" from which the Height fog starts to decrease.
+HeightFogBlend = 1.0                # General strength of the impact of Height fog on the final look.
+HeightFogRolloff = 1.0              # Pushes back the Height fog without changing the far distance. Changes the curve of progression
+Extinction = 1.0                    # Light lost due to absorption of particles when seen throught the fog.
+Inscattering = 1.0                  # Light gained from light scattering when seen through the fog.
+FogNight = 1.0                      # Scales the fog distances at night.
+SimpleFogSkyColor = 1.0             # Strong fogs will use the weather fog color instead of the sky. This setting changes how strong the fog should be for that.
+SimpleFogHeight = 1.0               # Limit the sky influence/height rate of dissipation for simple fog.
+SimpleFogBlend = 1.0                # General strength of the impact of simple fog on the final look.
+
 
 [_Shaders.VolumetricFog.Status]
 Enabled = true                      # Volumetric fog shader tinted by the sun. Rendered after shadows and other effects for more accurate effect.
