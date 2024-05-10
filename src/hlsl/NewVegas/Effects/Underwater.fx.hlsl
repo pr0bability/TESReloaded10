@@ -144,6 +144,12 @@ float4 Godrays( VSOUT IN) : COLOR0 {
 }
 
 
+float aboveWater(float eyeHeight, float pointHeight, float waterHeight, float depth){
+	if (eyeHeight < waterHeight - 4.0) return false;
+	return eyeHeight > (waterHeight + 4.0) || pointHeight > (waterHeight - 0.6);
+}
+
+
 float4 Water( VSOUT IN ) : COLOR0 {
 	float depth = readDepth(IN.UVCoord);
     float3 eyeVector = toWorld(IN.UVCoord);
@@ -156,7 +162,7 @@ float4 Water( VSOUT IN ) : COLOR0 {
 
 	// float3 blurredColor = tex2D(TESR_RenderedBuffer, IN.UVCoord/2 + 1).rgb;
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	if (TESR_CameraPosition.z + 4.0 > TESR_WaterSettings.x && worldPos.z > TESR_WaterSettings.x - 10.0) return color;
+ 	if (aboveWater(TESR_CameraPosition.z, worldPos.z, TESR_WaterSettings.x, depth)) return color;
 
 	color = linearize(color); //linearise
 
@@ -221,7 +227,7 @@ float4 WaterDistortion( VSOUT IN ) : COLOR0 {
 	float3 eyeDirection = normalize(eyeVector);
     float3 worldPos = TESR_CameraPosition.xyz + eyeVector * depth;
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	if (TESR_CameraPosition.z + 4.0 > TESR_WaterSettings.x && worldPos.z > TESR_WaterSettings.x - 10.0) return color;
+	if (aboveWater(TESR_CameraPosition.z, worldPos.z, TESR_WaterSettings.x, depth)) return color;
 
 	IN.UVCoord.x += sin(frame * 3 + IN.UVCoord.x * 60) * 0.001f;
 	IN.UVCoord.y += cos(frame * 3 + IN.UVCoord.y * 60) * 0.001f;
