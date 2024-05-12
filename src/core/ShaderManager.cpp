@@ -207,7 +207,6 @@ void ShaderManager::UpdateConstants() {
 	GameState.isDialog = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Dialog);
 	GameState.isPersuasion = InterfaceManager->IsActive(Menu::MenuType::kMenuType_Persuasion);
 	
-	if (GameState.OverlayIsOn) return;
 	if (!currentCell) return; // if no cell is present, we skip update to avoid trying to access values that don't exist
 	
 	GameState.isExterior = !currentCell->IsInterior();// || Player->parentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // < use exterior flag, broken for now
