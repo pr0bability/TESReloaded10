@@ -49,7 +49,15 @@ void FlashlightEffect::UpdateConstants() {
 		WeaponRot = Player->ActorSkinInfo->WeaponNode->m_worldTransform.rot;
 	}
 	else {
-		if (Player->process->IsWeaponOut() && Settings.attachToWeapon) {
+
+		bool melee = false;
+		if (Player->process->IsWeaponOut()) {
+			melee = Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_HandToHandMelee ||
+				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandMelee ||
+				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_TwoHandMelee;
+		}
+
+		if (Player->process->IsWeaponOut() && !melee && Settings.attachToWeapon) {
 			WeaponPos = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.pos;
 			WeaponRot = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.rot;
 		}
