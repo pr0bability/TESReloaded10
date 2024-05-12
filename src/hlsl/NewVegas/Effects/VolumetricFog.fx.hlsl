@@ -164,9 +164,9 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float3 eyeDirection = normalize(eyeVector);
 	depth = length(eyeVector); // make sure depth is the same at the center and edges of the screen
 
-	float fogPower = FogPower * lerp( 1/FogNight, HeightFogRolloff, isDayTimeFog);    			// boost fog power at night to allow it to show up better
-	float normalizedDepth = pows(depth / farZ, fogPower); 							  			// apply a curve to the distance to simulate pushing back fog
-	float fogDepth = normalizedDepth * farZ / (HeightFogDist * lerp(0.005, 1, isExterior));     // scale distances > shorter distances = further out fog
+	float fogPower = FogPower * lerp(HeightFogRolloff, 1/FogNight, (1 - isDayTimeFog) * isExterior);    	// boost fog power at night to allow it to show up better
+	float normalizedDepth = pows(depth / farZ, fogPower);													// apply a curve to the distance to simulate pushing back fog
+	float fogDepth = normalizedDepth * farZ / (HeightFogDist * lerp(0.005, 1, isExterior));     			// scale distances > shorter distances = further out fog
 
 	float strength = pows((saturate(1 - farFog/farZ) + saturate(1 - nearFog/farZ)) / 2, 2) / (fogPower + 1); // deduce a strength of density from near/far and power values
 	strength = BaseFogStrength + WeatherImpact * strength + SunsetFog;     			                         // scale strength so that strength 0 = no fog and strength 1 = fully fogged scene
