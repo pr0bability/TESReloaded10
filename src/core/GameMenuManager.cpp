@@ -30,8 +30,6 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->EditingMode = false;
 	TheGameMenuManager->MainMenuOn = false;
 
-	TheGameMenuManager->UpdateSettings();
-
 	TheGameMenuManager->Keys[1] = "Esc";
 	TheGameMenuManager->Keys[2] = "1";
 	TheGameMenuManager->Keys[3] = "2";
@@ -135,16 +133,16 @@ void GameMenuManager::Initialize() {
 
 void GameMenuManager::UpdateSettings() {
 	int prevSize = textSize;
-	textSize = MenuSettings.TextSize * (TheRenderManager->height / 1080);  // scale fonts based on resolution (scale 1 -> 1920x1080)
+	float ratio = (float)TheRenderManager->height / 1080.0;
+	
+	textSize = (float)MenuSettings.TextSize * ratio;  // scale fonts based on resolution (scale 1 -> 1920x1080)
 
 	if (textSize != prevSize) {
-		if (TheGameMenuManager->FontNormal != nullptr) delete TheGameMenuManager->FontNormal;
-		if (TheGameMenuManager->FontSelected != nullptr) delete TheGameMenuManager->FontSelected;
-		if (TheGameMenuManager->FontStatus != nullptr) delete TheGameMenuManager->FontStatus;
 
 		D3DXCreateFontA(TheRenderManager->device, textSize, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontNormal);
 		D3DXCreateFontA(TheRenderManager->device, textSize, 0, FW_BOLD, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFont, &TheGameMenuManager->FontSelected);
-		D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus * (TheRenderManager->height / 1080), 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
+		D3DXCreateFontA(TheRenderManager->device, MenuSettings.TextSizeStatus * ratio, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, MenuSettings.TextFontStatus, &TheGameMenuManager->FontStatus);
+		//Logger::Log("Font created OK");
 	}
 
 	// calculate menu dimensions based on screen
@@ -153,9 +151,9 @@ void GameMenuManager::UpdateSettings() {
 	TheGameMenuManager->rowHeight = textSize + RowSpace;
 	TheGameMenuManager->margins = PositionY * 3; // top/bottom margin + footer
 	TheGameMenuManager->pageSize = (TheRenderManager->height - (TheGameMenuManager->MenuHeight + TheGameMenuManager->margins)) / (TheGameMenuManager->rowHeight);
-	TheGameMenuManager->ItemColumnWidth = ItemColumnSize * (TheRenderManager->height / 1080);
-	TheGameMenuManager->TitleColumnWidth = TitleColumnSize * (TheRenderManager->height / 1080);
-	TheGameMenuManager->MainColumnWidth = MainItemColumnSize * (TheRenderManager->height / 1080);
+	TheGameMenuManager->ItemColumnWidth = ItemColumnSize * ratio;
+	TheGameMenuManager->TitleColumnWidth = TitleColumnSize * ratio;
+	TheGameMenuManager->MainColumnWidth = MainItemColumnSize * ratio;
 }
 
 void GameMenuManager::MainMenuMessage() {
@@ -165,12 +163,13 @@ void GameMenuManager::MainMenuMessage() {
 	if (!MainMenuOn) {
 		MainMenuOn = true;
 		MainMenuStartTime = now;
+		UpdateSettings();
 	}
 
 	std::chrono::duration<double> elapsed_seconds = now - MainMenuStartTime;
 	if (elapsed_seconds.count() > 5.0) return; // only show message at the bottom of the screen for 5 seconds
 
-	std::string menuMessage = std::string(PluginVersion::VersionString) + " - Open the Config Menu by pressing the key " + Keys[MenuSettings.KeyEnable];
+	std::string menuMessage = std::string(PluginVersion::VersionString) + " - Open the Config Menu by pressing the key " + GetKeyName(MenuSettings.KeyEnable);
 
 	SetRect(&Rect, 0, TheRenderManager->height - textSize - 10, TheRenderManager->width, TheRenderManager->height + textSize);
 	SetRect(&RectShadow, Rect.left + 1, Rect.top + 1, Rect.right + 1, Rect.bottom + 1);
@@ -399,6 +398,14 @@ void GameMenuManager::HandleInput() {
 	}
 }
 
+std::string GameMenuManager::GetKeyName(int keyCode) {
+	KeyCodes::iterator result = Keys.find(keyCode);
+	if (result == Keys.end())
+		return std::to_string(keyCode);
+
+	return result->second;
+}
+
 
 void GameMenuManager::DrawLine(int x, int y, int length) {
 	float posX = PositionX + x;
@@ -448,7 +455,7 @@ void GameMenuManager::Render() {
 	DrawShadowedText(TitleMenu, 0, 0, TitleColumnWidth, TextColorNormal, FontNormal, DT_LEFT);
 
 	if (TheSettingManager->hasUnsavedChanges)
-		DrawShadowedText(std::string("/!\\ You have unsaved changes. To avoid losing them, save them using the " + Keys[MenuSettings.KeySave] + " Key").c_str(), MainColumnWidth * 3, 0, MainColumnWidth * 2, TextColorEditing, FontNormal, DT_LEFT);
+		DrawShadowedText(std::string("/!\\ You have unsaved changes. To avoid losing them, save them using the " + GetKeyName(MenuSettings.KeySave) + " Key").c_str(), MainColumnWidth * 3, 0, MainColumnWidth * 2, TextColorEditing, FontNormal, DT_LEFT);
 
 	DrawLine(0, textSize + RowSpace, 3 * ItemColumnWidth); 	// draw line under Title
 
@@ -628,8 +635,8 @@ void GameMenuManager::Render() {
 	DrawLine(0, HeaderYPos + (pageSize + 1) * rowHeight + RowSpace * 2, 3 * ItemColumnWidth);
 	int toggleEntry = MenuSettings.UseNumpadForEditing ? MenuSettings.KeyEditing : 13;
 	std::string KeysInfo = "Page " + std::to_string(SelectedPage[COLUMNS::CATEGORY] + 1) + "/" + std::to_string(Pages[COLUMNS::CATEGORY] + 1) +
-		" | Keybinds: Enable/Increment: " + Keys[MenuSettings.KeyAdd] + ", Disable/Decrement: " + Keys[MenuSettings.KeySubtract] +
-		", Start Editing value: " + Keys[toggleEntry] + ", Save Settings: " + Keys[MenuSettings.KeySave];
+		" | Keybinds: Enable/Increment: " + GetKeyName(MenuSettings.KeyAdd) + ", Disable/Decrement: " + GetKeyName(MenuSettings.KeySubtract) +
+		", Start Editing value: " + GetKeyName(toggleEntry) + ", Save Settings: " + GetKeyName(MenuSettings.KeySave);
 
 	DrawShadowedText(KeysInfo.c_str(), 0, HeaderYPos + (pageSize + 1) * rowHeight + RowSpace * 4 + LineThickness, MainColumnWidth * 2, TextColorNormal, FontNormal, DT_LEFT);
 }
