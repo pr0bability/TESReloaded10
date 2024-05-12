@@ -20,6 +20,7 @@ public:
 	void					DrawLine(int x, int y, int length);
 	int 					DrawShadowedText(const char* text, int x, int y, int width, D3DCOLOR color, ID3DXFont* Font, int Alignment);
 	bool					IsKeyPressed(UInt16 KeyCode);
+	std::string				GetKeyName(int keyCode);
 
 	bool										Enabled;
 	bool										EditingMode;
