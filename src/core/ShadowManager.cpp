@@ -493,16 +493,7 @@ D3DXMATRIX ShadowManager::GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir) {
 * Renders the different shadow maps: Near, Far, Ortho.
 */
 void ShadowManager::RenderShadowMaps() {
-	if (!TheSettingManager->SettingsMain.Main.RenderEffects || !ShadowShadersLoaded) return; // cancel out if rendering effects is disabled
-
-	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
-	ShadowsExteriorEffect::ExteriorsStruct* ShadowsExteriors = &Shadows->Settings.Exteriors;
-	ShadowsExteriorEffect::InteriorsStruct* ShadowsInteriors = &Shadows->Settings.Interiors;
-
-	bool isExterior = TheShaderManager->GameState.isExterior;// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
-
-	bool ExteriorEnabled = isExterior && TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
-	bool InteriorEnabled = !isExterior && TheShaderManager->Effects.ShadowsInteriors->Enabled;
+	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // cancel out if rendering effects is disabled
 
 	// track point lights for interiors and exteriors
 	ShadowSceneLight* ShadowLights[ShadowCubeMapsMax] = { NULL };
@@ -511,8 +502,18 @@ void ShadowManager::RenderShadowMaps() {
 
 	TheShaderManager->GetNearbyLights(ShadowLights, Lights, SpotLights);
 
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+	ShadowsExteriorEffect::ExteriorsStruct* ShadowsExteriors = &Shadows->Settings.Exteriors;
+	ShadowsExteriorEffect::InteriorsStruct* ShadowsInteriors = &Shadows->Settings.Interiors;
+
+	bool isExterior = TheShaderManager->GameState.isExterior;// || currentCell->flags0 & TESObjectCELL::kFlags0_BehaveLikeExterior; // exterior flag currently broken
+	bool ExteriorEnabled = isExterior && TheShaderManager->Effects.ShadowsExteriors->Enabled && ShadowsExteriors->Enabled;
+	bool InteriorEnabled = !isExterior && TheShaderManager->Effects.ShadowsInteriors->Enabled;
+
 	// early out in case shadow rendering is not required
-	if (!ExteriorEnabled && !InteriorEnabled && !TheShaderManager->orthoRequired) return;
+	if (!ExteriorEnabled && !InteriorEnabled && !TheShaderManager->orthoRequired || !ShadowShadersLoaded) {
+		return;
+	}
 	if (!Player->parentCell) return;
 
 	auto timer = TimeLogger();
@@ -554,6 +555,7 @@ void ShadowManager::RenderShadowMaps() {
 	// Render all shadow maps
 	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
 	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
+
 		geometryPass->VertexShader = ShadowMapVertex;
 		geometryPass->PixelShader = ShadowMapPixel;
 		alphaPass->VertexShader = ShadowMapVertex;
@@ -562,41 +564,41 @@ void ShadowManager::RenderShadowMaps() {
 		skinnedGeoPass->PixelShader = ShadowMapPixel;
 		speedTreePass->VertexShader = ShadowMapVertex;
 		speedTreePass->PixelShader = ShadowMapPixel;
-	}
 
-	if (isExterior && ExteriorEnabled && SunDir->z > 0.0f) {
-		ShadowData->z = 0; // set shader constant to identify other shadow maps
-		D3DXMATRIX View = GetViewMatrix(&At, SunDir);
-		auto shadowMapTimer = TimeLogger();
+		if (ExteriorEnabled && SunDir->z > 0.0f) {
+			ShadowData->z = 0; // set shader constant to identify other shadow maps
+			D3DXMATRIX View = GetViewMatrix(&At, SunDir);
+			auto shadowMapTimer = TimeLogger();
 
-		for (int i = MapNear; i < MapOrtho; i++) {
-			ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View);
+			for (int i = MapNear; i < MapOrtho; i++) {
+				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
+				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View);
 
-			RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
-			if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
+				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+				if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
 
-			std::string message = "ShadowManager::RenderShadowMap ";
-			message += std::to_string(i);
-			shadowMapTimer.LogTime(message.c_str());
+				std::string message = "ShadowManager::RenderShadowMap ";
+				message += std::to_string(i);
+				shadowMapTimer.LogTime(message.c_str());
+			}
 		}
-	}
 
-	// render ortho map if one of the effects using ortho is active
-	if (isExterior && TheShaderManager->orthoRequired) {
-		auto shadowMapTimer = TimeLogger();
+		// render ortho map if one of the effects using ortho is active
+		if (TheShaderManager->orthoRequired) {
+			auto shadowMapTimer = TimeLogger();
 
-		ShadowData->z = 1; // identify ortho map in shader constant
-		D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
-		D3DMATRIX View = GetViewMatrix(&At, &OrthoDir);
-		Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(View);
+			ShadowData->z = 1; // identify ortho map in shader constant
+			D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
+			D3DMATRIX View = GetViewMatrix(&At, &OrthoDir);
+			Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(View);
 
-		RenderShadowMap(&Shadows->ShadowMaps[MapOrtho], &Shadows->Constants.ShadowViewProj);
-		OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
+			RenderShadowMap(&Shadows->ShadowMaps[MapOrtho], &Shadows->Constants.ShadowViewProj);
+			OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
 	
-		shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
-	}
+			shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
+		}
 
+	}
 
 	// Render shadow maps for point lights
 	bool usePointLights = (TheShaderManager->GameState.isDayTime > 0.5) ? ShadowsExteriors->UsePointShadowsDay : ShadowsExteriors->UsePointShadowsNight;
