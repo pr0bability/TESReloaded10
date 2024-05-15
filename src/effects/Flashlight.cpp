@@ -52,7 +52,8 @@ void FlashlightEffect::UpdateConstants() {
 
 		bool melee = false;
 		if (Player->process->IsWeaponOut()) {
-			melee = Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_HandToHandMelee ||
+			melee = !Player->ActorSkinInfo->WeaponForm ||
+				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_HandToHandMelee ||
 				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandMelee ||
 				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_TwoHandMelee;
 		}
