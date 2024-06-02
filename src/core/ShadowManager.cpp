@@ -531,9 +531,12 @@ void ShadowManager::RenderShadowMaps() {
 	Device->GetRenderTarget(0, &RenderSurface);
 	Device->GetViewport(&viewport);	
 
-	RenderState->SetRenderState(D3DRS_STENCILENABLE , 1 ,RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_STENCILREF , 0 ,RenderStateArgs);
- 	RenderState->SetRenderState(D3DRS_STENCILFUNC , 8 ,RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_STENCILENABLE, 1 ,RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_STENCILREF, 0 ,RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_STENCILFUNC, 8 ,RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_ALPHAREF, 0 ,RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_NORMALIZENORMALS, 1 ,RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_POINTSIZE, 810365505,RenderStateArgs);
 
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
@@ -626,7 +629,7 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
-	if (TheShaderManager->Effects.Flashlight->Enabled && TheShaderManager->Effects.Flashlight->spotLightActive) {
+	if (TheShaderManager->Effects.Flashlight->Enabled && TheShaderManager->Effects.Flashlight->spotLightActive && TheShaderManager->Effects.Flashlight->Settings.renderShadows) {
 		// render shadow maps for spotlights
 		
 		for (int i = 0; i < SpotLightsMax; i++) {
