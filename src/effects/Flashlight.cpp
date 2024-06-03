@@ -11,8 +11,8 @@ void FlashlightEffect::RegisterConstants() {
 void FlashlightEffect::UpdateSettings() {
 
 	Settings.attachToWeapon = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "AttachToWeapon");
-	Settings.renderShadows = 0; // disabled until fixed
 	//Settings.renderShadows = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "RenderShadows");
+	Settings.renderShadows = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "RenderShadows");
 	selectedPass = Settings.renderShadows;
 
 	Settings.Offset = NiPoint3(

@@ -647,18 +647,17 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
-	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, Effects.Flashlight->selectedPass, true, SourceSurface);
-
 	if (GameState.isExterior) 
 		Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	else 
 		Effects.ShadowsInteriors->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
-	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.SnowAccumulation->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, Effects.Flashlight->selectedPass, true, SourceSurface);
+	Effects.AmbientOcclusion->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.WetWorld->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+	Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
