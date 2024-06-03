@@ -587,7 +587,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			else if (LightIndex < TrackedLightsMax) {
 				LightsList[LightIndex] = Light;
 				LightPosition[LightIndex] = LightPos;
-				LightColor[ShadowCubeMapsMax + ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
+				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
 				LightIndex++;
 			};
 		}
