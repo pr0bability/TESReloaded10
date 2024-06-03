@@ -16,6 +16,7 @@ sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP;
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SourceBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_PointShadowBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 
 static const float LumTreshold = TESR_SpecularData.x;
 static const float BlurRadius = TESR_SpecularData.y;
@@ -110,6 +111,9 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	float invLuma = saturate(1 - sunLuma);
 	float sunSetFade = 1 - TESR_ShadowFade.x;
 
+	float shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord); // fade shadows to light when sun is low
+	shadows = lerp(TESR_ShadowFade.x, 1.0f, shadows); // fade shadows to light when sun is low
+
 	// skylight
 	float4 skyColor = lerp(skyColor_t, horizonColor, depth);
 	skyColor = lerp(luma(skyColor).rrrr, skyColor, SkySaturation);
@@ -121,7 +125,7 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	result += SkyStrength * light.g * skyColor * 0.01 * saturate(smoothstep(0.4, 0, luminance)) * max(0.0,invLuma * sunSetFade); // skylight is more pronounced in darker areas
 
 	// specular
-	result += lerp(0, light.r * SpecStrength * 10.0 * sunColor * color, invlerps(LumTreshold * sunLuma, 1, luminance)); // specular will boost areas above treshold
+	result += lerp(0, light.r * SpecStrength * 10.0 * sunColor * color * shadows, smoothstep(LumTreshold * 0.8, LumTreshold * 1.2, luminance)); // specular will boost areas above treshold
 
     result.rgb = pows(result.rgb, 1.0/2.2); // delinearise
 	return float4 (result.rgb, 1.0f);

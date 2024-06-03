@@ -224,7 +224,8 @@ float4 Wet( VSOUT IN ) : COLOR0
 
 	// sample and strenghten the shadow map
 	float sunAmbient = luma(linearize(TESR_SunAmbient));
-	float inShadow = saturate(pow(tex2D(TESR_PointShadowBuffer, IN.UVCoord).r / sunAmbient, 5));
+	float4 shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	float inShadow = saturate(pow((shadows.r + shadows.g) / sunAmbient, 5));
 
 	// calculate sky color
     float sunHeight = shade(TESR_SunPosition.xyz, up);
