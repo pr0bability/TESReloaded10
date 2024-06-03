@@ -377,42 +377,61 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 		// Since this is pure geometry, getting reference data will be difficult (read: slow)
 		auto iter = Lights[LightIndex]->kGeometryList.start;
-		if (!iter) Logger::Log("[ERROR] Light %i has no geometry data", LightIndex);
+		if (iter) {
+			while (iter) {
+				NiGeometry* geo = iter->data;
+				iter = iter->next;
+				if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
+					continue;
 
-		while (iter) {
-			NiGeometry* geo = iter->data;
-			iter = iter->next;
-			if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
-				continue;
+				NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+				NiMaterialProperty* matProp = static_cast<NiMaterialProperty*>(geo->GetProperty(NiProperty::kType_Material));
 
-			NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
-			NiMaterialProperty* matProp = static_cast<NiMaterialProperty*>(geo->GetProperty(NiProperty::kType_Material));
+				if (!shaderProp)
+					continue;
 
-			if (!shaderProp)
-				continue;
+				bool isFirstPerson = (shaderProp->flags & NiShadeProperty::kFirstPerson) != 0;
+				bool isThirdPerson = (shaderProp->flags & NiShadeProperty::kThirdPerson) != 0;
 
-			bool isFirstPerson = (shaderProp->flags & NiShadeProperty::kFirstPerson) != 0;
-			bool isThirdPerson = (shaderProp->flags & NiShadeProperty::kThirdPerson) != 0;
+				// Skip objects if they are barely visible. 
+				if ((matProp && matProp->fAlpha < 0.05f))
+					continue;
 
-			// Skip objects if they are barely visible. 
-			if ((matProp && matProp->fAlpha < 0.05f))
-				continue;
+				// Also skip viewmodel due to issues, and render player's model only in 3rd person
+				if (isFirstPerson) continue;
 
-			// Also skip viewmodel due to issues, and render player's model only in 3rd person
-			if (isFirstPerson) continue;
+				if (!Player->isThirdPerson && !Settings->PlayerShadowFirstPerson && isThirdPerson)
+					continue;
 
-			if (!Player->isThirdPerson && !Settings->PlayerShadowFirstPerson && isThirdPerson)
-				continue;
-				
-			if (Player->isThirdPerson && !Settings->PlayerShadowThirdPerson && isThirdPerson)
-				continue;
+				if (Player->isThirdPerson && !Settings->PlayerShadowThirdPerson && isThirdPerson)
+					continue;
 
-			if (skinnedGeoPass->AccumObject(geo)) {}
-			else if (speedTreePass->AccumObject(geo)) {}
-			else if (Settings->Forms.AlphaEnabled && alphaPass->AccumObject(geo)) {}
-			else geometryPass->AccumObject(geo);
+				if (skinnedGeoPass->AccumObject(geo)) {}
+				else if (speedTreePass->AccumObject(geo)) {}
+				else if (Settings->Forms.AlphaEnabled && alphaPass->AccumObject(geo)) {}
+				else geometryPass->AccumObject(geo);
+			}
 		}
-		
+		else {
+			// old form based geo accumulation when the one perform by the game has not handled this light
+			TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
+			while (Entry) {
+				if (TESObjectREFR* Ref = GetRef(Entry->item, &Settings->Forms)) {
+					// Detect if the object is in front of the light in the direction of the current face
+					// TODO: improve to base on frustum
+					NiNode* RefNode = Ref->GetNode();
+					D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
+					D3DXVECTOR3 ObjectToLight = ObjectPos - LightPos->toD3DXVEC3();
+
+					D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
+					float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
+					if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
+				}
+				Entry = Entry->next;
+			}
+		}
+
+
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		Shadows->Constants.ShadowViewProj = View * Proj;
 
