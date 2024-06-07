@@ -379,10 +379,11 @@ void RenderManager::CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget, bool
 		strftime(Name, 80, "\\%Y%m%d %H.%M.%S", localtime(&CurrentTime));
 		strcat(Filename, Name);
 		strcat(Filename, HDR?".hdr":".jpg");
+		strcat(Filename, HDR?".hdr":".png");
 		if (HDR)
 			D3DXSaveSurfaceToFileA(Filename, D3DXIFF_HDR, RenderTarget, NULL, NULL);
 		else
-			D3DXSaveSurfaceToFileA(Filename, D3DXIFF_JPG, RenderTarget, NULL, NULL);
+			D3DXSaveSurfaceToFileA(Filename, D3DXIFF_PNG, RenderTarget, NULL, NULL);
 
 		InterfaceManager->ShowMessage("Screenshot taken!");
 	}
