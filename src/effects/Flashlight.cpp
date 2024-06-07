@@ -11,7 +11,6 @@ void FlashlightEffect::RegisterConstants() {
 void FlashlightEffect::UpdateSettings() {
 
 	Settings.attachToWeapon = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "AttachToWeapon");
-	//Settings.renderShadows = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "RenderShadows");
 	Settings.renderShadows = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "RenderShadows");
 	selectedPass = Settings.renderShadows;
 
@@ -44,21 +43,45 @@ void FlashlightEffect::UpdateConstants() {
 
 	NiPoint3 WeaponPos;
 	NiMatrix33 WeaponRot;
+	bool melee = false;
+	if (Player->process->IsWeaponOut()) {
+		melee = !Player->ActorSkinInfo->WeaponForm ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_HandToHandMelee ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandMelee ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_TwoHandMelee ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandGrenade ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandMine ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandLunchboxMine ||
+			Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandThrown;
+	}
+
 	if (Player->isThirdPerson) {
-		WeaponPos = Player->ActorSkinInfo->WeaponNode->m_worldTransform.pos;
-		WeaponRot = Player->ActorSkinInfo->WeaponNode->m_worldTransform.rot;
+		if (Settings.attachToWeapon && !melee && Player->process->IsWeaponOut() && !Player->IsReloading()) {
+			WeaponPos = Player->ActorSkinInfo->WeaponNode->m_worldTransform.pos;
+			WeaponRot = Player->ActorSkinInfo->WeaponNode->m_worldTransform.rot;
+		}
+		else {
+			// matrix that will rotate 90� on the Z then X axis
+			NiMatrix33 rotation = NiMatrix33();
+			rotation.data[0][0] = 0;
+			rotation.data[0][1] = -1;
+			rotation.data[0][2] = 0;
+			rotation.data[1][0] = 0;
+			rotation.data[1][1] = 0;
+			rotation.data[1][2] = 1;
+			rotation.data[2][0] = -1;
+			rotation.data[2][1] = 0;
+			rotation.data[2][2] = 0;
+
+			WeaponRot = Player->ActorSkinInfo->HeadNode->m_worldTransform.rot;
+			rotation = rotation * WeaponRot; // we place the rotation matrix in the referential of the bone
+			WeaponRot = WeaponRot * rotation; // we apply it
+
+			WeaponPos = Player->ActorSkinInfo->Spine2Node->m_worldTransform.pos;
+		}
 	}
 	else {
-
-		bool melee = false;
-		if (Player->process->IsWeaponOut()) {
-			melee = !Player->ActorSkinInfo->WeaponForm ||
-				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_HandToHandMelee ||
-				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_OneHandMelee ||
-				Player->ActorSkinInfo->WeaponForm->weaponType == TESObjectWEAP::WeaponType::kWeapType_TwoHandMelee;
-		}
-
-		if (Player->process->IsWeaponOut() && !melee && Settings.attachToWeapon) {
+		if (Settings.attachToWeapon && !melee && Player->process->IsWeaponOut() && !Player->IsReloading()) {
 			WeaponPos = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.pos;
 			WeaponRot = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.rot;
 		}
