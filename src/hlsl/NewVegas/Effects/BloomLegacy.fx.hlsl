@@ -70,7 +70,7 @@ static const float2 BlurOffsets[cKernelSize] =
 
 float3 AdjustSaturation(float3 color, float saturation)
 {
-	float grey = dot(color, float3(0.3, 0.59, 0.11));
+	float grey = dot(color, float3(0.2126f, 0.7152f, 0.0722f)); // same as our "luma()" helper function
 	
 	return lerp(grey, color, saturation);
 }
@@ -101,12 +101,12 @@ float4 BlurPass(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 
 float4 CombinePass(VSOUT IN) : COLOR0
 {
-	float3 bloomColor = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb);
+	float3 bloomColor = saturate(tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb); // Needs saturate() to not go crazy as the bloom wasn't targeting the 0-1 range
 	float3 originalColor = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
 	
 	bloomColor = AdjustSaturation(bloomColor, TESR_BloomLegacyValues.z) * TESR_BloomLegacyValues.x;
 	originalColor = AdjustSaturation(originalColor, TESR_BloomLegacyValues.w) * TESR_BloomLegacyValues.y;
-	originalColor *= (1 - saturate(bloomColor));
+	originalColor *= max((max(originalColor, 1) - bloomColor), 0); // darken the background by the inverse bloom channel value (relative to the background max, to support HDR backgrounds beyond 1)
 	
 	#if viewbloom
 		return float4(bloomColor, 1.0f);
