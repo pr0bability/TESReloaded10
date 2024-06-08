@@ -24,7 +24,7 @@ void TonemappingShaders::UpdateConstants() {
 		Constants.BloomData.y = TheShaderManager->GetTransitionValue(Settings.Main.BloomExponent, Settings.Night.BloomExponent, Settings.Interiors.BloomExponent);
 		Constants.BloomData.z = TheShaderManager->GetTransitionValue(Settings.Main.WeatherModifier, Settings.Night.WeatherModifier, Settings.Interiors.WeatherModifier);
 		Constants.BloomData.w = TheShaderManager->GetTransitionValue(Settings.Main.TonemapWhitePoint, Settings.Night.TonemapWhitePoint, Settings.Interiors.TonemapWhitePoint);
-		Constants.HDRData.x = TheShaderManager->GetTransitionValue(Settings.Main.TonemappingMode, Settings.Night.TonemappingMode, Settings.Interiors.TonemappingMode);
+		Constants.HDRData.x = TheShaderManager->GetTransitionValue(Settings.Main.TonemappingMode, Settings.Main.TonemappingMode, Settings.Interiors.TonemappingMode);
 		Constants.HDRData.y = TheShaderManager->GetTransitionValue(Settings.Main.Exposure, Settings.Night.Exposure, Settings.Interiors.Exposure);
 		Constants.HDRData.z = TheShaderManager->GetTransitionValue(Settings.Main.Saturation, Settings.Night.Saturation, Settings.Interiors.Saturation);
 		Constants.HDRData.w = TheShaderManager->GetTransitionValue(Settings.Main.Gamma, Settings.Night.Gamma, Settings.Interiors.Gamma);
