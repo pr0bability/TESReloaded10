@@ -108,12 +108,12 @@ float4 Bloom(VSOUT IN ):COLOR0
 		return color; // cancel out tresholding if treshold is set to 0
 	}
 
-	float brightness = max(0.000001, luma(color));
+	float brightness = luma(color);
 	float bloomScale = TESR_BloomData.y; 
 
-	float bloom = bloomScale * sqr(max(0.0, brightness - threshold)) / brightness;
+	float bloom = bloomScale * (brightness > 0.0 ? (sqr(max(0.0, brightness - threshold)) / brightness) : 0.0);
 
-	return float4(saturate(bloom) * color.rgb, 1);
+	return float4(bloom * color.rgb, 1);
 }
 
 
