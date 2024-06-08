@@ -601,6 +601,15 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 }
 
 
+bool ShaderManager::ShouldRenderShadowMaps() {
+	if (GameState.isExterior)
+		return orthoRequired || (
+			Effects.ShadowsExteriors->Settings.Exteriors.Enabled &&
+			Effects.ShadowsExteriors->Enabled);
+	else
+		return Effects.ShadowsInteriors->Enabled;
+}
+
 /*
 * Renders a given effect to an arbitrary render target
 */
