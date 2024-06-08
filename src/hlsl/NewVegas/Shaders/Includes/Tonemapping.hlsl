@@ -347,17 +347,19 @@ float3 DICE(float3 color, float contrast, float brightness, float hdrMax, float 
 
 float3 tonemap(float3 color)
 {
-    color = max(0.0, color);
+    // Vanilla like, use this for HDR output (e.g. SpecialK or DXVK) (we can't do display mapping here because this is not the last shader to run)
     if (TESR_HDRData.x == 0)
     {
         return color;
     }
     else if (TESR_HDRData.x == 1)
     {
+        color = max(0.0, color);
         return max(0.0, VTLottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.z, TESR_LotteData.y, TESR_LotteData.w, TESR_ToneMapping.x));
     }
     else if (TESR_HDRData.x == 2)
     {
+        color = max(0.0, color);
         return max(0.0, Lottes(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w));
     }
     else if (TESR_HDRData.x == 3)
@@ -382,6 +384,7 @@ float3 tonemap(float3 color)
     }
     else if (TESR_HDRData.x == 8)
     {
+        color = max(0.0, color);
         return max(0.0, Uchimura(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_LotteData.z, TESR_HDRBloomData.w, TESR_LotteData.w));
     }
     else if (TESR_HDRData.x == 9)
@@ -390,7 +393,7 @@ float3 tonemap(float3 color)
     }
     else if (TESR_HDRData.x == 10)
     {
-        return max(0.0, DICE(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_HDRBloomData.w, TESR_LotteData.w));
+        return DICE(min(CMAX, color), TESR_LotteData.x, TESR_LotteData.y, TESR_HDRBloomData.w, TESR_LotteData.w);
     }
     else
     {
