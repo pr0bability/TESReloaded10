@@ -150,7 +150,8 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	// attentuate intensity with distance from sun to fade the edges and reduce sunglare
 	float heightAttenuation = TESR_GodRaysData.w?lerp(0.2, 4.0, pows(sunHeight, 4)):1.0; // if timeEnabled is on, godrays strength is reduced when the sun is high
-	float glareAttenuation = smoothstep(0, glareReduction, distance);
+	float glareAttenuation = 1.0;
+	// float glareAttenuation = smoothstep(0, glareReduction, distance);
 	float attenuation = shade(TESR_ViewSpaceLightDir.xyz, eyeDir) * glareAttenuation * heightAttenuation;
 
 	// calculate sun color
@@ -167,7 +168,7 @@ float4 Combine(VSOUT IN) : COLOR0
 	//uv /= TESR_ReciprocalResolution.xy;
 	//rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
-	color += rays * 5 * color + rays * 0.2;
+	color += max(rays, 0) * 5 * color + max(rays, 0) * 0.2;
 	color = delinearize(color);
 	return float4(color.rgb, 1);
 }
