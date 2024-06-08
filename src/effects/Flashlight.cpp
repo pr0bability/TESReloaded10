@@ -34,12 +34,13 @@ void FlashlightEffect::UpdateSettings() {
 };
 
 void FlashlightEffect::UpdateConstants() {
+	
+	if (!SpotLight) return;
 
-	//TODO: find a better place for this
-	UInt32* (__cdecl * GetPipboyManager)() = (UInt32 * (__cdecl*)())0x705990;
-	bool(__thiscall * IsLightActive)(UInt32 * pPipBoyManager) = (bool(__thiscall*)(UInt32*))0x967700;
+	// based on JIP https://github.com/jazzisparis/JIP-LN-NVSE/blob/5a30ac4356ea0e93b9ff357b5031b1e420240a4d/functions_jip/jip_fn_ui.h#L1469
+	UInt32 lightIsOn = ThisStdCall<bool>(0x822B90, &Player->magicTarget, (void*)&(*(MagicItem**)(ThisStdCall<uint8_t*>(0x93CCD0, NULL) + 0x18)), 1);
 
-	spotLightActive = Enabled && IsLightActive(GetPipboyManager());
+	spotLightActive = Enabled && lightIsOn;
 
 	NiPoint3 WeaponPos;
 	NiMatrix33 WeaponRot;
@@ -97,33 +98,29 @@ void FlashlightEffect::UpdateConstants() {
 	WeaponPos.y += offset.y;
 	WeaponPos.z += offset.z;
 
-	if (SpotLight) {
-		if (spotLightActive) {
-			// find and disable pipboy light
-			NiNode* PlayerNode = Player->GetNode();
-			for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
-				NiAVObject* childNode = PlayerNode->m_children.data[i];
-				if (childNode) {
-					if (childNode->GetRTTI() == (void*)0x11F4A98) {
-						childNode->m_flags |= childNode->APP_CULLED;
-					}
+	if (spotLightActive) {
+		// find and disable pipboy light
+		NiNode* PlayerNode = Player->GetNode();
+		for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
+			NiAVObject* childNode = PlayerNode->m_children.data[i];
+			if (childNode) {
+				if (childNode->GetRTTI() == (void*)0x11F4A98) {
+					childNode->m_flags |= childNode->APP_CULLED;
 				}
 			}
 		}
-
-		SpotLight->CastShadows = Settings.renderShadows;
-		SpotLight->Diff = Settings.Color;
-		SpotLight->Dimmer = Settings.Dimmer * 10.0 * spotLightActive;
-		SpotLight->m_worldTransform.pos = WeaponPos;
-		SpotLight->m_worldTransform.rot = WeaponRot;
-		SpotLight->m_worldTransform.scale = 1.0f;
-		SpotLight->OuterSpotAngle = Settings.ConeAngle;
-		SpotLight->Spec = NiColor(Settings.Distance * spotLightActive, 0, 0); // radius in r channel
-
-		GetFlashlightViewProj();
-
 	}
 
+	SpotLight->CastShadows = Settings.renderShadows;
+	SpotLight->Diff = Settings.Color;
+	SpotLight->Dimmer = Settings.Dimmer * 10.0 * spotLightActive;
+	SpotLight->m_worldTransform.pos = WeaponPos;
+	SpotLight->m_worldTransform.rot = WeaponRot;
+	SpotLight->m_worldTransform.scale = 1.0f;
+	SpotLight->OuterSpotAngle = Settings.ConeAngle;
+	SpotLight->Spec = NiColor(Settings.Distance * spotLightActive, 0, 0); // radius in r channel
+
+	GetFlashlightViewProj();
 };
 
 bool FlashlightEffect::ShouldRender() { return SpotLight && spotLightActive; };
