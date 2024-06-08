@@ -34,7 +34,7 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 	
 	// saturation
-	color = max(0.0,lerp(luma(color).rrrr, color, TESR_ImageAdjustData.z));
+	color = lerp(luma(color).rrrr, color, TESR_ImageAdjustData.z);
 	
 	color.rgb = pows(color.rgb, 2.2); // linearise
 	float2 io = float2(1, 0);
@@ -53,7 +53,7 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
 
 	// contrast
 	//0.5^2.2=0.21764
-	newColor = max(0.0,(color.rgb - float(0.5).rrr) * TESR_ImageAdjustData.y + float(0.5).rrr);
+	newColor = (color.rgb - float(0.5).rrr) * TESR_ImageAdjustData.y + float(0.5).rrr;
 
 	color.rgb = lerp(color.rgb, newColor, TESR_ImageAdjustData.w); // strength of the effect
 	return float4(color.rgb, 1);
