@@ -40,7 +40,7 @@ float4 ColorPass(VSOUT IN) : COLOR0
 	float3 color = tex2D(TESR_RenderedBuffer, IN.UVCoord).rgb;
 	float3 H = 0.01;
 	
-	float3 lumCoeff = float3(0.25, 0.65,0.1);
+	float3 lumCoeff = float3(0.2126f, 0.7152f, 0.0722f); // same as our "luma()" helper function
 	float lum = saturate(dot(lumCoeff, color));
 	float L = saturate(10 * (lum - 0.45));
 	float3 result1 = min(2.0f * color * lum, 65504);
@@ -48,7 +48,7 @@ float4 ColorPass(VSOUT IN) : COLOR0
 	float3 newColor = lerp(result1, result2, L);
 	color = lerp(color, newColor, TESR_ColoringValues.z);
 
-	color = pow(abs(color), TESR_ColoringValues.w);
+	color = pow(abs(color), TESR_ColoringValues.w) * sign(color); // same as our "pows()" helper function
 	color = lerp(H, color, TESR_ColoringData.w);
 
 	float y = 1.0 / (1.0 + exp(TESR_ColoringColorCurve.y / 2.0));
@@ -60,7 +60,7 @@ float4 ColorPass(VSOUT IN) : COLOR0
 	luminance.r = (1.0 / (1.0 + exp(-TESR_ColoringColorCurve.y * (luminance.r - 0.5))) - y) / (1.0 - 2.0 * y);
 	luminance.g = (1.0 / (1.0 + exp(-TESR_ColoringColorCurve.z * (luminance.g - 0.5))) - z) / (1.0 - 2.0 * z);
 	luminance.b = (1.0 / (1.0 + exp(-TESR_ColoringColorCurve.w * (luminance.b - 0.5))) - w) / (1.0 - 2.0 * w);
-	luminance = pow(abs(luminance), 1.0 / TESR_ColoringEffectGamma.x);
+	luminance = pow(max(luminance, 0), 1.0 / TESR_ColoringEffectGamma.x);
 
 	float3 luminancei = 1.0 - luminance;
 	luminance = lerp(luminance, luminancei, TESR_ColoringValues.y);
@@ -68,7 +68,7 @@ float4 ColorPass(VSOUT IN) : COLOR0
 	luminance.g = pow(abs(luminance.g), 1.0 / TESR_ColoringEffectGamma.z);
 	luminance.b = pow(abs(luminance.b), 1.0 / TESR_ColoringEffectGamma.w);
 	
-	color = pow(abs(color), 1.0 / TESR_ColoringData.y);
+	color = pow(abs(color), 1.0 / TESR_ColoringData.y) * sign(color);
 	float3 color2 = color;
 
 	if (luminance.r < 0.5)
@@ -111,9 +111,9 @@ float4 ColorPass(VSOUT IN) : COLOR0
 	if (luminance2 < 0.5)
 		color4 = (2.0 * luminance2 - 1.0) * (color3 - color3 * color3) + color3;
 	else
-		color4 = (2.0 * luminance2 - 1.0) * (sqrt(color3) - color3) + color3;
+		color4 = (2.0 * luminance2 - 1.0) * (sqrt(max(color3, 0)) - color3) + color3; // "color3" could have channels below 0
 
-	color4 = pow(abs(color4), 1.0 / TESR_ColoringValues.w);
+	color4 = pow(abs(color4), 1.0 / TESR_ColoringValues.w) * sign(color4);
 
 	return float4(lerp(color, color4, TESR_ColoringData.x), 1.0f);
 }
