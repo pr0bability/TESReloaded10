@@ -4,8 +4,8 @@
 #define	shades(n, l)        saturate(dot(n, l))
 #define invlerp(a, b, t)    ((t-a)/(b-a))
 #define invlerps(a, b, t)    saturate((t-a)/(b-a))
-#define luma(color)         dot(color.rgb, float3(0.2126f, 0.7152f, 0.0722f)) // extract luma (BT.709)
-// #define luma(color)         dot(color, float3(0.3f, 0.59f, 0.11f)) // extract luma (BT.601)
+#define luma(color)         dot(color.rgb, float3(0.2126f, 0.7152f, 0.0722f)) // extract luminance (BT.709)
+// #define luma(color)         dot(color, float3(0.3f, 0.59f, 0.11f)) // extract luminance (BT.601)
 #define mix(colora, colorb) colora * colorb * 2 // mix two colors without darkening
 #define	weight(v)           dot(v, 1)
 #define	sqr(v)              ((v) * (v))
@@ -33,10 +33,10 @@ float4 linearize(float4 color) {
     return float4(pows(color.rgb, 2.2), color.a);
 }
 float4 delinearize(float4 color) {
-    return float4(max(0.0, pows(color.rgb, 1.0/2.2)), color.a);
+    return float4(pows(color.rgb, 1.0/2.2), color.a);
 }
 float3 delinearize(float3 color) {
-    return max(0.0, pows(color.rgb, 1.0/2.2));
+    return pows(color.rgb, 1.0/2.2);
 }
 
 float4 selectColor(float selector, float4 color0, float4 color1, float4 color2, float4 color3, float4 color4, float4 color5, float4 color6, float4 color7, float4 color8, float4 color9){
