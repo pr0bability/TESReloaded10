@@ -2,10 +2,7 @@
 
 void GodRaysEffect::UpdateConstants() {
 	Constants.Data.z = std::lerp(nightMult, dayMult, TheShaderManager->GameState.transitionCurve);
-
-	if (sunGlareEnabled) {
-		Constants.Ray.w = rayVisibility * TheShaderManager->ShaderConst.sunGlare;
-	}
+	Constants.Ray.w = rayVisibility * sunGlareEnabled ? TheShaderManager->ShaderConst.sunGlare : 1.0;
 }
 
 void GodRaysEffect::UpdateSettings(){
