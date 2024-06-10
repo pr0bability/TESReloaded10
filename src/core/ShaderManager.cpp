@@ -255,7 +255,11 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
-	if (GameState.isExterior && GameState.dayLight > 0.5) ShaderConst.SunDir = ShaderConst.SunPosition;
+	if (GameState.isExterior && GameState.dayLight > 0.5)
+		ShaderConst.SunDir = ShaderConst.SunPosition;
+	else
+		ShaderConst.SunPosition.z = -ShaderConst.SunPosition.z;
+
 
 	// expose the light vector in view space for screen space lighting
 	D3DXVec4Transform(&ShaderConst.ScreenSpaceLightDir, &ShaderConst.SunDir, &TheRenderManager->ViewProjMatrix);

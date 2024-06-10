@@ -111,7 +111,7 @@ float4 ShadeSun(SunValues Sun, float4 texColor, float4 vertexColor){
         float isSunset = smoothstep(0.3, 0.0, Sun.sunHeight);
         texColor.rgb += isSunset * Sun.sunColor;
         texColor.rgb += Sun.sunColor * TESR_SunAmount.w;
-        texColor.a = 1.0f; // force alpha 1 for sun disk in the daytime
+        texColor.a = Sun.isDayTime; // force alpha 1 for sun disk in the daytime
     }else{
         texColor.rgb *= vertexColor.rgb * Params.y * lerp(TESR_SunAmount.w, 1, isSunOrMoon); // vertex color (animated by the engine)
         texColor.a *= vertexColor.a;
@@ -131,11 +131,13 @@ float4 ShadeClouds(float4 finalColor, float4 vertexColor, float3 skyColor, SunVa
 
     // calculate sky color to blend in the clouds
     float3 scattering = pows(Sun.sunInfluence, 20) * smoothstep(0.5, 1, 1.0 - alpha) * Sun.sunColor;
+    float sunDir = Sun.sunDir;
+    float3 baseSkyColor = linearize(TESR_SkyColor).rgb;
 
     if (!UseNormals){
         // simply tint the clouds
         greyScale = (greyScale - 0.5) * 1.5 + 0.5; // tests for increasing cloud contrast before shading
-        float3 cloudTint = lerp(pows(TESR_SkyColor.rgb * 0.5, 5.0), Sun.sunColor * 5, (1 - saturate(Sun.sunInfluence)) * greyScale).rgb;
+        float3 cloudTint = lerp(pows(baseSkyColor * 0.5, 5.0), lerp(baseSkyColor, Sun.sunColor * 5, 0.7 * Sun.sunDir + 0.3), (1 - saturate(Sun.sunInfluence)) * greyScale).rgb;
         cloudTint = lerp(white.rgb, cloudTint * TESR_CloudData.w * 1.333, (1 - Sun.sunHeight) * Sun.isDayTime); // tint the clouds less when the sun is high in the sky and at night
 
         // finalColor.rgb *= lerp(1.0, cloudTint * TESR_CloudData.w * 1.333, isDayTime); // cancel tint at night
