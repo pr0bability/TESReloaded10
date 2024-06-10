@@ -59,6 +59,8 @@ static const float3 offsets[5] = {
 	float3(1, 1, 1)
 };
 
+static const float cinematicScalar = TESR_HDRData.z;
+
 float4 sampleBox(sampler2D buffer, float2 uv, float offset){
     float4 color = float4(0, 0, 0, 0);
     float total = 0;
@@ -80,37 +82,43 @@ VS_OUTPUT main(VS_INPUT IN) {
     // Whether we linearize before applying most post process effects that were already present in the vanilla game.
     // If we do, it will look less like vanilla; sometimes it will look better, some other times it will look worse (tint and fade especially make a big difference);
     // generally giving a darker and less saturated look in linear space.
-    bool gammaSpacePostProcess = true;
+    bool gammaSpacePostProcess = (TESR_ToneMapping.w < 0 || TESR_HDRData.w < 0); // apply if gamma or linearization settings are below 0
     //TODO: TESR_ToneMapping.w isn't used anymore (it was in gamma), TESR_HDRData.w isn't used anymore (it was out gamma)
-    
-    float4 NVRbloom = sampleBox(TESR_BloomBuffer, IN.texcoord_1.xy, 0.5); // already linear
-    float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
 
     float4 final = tex2D(DestBlend, IN.texcoord_1.xy);
+    float3 tint = Tint.rgb;
+    float3 fade = Fade.rgb;
 
     if (!gammaSpacePostProcess){
-        bloom.rgb = linearize(bloom.rgb);
-        final.rgb = linearize(final.rgb);
+        // linearize
+        final.rgb = pows(final.rgb, TESR_ToneMapping.w);
+        tint = pows(tint, TESR_ToneMapping.w);
+        fade = pows(fade, TESR_ToneMapping.w);
     }
-    
-    // scale bloom while maintaining color
-    bloom.rgb = TESR_HDRBloomData.x * pows(bloom.rgb, TESR_HDRBloomData.y);
-    
-    float cinematicScalar = TESR_HDRData.z;
+
     final.rgb = lerp(luma(final.rgb).xxx, final.rgb, Cinematic.x * cinematicScalar); // saturation
-    float3 actualTint = gammaSpacePostProcess ? Tint.rgb : linearize(Tint.rgb);
-    final.rgb = lerp(final.rgb, actualTint * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
+    final.rgb = lerp(final.rgb, tint * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     
     if (TESR_BloomData.w){
         // NVR bloom
+        float4 NVRbloom = sampleBox(TESR_BloomBuffer, IN.texcoord_1.xy, 0.5); // already linear
+
         if (gammaSpacePostProcess){ // Always do the new bloom in linear space as it's designed for that
             final.rgb = linearize(final.rgb);
         }
-        final.rgb = lerp(final.rgb, NVRbloom.rgb * TESR_BloomData.z, TESR_HDRBloomData.x * 0.15);
+        final.rgb = lerp(final.rgb, NVRbloom.rgb * TESR_BloomData.z, TESR_HDRBloomData.x * 0.15); 
     }else{
         // vanilla bloom
+        // scale bloom while maintaining color
+        float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
+        if (!gammaSpacePostProcess){
+            // linearize bloom
+            bloom.rgb = pows(bloom.rgb, TESR_ToneMapping.w);
+        }
+        bloom.rgb = TESR_HDRBloomData.x * pows(bloom.rgb, TESR_HDRBloomData.y);
+
         float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x is brights cutoff (clamp)
-        final.rgb = ((q0 * HDRParam.x) * final.rgb) + (bloom.rgb * (q0 * 0.5)); // blend image and bloom
+        final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
         if (gammaSpacePostProcess){
             final.rgb = linearize(final.rgb);
         }
@@ -122,13 +130,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     if (gammaSpacePostProcess){
         final.rgb = delinearize(final.rgb);
     }
-   
-    final.rgb = lerp(final.rgb, (Cinematic.z * (final.rgb - Cinematic.y)) + Cinematic.y, cinematicScalar * TESR_ToneMapping.y); // apply contrast from Cinematic, scaled by modifier
-    float3 actualFade = gammaSpacePostProcess ? Fade.rgb : linearize(Fade.rgb);
-    final.rgb = lerp(final.rgb, actualFade, Fade.a); // apply night eye and fade
     
+    final.rgb = lerp(final.rgb, (Cinematic.z * (final.rgb - Cinematic.y)) + Cinematic.y, cinematicScalar * TESR_ToneMapping.y); // apply contrast from Cinematic, scaled by modifier
+    final.rgb = lerp(final.rgb, fade, Fade.a); // apply night eye and fade
+
     if (!gammaSpacePostProcess){
-        final.rgb = delinearize(final.rgb);
+        final.rgb = pows(final.rgb, 1/TESR_HDRData.w); // delinearize
     }
     
     OUT.color_0 = float4(final.rgb,BlurScale.z); 
