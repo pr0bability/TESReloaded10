@@ -120,7 +120,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         bloom.rgb = TESR_HDRBloomData.x * pows(bloom.rgb, TESR_HDRBloomData.y);
 
         float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x is brights cutoff (clamp)
-        final.rgb = ((q0 * HDRParam.x) * final.rgb) + max(bloom.rgb * (q0 * 0.5), 0.0); // blend image and bloom
+        final.rgb = ((q0 * HDRParam.x) * final.rgb) + bloom.rgb * (q0 * 0.5); // blend image and bloom
         if (gammaSpacePostProcess){
             final.rgb = linearize(final.rgb);
         }
