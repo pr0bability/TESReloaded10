@@ -7,7 +7,8 @@ float4 TESR_GodRaysRay; // x: intensity, y:length, z: density, w: visibility
 float4 TESR_GodRaysRayColor; // x:r, y:g, z:b, w:saturate
 float4 TESR_GodRaysData; // x: passes amount, y: luminance, z:multiplier, w: time enabled
 float4 TESR_ViewSpaceLightDir; // view space light vector
-float4 TESR_SunDirection; // worldspace sun vector
+float4 TESR_SunDirection; // worldspace sun light vector
+float4 TESR_SunPosition; // worldspace sundisk position
 float4 TESR_ShadowFade; // attenuation factor of sunsets/sunrises and moon phases
 float4 TESR_SunAmount;
 float4 TESR_SunsetColor;
@@ -36,7 +37,7 @@ static const float intensity = TESR_GodRaysRay.x;
 static const float stepLengthMult = TESR_GodRaysRay.y;
 static const float glareReduction = TESR_GodRaysRay.z;
 static const float godrayCurve = TESR_GodRaysRay.w;
-static const float sunHeight = 1 - shade(TESR_SunDirection.xyz, blue.xyz);
+static const float sunHeight = 1 - shade(TESR_SunPosition.xyz, blue.xyz);
 
 struct VSOUT {
 	float4 vertPos : POSITION;
@@ -60,12 +61,12 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 	float2 uv = IN.UVCoord / scale;
 	clip((uv <= 1) - 1);
 
-    float3 sunColor = linearize(TESR_SunColor).rgb; // linearise
+    float3 sunColor = linearize(TESR_SunColor).rgb + lerp(linearize(TESR_SunsetColor.rgb), 0, pows(sunHeight, 8)); // linearise
 
 	float glarePower = lerp(0.1, 8.0, pows(sunHeight, 8)); // increase flare boost during sunrise/sunset
 
 	float depth = (readDepth(uv) / farZ) > 0.98; //only pixels belonging to the sky will register
-	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(uv))), 18) * glarePower; // fake sunglare computed from light direction
+	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(uv))), 180) * glarePower; // fake sunglare computed from light direction
 	float3 color = linearize(tex2D(TESR_SourceBuffer, uv)).rgb;
 	color = (color + sunGlare * sunColor) * depth;
 
@@ -88,12 +89,12 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 	color /= 5;
 
 	// extract bright pixels
-	float treshold = lumTreshold * lerp(0.1, 4.0, pows(sunHeight, 8)); // scale the bloom power with sunsets/sunrises
-	float bloom = max(0.0, smoothstep((1 - treshold), 30, luma(color)));
+	float treshold = lumTreshold * lerp(4.0, 0.0, pows(sunHeight, 8)); // scale the bloom power with sunsets/sunrises
+	float bloom = smoothstep(treshold, 15, luma(color));
 
 	color = saturate(bloom * color * 100 * intensity);
 
-	return float4(color.rgb,1.0f);
+	return float4(color.rgb, 1.0f);
 }
 
 
