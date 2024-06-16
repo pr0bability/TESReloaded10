@@ -6,7 +6,7 @@
 #define ShadersPath "Data\\Shaders\\NewVegasReloaded\\Shaders\\"
 #define EffectsPath "Data\\Shaders\\NewVegasReloaded\\Effects\\"
 #define RenderStateArgs 0, 0
-#define TerrainShadersNames "SLS2100.vso SLS2116.pso SLS2124.pso SLS2132.pso SLS2136.pso SLS2140.pso SLS2144.pso"
+#define TerrainShadersNames "SLS2002.vso SLS2003.pso SLS2006.pso SLS2082.pso SLS2100.vso SLS2116.pso SLS2124.pso SLS2132.pso SLS2136.pso SLS2140.pso SLS2144.pso"
 #define BloodShaders ""
 
 #define SamplerStatesMax 12
