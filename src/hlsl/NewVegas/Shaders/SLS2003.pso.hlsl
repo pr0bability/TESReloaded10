@@ -11,6 +11,8 @@ float4 LODTexParams : register(c31);
 sampler2D NormalMap : register(s1);
 float4 PSLightColor[10] : register(c3);
 
+float4 TESR_DebugVar;
+
 
 // Registers:
 //
@@ -51,24 +53,34 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 r0 = LODTexParams.xyw;
 
     float3 normal = tex2D(NormalMap, IN.NormalUV).xyz;
-    float noise = tex2D(LODLandNoise, IN.NormalUV * 1.75).r;
+
+    float noiseScale = 10000 * TESR_DebugVar.yy;
+    float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
+    float noise = tex2D(LODLandNoise, noiseUV).r;
     float3 parentNormal = tex2D(LODParentNormals, (IN.NormalUV * 0.5) + r0.xy).xyz;
+
+    float3 eyeDir = -normalize(IN.location);
 
     normal = r0.z >= 1 ? normal : lerp(parentNormal, normal, LODTexParams.w);
     normal = expand(normal);
 
     float diffuse = shades(normal, IN.texcoord_1.xyz);
-    float3 lighting = max((diffuse) * PSLightColor[0].rgb + AmbientColor.rgb , 0);
+    float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(IN.texcoord_1.xyz, eyeDir));
+    float spec = pow(shades(normal, (eyeDir + IN.texcoord_1.xyz) / 2), 10);
+
+    float3 lighting = max((diffuse + spec + fresnel) * PSLightColor[0].rgb + AmbientColor.rgb , 0);
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
-    float3 r1 = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128)));
-    float3 r2 = tex2D(BaseMap, uv);
+    float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128)));
+    float3 baseColor = tex2D(BaseMap, uv);
 
     // blending between parent tex and basemap + apply noise
-    float3 q5 = (r0.z >= 1 ? r2 : lerp(r1, r2, LODTexParams.w)) * ((noise * 0.8) + 0.55);
+    baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.8) + 0.55);
 
     // apply fog
-    OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * lighting))) + (q5 * lighting);
+    // OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * lighting))) + (q5 * lighting);
+    OUT.color_0.rgb = baseColor * lighting;
+    // OUT.color_0.rgb = selectColor(TESR_DebugVar.x, q5 * lighting, IN.color_1, r1, r2, lighting, q5, noise.xxx, normalize(IN.location), fresnel.xxx, float3(noiseUV, 0));
 
     OUT.color_0.a = 1;
 
