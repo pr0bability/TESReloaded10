@@ -84,7 +84,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 atten3 = lightDir3 / PSLightPosition[2].w;
     lightDir3 = mul(tbn, lightDir3);
 
-    float3 baseColor = IN.color_0.r * texture0 + texture1 * IN.color_0.g + IN.color_0.b * texture2 + IN.color_1.r * texture3 + IN.color_1.g * texture4 + IN.color_1.b * texture5 + IN.color_1.a * texture6;
+    float3 baseColor = IN.color_0.r * texture0 + IN.color_0.g * texture1 + IN.color_0.b * texture2 + IN.color_1.r * texture3 + IN.color_1.g * texture4 + IN.color_1.b * texture5 + IN.color_1.a * texture6;
     float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_1.r + expand(normal4) * IN.color_1.g + expand(normal5) * IN.color_1.b + expand(normal6) * IN.color_1.a);
 
     float3 lighting = ((shades(combinedNormal.xyz, sunDir.xyz) * PSLightColor[0].rgb) + AmbientColor.rgb);
