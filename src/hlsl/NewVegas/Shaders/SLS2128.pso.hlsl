@@ -3,11 +3,11 @@
 // Parameters:
 
 float4 AmbientColor : register(c1);
-sampler2D BaseMap[7];
-sampler2D NormalMap[7];
+sampler2D BaseMap[7] :register(s0);
+sampler2D NormalMap[7]:register(s7);
 float4 PSLightColor[10] : register(c3);
 float4 PSLightDir : register(c18);
-float4 PSLightPosition[8];
+float4 PSLightPosition[8] :register(c19);
 
 
 // Registers:
@@ -32,8 +32,8 @@ struct VS_INPUT {
     float3 texcoord_3 : TEXCOORD3_centroid;			// partial precision
     float3 texcoord_4 : TEXCOORD4_centroid;			// partial precision
     float3 texcoord_5 : TEXCOORD5_centroid;			// partial precision
-    float3 color_0 : COLOR0;
-    float2 color_1 : COLOR1;
+    float4 color_0 : COLOR0;
+    float4 color_1 : COLOR1;
     float4 texcoord_7 : TEXCOORD7_centroid;			// partial precision
 };
 
@@ -79,18 +79,17 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 atten3 = lightDir3 / PSLightPosition[2].w;
     lightDir3 = mul(tbn, lightDir3);
 
-    float3 baseColor = IN.color_0.r * texture0 + texture1 * IN.color_0.g + IN.color_0.b * texture2 + IN.color_1.r * texture3 + IN.color_1.g * texture4;
-    float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_1.r + expand(normal4) * IN.color_1.g);
+    float3 baseColor = IN.color_0.r * texture0 + texture1 * IN.color_0.g + IN.color_0.b * texture2 + IN.color_0.a * texture3 + IN.color_1.r * texture4;
+    float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_0.a + expand(normal4) * IN.color_1.r);
 
     float3 lighting = ((shades(combinedNormal.xyz, sunDir.xyz) * PSLightColor[0].rgb) + AmbientColor.rgb);
     lighting += shades(combinedNormal, normalize(lightDir1)) * (1 - shades(atten1, atten1)) * PSLightColor[1].xyz;
     lighting += ((shades(combinedNormal, normalize(lightDir2)) * (1 - shades(atten2, atten2))) * PSLightColor[2].xyz);
     lighting += ((shades(combinedNormal, normalize(lightDir3)) * (1 - shades(atten3, atten3))) * PSLightColor[3].xyz);
 
-
     // apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
-    float3 finalColor = lighting * baseColor;
+    float3 finalColor = lighting * baseColor * IN.texcoord_1.rgb;
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;

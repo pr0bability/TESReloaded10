@@ -34,7 +34,7 @@ struct VS_INPUT {
 };
 
 struct VS_OUTPUT {
-    float3 color_0 : COLOR0;
+    float4 color_0 : COLOR0;
     float4 color_1 : COLOR1;
     float4 position : POSITION;
     float2 texcoord_0 : TEXCOORD0;
@@ -56,9 +56,9 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     mdl0.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
 
-    OUT.color_0.rgb = IN.texcoord_1.xyz;
-    OUT.color_1.r = IN.texcoord_1.w;
-    OUT.color_1.yzw = IN.texcoord_2.xyz;
+    OUT.color_0 = IN.texcoord_1;
+    OUT.color_1 = IN.texcoord_2;
+
     OUT.position.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
     OUT.position.xyz = mdl0.xyz;
     OUT.texcoord_0.xy = IN.texcoord_0.xy;

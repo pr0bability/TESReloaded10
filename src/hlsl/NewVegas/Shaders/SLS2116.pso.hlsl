@@ -29,8 +29,8 @@ struct VS_INPUT {
     float3 texcoord_3 : TEXCOORD3_centroid;
     float3 texcoord_4 : TEXCOORD4_centroid;
     float3 texcoord_5 : TEXCOORD5_centroid;
-    float3 color_0 : COLOR0;
-    float color_1 : COLOR1;
+    float4 color_0 : COLOR0;
+    float4 color_1 : COLOR1;
     float4 texcoord_7 : TEXCOORD7_centroid;
 };
 
@@ -61,14 +61,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 sunDir = mul(float3x3(tangent, binormal, normal), PSLightDir.xyz);
 
-    float3 baseColor = IN.color_0.r * texture0 + IN.color_0.g * texture1+ IN.color_0.b * texture2 + IN.color_1.r * texture3;
-    float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_1.r);
+    float3 baseColor = IN.color_0.r * texture0 + IN.color_0.g * texture1+ IN.color_0.b * texture2 + IN.color_0.a * texture3;
+    float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_0.a);
 
     float3 lighting = ((shades(combinedNormal.xyz, sunDir.xyz) * PSLightColor[0].rgb) + AmbientColor.rgb);
 
     // apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
-    float3 finalColor = lighting * baseColor;
+    float3 finalColor = lighting * baseColor * IN.texcoord_1.rgb;
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;
