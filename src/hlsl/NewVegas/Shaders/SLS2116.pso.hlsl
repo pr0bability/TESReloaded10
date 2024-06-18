@@ -26,6 +26,7 @@ float4 PSLightDir : register(c18);
 struct VS_INPUT {
     float2 BaseUV : TEXCOORD0;
     float3 texcoord_1 : TEXCOORD1_centroid;
+    float3 texcoord_2 : TEXCOORD2_centroid;
     float3 texcoord_3 : TEXCOORD3_centroid;
     float3 texcoord_4 : TEXCOORD4_centroid;
     float3 texcoord_5 : TEXCOORD5_centroid;
@@ -39,6 +40,8 @@ struct VS_OUTPUT {
 };
 
 #include "includes/Helpers.hlsl"
+#include "includes/Terrain.hlsl"
+
 
 // Code:
 
@@ -58,13 +61,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 tangent = normalize(IN.texcoord_3.xyz);
     float3 binormal = normalize(IN.texcoord_4.xyz);
     float3 normal = normalize(IN.texcoord_5.xyz);
-
-    float3 sunDir = mul(float3x3(tangent, binormal, normal), PSLightDir.xyz);
+    float3x3 tbn = float3x3(tangent, binormal, normal);
 
     float3 baseColor = IN.color_0.r * texture0 + IN.color_0.g * texture1+ IN.color_0.b * texture2 + IN.color_0.a * texture3;
     float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_0.a);
 
-    float3 lighting = ((shades(combinedNormal.xyz, sunDir.xyz) * PSLightColor[0].rgb) + AmbientColor.rgb);
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb,  IN.texcoord_2, combinedNormal, AmbientColor.rgb);
 
     // apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
