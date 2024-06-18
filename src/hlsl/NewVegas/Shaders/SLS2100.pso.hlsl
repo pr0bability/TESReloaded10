@@ -29,7 +29,7 @@ struct VS_INPUT {
     float3 texcoord_3 : TEXCOORD3_centroid;			// partial precision
     float3 texcoord_4 : TEXCOORD4_centroid;			// partial precision
     float3 texcoord_5 : TEXCOORD5_centroid;			// partial precision
-    float2 color_0 : COLOR0;
+    float4 color_0 : COLOR0;
     float4 texcoord_7 : TEXCOORD7_centroid;			// partial precision
 };
 
@@ -62,7 +62,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);
-    float3 finalColor = lighting * baseColor;
+    float3 finalColor = lighting * baseColor * IN.texcoord_1.rgb;
     
     OUT.color_0.rgb = finalColor;
     OUT.color_0.a = 1;
