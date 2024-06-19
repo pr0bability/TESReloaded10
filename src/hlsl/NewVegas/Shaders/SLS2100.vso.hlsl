@@ -5,6 +5,7 @@
 float3 FogColor : register(c15);
 float4 FogParam : register(c14);
 row_major float4x4 ModelViewProj : register(c0);
+float4x4 TESR_InvViewProjectionTransform : register(c36);
 
 
 // Registers:
@@ -71,7 +72,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     r0.xy = 1 - saturate((FogParam.x - length(mdl0.xyz)) / FogParam.y);
     // lit r0, r0
     OUT.texcoord_7.w = r0.z;
-    OUT.texcoord_7.xyz = FogColor.rgb;
+    OUT.texcoord_7.xyz = mul(TESR_InvViewProjectionTransform, OUT.position);
 
     return OUT;
 };
