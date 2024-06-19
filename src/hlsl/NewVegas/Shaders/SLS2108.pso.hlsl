@@ -8,6 +8,8 @@ float4 AmbientColor : register(c1);
 float4 PSLightColor[10] : register(c3);
 float4 PSLightDir : register(c18);
 float4 TESR_DebugVar : register(c27);
+float4 TESR_CameraPosition : register (c28);
+
 
 
 // Registers:
@@ -24,21 +26,21 @@ float4 TESR_DebugVar : register(c27);
 
 // Structures:
 
-struct VS_INPUT {
-    float2 texcoord_0 : TEXCOORD0;
-    float3 texcoord_1 : TEXCOORD1_centroid;
-    float3 texcoord_2 : TEXCOORD2_centroid;
-    float3 texcoord_3 : TEXCOORD3_centroid;
-    float3 texcoord_4 : TEXCOORD4_centroid;
-    float3 texcoord_5 : TEXCOORD5_centroid;
-    float4 color_0 : COLOR0;
-    float4 texcoord_7 : TEXCOORD7_centroid;
-};
+// struct VS_INPUT {
+//     float2 texcoord_0 : TEXCOORD0;
+//     float3 texcoord_1 : TEXCOORD1_centroid;
+//     float3 texcoord_2 : TEXCOORD2_centroid;
+//     float3 texcoord_3 : TEXCOORD3_centroid;
+//     float3 texcoord_4 : TEXCOORD4_centroid;
+//     float3 texcoord_5 : TEXCOORD5_centroid;
+//     float4 color_0 : COLOR0;
+//     float4 texcoord_7 : TEXCOORD7_centroid;
+// };
 
-struct VS_OUTPUT {
-    float4 color_0 : COLOR0;
-};
-
+// struct VS_OUTPUT {
+//     float4 color_0 : COLOR0;
+// };
+ #define tint cyan
 
 #include "includes/Helpers.hlsl"
 #include "includes/Terrain.hlsl"
@@ -64,12 +66,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 baseColor = IN.color_0.r * texture0.xyz + texture1.xyz * IN.color_0.g + IN.color_0.b * texture2.xyz;
     float3 combinedNormal = normalize(expand(normal0.xyz) * IN.color_0.r + expand(normal1.xyz) * IN.color_0.g + expand(normal2.xyz) * IN.color_0.b);
     
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_2.xyz, combinedNormal, AmbientColor.rgb);
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb);
 
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);
-    float3 finalColor = lighting * baseColor * IN.texcoord_1.rgb;
-    
+    float3 finalColor = getFinalColor(lighting, baseColor, IN.texcoord_1.rgb);
+
     OUT.color_0.rgb = finalColor;
     OUT.color_0.a = 1;
 
