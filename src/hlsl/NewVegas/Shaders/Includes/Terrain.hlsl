@@ -11,12 +11,18 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
 float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 position, float3 normal, float3 AmbientColor){
     float3 sunDir = mul(tbn, lightDir);
 
-    return shades(normal, sunDir) * sunColor + AmbientColor;
+    // return shades(normal, sunDir) * sunColor + AmbientColor;
 
-    // float3 eyeDir = normalize(TESR_CameraPosition - position);
-    // float diffuse = shades(normal, sunDir);
-    // float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(sunDir, eyeDir));
-    // float spec = pow(shades(normal, (eyeDir + sunDir) / 2), 10);
+    float3 eyeDir = -mul(tbn, normalize(position));
+    float diffuse = shades(sunDir, normal);
+    float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(sunDir, eyeDir)) * 0.3;
+    float spec = pow(shades(normal, normalize(eyeDir + sunDir)), 10) * 0.5;
 
-    // return max((diffuse + spec + fresnel) * sunColor + AmbientColor.rgb , 0);
+    return max((diffuse + spec + fresnel) * linearize(sunColor) + linearize(AmbientColor) , 0);
+}
+
+
+float3 getFinalColor(float3 lighting, float3 color, float3 vertexColor){
+
+    return delinearize(lighting * linearize(color) * linearize(vertexColor));
 }
