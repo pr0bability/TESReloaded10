@@ -40,6 +40,7 @@ struct VS_OUTPUT {
 
 
 #include "includes/Helpers.hlsl"
+#include "includes/Terrain.hlsl"
 // Code:
 
 VS_OUTPUT main(VS_INPUT IN) {
@@ -56,16 +57,12 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 baseColor = tex2D(BaseMap, IN.BaseUV.xy).xyz;
     baseColor = baseColor * ((noise * 0.8) + 0.55);
-    float3 eyeDir = -normalize(IN.location);
     
-    float diffuse = shades(normal, IN.texcoord_3.xyz);
-    float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(IN.texcoord_3.xyz, eyeDir));
-    float spec = pow(shades(normal, (eyeDir + IN.texcoord_3.xyz) / 2), 10);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, IN.location.xyz, normal, AmbientColor.rgb);
 
-    float3 lighting = max((diffuse + spec + fresnel) * PSLightColor[0].rgb + AmbientColor.rgb , 0);
 
     // OUT.color_0.rgb = (IN.texcoord_5.w * (IN.texcoord_5.xyz - (baseColor * lighting))) + (baseColor * lighting);
-    OUT.color_0.rgb = baseColor * lighting;
+    OUT.color_0.rgb = getFinalColor(lighting, baseColor, white);
     OUT.color_0.a = IN.texcoord_4.x;
 
     return OUT;

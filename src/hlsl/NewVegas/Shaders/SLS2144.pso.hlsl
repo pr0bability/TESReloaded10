@@ -27,21 +27,21 @@ float4 TESR_CameraPosition : register (c28);
 
 // Structures:
 
-// struct VS_INPUT {
-//     float2 texcoord_0 : TEXCOORD0;
-//     float3 texcoord_1 : TEXCOORD1_centroid;
-//     float3 texcoord_2 : TEXCOORD2_centroid;
-//     float3 texcoord_3 : TEXCOORD3_centroid;
-//     float3 texcoord_4 : TEXCOORD4_centroid;
-//     float3 texcoord_5 : TEXCOORD5_centroid;
-//     float4 color_0 : COLOR0;
-//     float4 color_1 : COLOR1;
-//     float4 texcoord_7 : TEXCOORD7_centroid;
-// };
+struct VS_INPUT {
+    float2 texcoord_0 : TEXCOORD0;
+    float3 texcoord_1 : TEXCOORD1_centroid;
+    float3 texcoord_2 : TEXCOORD2_centroid;
+    float3 texcoord_3 : TEXCOORD3_centroid;
+    float3 texcoord_4 : TEXCOORD4_centroid;
+    float3 texcoord_5 : TEXCOORD5_centroid;
+    float4 color_0 : COLOR0;
+    float4 color_1 : COLOR1;
+    float4 texcoord_7 : TEXCOORD7_centroid;
+};
 
-// struct VS_OUTPUT {
-//     float4 color_0 : COLOR0;
-// };
+struct VS_OUTPUT {
+    float4 color_0 : COLOR0;
+};
 
 #define tint green
 
