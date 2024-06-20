@@ -44,6 +44,7 @@ struct VS_OUTPUT {
 };
 
 #include "includes/Helpers.hlsl"
+#include "includes/Terrain.hlsl"
 
 // Code:
 
@@ -59,16 +60,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float noise = tex2D(LODLandNoise, noiseUV).r;
     float3 parentNormal = tex2D(LODParentNormals, (IN.NormalUV * 0.5) + r0.xy).xyz;
 
-    float3 eyeDir = -normalize(IN.location);
 
     normal = r0.z >= 1 ? normal : lerp(parentNormal, normal, LODTexParams.w);
     normal = expand(normal);
 
-    float diffuse = shades(normal, IN.texcoord_1.xyz);
-    float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(IN.texcoord_1.xyz, eyeDir));
-    float spec = pow(shades(normal, (eyeDir + IN.texcoord_1.xyz) / 2), 10);
 
-    float3 lighting = max((diffuse + spec + fresnel) * PSLightColor[0].rgb + AmbientColor.rgb , 0);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, IN.location, normal, AmbientColor.rgb);
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
     float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128)));
@@ -79,7 +76,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     // apply fog
     // OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * lighting))) + (q5 * lighting);
-    OUT.color_0.rgb = baseColor * lighting;
+    OUT.color_0.rgb = getFinalColor(lighting, baseColor, white.rgb);
     // OUT.color_0.rgb = selectColor(TESR_DebugVar.x, q5 * lighting, IN.color_1, r1, r2, lighting, q5, noise.xxx, normalize(IN.location), fresnel.xxx, float3(noiseUV, 0));
 
     OUT.color_0.a = 1;

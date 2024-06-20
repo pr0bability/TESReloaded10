@@ -26,20 +26,20 @@ float4 TESR_CameraPosition : register (c28);
 
 // Structures:
 
-// struct VS_INPUT {
-//     float2 texcoord_0 : TEXCOORD0;			// partial precision
-//     float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
-//     float3 texcoord_2 : TEXCOORD2_centroid;			// partial precision
-//     float3 texcoord_3 : TEXCOORD3_centroid;			// partial precision
-//     float3 texcoord_4 : TEXCOORD4_centroid;			// partial precision
-//     float3 texcoord_5 : TEXCOORD5_centroid;			// partial precision
-//     float4 color_0 : COLOR0;
-//     float4 texcoord_7 : TEXCOORD7_centroid;			// partial precision
-// };
+struct VS_INPUT {
+    float2 texcoord_0 : TEXCOORD0;			// partial precision
+    float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
+    float3 texcoord_2 : TEXCOORD2_centroid;			// partial precision
+    float3 texcoord_3 : TEXCOORD3_centroid;			// partial precision
+    float3 texcoord_4 : TEXCOORD4_centroid;			// partial precision
+    float3 texcoord_5 : TEXCOORD5_centroid;			// partial precision
+    float4 color_0 : COLOR0;
+    float4 texcoord_7 : TEXCOORD7_centroid;			// partial precision
+};
 
-// struct VS_OUTPUT {
-//     float4 color_0 : COLOR0;
-// };
+struct VS_OUTPUT {
+    float4 color_0 : COLOR0;
+};
 #define tint yellow
 
 #include "includes/Helpers.hlsl"
