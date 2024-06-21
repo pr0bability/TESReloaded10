@@ -748,10 +748,13 @@ SpecularStrength = 1.0              # Strength of the effect for specular boost 
 Enabled = true                      # Shader that boosts a few lighting effects: specular boost, sky lighting and fresnel boost.
 
 [_Shaders.Terrain.Main]
-DistantNoise = 0.6
-DistantSpecular = 0.2
-MiddleSpecular = 0.0
-NearSpecular = 0.0
+UsePBR = true
+Fresnel = 0.3
+Specular = 0.5
+Roughness = 0.5
+Reflectance = 0.4
+AmbientScale = 1.0
+LightingScale = 1.0
 
 [_Shaders.Terrain.Status]
 Enabled = false                     # Not currently used. Replaces shaders used by terrain.
