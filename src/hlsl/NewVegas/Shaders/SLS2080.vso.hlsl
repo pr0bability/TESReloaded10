@@ -73,8 +73,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_5.w = r0.z;
     OUT.texcoord_5.xyz = FogColor.rgb;
 
-    OUT.location = mul(TESR_InvViewProjectionTransform, OUT.position);
-    OUT.worldpos = OUT.location + TESR_CameraPosition;
+    OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
+    OUT.worldpos = OUT.location + TESR_CameraPosition.xyz;
 
     return OUT;
 };

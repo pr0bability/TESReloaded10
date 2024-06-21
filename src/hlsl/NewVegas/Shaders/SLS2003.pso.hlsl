@@ -1,17 +1,17 @@
 // Shader for LOD terrain
 //
 // Parameters:
+sampler2D BaseMap : register(s0);
+sampler2D NormalMap : register(s1);
+sampler2D LODParentTex : register(s4);
+sampler2D LODParentNormals : register(s6);
+sampler2D LODLandNoise : register(s7);
 
 float4 AmbientColor : register(c1);
-sampler2D BaseMap : register(s0);
-sampler2D LODLandNoise : register(s7);
-sampler2D LODParentNormals : register(s6);
-sampler2D LODParentTex : register(s4);
-float4 LODTexParams : register(c31);
-sampler2D NormalMap : register(s1);
 float4 PSLightColor[10] : register(c3);
+float4 LODTexParams : register(c31);
 
-float4 TESR_DebugVar;
+// float4 TESR_DebugVar;
 
 
 // Registers:
@@ -55,21 +55,19 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 normal = tex2D(NormalMap, IN.NormalUV).xyz;
 
-    float noiseScale = 10000 * TESR_DebugVar.yy;
+    float noiseScale = 10000;
     float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
     float noise = tex2D(LODLandNoise, noiseUV).r;
     float3 parentNormal = tex2D(LODParentNormals, (IN.NormalUV * 0.5) + r0.xy).xyz;
 
-
     normal = r0.z >= 1 ? normal : lerp(parentNormal, normal, LODTexParams.w);
     normal = expand(normal);
-
 
     float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, IN.location, normal, AmbientColor.rgb);
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
-    float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128)));
-    float3 baseColor = tex2D(BaseMap, uv);
+    float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
+    float3 baseColor = tex2D(BaseMap, uv).rgb;
 
     // blending between parent tex and basemap + apply noise
     baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.8) + 0.55);
