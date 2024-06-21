@@ -73,7 +73,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1 = LightData[0].xyz; // sun direction
 
-    OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position);
+    OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
     OUT.worldpos = OUT.location.xyz + TESR_CameraPosition.xyz;
 
     return OUT;

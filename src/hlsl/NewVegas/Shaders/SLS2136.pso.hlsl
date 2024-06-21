@@ -8,9 +8,6 @@ float4 AmbientColor : register(c1);
 float4 PSLightColor[10] : register(c3);
 float4 PSLightDir : register(c18);
 float4 PSLightPosition[8] : register(c19);
-float4 TESR_DebugVar: register(c27);
-float4 TESR_CameraPosition : register (c28);
-
 
 // Registers:
 //
@@ -53,19 +50,19 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy);
-    float3 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy);
-    float3 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy);
-    float3 normal3 = tex2D(NormalMap[3], IN.texcoord_0.xy);
-    float3 normal4 = tex2D(NormalMap[4], IN.texcoord_0.xy);
-    float3 normal5 = tex2D(NormalMap[5], IN.texcoord_0.xy);
+    float3 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy).rgb;
+    float3 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy).rgb;
+    float3 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy).rgb;
+    float3 normal3 = tex2D(NormalMap[3], IN.texcoord_0.xy).rgb;
+    float3 normal4 = tex2D(NormalMap[4], IN.texcoord_0.xy).rgb;
+    float3 normal5 = tex2D(NormalMap[5], IN.texcoord_0.xy).rgb;
 
-    float4 texture0 = tex2D(BaseMap[0], IN.texcoord_0.xy);
-    float4 texture1 = tex2D(BaseMap[1], IN.texcoord_0.xy);
-    float4 texture2 = tex2D(BaseMap[2], IN.texcoord_0.xy);
-    float4 texture3 = tex2D(BaseMap[3], IN.texcoord_0.xy);
-    float4 texture4 = tex2D(BaseMap[4], IN.texcoord_0.xy);
-    float4 texture5 = tex2D(BaseMap[5], IN.texcoord_0.xy);
+    float3 texture0 = tex2D(BaseMap[0], IN.texcoord_0.xy).xyz;
+    float3 texture1 = tex2D(BaseMap[1], IN.texcoord_0.xy).xyz;
+    float3 texture2 = tex2D(BaseMap[2], IN.texcoord_0.xy).xyz;
+    float3 texture3 = tex2D(BaseMap[3], IN.texcoord_0.xy).xyz;
+    float3 texture4 = tex2D(BaseMap[4], IN.texcoord_0.xy).xyz;
+    float3 texture5 = tex2D(BaseMap[5], IN.texcoord_0.xy).xyz;
 
     float3 tangent = normalize(IN.texcoord_3.xyz);
     float3 binormal = normalize(IN.texcoord_4.xyz);

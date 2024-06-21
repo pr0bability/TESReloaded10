@@ -72,7 +72,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     r0.xy = 1 - saturate((FogParam.x - length(mdl0.xyz)) / FogParam.y);
     // lit r0, r0
     OUT.texcoord_7.w = r0.z;
-    OUT.texcoord_7.xyz = mul(TESR_InvViewProjectionTransform, OUT.position);
+    OUT.texcoord_7.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
 
     return OUT;
 };

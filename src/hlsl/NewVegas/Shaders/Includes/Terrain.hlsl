@@ -1,4 +1,7 @@
+#include "includes/PBR.hlsl"
 
+float4 TESR_TerrainData : register(c16);
+float4 TESR_TerrainExtraData : register(c17);
 
 float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightColor, float3 position, float3 normal){
     float3 lightDir = lightPosition.xyz - position.xyz;
@@ -10,19 +13,36 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
 
 float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 position, float3 normal, float3 AmbientColor){
     float3 sunDir = mul(tbn, lightDir);
-
-    // return shades(normal, sunDir) * sunColor + AmbientColor;
-
     float3 eyeDir = -mul(tbn, normalize(position));
-    float diffuse = shades(sunDir, normal);
-    float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(sunDir, eyeDir)) * 0.3;
-    float spec = pow(shades(normal, normalize(eyeDir + sunDir)), 10) * 0.5;
+    float3 halfway = normalize(eyeDir + sunDir);
 
-    return max((diffuse + spec + fresnel) * linearize(sunColor) + linearize(AmbientColor) , 0);
+    if (TESR_TerrainExtraData.x){
+        // PBR
+        float3 reflectance = saturate(TESR_TerrainData.xxx);
+        float roughness = saturate(TESR_TerrainData.y);
+        float3 lightColor = linearize(sunColor) * TESR_TerrainData.z * 6.0;
+        float3 ambient = linearize(AmbientColor) * TESR_TerrainData.w * 4.0;
+        // float3 lightColor = linearize(sunColor) * TESR_TerrainData.z * 6.0 * TESR_DebugVar.z;
+        // float3 ambient = linearize(AmbientColor) * TESR_TerrainData.w * 4.0 * TESR_DebugVar.w;
+
+        return max(0, PBR(reflectance, roughness, normal, halfway, eyeDir, lightDir)) * lightColor + ambient;
+    }else{
+        // traditional lighting
+        float diffuse = shades(sunDir, normal);
+        float fresnel = pow(1 - shades(eyeDir, normal), 5) * (1 - shades(sunDir, eyeDir)) * TESR_TerrainData.x;
+        float spec = pow(shades(normal, halfway), 10) * TESR_TerrainData.y;
+
+        return max((diffuse + spec + fresnel) * linearize(sunColor) * TESR_TerrainData.z + linearize(AmbientColor) * TESR_TerrainData.w , 0);
+    }
 }
 
 
 float3 getFinalColor(float3 lighting, float3 color, float3 vertexColor){
+    // fog
+    // return (IN.texcoord_7.w * (IN.texcoord_7.xyz - (vertexColor * lighting * color))) + (lighting * color * vertexColor);
 
-    return delinearize(lighting * linearize(color) * linearize(vertexColor));
+    // float3 lambert = (linearize(color) * linearize(vertexColor)) / PI;
+    float3 lambert = (linearize(color) * linearize(vertexColor));
+
+    return delinearize(lighting * lambert);
 }

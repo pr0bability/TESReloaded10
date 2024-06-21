@@ -7,8 +7,6 @@ sampler2D NormalMap[7]:register(s7);
 float4 AmbientColor : register(c1);
 float4 PSLightColor[10] : register(c3);
 float4 PSLightDir : register(c18);
-float4 TESR_DebugVar : register(c27);
-float4 TESR_CameraPosition : register (c28);
 
 
 
