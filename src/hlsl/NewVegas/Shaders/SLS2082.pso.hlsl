@@ -57,7 +57,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 baseColor = tex2D(BaseMap, IN.BaseUV.xy).xyz;
     baseColor = baseColor * ((noise * 0.8) + 0.55);
 
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, IN.location.xyz, normal, AmbientColor.rgb);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, IN.location.xyz, normal, AmbientColor.rgb, baseColor);
 
     // OUT.color_0.rgb = (IN.texcoord_5.w * (IN.texcoord_5.xyz - (baseColor * lighting))) + (baseColor * lighting);
     OUT.color_0.rgb = getFinalColor(lighting, baseColor, white.rgb);
