@@ -71,6 +71,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
     float3 finalColor = getFinalColor(lighting, baseColor, IN.texcoord_1.rgb);
+    // float3 finalColor = lighting * baseColor * IN.texcoord_1.rgb;
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;

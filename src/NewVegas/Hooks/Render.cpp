@@ -7,8 +7,11 @@ void __fastcall RenderHook(Main* This, UInt32 edx, BSRenderedTexture* RenderedTe
 
 	TheFrameRateManager->UpdatePerformance();
 	TheCameraManager->SetSceneGraph();
-	//TheShaderManager->UpdateConstants();
-//	if (SettingsMain->Develop.TraceShaders && InterfaceManager->IsActive(Menu::MenuType::kMenuType_None) && Global->OnKeyDown(SettingsMain->Develop.TraceShaders) && DWNode::Get() == NULL) DWNode::Create();
+	TheRenderManager->UpdateSceneCameraData();
+	TheRenderManager->SetupSceneCamera();
+
+	TheShaderManager->UpdateConstants();
+	//if (SettingsMain->Develop.TraceShaders && InterfaceManager->IsActive(Menu::MenuType::kMenuType_None) && Global->OnKeyDown(SettingsMain->Develop.TraceShaders) && DWNode::Get() == NULL) DWNode::Create();
 	(*Render)(This, RenderedTexture, Arg2, Arg3);
 
 }
@@ -121,7 +124,10 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 	IDirect3DSurface9* GameSurface = NULL;
 	IDirect3DSurface9* OutputSurface = NULL;
 	
+	TheRenderManager->UpdateSceneCameraData();
+	TheRenderManager->SetupSceneCamera();
 	TheShaderManager->UpdateConstants();
+
 	if (TheSettingManager->SettingsMain.Main.RenderPreTonemapping) {
 		SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
 
