@@ -1,4 +1,4 @@
-//
+//  Terrain shader with 1 texture
 //
 // Parameters:
 sampler2D BaseMap[7] : register(s0);
@@ -60,7 +60,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 baseColor = texture0 * IN.color_0.r;
     float3 combinedNormal = normalize(expand(normal0.xyz)) * IN.color_0.r;
     
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb);
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor * IN.texcoord_1.rgb);
 
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);

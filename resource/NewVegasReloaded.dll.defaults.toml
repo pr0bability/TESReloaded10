@@ -752,7 +752,7 @@ UsePBR = true
 Fresnel = 0.3
 Specular = 0.5
 Roughness = 0.5
-Reflectance = 0.4
+Metallicness = 0.0
 AmbientScale = 1.0
 LightingScale = 1.0
 
