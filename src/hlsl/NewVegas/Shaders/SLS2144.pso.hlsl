@@ -73,17 +73,17 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 normal = normalize(IN.texcoord_5.xyz);
     float3x3 tbn = float3x3(tangent, binormal, normal);
     
-    float3 baseColor = IN.color_0.r * texture0 + IN.color_0.g * texture1 + IN.color_0.b * texture2 + IN.color_0.a * texture3 + IN.color_1.r * texture4 + IN.color_1.g * texture5 + IN.color_1.b * texture6;
+    float3 baseColor = blendTextures(IN.color_0, IN.color_1, IN.texcoord_1, texture0, texture1, texture2, texture3, texture4, texture5, texture6);
     float3 combinedNormal = normalize(expand(normal0) * IN.color_0.r + expand(normal1) * IN.color_0.g + expand(normal2) * IN.color_0.b + expand(normal3) * IN.color_0.a + expand(normal4) * IN.color_1.r + expand(normal5) * IN.color_1.g + expand(normal6) * IN.color_1.b);
 
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor * IN.texcoord_1.rgb);
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor);
     lighting += getPointLightLighting(tbn, PSLightPosition[0], PSLightColor[1].rgb, IN.texcoord_2.xyz, combinedNormal);
     lighting += getPointLightLighting(tbn, PSLightPosition[1], PSLightColor[2].rgb, IN.texcoord_2.xyz, combinedNormal);
     lighting += getPointLightLighting(tbn, PSLightPosition[2], PSLightColor[3].rgb, IN.texcoord_2.xyz, combinedNormal);
 
     // apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
-    float3 finalColor = getFinalColor(lighting, baseColor, IN.texcoord_1.rgb);
+    float3 finalColor = getFinalColor(lighting, baseColor);
     
 
     OUT.color_0.a = 1;

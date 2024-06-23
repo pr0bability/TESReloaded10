@@ -755,6 +755,9 @@ Roughness = 0.5
 Metallicness = 0.0
 AmbientScale = 1.0
 LightingScale = 1.0
+TerrainSaturation = 1.0
+LODNoiseScale = 1.0
+
 
 [_Shaders.Terrain.Status]
 Enabled = false                     # Not currently used. Replaces shaders used by terrain.

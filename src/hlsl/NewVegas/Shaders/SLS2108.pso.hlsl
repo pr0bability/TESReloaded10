@@ -49,27 +49,27 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float4 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy);
-    float4 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy);
-    float4 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy);
+    float3 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy).xyz;
+    float3 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy).xyz;
+    float3 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy).xyz;
     
-    float4 texture0 = tex2D(BaseMap[0], IN.texcoord_0.xy);
-    float4 texture1 = tex2D(BaseMap[1], IN.texcoord_0.xy);
-    float4 texture2 = tex2D(BaseMap[2], IN.texcoord_0.xy);
+    float3 texture0 = tex2D(BaseMap[0], IN.texcoord_0.xy).xyz;
+    float3 texture1 = tex2D(BaseMap[1], IN.texcoord_0.xy).xyz;
+    float3 texture2 = tex2D(BaseMap[2], IN.texcoord_0.xy).xyz;
 
     float3 tangent = normalize(IN.texcoord_3.xyz);
     float3 binormal = normalize(IN.texcoord_4.xyz);
     float3 normal = normalize(IN.texcoord_5.xyz);
     float3x3 tbn = float3x3(tangent, binormal, normal);
 
-    float3 baseColor = IN.color_0.r * texture0.xyz + texture1.xyz * IN.color_0.g + IN.color_0.b * texture2.xyz;
+    float3 baseColor = blendTextures(IN.color_0, black, IN.texcoord_1, texture0, texture1, texture2);
     float3 combinedNormal = normalize(expand(normal0.xyz) * IN.color_0.r + expand(normal1.xyz) * IN.color_0.g + expand(normal2.xyz) * IN.color_0.b);
     
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor * IN.texcoord_1.rgb);
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor);
 
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);
-    float3 finalColor = getFinalColor(lighting, baseColor, IN.texcoord_1.rgb);
+    float3 finalColor = getFinalColor(lighting, baseColor);
 
     OUT.color_0.rgb = finalColor;
     OUT.color_0.a = 1;
