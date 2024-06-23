@@ -62,7 +62,6 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x);
     surfaceNormal = getDisplacement(IN, BlendRadius.w, surfaceNormal);
-    normalize(surfaceNormal);
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
     float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);

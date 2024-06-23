@@ -58,7 +58,7 @@ float4 getScreenpos(PS_INPUT IN){
     return screenPos;
 }
 
-float4 getWaveTexture(PS_INPUT IN, float LODfade, float4 waveParams) {
+float3 getWaveTexture(PS_INPUT IN, float distance, float4 waveParams) {
 
     float2 texPos = IN.LTEXCOORD_7;
 
@@ -67,13 +67,14 @@ float4 getWaveTexture(PS_INPUT IN, float LODfade, float4 waveParams) {
     float speed = TESR_GameTime.x * 0.002 * waveParams.z;
     float smallScale = 0.5;
     float bigScale = 2;
-    float4 waveTexture = expand(tex2D(TESR_samplerWater, texPos * smallScale * waveWidth + normalize(float2(1, 4)) * speed)) * 0.5;
-    float4 waveTextureLarge = expand(tex2D(TESR_samplerWater, texPos * bigScale * waveWidth + normalize(float2(-3, -2)) * speed)) * 1;
-    float4 waveTextureMicro = expand(tex2D(TESR_samplerWater, texPos * bigScale * 2 * waveWidth + normalize(float2(2, 2)) * speed)) * 0.3;
+    float3 waveTexture = expand(tex2D(TESR_samplerWater, texPos * smallScale * waveWidth + normalize(float2(1, 4)) * speed)).xyz * 0.5;
+    float3 waveTextureLarge = expand(tex2D(TESR_samplerWater, texPos * bigScale * waveWidth + normalize(float2(-3, -2)) * speed)).xyz * 1;
+    float3 waveTextureMicro = expand(tex2D(TESR_samplerWater, texPos * bigScale * 2 * waveWidth + normalize(float2(2, 2)) * speed)).xyz * 0.3;
 
     // combine waves
-    waveTexture = float4(waveTextureLarge.xy + waveTexture.xy + waveTextureMicro.xy,  waveTextureLarge.z + waveTexture.z + waveTextureMicro.z, 1);
-    waveTexture.z *= 1/max(choppiness, 0.000001) * lerp(1, 0.5, LODfade);
+    waveTexture = float3(waveTextureLarge.xy + waveTexture.xy + waveTextureMicro.xy,  waveTextureLarge.z + waveTexture.z + waveTextureMicro.z);
+    waveTexture.z *= 1/max(choppiness, 0.000001);
+    // waveTexture.z *= lerp(1, 0.5, (distance / 4096)) / max(choppiness, 0.000001);
 
     waveTexture = normalize(waveTexture);
 
@@ -98,14 +99,12 @@ float3 getDisplacement(PS_INPUT IN, float blendRadius, float3 surfaceNormal){
     float4 displacement = tex2D(DisplacementMap, IN.LTEXCOORD_6.xy);
 
     displacement.xy = (displacement.zw - 0.5) * blendRadius / 2;
-    displacement.xyz = reconstructZ(displacement.xy);
 
     // sample displacement and mix with the wave texture
-    float3 DisplacementNormal = expand(displacement.xyz);
+    float3 DisplacementNormal = normalize(reconstructZ(displacement.xy));
 
-    // surfaceNormal = compress(surfaceNormal);
-    // surfaceNormal += DisplacementNormal;
-    // surfaceNormal = normalize(surfaceNormal);
+    surfaceNormal = float3(surfaceNormal.xy + DisplacementNormal.xy * 2,  surfaceNormal.z * DisplacementNormal.z);
+    surfaceNormal = normalize(surfaceNormal);
     return surfaceNormal;
 }
 
@@ -153,8 +152,8 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
     return float4(result, 1);
 }
 
-float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float3 specColor, float4 reflections, float4 color){
-    float specularBoost = 10 * TESR_DebugVar.x;
+float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float3 specColor, float4 color){
+    float specularBoost = 5;
     float glossiness = 10000;
 
     float3 normal = normalize(surfaceNormal);
@@ -163,22 +162,16 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
 
     float3 result;
     if (true){
-    // if (TESR_DebugVar.y){
         float NdotL = shades(normal, lightDir);
         float NdotV = shades(normal, eyeDirection);
 
-        float3 Ks = FresnelShlick(white.rgb * TESR_DebugVar.y, halfway, lightDir);
-        result = color.rgb + modifiedBRDF(TESR_DebugVar.w, NdotL, NdotV, NdotH, Ks) * specColor * specularBoost;
-        // return result;
-        // result = color.rgb + BRDF( 0.1 * TESR_DebugVar.y, 0.05 * TESR_DebugVar.z, surfaceNormal, eyeDirection, lightDir) * specColor * specularBoost;
+        float3 Ks = FresnelShlick(0.04, halfway, lightDir);
+        result = color.rgb + modifiedBRDF(0.04, NdotL, NdotV, NdotH, Ks) * specColor * specularBoost;
     } else{
         // phong blinn specular
         float specular = pows(NdotH, glossiness);
-
-        // float specular = pow(abs(shades(reflect(-eyeDirection, surfaceNormal), lightDir)), VarAmounts.x);
         result = color.rgb + specular * specColor.rgb * specularBoost;
     }
-    // float3 result = color.rgb + PBR(TESR_DebugVar.y, TESR_DebugVar.z, surfaceNormal, eyeDirection, lightDir) * specColor * specularBoost;
 
     return float4(result, 1);
 }
@@ -202,18 +195,6 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;
 }
-
-
-// float4 getPBRSpecular(float3 normal, float3 lightDir, float3 eyeDirection, float3 LightColor, float3 reflection, float4 color){
-//     float specularBoost = 10;
-
-//     float3 reflections = BRDF( 0.1 * TESR_DebugVar.y, 0.05 * TESR_DebugVar.z, normal, eyeDirection, lightDir) * LightColor * specularBoost;
-
-//     // color = lerp(color, reflection, reflections);
-
-//     return color;
-// }
-
 
 
 float4 getShoreFade(PS_INPUT IN, float depth, float shoreSpeed, float shoreFactor, float4 color){
@@ -247,7 +228,6 @@ float3 ComputeRipple(sampler2D puddlesSampler, float2 UV, float CurrentTime, flo
 
 
 float3 getRipples(PS_INPUT IN, sampler2D puddlesSampler, float3 surfaceNormal, float distance, float rainCoeff){
-
     float distanceFade = 1 - saturate(invlerp(0, 3500, distance));
 
     if (!rainCoeff || !distanceFade) return surfaceNormal;
