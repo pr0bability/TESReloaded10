@@ -9,6 +9,7 @@ void TerrainShaders::RegisterConstants() {
 void TerrainShaders::UpdateSettings() {
 	Constants.ExtraData.x = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "UsePBR");
 	Constants.ExtraData.y = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "LODNoiseScale");
+	Constants.ExtraData.z = TheSettingManager->GetSettingF("Shaders.Terrain.Main", "TerrainSaturation");
 
 	if (Constants.ExtraData.x) {
 		// use PBR

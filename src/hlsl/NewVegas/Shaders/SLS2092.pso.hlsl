@@ -57,7 +57,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 normal = normalize(IN.texcoord_5.xyz);
     float3x3 tbn = float3x3(tangent, binormal, normal);
 
-    float3 baseColor = texture0 * IN.color_0.r;
+    float3 baseColor = linearize(texture0 * IN.color_0.r) * linearize(IN.texcoord_1);
     float3 combinedNormal = normalize(expand(normal0.xyz)) * IN.color_0.r;
     
     float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor * IN.texcoord_1.rgb);
@@ -65,7 +65,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);
     // float3 finalColor = lighting * baseColor * IN.texcoord_1.rgb;
-    float3 finalColor = getFinalColor(lighting, baseColor, IN.texcoord_1.rgb);
+    float3 finalColor = getFinalColor(lighting, baseColor);
 
     OUT.color_0.rgb = finalColor;
     OUT.color_0.a = 1;

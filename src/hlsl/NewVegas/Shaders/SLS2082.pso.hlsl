@@ -52,15 +52,15 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float noiseScale = 10000;
     float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
-    float noise = tex2D(LODLandNoise, noiseUV).r;
+    float noise = linearize(tex2D(LODLandNoise, noiseUV)).r;
 
-    float3 baseColor = tex2D(BaseMap, IN.BaseUV.xy).xyz;
+    float3 baseColor = linearize(tex2D(BaseMap, IN.BaseUV.xy).xyz);
     baseColor = baseColor * ((noise * 0.8) + 0.55);
 
     float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, IN.location.xyz, normal, AmbientColor.rgb, baseColor);
 
     // OUT.color_0.rgb = (IN.texcoord_5.w * (IN.texcoord_5.xyz - (baseColor * lighting))) + (baseColor * lighting);
-    OUT.color_0.rgb = getFinalColor(lighting, baseColor, white.rgb);
+    OUT.color_0.rgb = getFinalColor(lighting, baseColor );
     OUT.color_0.a = IN.texcoord_4.x;
 
     return OUT;

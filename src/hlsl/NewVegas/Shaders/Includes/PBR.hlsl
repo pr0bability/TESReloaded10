@@ -28,20 +28,29 @@ float3 CookTorrance(float alpha, float3 fresnel, float NdotV, float NdotL, float
     return num/denom;
 }
 
-float3 Reflectance(float3 albedo, float metallicness){
-    return lerp(float(0.04).rrr, albedo, metallicness);
+
+float3 BRDF(float roughness, float NdotL, float NdotV, float NdotH, float3 fresnel){
+    float3 BRDF = fresnel + (1 - fresnel) * CookTorrance(roughness, fresnel, NdotV, NdotL, NdotH);
+    return BRDF * NdotL;
 }
 
-float3 BRDF(float3 reflectance, float roughness, float3 normal, float3 eyeDir, float3 lightDir){
-    float3 halfway = normalize(eyeDir + lightDir);
-    float alpha = roughness;
+float3 modifiedBRDF(float roughness, float NdotL, float NdotV, float NdotH, float3 fresnel){
+    // BRDF without the fresnel term to get cleaner specular on water
+    float3 BRDF = (1 - fresnel) * CookTorrance(roughness, fresnel, NdotV, NdotL, NdotH);
+    return BRDF * NdotL;
+}
 
+float3 PBR(float metallicness, float roughness, float3 albedo, float3 normal, float3 eyeDir, float3 lightDir, float3 lightColor){
+    float3 reflectance = lerp(float(0.04).rrr, albedo, metallicness);
+    float3 halfway = normalize(eyeDir + lightDir);
     float NdotL = shades(normal, lightDir);
     float NdotV = shades(normal, eyeDir);
     float NdotH = shades(normal, halfway);
 
     float3 Ks = FresnelShlick(reflectance, halfway, lightDir);
-    float3 BRDF = (1 - Ks) * CookTorrance(alpha, Ks, NdotV, NdotL, NdotH);
+    float3 lambertDiffuse = (1 - metallicness) * Ks * albedo/PI * NdotL;
+    float3 spec = BRDF(roughness * roughness, NdotL, NdotV, NdotH, Ks);
+    // float spec = 0;//BRDF(reflectance, roughness, NdotL, NdotV, NdotH, Ks);
 
-    return BRDF * NdotL;
+    return (lambertDiffuse + spec) * lerp(lightColor, albedo, metallicness * 0.5);
 }
