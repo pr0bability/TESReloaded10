@@ -100,7 +100,7 @@ float3 ComputeRipple(float2 UV, float CurrentTime, float Weight)
 }
 
 
-float3 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor){
+float3 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor, float roughness){
 	if (lightPosition.w == 0) return float3(0, 0, 0);
 	float specularBoost = 10;
 	float glossiness = 20;
@@ -108,18 +108,19 @@ float3 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 	float3 lightDir = lightPosition.xyz - worldPosition;
 	float distance = length(lightDir) / lightPosition.w;
 
+	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
 	float s = saturate(distance * distance); 
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
-	float3 H = normalize(normalize(lightDir) + eyeDirection);
-
     lightDir = normalize(lightDir);
+	float3 H = normalize(lightDir + eyeDirection);
+
     float NdotL = shades(surfaceNormal, lightDir);
     float NdotV = shades(surfaceNormal, eyeDirection);
     float NdotH = shades(surfaceNormal, H);
 
     float3 Ks = FresnelShlick(0.02, H, lightDir);
-	return modifiedBRDF(0.02, NdotL, NdotV, NdotH, Ks) * specColor * atten;
+	return modifiedBRDF(roughness, NdotL, NdotV, NdotH, Ks) * linearize(specColor) * atten;
 }
 
 
@@ -186,8 +187,8 @@ float4 Wet( VSOUT IN ) : COLOR0
 	eyeDirection = normalize(eyeDirection);
 
 	// early out to avoid computing pixels that aren't puddles
-	float waterTreshold = (depth/farZ) * 200;
-	float isWaterSurface = (dot(normal, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
+	float waterTreshold = (depth/farZ) * 500;
+	float isWaterSurface = (floorAngle > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
     if (depth > DrawD || floorAngle == 0 || isWaterSurface) return baseColor;
 	if (tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x < 0.9) return baseColor; // filter out viewmodel
 
@@ -250,17 +251,22 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float4 sunColor = linearize(TESR_SunColor);
 
 	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, 0.5 * TESR_WetWorldData.w);
-	float3 Ks = FresnelShlick(0.02, halfwayDir, sunDir);
+	float3 Ks = FresnelShlick(0.02, halfwayDir, TESR_SunDirection.xyz);
 
 	float3 puddleNormal = normalize(lerp(normal, combinedNormals, specularMask));
-	float3 specular = modifiedBRDF(lerp(0.00015, 0.00007, puddlemask), shades(puddleNormal, sunDir), shades(puddleNormal, eyeDirection), shades(puddleNormal, halfwayDir), Ks);
+	float roughness = lerp(0.00015, 0.00007, puddlemask);
+	float3 specular = modifiedBRDF(roughness, shades(puddleNormal, TESR_SunDirection.xyz), shades(puddleNormal, eyeDirection), shades(puddleNormal, halfwayDir), Ks);
 
+	for (int i=0; i < 12; i++){
+		specular += getPointLightSpecular(combinedNormals, TESR_ShadowLightPosition[i], worldPos.rgb, eyeDirection, TESR_LightColor[i].rgb, roughness);
+		specular += getPointLightSpecular(combinedNormals, TESR_LightPosition[i], worldPos.rgb, eyeDirection, TESR_LightColor[i+12].rgb, roughness);
+	}
 
 	// transition between surface ripple and deeper puddles
 	puddleColor = lerp(rippleColor.rgb, puddleColor.rgb, puddlemask);
 
 	float4 color = float4(lerp(puddleColor, fresnelColor, fresnel * specularMask), 1.0);
-	color.rgb += specular * specularMask * 1000;
+	color.rgb += specular * specularMask * inShadow * lerp(10, 50, saturate(sunHeight));
 	
 	color = delinearize(color);
     return float4(lerp(baseColor.rgb, color.rgb, LODfade), 1); // fade out puddles
