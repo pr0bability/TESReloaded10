@@ -18,27 +18,44 @@ float3 blendTextures(float4 coeffs1, float4 coeffs2, float3 vertexColor, float3 
 }
 
 
-float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightColor, float3 position, float3 normal){
+float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightColor, float3 eyeDir, float3 position, float3 normal, float3 albedo){
     float3 lightDir = lightPosition.xyz - position.xyz;
-    float3 atten = lightDir / lightPosition.w;
-    lightDir = mul(tbn, lightDir);
-    return shades(normal, normalize(lightDir)) * (1 - shades(atten, atten)) * lightColor;
+    // float3 eyeDir = -mul(tbn, normalize(position));
+    // float3 eyeDir = -normalize(position);
+
+    if (TESR_TerrainExtraData.x){
+        float atten = length(lightDir / lightPosition.w);
+        float s = saturate(sqr(atten)); 
+        atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
+
+        lightDir = mul(tbn, lightDir);
+        lightDir = normalize(lightDir);
+
+        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), albedo, normal, eyeDir, lightDir, lightColor * atten);
+        // return atten.xxx;
+        return max(0, aspect);
+    } else{
+        float3 atten = lightDir / lightPosition.w;
+        atten = 1 - shades(atten, atten);
+        return shades(normal, normalize(lightDir)) * atten * lightColor * albedo;
+    }
 }
 
-float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 position, float3 normal, float3 AmbientColor, float3 albedo){
+float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eyeDir, float3 position, float3 normal, float3 AmbientColor, float3 albedo){
     float3 sunDir = mul(tbn, lightDir);
-    float3 eyeDir = -mul(tbn, normalize(position));
+    // float3 eyeDir = -mul(tbn, normalize(position));
     float3 lightColor = linearize(sunColor) * TESR_TerrainData.z;
     float3 ambientColor = linearize(AmbientColor) * TESR_TerrainData.w;
+    float ao = luma(albedo);
+    float3 color = albedo;
+    // float3 color = albedo / ao;
 
     if (TESR_TerrainExtraData.x){
         // PBR
-        lightColor *= 1; // boosting the sun to get the same behavior as vanilla in terms of overall brightness
-        ambientColor *= 1;
-        albedo = lerp(luma(albedo), albedo, TESR_TerrainExtraData.z);
+        color = lerp(ao, color, TESR_TerrainExtraData.z);
 
-        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), albedo, normal, eyeDir, sunDir, lightColor);
-        return max(0, aspect + ambientColor * albedo);
+        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), color, normal, eyeDir, sunDir, lightColor);
+        return max(0, aspect + ambientColor * ao * color);
     }else{
         // traditional lighting
         float diffuse = shades(sunDir, normal);
@@ -46,7 +63,7 @@ float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 pos
         float3 halfway = normalize(eyeDir + sunDir);
         float spec = pow(shades(normal, halfway), 10) * TESR_TerrainData.y;
 
-        return max((diffuse + spec + fresnel) * sunColor + ambientColor, 0) * albedo;
+        return max((diffuse + spec + fresnel) * sunColor + ambientColor * luma(albedo), 0) * (albedo / luma(albedo));
     }
 }
 
