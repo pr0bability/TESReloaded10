@@ -12,6 +12,7 @@ float4 TESR_SunPosition; // worldspace sundisk position
 float4 TESR_ShadowFade; // attenuation factor of sunsets/sunrises and moon phases
 float4 TESR_SunAmount;
 float4 TESR_SunsetColor;
+float4 TESR_DebugVar;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -61,14 +62,15 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 	float2 uv = IN.UVCoord / scale;
 	clip((uv <= 1) - 1);
 
-    float3 sunColor = linearize(TESR_SunColor).rgb + lerp(linearize(TESR_SunsetColor.rgb), 0, pows(sunHeight, 8)); // linearise
+	float sunset = pows(sunHeight, 8);
+    float3 sunColor = linearize(TESR_SunColor).rgb + lerp(linearize(TESR_SunsetColor.rgb), 0, sunset); // linearise
 
-	float glarePower = lerp(0.1, 8.0, pows(sunHeight, 8)); // increase flare boost during sunrise/sunset
+	float glarePower = lerp(0.1, 8.0, sunset); // increase flare boost during sunrise/sunset
 
-	float depth = (readDepth(uv) / farZ) > 0.98; //only pixels belonging to the sky will register
+	float depth = (readDepth(uv) / farZ) > 0.9; //only pixels belonging to the sky will register
 	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(uv))), 180) * glarePower; // fake sunglare computed from light direction
 	float3 color = linearize(tex2D(TESR_SourceBuffer, uv)).rgb;
-	color = (color + sunGlare * sunColor) * depth;
+	color = (color + sunGlare * sunColor) * depth * smoothstep(0, 0.01, sunHeight);
 
 	return float4(color, 1.0f);
 }
@@ -89,8 +91,8 @@ float4 LightMask(VSOUT IN) : COLOR0 {
 	color /= 5;
 
 	// extract bright pixels
-	float treshold = lumTreshold * lerp(4.0, 0.0, pows(sunHeight, 8)); // scale the bloom power with sunsets/sunrises
-	float bloom = smoothstep(treshold, 15, luma(color));
+	float treshold = lerp(2.0, 0.0, pow(abs(sunHeight), 8)); // scale the bloom power with sunsets/sunrises
+	float bloom = smoothstep(treshold, treshold + lumTreshold * 15, luma(color));
 
 	color = saturate(bloom * color * 100 * intensity);
 
