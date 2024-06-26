@@ -66,11 +66,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
     float3 blendColor = linearize(tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128)))).rgb;
     float3 baseColor = linearize(tex2D(BaseMap, uv).rgb);
+    float3 eyeDir = -normalize(IN.location.xyz);
 
     // blending between parent tex and basemap + apply noise
     baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.8) + 0.55);
 
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, IN.location, normal, AmbientColor.rgb, baseColor.rgb);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, eyeDir, IN.location, normal, AmbientColor.rgb, baseColor.rgb);
 
     // apply fog
     // OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * lighting))) + (q5 * lighting);
