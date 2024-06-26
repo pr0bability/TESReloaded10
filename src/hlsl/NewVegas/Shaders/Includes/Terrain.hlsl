@@ -22,6 +22,7 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
     float3 lightDir = lightPosition.xyz - position.xyz;
     // float3 eyeDir = -mul(tbn, normalize(position));
     // float3 eyeDir = -normalize(position);
+    float3 pointlightColor = linearize(lightColor) * TESR_TerrainData.z;
 
     if (TESR_TerrainExtraData.x){
         float atten = length(lightDir / lightPosition.w);
@@ -31,13 +32,13 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
         lightDir = mul(tbn, lightDir);
         lightDir = normalize(lightDir);
 
-        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), albedo, normal, eyeDir, lightDir, linearize(lightColor) * atten);
         // return atten.xxx;
+        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), albedo, normal, eyeDir, lightDir, pointlightColor * atten);
         return max(0, aspect);
     } else{
         float3 atten = lightDir / lightPosition.w;
         atten = 1 - shades(atten, atten);
-        return shades(normal, normalize(lightDir)) * atten * linearize(lightColor) * albedo;
+        return shades(normal, normalize(lightDir)) * atten * pointlightColor * albedo;
     }
 }
 
@@ -49,11 +50,10 @@ float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eye
     float ao = luma(albedo);
     float3 color = albedo;
     // float3 color = albedo / ao;
+    color = lerp(ao, color, TESR_TerrainExtraData.z);
 
     if (TESR_TerrainExtraData.x){
         // PBR
-        color = lerp(ao, color, TESR_TerrainExtraData.z);
-
         float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), color, normal, eyeDir, sunDir, lightColor);
         return max(0, aspect + ambientColor * ao * color);
     }else{
@@ -71,10 +71,6 @@ float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eye
 float3 getFinalColor(float3 lighting, float3 color){
     // fog
     // return (IN.texcoord_7.w * (IN.texcoord_7.xyz - (vertexColor * lighting * color))) + (lighting * color * vertexColor);
-    // float3 lambert = (linearize(color) * linearize(vertexColor)); // apply conservation of energy
-    // float3 lambert = (linearize(color) * linearize(vertexColor)) * lerp(1, 1/PI, TESR_TerrainExtraData.x); // apply conservation of energy
 
     return delinearize(lighting);
-    // return delinearize(color);
-    // return delinearize(color);
 }
