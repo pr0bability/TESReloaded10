@@ -751,13 +751,39 @@ Enabled = true                      # Shader that boosts a few lighting effects:
 UsePBR = true
 Fresnel = 0.3
 Specular = 0.5
-Roughness = 0.5
+Roughness = 0.95
 Metallicness = 0.0
-AmbientScale = 1.0
-LightingScale = 1.0
-TerrainSaturation = 1.0
+AmbientScale = 3.0
+LightingScale = 0.8
+TerrainSaturation = 1.5
 LODNoiseScale = 1.0
 
+[_Shaders.Terrain.Rain]
+Fresnel = 0.3
+Specular = 0.5
+Roughness = 0.4
+Metallicness = 0.0
+AmbientScale = 3.0
+LightingScale = 0.8
+TerrainSaturation = 0.7
+
+[_Shaders.Terrain.Night]
+Fresnel = 0.3
+Specular = 0.5
+Roughness = 0.8
+Metallicness = 0.0
+AmbientScale = 5.0
+LightingScale = 2.3
+TerrainSaturation = 1.0
+
+[_Shaders.Terrain.NightRain]
+Fresnel = 0.3
+Specular = 0.5
+Roughness = 0.3
+Metallicness = 0.0
+AmbientScale = 2.6
+LightingScale = 1.5
+TerrainSaturation = 1.0
 
 [_Shaders.Terrain.Status]
 Enabled = false                     # Not currently used. Replaces shaders used by terrain.
