@@ -31,13 +31,13 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
         lightDir = mul(tbn, lightDir);
         lightDir = normalize(lightDir);
 
-        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), albedo, normal, eyeDir, lightDir, lightColor * atten);
+        float3 aspect = PBR(saturate(TESR_TerrainData.x), saturate(TESR_TerrainData.y), albedo, normal, eyeDir, lightDir, linearize(lightColor) * atten);
         // return atten.xxx;
         return max(0, aspect);
     } else{
         float3 atten = lightDir / lightPosition.w;
         atten = 1 - shades(atten, atten);
-        return shades(normal, normalize(lightDir)) * atten * lightColor * albedo;
+        return shades(normal, normalize(lightDir)) * atten * linearize(lightColor) * albedo;
     }
 }
 
