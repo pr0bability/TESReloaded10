@@ -153,7 +153,7 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
 }
 
 float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float3 specColor, float4 color){
-    float specularBoost = 5;
+    float specularBoost = 1;
     float glossiness = 10000;
 
     float3 normal = normalize(surfaceNormal);
@@ -165,8 +165,8 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
         float NdotL = shades(normal, lightDir);
         float NdotV = shades(normal, eyeDirection);
 
-        float3 Ks = FresnelShlick(0.04, halfway, lightDir);
-        result = color.rgb + modifiedBRDF(0.04, NdotL, NdotV, NdotH, Ks) * specColor * specularBoost;
+        float3 Ks = FresnelShlick(0.02, halfway, lightDir);
+        result = color.rgb + modifiedBRDF(0.02, NdotL, NdotV, NdotH, Ks) * specColor * specularBoost;
     } else{
         // phong blinn specular
         float specular = pows(NdotH, glossiness);
@@ -179,7 +179,7 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
 float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor, float4 color){
     if (lightPosition.w == 0) return color;
 
-    float specularBoost = 10;
+    float specularBoost = 1;
     float glossiness = 20;
 
     float3 lightDir = lightPosition.xyz - worldPosition;
@@ -190,8 +190,15 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
     float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
     //return color + getSpecular(surfaceNormal, normalize(lightDir), eyeDirection, specColor * atten, color);
-    float3 H = normalize(normalize(lightDir) + eyeDirection);
-    color.rgb += pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)).rgb * specularBoost * atten;
+    lightDir = normalize(lightDir);
+    float3 H = normalize(lightDir + eyeDirection);
+    float NdotL = shades(surfaceNormal, lightDir);
+    float NdotV = shades(surfaceNormal, eyeDirection);
+    float NdotH = shades(surfaceNormal, H);
+
+    float3 Ks = FresnelShlick(0.02, H, lightDir);
+    color.rgb += modifiedBRDF(0.02, NdotL, NdotV, NdotH, Ks) * specColor * atten;
+
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;
 }
