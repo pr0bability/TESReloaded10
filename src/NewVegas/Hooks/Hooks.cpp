@@ -69,12 +69,6 @@ void AttachHooks() {
 	SafeWriteCall(0x9BB158, (UInt32)MuzzleLightCullingFix);
 	SafeWriteCall(0x879061, (UInt32)CreateSaveTextureHook); // Fixes image corruption in save screenshots when using DXVK with the HDR mod 
 
-	if (SettingsMain->Main.ForceReflections) {
-		//*Pointers::ShaderParams::WaterHighResolution = 1;
-		SafeWriteCall(Jumpers::MultiBoundWaterHeight::Fix1, (UInt32)MultiBoundWaterHeightFix);
-		SafeWriteCall(Jumpers::MultiBoundWaterHeight::Fix2, (UInt32)MultiBoundWaterHeightFix);
-	}
-
 	if (TheSettingManager->SettingsMain.Main.ReplaceIntro) SafeWriteJump(Jumpers::SetTileShaderConstants::Hook, (UInt32)SetTileShaderConstantsHook);
 
 	if (TheSettingManager->SettingsMain.Main.RemovePrecipitations) {

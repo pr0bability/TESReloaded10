@@ -78,10 +78,7 @@ public:
 		static const UInt32 Fix1	= 0x007D0B48;
 		static const UInt32 Fix2	= 0x007D6CE7;
 	};
-	struct MultiBoundWaterHeight {
-		static const UInt32 Fix1	= 0x006FAE04;
-		static const UInt32 Fix2	= 0x006FAF50;
-	};
+
 	struct FlyCam {
 		static const UInt32 UpdateForwardFlyCamHook		= 0x0094ABDF;
 		static const UInt32 UpdateForwardFlyCamReturn	= 0x0094ABEB;

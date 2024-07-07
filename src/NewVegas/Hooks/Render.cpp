@@ -215,12 +215,6 @@ __declspec(naked) void SetTileShaderConstantsHook() {
 
 }
 
-float MultiBoundWaterHeightFix() {
-
-	return Player->pos.z;
-
-}
-
 void* (__thiscall* ShowDetectorWindow)(DetectorWindow*, HWND, HINSTANCE, NiNode*, char*, int, int, int, int) = (void* (__thiscall*)(DetectorWindow*, HWND, HINSTANCE, NiNode*, char*, int, int, int, int))::Hooks::ShowDetectorWindow;
 void* __fastcall ShowDetectorWindowHook(DetectorWindow* This, UInt32 edx, HWND Handle, HINSTANCE Instance, NiNode* RootNode, char* FormCaption, int X, int Y, int Width, int Height) {
 	
