@@ -39,8 +39,8 @@ void AttachHooks() {
 	DetourTransactionCommit();
 
 
-	SafeWrite8(0x00BE1690, sizeof(NiD3DVertexShaderEx));
-	SafeWrite8(0x00BE1DFB, sizeof(NiD3DPixelShaderEx));
+	SafeWriteCall(0xBE0B73, (UInt32)NiD3DVertexShaderEx::Free);
+	SafeWriteCall(0xBE0AF3, (UInt32)NiD3DPixelShaderEx::Free);
 	SafeWrite32(0x00E7624D, sizeof(RenderManager));
 	SafeWrite32(0x00466606, sizeof(TESWeatherEx));
 	SafeWrite32(0x0046CF9B, sizeof(TESWeatherEx));

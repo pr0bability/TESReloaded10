@@ -4,18 +4,19 @@ NiD3DVertexShader* (__thiscall* CreateVertexShader)(BSShader*, char*, char*, cha
 NiD3DVertexShader* __fastcall CreateVertexShaderHook(BSShader* This, UInt32 edx, char* FileName, char* Arg2, char* ShaderType, char* ShaderName) {
 
 	NiD3DVertexShaderEx* VertexShader = (NiD3DVertexShaderEx*)(*CreateVertexShader)(This, FileName, Arg2, ShaderType, ShaderName);
+	if (!VertexShader) return nullptr;
 
-	VertexShader->ShaderProg = NULL;
-	VertexShader->ShaderProgE = NULL;
-	VertexShader->ShaderProgI = NULL;
+	VertexShader->ShaderProg[ShaderRecordType::Default] = NULL;
+	VertexShader->ShaderProg[ShaderRecordType::Exterior] = NULL;
+	VertexShader->ShaderProg[ShaderRecordType::Interior] = NULL;
 	VertexShader->ShaderHandleBackup = VertexShader->ShaderHandle;
-	strcpy(VertexShader->ShaderName, ShaderName);
-	if (!memcmp(VertexShader->ShaderName, "ISNOISESCROLLANDBLEND", 21)) {
-		strcpy(VertexShader->ShaderName, "WATERHEIGHTMAP0.vso");
+	VertexShader->SetName(ShaderName);
+	if (!strcmp(ShaderName, "ISNOISESCROLLANDBLEND.vso")) {
+		VertexShader->SetName("WATERHEIGHTMAP0.vso");
 		TheShaderManager->WaterVertexShaders[0] = VertexShader;
 	}
-	else if (!memcmp(VertexShader->ShaderName, "ISNOISENORMALMAP", 16)) {
-		strcpy(VertexShader->ShaderName, "WATERHEIGHTMAP1.vso");
+	else if (!strcmp(ShaderName, "ISNOISENORMALMAP.vso")) {
+		VertexShader->SetName("WATERHEIGHTMAP1.vso");
 		TheShaderManager->WaterVertexShaders[1] = VertexShader;
 	}
 	TheShaderManager->LoadShader(VertexShader);
@@ -27,18 +28,19 @@ NiD3DPixelShader* (__thiscall* CreatePixelShader)(BSShader*, char*, char*, char*
 NiD3DPixelShader* __fastcall CreatePixelShaderHook(BSShader* This, UInt32 edx, char* FileName, char* Arg2, char* ShaderType, char* ShaderName) {
 
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)(*CreatePixelShader)(This, FileName, Arg2, ShaderType, ShaderName);
+	if (!PixelShader) return nullptr;
 
-	PixelShader->ShaderProg = NULL;
-	PixelShader->ShaderProgE = NULL;
-	PixelShader->ShaderProgI = NULL;
+	PixelShader->ShaderProg[ShaderRecordType::Default]	= NULL;
+	PixelShader->ShaderProg[ShaderRecordType::Exterior] = NULL;
+	PixelShader->ShaderProg[ShaderRecordType::Interior] = NULL;
 	PixelShader->ShaderHandleBackup = PixelShader->ShaderHandle;
-	strcpy(PixelShader->ShaderName, ShaderName);
-	if (!memcmp(PixelShader->ShaderName, "ISNOISESCROLLANDBLEND", 21)) {
-		strcpy(PixelShader->ShaderName, "WATERHEIGHTMAP0.pso");
+	PixelShader->SetName(ShaderName);
+	if (!strcmp(ShaderName, "ISNOISESCROLLANDBLEND.pso")) {
+		PixelShader->SetName("WATERHEIGHTMAP0.pso");
 		TheShaderManager->WaterPixelShaders[0] = PixelShader;
 	}
-	else if (!memcmp(PixelShader->ShaderName, "ISNOISENORMALMAP", 16)) {
-		strcpy(PixelShader->ShaderName, "WATERHEIGHTMAP1.pso");
+	else if (!strcmp(ShaderName, "ISNOISENORMALMAP.pso")) {
+		PixelShader->SetName("WATERHEIGHTMAP1.pso");
 		TheShaderManager->WaterPixelShaders[1] = PixelShader;
 	}
 	TheShaderManager->LoadShader(PixelShader);

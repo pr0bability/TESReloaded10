@@ -1044,6 +1044,8 @@ public:
 };
 assert(sizeof(NiDX9ShaderDeclaration) == 0x038);
 
+class ShaderRecord;
+
 class NiD3DShaderProgram : public NiRefObject {
 public:
 	enum ProgramType {
@@ -1053,15 +1055,30 @@ public:
 		PROGRAM_MAX
 	};
 
-	ProgramType			eProgramType;		// 08
-	char*				Name;				// 0C
-	char*				ShaderProgramName;	// 10
-	UInt32				CodeSize;			// 14
-	void*				Unk018;				// 18
-	void*				Unk01C;				// 1C
-	IDirect3DDevice9*	Device;				// 20
-	NiDX9Renderer*		Renderer;			// 24
-	NiDX9RenderState*	RenderState;		// 28
+	union {
+		ProgramType				eProgramType;		// 08
+
+		struct {
+			UInt8				ucProgramType;				// 08
+			UInt8				Unk09;					// 09
+			UInt8				Unk0A;					// 0A
+			bool				Enabled;				// 0B
+		};
+	};
+	const char*	const		Name;				// 0C
+	ShaderRecord*			ShaderProg[3];
+	IUnknown*				ShaderHandleBackup;
+	IDirect3DDevice9*		Device;				// 20
+	NiDX9Renderer*			Renderer;			// 24
+	NiDX9RenderState*		RenderState;		// 28
+
+	ShaderRecord* GetShaderRecord(int Type) {
+		return ShaderProg[Type];
+	};
+
+	void SetName(const char* name) {
+		ThisCall(0xBE0920, this, name);
+	}
 };
 assert(sizeof(NiD3DShaderProgram) == 0x2C);
 

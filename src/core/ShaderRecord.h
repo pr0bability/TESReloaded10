@@ -105,17 +105,20 @@ public:
 	IDirect3DPixelShader9* ShaderHandle;
 };
 
+enum ShaderRecordType {
+	Default,
+	Exterior,
+	Interior,
+};
+
 class NiD3DVertexShaderEx : public NiD3DVertexShader {
 public:
 	void					SetupShader(IDirect3DVertexShader9* CurrentVertexHandle);
 	void					DisposeShader();
 
-	ShaderRecordVertex*		ShaderProg;
-	ShaderRecordVertex*		ShaderProgE;
-	ShaderRecordVertex*		ShaderProgI;
-	IDirect3DVertexShader9* ShaderHandleBackup;
-	char					ShaderName[40];
-	bool					Enabled;
+	ShaderRecordVertex*		GetShaderRecord(ShaderRecordType Type);
+
+	static void __fastcall Free(NiD3DVertexShaderEx* shader);
 };
 
 class NiD3DPixelShaderEx : public NiD3DPixelShader {
@@ -123,10 +126,7 @@ public:
 	void					SetupShader(IDirect3DPixelShader9* CurrentPixelHandle);
 	void					DisposeShader();
 
-	ShaderRecordPixel*		ShaderProg;
-	ShaderRecordPixel*		ShaderProgE;
-	ShaderRecordPixel*		ShaderProgI;
-	IDirect3DPixelShader9*	ShaderHandleBackup;
-	char					ShaderName[40];
-	bool					Enabled;
+	ShaderRecordPixel*		GetShaderRecord(ShaderRecordType Type);
+
+	static void __fastcall Free(NiD3DPixelShaderEx* shader);
 };

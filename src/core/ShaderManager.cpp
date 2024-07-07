@@ -412,18 +412,18 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
 	NiD3DVertexShaderEx* VertexShader = (NiD3DVertexShaderEx*)Shader;
-	ShaderCollection* Collection = GetShaderCollection(VertexShader->ShaderName);
+	ShaderCollection* Collection = GetShaderCollection(VertexShader->Name);
 	bool enabled = Collection->Enabled;
 
 	// Load generic, interior and exterior shaders
-	VertexShader->ShaderProg  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, NULL);
-	VertexShader->ShaderProgE = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Exteriors\\");
-	VertexShader->ShaderProgI = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->ShaderName, "Interiors\\");
+	VertexShader->ShaderProg[ShaderRecordType::Default]  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->Name, NULL);
+	VertexShader->ShaderProg[ShaderRecordType::Exterior] = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->Name, "Exteriors\\");
+	VertexShader->ShaderProg[ShaderRecordType::Interior] = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->Name, "Interiors\\");
 	VertexShader->Enabled = enabled;
 
-	if (VertexShader->ShaderProg != nullptr || VertexShader->ShaderProgE != nullptr || VertexShader->ShaderProgI != nullptr) {
+	if (VertexShader->ShaderProg[ShaderRecordType::Default] != nullptr || VertexShader->ShaderProg[ShaderRecordType::Exterior] != nullptr || VertexShader->ShaderProg[ShaderRecordType::Interior] != nullptr) {
 		Collection->VertexShaderList.push_back(VertexShader);
-		Logger::Log("Loaded %s Vertex Shader %s", Collection->Name, VertexShader->ShaderName);
+		Logger::Log("Loaded %s Vertex Shader %s", Collection->Name, VertexShader->Name);
 	}
 
 	return enabled;
@@ -437,18 +437,18 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)Shader;
-	ShaderCollection* Collection = GetShaderCollection(PixelShader->ShaderName);
+	ShaderCollection* Collection = GetShaderCollection(PixelShader->Name);
 
 	bool enabled = Collection->Enabled;
 
-	PixelShader->ShaderProg  = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, NULL);
-	PixelShader->ShaderProgE = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Exteriors\\");
-	PixelShader->ShaderProgI = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->ShaderName, "Interiors\\");
+	PixelShader->ShaderProg[ShaderRecordType::Default]  = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->Name, NULL);
+	PixelShader->ShaderProg[ShaderRecordType::Exterior] = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->Name, "Exteriors\\");
+	PixelShader->ShaderProg[ShaderRecordType::Interior] = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->Name, "Interiors\\");
 	PixelShader->Enabled = enabled;
 
-	if (PixelShader->ShaderProg != nullptr || PixelShader->ShaderProgE != nullptr || PixelShader->ShaderProgI != nullptr) {
+	if (PixelShader->ShaderProg[ShaderRecordType::Default] != nullptr || PixelShader->ShaderProg[ShaderRecordType::Exterior] != nullptr || PixelShader->ShaderProg[ShaderRecordType::Interior] != nullptr) {
 		Collection->PixelShaderList.push_back(PixelShader);
-		Logger::Log("Loaded %s Pixel Shader %s", Collection->Name, PixelShader->ShaderName);
+		Logger::Log("Loaded %s Pixel Shader %s", Collection->Name, PixelShader->Name);
 	}
 
 	return enabled;
