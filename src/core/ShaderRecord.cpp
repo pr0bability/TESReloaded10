@@ -1,3 +1,4 @@
+#include "ShaderRecord.h"
 ShaderProgram::ShaderProgram() {
 
 	FloatShaderValues = NULL;
@@ -397,35 +398,48 @@ void ShaderRecord::SetCT() {
 */
 void NiD3DVertexShaderEx::SetupShader(IDirect3DVertexShader9* CurrentVertexHandle) {
 
-	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
-		ShaderHandle = ShaderHandleBackup;
+	if ((!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) && ShaderHandleBackup) {
+		ShaderHandle = (IDirect3DVertexShader9*)ShaderHandleBackup;
 		return;
 	}
 
-	if (ShaderProgE && Player->GetWorldSpace()) {
-		ShaderHandle = ShaderProgE->ShaderHandle;
-		if (CurrentVertexHandle != ShaderHandle) ShaderProgE->SetCT();
+	if (GetShaderRecord(ShaderRecordType::Exterior) && Player->GetWorldSpace()) {
+		ShaderHandle = GetShaderRecord(ShaderRecordType::Exterior)->ShaderHandle;
+		if (CurrentVertexHandle != ShaderHandle) GetShaderRecord(ShaderRecordType::Exterior)->SetCT();
 	}
-	else if (ShaderProgI && !Player->GetWorldSpace()) {
-		ShaderHandle = ShaderProgI->ShaderHandle;
-		if (CurrentVertexHandle != ShaderHandle) ShaderProgI->SetCT();
+	else if (GetShaderRecord(ShaderRecordType::Interior) && !Player->GetWorldSpace()) {
+		ShaderHandle = GetShaderRecord(ShaderRecordType::Interior)->ShaderHandle;
+		if (CurrentVertexHandle != ShaderHandle) GetShaderRecord(ShaderRecordType::Interior)->SetCT();
 	}
-	else if (ShaderProg) {
-		ShaderHandle = ShaderProg->ShaderHandle;
-		if (CurrentVertexHandle != ShaderHandle) ShaderProg->SetCT();
+	else if (GetShaderRecord(ShaderRecordType::Default)) {
+		ShaderHandle = GetShaderRecord(ShaderRecordType::Default)->ShaderHandle;
+		if (CurrentVertexHandle != ShaderHandle) GetShaderRecord(ShaderRecordType::Default)->SetCT();
 	}
-	else {
-		ShaderHandle = ShaderHandleBackup;
+	else if (ShaderHandleBackup) {
+		ShaderHandle = (IDirect3DVertexShader9*)ShaderHandleBackup;
 	}
 
 }
 
 void NiD3DVertexShaderEx::DisposeShader() {
+	for (UInt32 i = 0; i < 3; i++) {
+		if (ShaderProg[i]) {
+			delete ShaderProg[i];
+			ShaderProg[i] = NULL;
+		}
+	}
+}
 
-	if (ShaderProgE) delete ShaderProgE; ShaderProgE = NULL;
-	if (ShaderProgI) delete ShaderProgI; ShaderProgI = NULL;
-	if (ShaderProg) delete ShaderProg; ShaderProg = NULL;
+ShaderRecordVertex* NiD3DVertexShaderEx::GetShaderRecord(ShaderRecordType Type) {
+	return (ShaderRecordVertex*)NiD3DShaderProgram::GetShaderRecord(Type);
+}
 
+void __fastcall NiD3DVertexShaderEx::Free(NiD3DVertexShaderEx* shader) {
+	shader->DisposeShader();
+	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
+	std::vector<NiD3DVertexShaderEx*>* pList = &Collection->VertexShaderList;
+	pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
+	ThisCall(0xE89B70, shader);
 }
 
 
@@ -435,34 +449,47 @@ void NiD3DVertexShaderEx::DisposeShader() {
 void NiD3DPixelShaderEx::SetupShader(IDirect3DPixelShader9* CurrentPixelHandle) {
 
 	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
-		ShaderHandle = ShaderHandleBackup;
+		ShaderHandle = (IDirect3DPixelShader9*)ShaderHandleBackup;
 		return;
 	}
 
-	if (ShaderProgE && Player->GetWorldSpace()) {
-		ShaderHandle = ShaderProgE->ShaderHandle;
-		if (CurrentPixelHandle != ShaderHandle) ShaderProgE->SetCT();
+	if (GetShaderRecord(ShaderRecordType::Exterior) && Player->GetWorldSpace()) {
+		ShaderHandle = GetShaderRecord(ShaderRecordType::Exterior)->ShaderHandle;
+		if (CurrentPixelHandle != ShaderHandle) GetShaderRecord(ShaderRecordType::Exterior)->SetCT();
 	}
-	else if (ShaderProgI && !Player->GetWorldSpace()) {
-		ShaderHandle = ShaderProgI->ShaderHandle;
-		if (CurrentPixelHandle != ShaderHandle) ShaderProgI->SetCT();
+	else if (GetShaderRecord(ShaderRecordType::Interior) && !Player->GetWorldSpace()) {
+		ShaderHandle = GetShaderRecord(ShaderRecordType::Interior)->ShaderHandle;
+		if (CurrentPixelHandle != ShaderHandle) GetShaderRecord(ShaderRecordType::Interior)->SetCT();
 	}
-	else if (ShaderProg) {
-		ShaderHandle = ShaderProg->ShaderHandle;
-		if (CurrentPixelHandle != ShaderHandle) ShaderProg->SetCT();
+	else if (GetShaderRecord(ShaderRecordType::Default)) {
+		ShaderHandle = GetShaderRecord(ShaderRecordType::Default)->ShaderHandle;
+		if (CurrentPixelHandle != ShaderHandle) GetShaderRecord(ShaderRecordType::Default)->SetCT();
 	}
 	else {
-		ShaderHandle = ShaderHandleBackup;
+		ShaderHandle = (IDirect3DPixelShader9*)ShaderHandleBackup;
 	}
 }
 
 
 void NiD3DPixelShaderEx::DisposeShader() {
+	for (UInt32 i = 0; i < 3; i++) {
+		if (ShaderProg[i]) {
+			delete ShaderProg[i];
+			ShaderProg[i] = NULL;
+		}
+	}
+}
 
-	if (ShaderProgE) delete ShaderProgE; ShaderProgE = NULL;
-	if (ShaderProgI) delete ShaderProgI; ShaderProgI = NULL;
-	if (ShaderProg) delete ShaderProg; ShaderProg = NULL;
+ShaderRecordPixel* NiD3DPixelShaderEx::GetShaderRecord(ShaderRecordType Type) {
+	return (ShaderRecordPixel*)NiD3DShaderProgram::GetShaderRecord(Type);
+}
 
+void __fastcall NiD3DPixelShaderEx::Free(NiD3DPixelShaderEx* shader) {
+	shader->DisposeShader();
+	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
+	std::vector<NiD3DPixelShaderEx*>* pList = &Collection->PixelShaderList;
+	pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
+	ThisCall(0xE89970, shader);
 }
 
 ShaderRecordVertex::ShaderRecordVertex(const char* shaderName) {
