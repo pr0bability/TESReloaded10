@@ -4,12 +4,12 @@ void WaterLensEffect::UpdateConstants() {
 
 	if (TheShaderManager->GameState.isUnderwater && Constants.WaterLensAnimator.switched == false) {
 		Constants.WaterLensAnimator.switched = true;
-		Constants.WaterLensAnimator.Start(0.0, 0);
+		Constants.WaterLensAnimator.Start(0.f, 0);
 	}else if (!TheShaderManager->GameState.isUnderwater && Constants.WaterLensAnimator.switched == true) {
 		Constants.WaterLensAnimator.switched = false;
 		// start the waterlens effect and animate it fading
 		 Constants.WaterLensAnimator.Initialize(1);
-		 Constants.WaterLensAnimator.Start(0.01, 0);
+		 Constants.WaterLensAnimator.Start(0.01f, 0);
 	}
 
 	Constants.Data.w = amount * Constants.WaterLensAnimator.GetValue();

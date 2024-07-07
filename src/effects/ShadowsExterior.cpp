@@ -4,17 +4,17 @@ void ShadowsExteriorEffect::UpdateConstants() {
 
 	Constants.ShadowFade.x = 0; // Fade 1.0 == no shadows
 	if (TheShaderManager->GameState.isExterior) {
-		Constants.ShadowFade.x = smoothStep(0.5, 0.1, abs(TheShaderManager->GameState.dayLight - 0.5)); // fade shadows to 0 at sunrise/sunset.  
+		Constants.ShadowFade.x = smoothStep(0.5f, 0.1f, abs(TheShaderManager->GameState.dayLight - 0.5f)); // fade shadows to 0 at sunrise/sunset.  
 
 		TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
 		float DaysPassed = GameTimeGlobals->GameDaysPassed ? GameTimeGlobals->GameDaysPassed->data : 1.0f;
 
-		if(TheShaderManager->GameState.isDayTime < 0.5) {
+		if(TheShaderManager->GameState.isDayTime < 0.5f) {
 			// at night time, fade based on moonphase
 			// moonphase goes from 0 to 8
 			float MoonPhase = (fmod(DaysPassed, 8 * Tes->sky->firstClimate->phaseLength & 0x3F)) / (Tes->sky->firstClimate->phaseLength & 0x3F);
 
-			float PI = 3.1416; // use cos curve to fade moon light shadows strength
+			float PI = 3.1416f; // use cos curve to fade moon light shadows strength
 			MoonPhase = std::lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
 
 			// map MoonVisibility to MinNightDarkness/1 range

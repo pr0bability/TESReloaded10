@@ -4,12 +4,12 @@ void RainEffect::UpdateConstants() {
 	if (TheShaderManager->GameState.isRainy && Constants.RainAnimator.switched == false) {
 		// it just started raining
 		Constants.RainAnimator.switched = true;
-		Constants.RainAnimator.Start(0.05, 1);
+		Constants.RainAnimator.Start(0.05f, 1);
 	}
 	else if (!TheShaderManager->GameState.isRainy && Constants.RainAnimator.switched) {
 		// it just stopped raining
 		Constants.RainAnimator.switched = false;
-		Constants.RainAnimator.Start(0.07, 0);
+		Constants.RainAnimator.Start(0.07f, 0);
 	}
 
 	Constants.Data.x = Constants.RainAnimator.GetValue();
