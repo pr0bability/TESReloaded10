@@ -41,6 +41,5 @@
 #include "../NewVegas/Hooks/Game.h"
 #include "../NewVegas/Hooks/ShaderIO.h"
 #include "../NewVegas/Hooks/Render.h"
-#include "../NewVegas/Hooks/Forms.h"
 #include "../NewVegas/Hooks/Shadows.h"
 #include "../NewVegas/Hooks/FlyCam.h"
