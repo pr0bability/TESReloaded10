@@ -314,6 +314,13 @@ void __fastcall MuzzleLightCullingFix(MuzzleFlash* This) {
 	ThisCall(0x9BB8A0, This);
 }
 
+NiPoint2* __fastcall WaterFogRemover(NiPoint2* point, void*, float x, float y)
+{
+	point->x = 0.f;
+	point->y = 0.f;
+	return point;
+}
+
 // Compatibility patch for DXVK 16bits buffer upgrade.
 typedef bool(__cdecl* DisableFormatUpgradeFunc)();
 typedef bool(__cdecl* EnableFormatUpgradeFunc)();

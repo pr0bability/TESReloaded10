@@ -76,6 +76,9 @@ void AttachHooks() {
 		SafeWriteJump(0x0063A5CB, 0x0063A5DE);
 	}
 
+	if (TheSettingManager->SettingsMain.Main.RemoveUnderwater)
+		SafeWriteCall(0x4EC8EE, UInt32(WaterFogRemover));
+
 	//SafeWriteCall(0xB7DBAC, (UInt32)ShadowLightShader__UpdateLights);
 
 

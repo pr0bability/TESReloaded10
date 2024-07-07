@@ -13,11 +13,6 @@ bool __cdecl LoadFormHook(TESForm* Form, UInt32 ModEntry) {
 				}
 			}
 			break;
-		case TESForm::FormType::kFormType_Water: {
-				TESWaterForm* Water = (TESWaterForm*)Form;
-				if (TheSettingManager->SettingsMain.Main.RemoveUnderwater) Water->RemoveUnderwaterFog();
-			}
-			break;
 		default:
 			break;
 	}
