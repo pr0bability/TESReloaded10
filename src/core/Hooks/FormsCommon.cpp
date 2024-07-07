@@ -24,16 +24,3 @@ bool __cdecl LoadFormHook(TESForm* Form, UInt32 ModEntry) {
 	return r;
 
 }
-
-void SetRegionEditorName(TESRegionEx* Region, const char* Name) {
-
-	strcpy(Region->EditorName, Name);
-	Region->SetEditorName(Name); // SetEditorID
-
-}
-
-void SetWeatherEditorName(TESWeatherEx* Weather, const char* Name) {
-
-	strcpy(Weather->EditorName, Name);
-	Weather->SetEditorName(Name); // SetEditorID
-}

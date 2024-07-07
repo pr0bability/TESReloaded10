@@ -41,8 +41,6 @@ void AttachHooks() {
 
 	SafeWrite8(0x00BE1690, sizeof(NiD3DVertexShaderEx));
 	SafeWrite8(0x00BE1DFB, sizeof(NiD3DPixelShaderEx));
-	SafeWrite8(0x00466877, sizeof(TESRegionEx));
-	SafeWrite8(0x004F1107, sizeof(TESRegionEx));
 	SafeWrite32(0x00E7624D, sizeof(RenderManager));
 	SafeWrite32(0x00466606, sizeof(TESWeatherEx));
 	SafeWrite32(0x0046CF9B, sizeof(TESWeatherEx));
@@ -55,8 +53,6 @@ void AttachHooks() {
 	SafeWriteJump(Jumpers::DetectorWindow::ConsoleCommandHook, (UInt32)DetectorWindowConsoleCommandHook);
 	SafeWriteCall(Jumpers::DetectorWindow::SetNodeName, (UInt32)DetectorWindowSetNodeName);
 	SafeWriteJump(Jumpers::RenderInterface::Hook, (UInt32)RenderInterfaceHook);
-	SafeWriteJump(Jumpers::SetRegionEditorName::Hook, (UInt32)SetRegionEditorNameHook);
-	SafeWriteJump(Jumpers::SetWeatherEditorName::Hook, (UInt32)SetWeatherEditorNameHook);
 	SafeWriteJump(Jumpers::Shadows::RenderShadowMapHook, (UInt32)RenderShadowMapHook);
 	//	SafeWriteJump(Jumpers::Shadows::RenderShadowMap1Hook,		(UInt32)RenderShadowMap1Hook);
 	SafeWriteJump(Jumpers::Shadows::AddCastShadowFlagHook, (UInt32)AddCastShadowFlagHook);

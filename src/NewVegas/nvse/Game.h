@@ -1340,9 +1340,8 @@ assert(sizeof(TESWeather) == 0x36C);
 class TESWeatherEx : public TESWeather {
 public:
 	ColorData	colorsb[TESWeather::kNumColorTypes];
-	char		EditorName[40];
 };
-assert(sizeof(TESWeatherEx) == 0x484);
+assert(sizeof(TESWeatherEx) == 0x45C);
 
 class TESClimate : public TESForm {
 public:
@@ -1622,12 +1621,6 @@ public:
 	UInt32			unk28[4];		// 28
 };
 assert(sizeof(TESRegion) == 0x38);
-
-class TESRegionEx : public TESRegion {
-public:
-	char		EditorName[40];		// 38
-};
-assert(sizeof(TESRegionEx) == 0x060);
 
 class TESRegionList {
 public:
@@ -4929,7 +4922,7 @@ public:
 								if (FormType == TESForm::FormType::kFormType_Weather) {
 									for (TList<TESWeather>::Iterator Itr = weathers.Begin(); !Itr.End() && Itr.Get(); ++Itr) {
 										TESWeatherEx* Weather = (TESWeatherEx*)Itr.Get();
-										List->push_back(Weather->EditorName);
+										List->push_back(Weather->GetEditorName());
 									}
 								}
 							}
@@ -4939,7 +4932,7 @@ public:
 								if (FormType == TESForm::FormType::kFormType_Weather) {
 									for (TList<TESWeather>::Iterator Itr = weathers.Begin(); !Itr.End() && Itr.Get(); ++Itr) {
 										TESWeatherEx* Weather = (TESWeatherEx*)Itr.Get();
-										if (!strcmp(EditorName, Weather->EditorName)) {
+										if (!strcmp(EditorName, Weather->GetEditorName())) {
 											Form = Weather;
 											break;
 										}

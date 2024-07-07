@@ -253,7 +253,7 @@ void CommandManager::PluginCommands::GetLocationName(double* result) {
 		else
 			s += "(no worldspace)";
 		s += ", Region: ";
-		if (TESRegionEx* currentRE = (TESRegionEx*)Player->GetRegion()) regionName = currentRE->EditorName;
+		if (TESRegion* currentRE = Player->GetRegion()) regionName = currentRE->GetEditorName();
 		if (regionName != NULL)
 			s += regionName;
 		else
@@ -285,7 +285,7 @@ void CommandManager::PluginCommands::GetWeatherName(double* result) {
 	if (InterfaceManager->IsActive(Menu::MenuType::kMenuType_Console)) {
 		const char* weatherName = NULL;
 
-		if (TESWeatherEx* currentWE = (TESWeatherEx*)TheShaderManager->ShaderConst.pWeather) weatherName = currentWE->EditorName;
+		if (TESWeatherEx* currentWE = (TESWeatherEx*)TheShaderManager->ShaderConst.pWeather) weatherName = currentWE->GetEditorName();
 		std::string s = "Weather: ";
 		if (weatherName != NULL)
 			s += weatherName;

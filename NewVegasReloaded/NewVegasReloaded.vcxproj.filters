@@ -223,9 +223,6 @@
     <ClInclude Include="..\src\NewVegas\Hooks\FlyCam.h">
       <Filter>NewVegas\Hooks</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\NewVegas\Hooks\Forms.h">
-      <Filter>NewVegas\Hooks</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\NewVegas\Hooks\Game.h">
       <Filter>NewVegas\Hooks</Filter>
     </ClInclude>
@@ -448,9 +445,6 @@
       <Filter>NewVegas</Filter>
     </ClCompile>
     <ClCompile Include="..\src\NewVegas\Hooks\FlyCam.cpp">
-      <Filter>NewVegas\Hooks</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\NewVegas\Hooks\Forms.cpp">
       <Filter>NewVegas\Hooks</Filter>
     </ClCompile>
     <ClCompile Include="..\src\NewVegas\Hooks\Game.cpp">

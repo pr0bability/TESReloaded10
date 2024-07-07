@@ -1235,7 +1235,7 @@ SettingsWeatherStruct* SettingManager::GetSettingsWeather(const char* WeatherNam
 void SettingManager::SetSettingsWeather(TESWeather* Weather) {
 
 	TESWeatherEx* WeatherEx = (TESWeatherEx*)Weather;
-	SettingsWeatherStruct* SettingsWeather = GetSettingsWeather(WeatherEx->EditorName);
+	SettingsWeatherStruct* SettingsWeather = GetSettingsWeather(WeatherEx->GetEditorName());
 
 	if (SettingsWeather) {
 		SetTextureAndHDR(WeatherEx, SettingsWeather->UpperLayer, SettingsWeather->LowerLayer, SettingsWeather->HDR);
