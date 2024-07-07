@@ -1444,7 +1444,6 @@ public:
 	};
 
 	UInt32					GetWaterType() { return kWaterType_Normal; };
-	void					RemoveUnderwaterFog() { properties.fogAmountUW = 0.0f; properties.fogNearUW = 9995.0f; properties.fogFarUW = 10000.0f; }
 	RGBA*					GetShallowColor() { return &properties.shallowColor; }
 	RGBA*					GetDeepColor() { return &properties.deepColor; }
 
