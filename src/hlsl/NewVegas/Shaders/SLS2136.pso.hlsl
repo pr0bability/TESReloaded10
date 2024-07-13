@@ -78,6 +78,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     lighting += getPointLightLighting(tbn, PSLightPosition[0], PSLightColor[1].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
     lighting += getPointLightLighting(tbn, PSLightPosition[1], PSLightColor[2].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
     lighting += getPointLightLighting(tbn, PSLightPosition[2], PSLightColor[3].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
+    lighting += getPointLightLighting(tbn, PSLightPosition[3], PSLightColor[4].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
+    lighting += getPointLightLighting(tbn, PSLightPosition[4], PSLightColor[5].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
+    lighting += getPointLightLighting(tbn, PSLightPosition[5], PSLightColor[6].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
+    lighting += getPointLightLighting(tbn, PSLightPosition[6], PSLightColor[7].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
+    lighting += getPointLightLighting(tbn, PSLightPosition[7], PSLightColor[8].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
 
     // apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
