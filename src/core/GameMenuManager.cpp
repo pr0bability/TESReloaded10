@@ -239,31 +239,32 @@ void GameMenuManager::HandleInput() {
 
 	if (EditingMode) {
 
-		if (IsKeyPressed(key0))
+		if (Global->OnKeyDown(key0))
 			strcat(EditingValue, "0");
-		else if (IsKeyPressed(key1))
+		else if (Global->OnKeyDown(key1))
 			strcat(EditingValue, "1");
-		else if (IsKeyPressed(key2))
+		else if (Global->OnKeyDown(key2))
 			strcat(EditingValue, "2");
-		else if (IsKeyPressed(key3))
+		else if (Global->OnKeyDown(key3))
 			strcat(EditingValue, "3");
-		else if (IsKeyPressed(key4))
+		else if (Global->OnKeyDown(key4))
 			strcat(EditingValue, "4");
-		else if (IsKeyPressed(key5))
+		else if (Global->OnKeyDown(key5))
 			strcat(EditingValue, "5");
-		else if (IsKeyPressed(key6))
+		else if (Global->OnKeyDown(key6))
 			strcat(EditingValue, "6");
-		else if (IsKeyPressed(key7))
+		else if (Global->OnKeyDown(key7))
 			strcat(EditingValue, "7");
-		else if (IsKeyPressed(key8))
+		else if (Global->OnKeyDown(key8))
 			strcat(EditingValue, "8");
-		else if (IsKeyPressed(key9))
+		else if (Global->OnKeyDown(key9))
 			strcat(EditingValue, "9");
-		else if (IsKeyPressed(keyDot))
+		else if (Global->OnKeyDown(keyDot))
 			strcat(EditingValue, ".");
-		else if (IsKeyPressed(keyMinus))
+		else if (Global->OnKeyDown(keyMinus))
 			strcat(EditingValue, "-");
-		if (strlen(EditingValue) > 0 && IsKeyPressed(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
+		if (strlen(EditingValue) > 0 && Global->OnKeyDown(14)) EditingValue[strlen(EditingValue) - 1] = NULL;
+		return; //Stop evaluating inputs to avoid moving the current section without exiting edit mode
 	}
 	else if (!SelectedNode.Section) {
 		return; //SelectedNode.Section is empty the first time the menu renders
