@@ -2,9 +2,9 @@
 
 #include "includes/PBR.hlsl"
 
-float4 TESR_TerrainData : register(c16);
-float4 TESR_TerrainExtraData : register(c17);
-float4 TESR_DebugVar : register(c15);
+float4 TESR_TerrainData : register(c32);
+float4 TESR_TerrainExtraData : register(c33);
+float4 TESR_DebugVar : register(c34);
 
 float3 blendTextures(float4 coeffs1, float4 coeffs2, float3 vertexColor, float3 texture0=black.xyz, float3 texture1=black.xyz, float3 texture2=black.xyz, float3 texture3=black.xyz, float3 texture4=black.xyz, float3 texture5=black.xyz, float3 texture6=black.xyz){
     float3 color = linearize(texture0) * coeffs1.r;
