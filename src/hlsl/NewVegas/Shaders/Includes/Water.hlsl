@@ -165,8 +165,8 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
         float NdotL = shades(normal, lightDir);
         float NdotV = shades(normal, eyeDirection);
 
-        float3 Ks = FresnelShlick(0.02, halfway, lightDir);
-        result = color.rgb + modifiedBRDF(0.02, NdotL, NdotV, NdotH, Ks) * specColor * specularBoost;
+        float3 Ks = FresnelShlick(0.08, halfway, lightDir);
+        result = color.rgb + modifiedBRDF(0.08, NdotL, NdotV, NdotH, Ks) * specColor * specularBoost;
     } else{
         // phong blinn specular
         float specular = pows(NdotH, glossiness);
@@ -196,8 +196,8 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
     float NdotV = shades(surfaceNormal, eyeDirection);
     float NdotH = shades(surfaceNormal, H);
 
-    float3 Ks = FresnelShlick(0.02, H, lightDir);
-    color.rgb += modifiedBRDF(0.02, NdotL, NdotV, NdotH, Ks) * specColor * atten;
+    float3 Ks = FresnelShlick(0.04 * TESR_DebugVar.w, H, lightDir);
+    color.rgb += modifiedBRDF(0.04 * TESR_DebugVar.w, NdotL, NdotV, NdotH, Ks) * specColor * atten;
 
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;
