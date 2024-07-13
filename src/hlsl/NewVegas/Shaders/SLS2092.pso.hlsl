@@ -60,8 +60,9 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 baseColor = linearize(texture0 * IN.color_0.r) * linearize(IN.texcoord_1);
     float3 combinedNormal = normalize(expand(normal0.xyz)) * IN.color_0.r;
-    
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor);
+    float roughness = combineRoughness(IN.color_0, black, normal0.a);
+
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor, roughness);
 
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);

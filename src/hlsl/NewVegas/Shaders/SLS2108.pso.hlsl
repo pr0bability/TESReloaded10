@@ -49,9 +49,9 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy).xyz;
-    float3 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy).xyz;
-    float3 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy).xyz;
+    float4 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy);
+    float4 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy);
+    float4 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy);
     
     float3 texture0 = tex2D(BaseMap[0], IN.texcoord_0.xy).xyz;
     float3 texture1 = tex2D(BaseMap[1], IN.texcoord_0.xy).xyz;
@@ -65,8 +65,9 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 baseColor = blendTextures(IN.color_0, black, IN.texcoord_1, texture0, texture1, texture2);
     float3 combinedNormal = normalize(expand(normal0.xyz) * IN.color_0.r + expand(normal1.xyz) * IN.color_0.g + expand(normal2.xyz) * IN.color_0.b);
-    
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor);
+    float roughness = combineRoughness(IN.color_0, black, normal0.a, normal1.a, normal2.a);
+
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor, roughness);
 
     // Apply fog
     // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + ( lighting * baseColor * IN.texcoord_1.xyz);
