@@ -198,8 +198,7 @@ void RenderManager::SetupSceneCamera() {
 		//DepthConstants.x = - nearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
 		DepthConstants.x = TheShaderManager->Effects.CombineDepth->Constants.viewNearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
 		DepthConstants.y = (-farZ * Q) / (Q - 1.0f); // FarZ: (TESR_ProjectionTransform._33 * nearZ) / (TESR_ProjectionTransform._33 - 1.0f);
-		DepthConstants.z = DepthConstants.x * DepthConstants.y; // Zmult
-		DepthConstants.w = DepthConstants.y - DepthConstants.x; // Zdiff
+		DepthConstants.z = TheSettingManager->SettingsMain.Main.InvertedDepth;
 
 		CameraData.x = nearZ;
 		CameraData.y = farZ;

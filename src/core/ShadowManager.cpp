@@ -550,12 +550,19 @@ void ShadowManager::RenderShadowMaps() {
 	Device->GetRenderTarget(0, &RenderSurface);
 	Device->GetViewport(&viewport);	
 
-	RenderState->SetRenderState(D3DRS_STENCILENABLE, 1 ,RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_STENCILREF, 0 ,RenderStateArgs);
- 	RenderState->SetRenderState(D3DRS_STENCILFUNC, 8 ,RenderStateArgs);
- 	RenderState->SetRenderState(D3DRS_ALPHAREF, 0 ,RenderStateArgs);
- 	RenderState->SetRenderState(D3DRS_NORMALIZENORMALS, 1 ,RenderStateArgs);
- 	RenderState->SetRenderState(D3DRS_POINTSIZE, 810365505,RenderStateArgs);
+	int zfunc = RenderState->GetRenderState(D3DRS_ZFUNC); // backup in case of inverted depth
+	
+	if (TheSettingManager->SettingsMain.Main.InvertedDepth)
+		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_GREATEREQUAL, RenderStateArgs);
+	else
+		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL, RenderStateArgs);
+
+	RenderState->SetRenderState(D3DRS_STENCILENABLE, 1, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_STENCILREF, 0, RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS, RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_ALPHAREF, 0, RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_NORMALIZENORMALS, 1, RenderStateArgs);
+ 	RenderState->SetRenderState(D3DRS_POINTSIZE, 810365505, RenderStateArgs);
 
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
@@ -666,6 +673,7 @@ void ShadowManager::RenderShadowMaps() {
 	Device->SetDepthStencilSurface(DepthSurface);
 	Device->SetRenderTarget(0, RenderSurface);
 	Device->SetViewport(&viewport);
+	RenderState->SetRenderState(D3DRS_ZFUNC, zfunc, RenderStateArgs);
 
 	//release smart pointers to prevent memory leak
 	if (DepthSurface) DepthSurface->Release();
