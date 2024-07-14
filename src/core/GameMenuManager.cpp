@@ -437,7 +437,7 @@ int GameMenuManager::DrawShadowedText(const char* text, int x, int y, int width,
 
 
 void GameMenuManager::Render() {
-
+	
 	StringList Sections;
 	SettingManager::Configuration::SettingList Settings;
 
@@ -452,6 +452,8 @@ void GameMenuManager::Render() {
 
 	HandleInput();
 	if (!Enabled) return; // skip render if menu is disabled
+
+	TheRenderManager->device->SetRenderState(D3DRS_ZENABLE, FALSE);
 
 	DrawShadowedText(TitleMenu, 0, 0, TitleColumnWidth, TextColorNormal, FontNormal, DT_LEFT);
 
@@ -640,6 +642,8 @@ void GameMenuManager::Render() {
 		", Start Editing value: " + GetKeyName(toggleEntry) + ", Save Settings: " + GetKeyName(MenuSettings.KeySave);
 
 	DrawShadowedText(KeysInfo.c_str(), 0, HeaderYPos + (pageSize + 1) * rowHeight + RowSpace * 4 + LineThickness, MainColumnWidth * 2, TextColorNormal, FontNormal, DT_LEFT);
+
+	TheRenderManager->device->SetRenderState(D3DRS_ZENABLE, TRUE);
 }
 
 

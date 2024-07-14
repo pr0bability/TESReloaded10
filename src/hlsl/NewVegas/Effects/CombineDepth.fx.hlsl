@@ -44,9 +44,15 @@ float packDepth(float viewZ, float nearZ, float farZ){
 
 float4 CombineDepth(VSOUT IN) : COLOR0
 {	
+
 	float worldDepth = tex2D(TESR_DepthBufferWorld, IN.UVCoord).x;
 	float viewModelDepth = tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x;
 	
+	if (TESR_DepthConstants.z){ // inverted Depth
+		worldDepth = 1 - worldDepth;
+		viewModelDepth = 1 - viewModelDepth;
+	}
+
 	// convert depths to linear in order to combine them
 	float linearWorldDepth = readDepth(worldDepth, nearZ, farZ);
 	float linearViewModelDepth = readDepth(viewModelDepth, TESR_DepthConstants.x, farZ);
