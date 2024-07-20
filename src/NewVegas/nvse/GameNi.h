@@ -1642,11 +1642,17 @@ public:
 	char							rendererInfo[0x200];			// 3C4
 	UInt32							adapterIdx;						// 5C4
 	UInt32							d3dDevType;						// 5C8 - D3DDEVTYPE
-	UInt32							d3dDevFlags;					// 5CC - D3DCREATE
-	UInt8							softwareVertexProcessing;		// 5D0 - !D3DCREATE_HARDWARE_VERTEXPROCESSING
-	UInt8							mixedVertexProcessing;			// 5D1 - D3DCREATE_MIXED_VERTEXPROCESSING
-	UInt8							pad5D2[2];						// 5D2
-	UInt32							Unk5D4[15];						// 5D4
+	UInt32							m_uiBehaviorFlags;
+	D3DFORMAT						m_eAdapterFormat;
+	bool							m_bSWVertexCapable;
+	bool							m_bSWVertexSwitchable;
+	const NiDX9AdapterDesc*			m_pkAdapterDesc;
+	const NiDX9DeviceDesc*			m_pkDeviceDesc;
+	UInt32							m_uiBackground;
+	float							m_fZClear;
+	UInt32							m_uiStencilClear;
+	UInt32							m_uiRendFlags;
+	char							m_acBehavior[32];
 	NiTMap<void*, void*>			PrePackObjects;					// 610 - NiTPointerMap <NiVBBlock *, NiDX9Renderer::PrePackObject *>
 	UInt32							Unk620[153];					// 620
 	NiRenderTargetGroup*			defaultRTGroup;					// 884 - back buffer

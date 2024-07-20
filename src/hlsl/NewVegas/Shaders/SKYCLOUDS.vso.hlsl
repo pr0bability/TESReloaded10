@@ -5,6 +5,7 @@
 float4 BlendColor[3] : register(c4);
 row_major float4x4 ModelViewProj : register(c0);
 float TexCoordYOff : register(c12);
+float4 TESR_DepthConstants : register(c13);
 
 
 // Registers:
@@ -50,9 +51,16 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.rgb = (IN.color_0.r * BlendColor[0].rgb) + (IN.color_0.g * BlendColor[1].rgb) + (IN.color_0.b * BlendColor[2].rgb);
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
+    OUT.location = IN.position.xyz;
+
     IN.position.z -= 5; // lower mesh to avoid visiible seam at the bottom
     OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
-    OUT.position.z *= 0.99998; // scale to appear in front of the moon mask
+
+    if (TESR_DepthConstants.z)
+        OUT.position.z *= 0.00001; // invert depth
+    else {
+        OUT.position.z *= 0.99998; // scale to appear in front of the moon mask
+    }
 
     float2 r0;
     r0.y = IN.texcoord_0.y + TexCoordYOff.x; // scroll clouds
@@ -61,7 +69,6 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_0.xy = r0.xy;
     OUT.texcoord_1.xy = r0.xy;
 
-    OUT.location = IN.position.xyz;
     OUT.color_1 = float4(0, 1, 0, 1); // identify this object as being clouds
 
     return OUT;
