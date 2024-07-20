@@ -2,10 +2,10 @@
 //
 // Parameters:
 
-float4 BlendColor[3] : register(c4);
 row_major float4x4 ModelViewProj : register(c0);
-
-float4 TESR_SunDirection;
+float4 BlendColor[3] : register(c4);
+float4 TESR_DepthConstants : register(c13);
+float4 TESR_DebugVar : register(c14);
 
 
 // Registers:
@@ -48,6 +48,11 @@ VS_OUTPUT main(VS_INPUT IN) {
 
 
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
+
+    if (TESR_DepthConstants.z > 0) {
+        OUT.position.z = 0; // invert depth
+    }
+ 
     OUT.eye.xyz = IN.position.xyz;
 
 

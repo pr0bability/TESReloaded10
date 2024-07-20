@@ -21,7 +21,6 @@ struct SettingsMainStruct {
 		UInt16	ScreenshotKey;
 		bool	HDRScreenshot;
 		float	FarPlaneDistance;
-		bool	InvertedDepth;
 	};
 	
 	struct FrameRateStruct {

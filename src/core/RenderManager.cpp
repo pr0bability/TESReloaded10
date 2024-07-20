@@ -198,7 +198,8 @@ void RenderManager::SetupSceneCamera() {
 		//DepthConstants.x = - nearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
 		DepthConstants.x = TheShaderManager->Effects.CombineDepth->Constants.viewNearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
 		DepthConstants.y = (-farZ * Q) / (Q - 1.0f); // FarZ: (TESR_ProjectionTransform._33 * nearZ) / (TESR_ProjectionTransform._33 - 1.0f);
-		DepthConstants.z = TheSettingManager->SettingsMain.Main.InvertedDepth;
+		DepthConstants.z = 1 - NiDX9Renderer::GetSingleton()->m_fZClear; // detect inverted depth buffer
+		DepthConstants.w = 1.0;
 
 		CameraData.x = nearZ;
 		CameraData.y = farZ;

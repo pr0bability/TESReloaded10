@@ -552,7 +552,7 @@ void ShadowManager::RenderShadowMaps() {
 
 	int zfunc = RenderState->GetRenderState(D3DRS_ZFUNC); // backup in case of inverted depth
 	
-	if (TheSettingManager->SettingsMain.Main.InvertedDepth)
+	if (1 - NiDX9Renderer::GetSingleton()->m_fZClear) // inverted depth
 		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_GREATEREQUAL, RenderStateArgs);
 	else
 		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL, RenderStateArgs);

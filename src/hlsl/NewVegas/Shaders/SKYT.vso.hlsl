@@ -2,8 +2,10 @@
 //
 // Parameters:
 
-float4 BlendColor[3] : register(c4);
 row_major float4x4 ModelViewProj : register(c0);
+float4 BlendColor[3] : register(c4);
+float4 TESR_DepthConstants : register(c13);
+float4 TESR_DebugVar : register(c14);
 
 
 // Registers:
@@ -46,7 +48,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
-    OUT.position.z *= 0.99998; // place in front of the moon mask that hides the stars
+
+    if (TESR_DepthConstants.z)
+        OUT.position.z = 0.000000001; // invert depth
+    else {
+        OUT.position.z *= 0.99998; // place in front of the moon mask that hides the stars
+    }
 
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1.xy = IN.texcoord_0.xy;
