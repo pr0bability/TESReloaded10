@@ -30,5 +30,5 @@ void GodRaysEffect::RegisterConstants() {
 }
 
 bool GodRaysEffect::ShouldRender() {
-	return TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater;
+	return TheShaderManager->GameState.isExterior && !TheShaderManager->GameState.isUnderwater && TheShaderManager->GameState.dayLight > 0.5;
 }
