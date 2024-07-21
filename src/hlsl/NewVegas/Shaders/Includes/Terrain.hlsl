@@ -65,7 +65,7 @@ float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eye
     if (TESR_TerrainExtraData.x){
         // PBR
         float3 aspect = PBR(saturate(metallicness * TESR_TerrainData.x), roughness, color, normal, eyeDir, sunDir, lightColor);
-        return max(0, aspect + ambientColor * ao * color);
+        return max(0, aspect + ambientColor * color);
     }else{
         // traditional lighting
         float diffuse = shades(sunDir, normal);
@@ -73,7 +73,7 @@ float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eye
         float3 halfway = normalize(eyeDir + sunDir);
         float spec = pow(shades(normal, halfway), 10) * TESR_TerrainData.y;
 
-        return max((diffuse + spec + fresnel) * sunColor + ambientColor * luma(albedo), 0) * (albedo / luma(albedo));
+        return max((diffuse * albedo + spec + fresnel) * sunColor + ambientColor * albedo, 0) ;
     }
 }
 
