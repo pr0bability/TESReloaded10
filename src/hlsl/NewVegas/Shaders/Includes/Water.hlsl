@@ -196,8 +196,8 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
     float NdotV = shades(surfaceNormal, eyeDirection);
     float NdotH = shades(surfaceNormal, H);
 
-    float3 Ks = FresnelShlick(0.04 * TESR_DebugVar.w, H, lightDir);
-    color.rgb += modifiedBRDF(0.04 * TESR_DebugVar.w, NdotL, NdotV, NdotH, Ks) * specColor * atten;
+    float3 Ks = FresnelShlick(0.08, H, lightDir);
+    color.rgb += modifiedBRDF(0.08, NdotL, NdotV, NdotH, Ks) * specColor * atten;
 
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;
