@@ -55,7 +55,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 normal = tex2D(NormalMap, IN.NormalUV).xyz;
 
-    float noiseScale = 10000;
+    float noiseScale = 10000 * TESR_TerrainExtraData.y;
     float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
     float noise = linearize(tex2D(LODLandNoise, noiseUV)).r;
     float3 parentNormal = tex2D(LODParentNormals, (IN.NormalUV * 0.5) + r0.xy).xyz;

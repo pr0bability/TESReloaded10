@@ -49,7 +49,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 eyeDir = -normalize(IN.location.xyz);
 
     // float noise = tex2D(LODLandNoise, IN.BaseUV.xy * 1.75);
-    float noiseScale = 10000;
+    float noiseScale = 10000 * TESR_TerrainExtraData.y;
     float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
     float noise = linearize(tex2D(LODLandNoise, noiseUV)).r;
 
