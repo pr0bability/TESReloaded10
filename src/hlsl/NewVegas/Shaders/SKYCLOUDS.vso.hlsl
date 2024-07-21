@@ -57,7 +57,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
 
     if (TESR_DepthConstants.z)
-        OUT.position.z *= 0.00001; // invert depth
+        OUT.position.z = 0.0; // invert depth
     else {
         OUT.position.z *= 0.99998; // scale to appear in front of the moon mask
     }

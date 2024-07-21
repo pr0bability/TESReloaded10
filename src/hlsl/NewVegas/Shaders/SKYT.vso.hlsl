@@ -50,7 +50,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
 
     if (TESR_DepthConstants.z)
-        OUT.position.z = 0.000000001; // invert depth
+        OUT.position.z = 0.0; // invert depth
     else {
         OUT.position.z *= 0.99998; // place in front of the moon mask that hides the stars
     }
