@@ -18,7 +18,7 @@ float3 GetSkyColor(float verticality, float athmosphere, float sunHeight, float 
 
     float3 color = lerp(skyLowColor.rgb, skyColor.rgb, verticality); // fade from low sky to high sky with height
     color = lerp(color, horizonColor.rgb, saturate(athmosphere * (0.5 + sunInfluence * 0.5))); // fade from base color to horizon color in athmosphere (stronger on the sun side)
-    color += lerp(0.0, sunColor * sunInfluence * (1.0 - sunHeight) * (((1.0 - verticality) + athmosphere)/2) * sunStrength, isDayTime);
+    color += lerp(0.0, sunColor * sunInfluence * (1.0 - sunHeight) * (athmosphere) * sunStrength, isDayTime);
 
     return color;
 }
