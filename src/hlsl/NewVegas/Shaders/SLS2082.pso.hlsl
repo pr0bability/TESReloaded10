@@ -54,16 +54,16 @@ VS_OUTPUT main(VS_INPUT IN) {
     float noise = linearize(tex2D(LODLandNoise, noiseUV)).r;
 
     float3 normal = expand(tex2D(NormalMap, IN.BaseUV.xy).xyz);
-    normal.z *= 0.7 + noise * 0.6;
+    normal.z *= 0.4 + noise * 0.6;
     normal = normalize(normal);
 
     float3 baseColor = linearize(tex2D(BaseMap, IN.BaseUV.xy).xyz);
-    baseColor = baseColor * ((noise * 0.8) + 0.55);
+    baseColor = baseColor * noise;
 
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, 0.7 + 0.3 * noise, 1.0);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb * (noise * 0.3 + 0.7), eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, (0.5 + 0.5 * noise) * TESR_TerrainData.y, 1.0);
 
     // OUT.color_0.rgb = (IN.texcoord_5.w * (IN.texcoord_5.xyz - (baseColor * lighting))) + (baseColor * lighting);
-    OUT.color_0.rgb = getFinalColor(lighting, baseColor );
+    OUT.color_0.rgb = getFinalColor(lighting, baseColor);
     OUT.color_0.a = IN.texcoord_4.x;
 
     return OUT;

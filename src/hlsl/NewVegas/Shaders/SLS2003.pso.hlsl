@@ -62,7 +62,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     normal = r0.z >= 1 ? normal : lerp(parentNormal, normal, LODTexParams.w);
     normal = expand(normal);
-    normal.z *= 0.7 + noise * 0.3;
+    normal.z *= 0.4 + noise * 0.6;
     normal = normalize(normal);
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
@@ -71,9 +71,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 eyeDir = -normalize(IN.location.xyz);
 
     // blending between parent tex and basemap + apply noise
-    baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.8) + 0.55);
+    baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.5) + 0.5);
 
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, eyeDir, IN.location, normal, AmbientColor.rgb, baseColor.rgb, 0.7 + 0.3 * noise, 1.0);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb* ((noise * 0.3) + 0.7), eyeDir, IN.location, normal, AmbientColor.rgb, baseColor.rgb, (0.5 + 0.5 * noise) * TESR_TerrainData.y, 1.0);
 
     // apply fog
     // OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * lighting))) + (q5 * lighting);
