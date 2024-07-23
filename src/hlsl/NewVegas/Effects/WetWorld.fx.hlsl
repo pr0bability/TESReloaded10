@@ -190,7 +190,8 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float waterTreshold = (depth/farZ) * 500;
 	float isWaterSurface = (floorAngle > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
     if (depth > DrawD || floorAngle == 0 || isWaterSurface) return baseColor;
-	if (tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x < 0.9) return baseColor; // filter out viewmodel
+	float viewmodelDepth = tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x;
+	if ((TESR_DepthConstants.z == 0 && viewmodelDepth < 0.9) || (TESR_DepthConstants.z > 0 && viewmodelDepth > 0.01)) return baseColor; // filter out viewmodel
 
 	float LODfade = smoothstep(DrawD, 0, depth);
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
