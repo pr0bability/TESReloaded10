@@ -3,11 +3,14 @@
 // Parameters:
 
 float4 AmbientColor : register(c1);
-sampler2D BaseMap : register(s0);
-sampler2D NormalMap : register(s1);
 float4 PSLightColor[10] : register(c3);
 float4 Toggles : register(c27);
+float4 TESR_TerrainData : register(c28);
+float4 TESR_TerrainExtraData : register(c29);
+float4 TESR_DebugVar : register(c31);
 
+sampler2D BaseMap : register(s0);
+sampler2D NormalMap : register(s1);
 
 // Registers:
 //
@@ -37,33 +40,35 @@ struct VS_OUTPUT {
 
 // Code:
 
+#define useVertexColor Toggles.x
+#define useFog Toggles.y
+#define glossPower Toggles.z
+#define alphaTestRef Toggles.w
+
 #include "Includes/Helpers.hlsl"
 #include "Includes/PBR.hlsl"
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float4 texture0 = tex2D(BaseMap, IN.BaseUV.xy);
+    float4 texture0 = linearize(tex2D(BaseMap, IN.BaseUV.xy));
     
-    float4 r1 = AmbientColor.rgba;
-    float4 r2 = (AmbientColor.a >= 1 ? 0 : (texture0.a - Toggles.w));
+    // clip faded objects and no alpha pixels
+    float4 r2 = (AmbientColor.a >= 1 ? 0 : (texture0.a - alphaTestRef));
     clip(r2.xyzw);
 
-    float3 normal = normalize(expand(tex2D(NormalMap, IN.BaseUV.xy)));
-
-    float NdotH = pow(abs(shades(normal, normalize(IN.texcoord_3.xyz))), Toggles.z) * r2.w; //specular
-    float NdotL = dot(normal, IN.texcoord_1.xyz);
-
-    float3 specular = saturate(((NdotL < 0.2 ? (NdotH * saturate(NdotL + 0.5)) : NdotH) * PSLightColor[0].rgb) * IN.texcoord_1.w); // strengthen specular when facing away
-    float3 lighting = max((saturate(NdotL) * PSLightColor[0].rgb) + AmbientColor.xyz, 0);
+    float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
+    normal.xyz = normalize(expand(normal.xyz));
 
     // final color
-    float3 color = ((Toggles.x ? (texture0.rgb * IN.color_0.rgb) : texture0.rgb) * lighting.xyz) + specular;
+    float3 color = useVertexColor > 0 ? (texture0.rgb * linearize(IN.color_0.rgb)) : texture0.rgb;
+    float3 eyeDir = normalize(IN.texcoord_3.xyz);
+    float3 final = PBR(0, 1 - normal.a, color, normal.xyz, eyeDir, normalize(IN.texcoord_1.xyz), linearize(PSLightColor[0].rgb) * IN.texcoord_1.w) + color * linearize(AmbientColor.rgb);
 
     // apply fog
-    float3 final = Toggles.y ? lerp(color, IN.color_1.rgb, IN.color_1.a) : color;
+    // final = useFog ? lerp(color, IN.color_1.rgb, IN.color_1.a) : color;
 
-    OUT.color_0.rgb = final * blue.rgb;
+    OUT.color_0.rgb = delinearize(final);
     OUT.color_0.a = texture0.a * AmbientColor.a;
 
     return OUT;

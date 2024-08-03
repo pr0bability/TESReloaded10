@@ -51,12 +51,10 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 l7;
     float3 mdl8;
     float1 q2;
 
     mdl8.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
-    l7.xyz = mul(TanSpaceProj, normalize(normalize(EyePosition.xyz - IN.position.xyz) + LightData[0].xyz));
     OUT.color_0.rgba = IN.color_0.rgba;
 
     // fog
@@ -68,11 +66,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.position.xyz = mdl8.xyz;
     OUT.position.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
     
-    OUT.texcoord_1.xyz = normalize(mul(TanSpaceProj, LightData[0].xyz));
+    OUT.texcoord_1.xyz = (mul(TanSpaceProj, LightData[0].xyz));
     OUT.texcoord_1.w = LightData[0].w;
     
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
-    OUT.texcoord_3.xyz = normalize(l7.xyz);
+    OUT.texcoord_3.xyz = mul(TanSpaceProj, (EyePosition.xyz - IN.position.xyz));
 
     return OUT;
 };
