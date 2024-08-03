@@ -40,9 +40,12 @@ void ShadowManager::Initialize() {
 /*
 * Returns the given object ref if it passes the test for excluded form types, otherwise returns NULL.
 */
-TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms) {
+NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms) {
 	
-	if (!Ref || !Ref->GetNode()) return NULL;
+	if (!Ref) return NULL;
+	NiNode* Node = Ref->GetNode();
+
+	if (!Node) return NULL;
 	if (Ref->flags & TESForm::FormFlags::kFormFlags_NotCastShadows) return NULL;
 
 	TESForm* Form = Ref->baseForm;
@@ -73,12 +76,13 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::
 		if (!Forms->Furniture) return NULL;
 		break;
 	case TESForm::FormType::kFormType_Land:
-		if (!Forms->Terrain) return NULL;
+		return NULL; // land is handled separately
 		break;
 	case TESForm::FormType::kFormType_NPC:
 		if (TypeID <= TESForm::FormType::kFormType_LeveledCreature && !Forms->Actors) return NULL;
 		break;
 	case TESForm::FormType::kFormType_Stat:
+		//return NULL;
 		if (TypeID <= TESForm::FormType::kFormType_MoveableStatic && !Forms->Statics) return NULL;
 		break;
 	default:
@@ -91,7 +95,7 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::
 	float Refraction = RefractionExtraProperty ? (1 - RefractionExtraProperty->refractionAmount) : 0.0f;
 	if (Refraction >= 0.5) return NULL;
 
-	return Ref;
+	return Node;
 }
 
 
@@ -122,6 +126,8 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 // go through the Object children and sort the ones that will be rendered based on their properties
 void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand) {
+	if (!NiObject) return;
+
 	std::stack<NiAVObject*> containers;
 	NiAVObject* child;
 	NiAVObject* object;
@@ -150,18 +156,28 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 }
 
 // Go through accumulations and render found objects
-void ShadowManager::RenderAccums() {
+void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* DepthSurface) {
+	IDirect3DDevice9* Device = TheRenderManager->device;
+
+	Device->SetRenderTarget(0, RenderTarget);
+	Device->SetDepthStencilSurface(DepthSurface);
+	Device->SetViewport(ViewPort);
+
+	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
+	Device->BeginScene();
+	
 	geometryPass->RenderAccum();
 	alphaPass->RenderAccum();
 	skinnedGeoPass->RenderAccum();
 	speedTreePass->RenderAccum();
+
+	Device->EndScene();
 }
 
 
 void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj) {
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
-
-	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
 	ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
@@ -171,11 +187,6 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
         Device->GetRenderTarget(i , &targ);
         Logger::Log("%u  : %08X", i, targ );
     }*/
-    Device->SetRenderTarget(0, ShadowMap->ShadowMapSurface);
-	Device->SetDepthStencilSurface(ShadowMap->ShadowMapDepthSurface);
-	Device->SetViewport(&ShadowMap->ShadowMapViewPort);
-
-	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
@@ -184,45 +195,54 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 
 	//RenderState->SetVertexShader(ShadowMapVertex->ShaderHandle, false);
 	//RenderState->SetPixelShader(ShadowMapPixel->ShaderHandle, false);
-	Device->BeginScene();
 
 	GridCellArray* CellArray = Tes->gridCellArray;
 	UInt32 CellArraySize = CellArray->size * CellArray->size;
 	if (Player->GetWorldSpace()) {
 		for (UInt32 i = 0; i < CellArraySize; i++) {
 			if (TESObjectCELL* Cell = CellArray->GetCell(i)) {
-				RenderExteriorCell(Cell, ShadowMap);
+				AccumExteriorCell(Cell, ShadowMap);
 			}
 		}
 	}
 	else {
-		RenderExteriorCell(Player->parentCell, ShadowMap);
+		AccumExteriorCell(Player->parentCell, ShadowMap);
 	}
 
-	Device->EndScene();
+	RenderAccums(&ShadowMap->ShadowMapViewPort, ShadowMap->ShadowMapSurface, ShadowMap->ShadowMapDepthSurface);
 }
 
 
-void ShadowManager::RenderExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
+void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
 	if (!Cell || Cell->IsInterior())
 		return;
 	
 	if (ShadowMap->Forms.Terrain) {
-		NiNode* LandNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Land);
 		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
-		if (LandNode) AccumChildren((NiAVObject*)LandNode, &ShadowMap->Forms, true);
+		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true);
 	}
+
+	//if (ShadowMap->Forms.Statics) {
+	//	NiNode* StaticNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Static);
+	//	if (StaticNode) AccumChildren((NiAVObject*)StaticNode, &ShadowMap->Forms, true);
+	//	//NiNode* MultiNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Multibound);
+	//	//if (MultiNode) AccumChildren((NiAVObject*)MultiNode, &ShadowMap->Forms, true);
+	//}
+
+	//if (ShadowMap->Forms.Actors) {
+	//	NiNode* ActorNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Actor);
+	//	if (ActorNode) AccumChildren((NiAVObject*)ActorNode, &ShadowMap->Forms, true);
+	//	NiNode* DynaNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Dynamic);
+	//	if (DynaNode) AccumChildren((NiAVObject*)DynaNode, &ShadowMap->Forms, true);
+	//}
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
-		if (TESObjectREFR* Ref = GetRef(Entry->item, &ShadowMap->Forms)) {
-			NiNode* RefNode = Ref->GetNode();
+		if (NiNode* RefNode = GetRefNode(Entry->item, &ShadowMap->Forms)) {
 			if (TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) AccumChildren(RefNode, &ShadowMap->Forms, false);
 		}
 		Entry = Entry->next;
 	}
-
-	RenderAccums();
 }
 
 
@@ -236,8 +256,6 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	D3DXMATRIX View, Proj;
-
-	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
 	NiPoint3* LightPos = &pNiLight->m_worldTransform.pos;
 	float Radius = pNiLight->Spec.r;
@@ -268,22 +286,20 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	D3DXVECTOR3 At = Eye + CameraDirection;
 
 	TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
-	TESObjectREFR* Ref = NULL;
 	while (Entry) {
-		Ref = GetRef(Entry->item, &Settings->Forms);
-		if (!Ref) {
+		NiNode* RefNode = GetRefNode(Entry->item, &Settings->Forms);
+		if (!RefNode) {
 			Entry = Entry->next;
 			continue;
 		}
 
 		// Detect if the object is in front of the light in the direction of the current face
 		// TODO: improve to base on frustum
-		NiNode* RefNode = Ref->GetNode();
 		D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
 		D3DXVECTOR3 ObjectToLight = ObjectPos - LightPos->toD3DXVEC3();
 
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
-		float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
+		bool inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection) > 0;
 		if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
 
 		Entry = Entry->next;
@@ -291,17 +307,9 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 
 	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 	Shadows->Constants.ShadowViewProj = View * Proj;
-
 	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = (Shadows->Constants.ShadowViewProj);
 
-	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
-	Device->SetViewport(&ShadowCubeMapViewPort);
-	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
-	Device->BeginScene();
-
-	RenderAccums();
-
-	Device->EndScene();
+	RenderAccums(&ShadowCubeMapViewPort, Shadows->Textures.ShadowSpotlightSurface[LightIndex], Shadows->Textures.ShadowCubeMapDepthSurface);
 }
 
 
@@ -318,8 +326,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 	NiPoint3* LightPos = NULL;
 	D3DXMATRIX View, Proj;
 	D3DXVECTOR3 Eye, At, Up, CameraDirection;
-
-	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
 	NiPointLight* pNiLight = Lights[LightIndex]->sourceLight;
 
@@ -341,9 +347,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
-
-	//RenderState->SetVertexShader(ShadowCubeMapVertex->ShaderHandle, false);
-	//RenderState->SetPixelShader(ShadowCubeMapPixel->ShaderHandle, false);
 
 	for (int Face = 0; Face < 6; Face++) {
 		At = Eye;
@@ -416,16 +419,15 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 			// old form based geo accumulation when the one perform by the game has not handled this light
 			TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 			while (Entry) {
-				if (TESObjectREFR* Ref = GetRef(Entry->item, &Settings->Forms)) {
+				if (NiNode* RefNode = GetRefNode(Entry->item, &Settings->Forms)) {
 					// Detect if the object is in front of the light in the direction of the current face
 					// TODO: improve to base on frustum
-					NiNode* RefNode = Ref->GetNode();
 					D3DXVECTOR3 ObjectPos = RefNode->m_worldTransform.pos.toD3DXVEC3();
 					D3DXVECTOR3 ObjectToLight = ObjectPos - LightPos->toD3DXVEC3();
 
 					D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
-					float inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection);
-					if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
+					bool inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection) > 0;
+					if (RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
 				}
 				Entry = Entry->next;
 			}
@@ -434,15 +436,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		Shadows->Constants.ShadowViewProj = View * Proj;
-
-		Device->SetRenderTarget(0, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]);
-		Device->SetViewport(&ShadowCubeMapViewPort);
-		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 0.25f, 0.25f, 0.55f), 1.0f, 0L);
-		Device->BeginScene();
-
-		RenderAccums();
-
-		Device->EndScene();
+		RenderAccums(&ShadowCubeMapViewPort, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face], Shadows->Textures.ShadowCubeMapDepthSurface);
 	}
 }
 
