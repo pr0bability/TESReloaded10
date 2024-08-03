@@ -38,7 +38,7 @@ void ShadowManager::Initialize() {
 
 
 /*
-* Returns the given object ref if it passes the test for excluded form types, otherwise returns NULL.
+* Returns the given object ref's NiNode if it passes the test for excluded form types, otherwise returns NULL.
 */
 NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms) {
 	
@@ -51,6 +51,9 @@ NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::For
 	TESForm* Form = Ref->baseForm;
 	UInt8 TypeID = Form->formType;
 	switch (TypeID) {
+	case TESForm::FormType::kFormType_Land:
+		return NULL; // land is handled separately
+		break;
 	case TESForm::FormType::kFormType_Activator:
 		if (!Forms->Activators) return NULL; 
 		break;
@@ -75,15 +78,16 @@ NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::For
 	case TESForm::FormType::kFormType_Furniture:
 		if (!Forms->Furniture) return NULL;
 		break;
-	case TESForm::FormType::kFormType_Land:
-		return NULL; // land is handled separately
-		break;
 	case TESForm::FormType::kFormType_NPC:
-		if (TypeID <= TESForm::FormType::kFormType_LeveledCreature && !Forms->Actors) return NULL;
+	case TESForm::FormType::kFormType_Creature:
+	case TESForm::FormType::kFormType_LeveledCreature:
+		if (!Forms->Actors) return NULL;
 		break;
 	case TESForm::FormType::kFormType_Stat:
+	case TESForm::FormType::kFormType_StaticCollection:
+	case TESForm::FormType::kFormType_MoveableStatic:
 		//return NULL;
-		if (TypeID <= TESForm::FormType::kFormType_MoveableStatic && !Forms->Statics) return NULL;
+		if (!Forms->Statics) return NULL;
 		break;
 	default:
 		break;
@@ -102,11 +106,6 @@ NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::For
 // Detect which pass the object must be added to
 void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms) {
 	auto timelog = TimeLogger();
-
-	if (!NiObject->IsGeometry()) {
-		containersAccum->push(NiObject);
-		return;
-	}
 
 	NiGeometry* geo = static_cast<NiGeometry*>(NiObject);
 	if (!geo->shader) return; // skip Geometry without a shader
@@ -133,14 +132,19 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 	NiAVObject* object;
 	NiNode* Node;
 
-	AccumObject(&containers, NiObject, Forms); //list all objects contained, or sort the object if not a container
+	if (!NiObject->IsGeometry())
+		containers.push(NiObject);
+	else
+		AccumObject(&containers, NiObject, Forms); //list all objects contained, or sort the object if not a container
 
 	// Gather geometry
 	while (!containers.empty()) {
     	object = containers.top();
     	containers.pop();
 
-    	Node = object ? object->IsNiNode() : nullptr;
+		if (!object) continue;
+
+		Node = object->IsNiNode();
     	if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling containers
 		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
@@ -150,7 +154,10 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
-			AccumObject(&containers, child, Forms);
+			if (!child->IsGeometry())
+				containers.push(child);
+			else
+				AccumObject(&containers, child, Forms);
 		}
 	}
 }
@@ -193,16 +200,12 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
-	//RenderState->SetVertexShader(ShadowMapVertex->ShaderHandle, false);
-	//RenderState->SetPixelShader(ShadowMapPixel->ShaderHandle, false);
-
-	GridCellArray* CellArray = Tes->gridCellArray;
-	UInt32 CellArraySize = CellArray->size * CellArray->size;
 	if (Player->GetWorldSpace()) {
+		GridCellArray* CellArray = Tes->gridCellArray;
+		UInt32 CellArraySize = CellArray->size * CellArray->size;
+
 		for (UInt32 i = 0; i < CellArraySize; i++) {
-			if (TESObjectCELL* Cell = CellArray->GetCell(i)) {
-				AccumExteriorCell(Cell, ShadowMap);
-			}
+			AccumExteriorCell(CellArray->GetCell(i), ShadowMap);
 		}
 	}
 	else {
@@ -217,30 +220,17 @@ void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect
 	if (!Cell || Cell->IsInterior())
 		return;
 	
-	if (ShadowMap->Forms.Terrain) {
-		// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+	if (ShadowMap->Forms.Terrain)
 		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true);
-	}
 
-	//if (ShadowMap->Forms.Statics) {
-	//	NiNode* StaticNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Static);
-	//	if (StaticNode) AccumChildren((NiAVObject*)StaticNode, &ShadowMap->Forms, true);
-	//	//NiNode* MultiNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Multibound);
-	//	//if (MultiNode) AccumChildren((NiAVObject*)MultiNode, &ShadowMap->Forms, true);
-	//}
-
-	//if (ShadowMap->Forms.Actors) {
-	//	NiNode* ActorNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Actor);
-	//	if (ActorNode) AccumChildren((NiAVObject*)ActorNode, &ShadowMap->Forms, true);
-	//	NiNode* DynaNode = Cell->GetChildNode(TESObjectCELL::kCellNode_Dynamic);
-	//	if (DynaNode) AccumChildren((NiAVObject*)DynaNode, &ShadowMap->Forms, true);
-	//}
+	// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
-		if (NiNode* RefNode = GetRefNode(Entry->item, &ShadowMap->Forms)) {
-			if (TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) AccumChildren(RefNode, &ShadowMap->Forms, false);
-		}
+		NiNode* RefNode = GetRefNode(Entry->item, &ShadowMap->Forms);
+		if (RefNode && TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) 
+			AccumChildren(RefNode, &ShadowMap->Forms, false);
+
 		Entry = Entry->next;
 	}
 }
@@ -300,7 +290,8 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 		bool inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection) > 0;
-		if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
+		if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) 
+			AccumChildren(RefNode, &Settings->Forms, false);
 
 		Entry = Entry->next;
 	}
