@@ -172,7 +172,7 @@ void ShaderManager::InitializeConstants() {
 Updates the values of the constants that can be accessed from shader code, with values representing the state of the game's elements.
 */
 void ShaderManager::UpdateConstants() {
-	
+
 	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
 
 	auto timer = TimeLogger();
@@ -467,6 +467,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 	ShadowsExteriorEffect::InteriorsStruct* Settings = &Effects.ShadowsExteriors->Settings.Interiors;
 	ShadowsExteriorEffect::ShadowStruct* ShadowsConstants = &Effects.ShadowsExteriors->Constants;
 
+	// Creating list of lights in order of distance to the player
 	while (Entry) {
 		NiPointLight* Light = Entry->data->sourceLight;
 		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
@@ -480,15 +481,15 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 		D3DXVECTOR4 LightVector = LightPosition - PlayerPosition;
 		D3DXVec4Normalize(&LightVector, &LightVector);
-		float inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward);
+		bool inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward) > 0;
 		float Distance = Light->GetDistance(&Player->pos);
 		float radius = Light->Spec.r * Settings->LightRadiusMult;
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
 		float drawDistance = 8000;//TheShaderManager->GameState.isExterior ? TheSettingManager->SettingsShadows.Exteriors.ShadowMapRadius[TheShadowManager->ShadowMapTypeEnum::MapLod] : TheSettingManager->SettingsShadows.Interiors.DrawDistance;
-		if ((inFront > 0 || Distance < radius) && (Distance + radius) < drawDistance) {
-			SceneLights[(int)(Distance * 10000)] = Entry->data; // mutliplying distance (used as key) before convertion to avoid duplicates in case of similar values
+		if ((inFront || Distance < radius) && (Distance + radius) < drawDistance) {
+			SceneLights[(int)(Distance * 10000)] = Entry->data; // multiplying distance (used as key) before conversion to avoid overwriting in case of similar values
 		}
 
 		Entry = Entry->next;
@@ -538,7 +539,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 	std::map<int, ShadowSceneLight*>::iterator v = SceneLights.begin();
 	for (int i = 0; i < TrackedLightsMax + ShadowCubeMapsMax; i++) {
-		// set null values if number of lights in the scene is lower than max amount
+		// set null values if we reached the end of lights in the scene and current index is lower than max amount
 		if (v == SceneLights.end()) {
 			if (ShadowIndex < ShadowCubeMapsMax) {
 				//Logger::Log("clearing shadow casting light at index %i", ShadowIndex);
@@ -576,10 +577,11 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				if (Process->OnBeltState == HighProcessEx::State::In) CastShadow = false;
 		}
 #endif
+			float radius = Light->Spec.r * Settings->LightRadiusMult;
 			D3DXVECTOR4 LightPos = Light->m_worldTransform.pos.toD3DXVEC4();
-			LightPos.w = Light->Spec.r * Settings->LightRadiusMult;
+			LightPos.w = radius;
 
-			if (CastShadow && ShadowIndex < ShadowCubeMapsMax) {
+			if (CastShadow && ShadowIndex < ShadowCubeMapsMax && radius > 10) {
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = v->second;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = LightPos;
@@ -625,9 +627,6 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 
 
 void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget) {
-	TheRenderManager->UpdateSceneCameraData();
-	TheRenderManager->SetupSceneCamera();
-
 	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
 	if (!Player->parentCell) return;
 	if (GameState.OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
