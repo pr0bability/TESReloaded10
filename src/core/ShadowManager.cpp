@@ -537,17 +537,18 @@ void ShadowManager::RenderShadowMaps() {
 
 	DWORD zfunc;
 	Device->GetRenderState(D3DRS_ZFUNC, &zfunc); // backup in case of inverted depth
-	if (1 - NiDX9Renderer::GetSingleton()->m_fZClear) // inverted depth
+
+	if (1.0 - NiDX9Renderer::GetSingleton()->m_fZClear) // inverted depth
 		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_GREATEREQUAL, RenderStateArgs);
 	else
 		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL, RenderStateArgs);
 
-	Device->SetRenderState(D3DRS_STENCILENABLE, 1);
-	Device->SetRenderState(D3DRS_STENCILREF, 0);
-	Device->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-	Device->SetRenderState(D3DRS_ALPHAREF, 0);
-	Device->SetRenderState(D3DRS_NORMALIZENORMALS, 1);
-	Device->SetRenderState(D3DRS_POINTSIZE, 810365505);
+	RenderState->SetRenderState(D3DRS_STENCILENABLE, 1, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_STENCILREF, 0, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ALPHAREF, 0, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_NORMALIZENORMALS, 1, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_POINTSIZE, 810365505, RenderStateArgs);
 
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
