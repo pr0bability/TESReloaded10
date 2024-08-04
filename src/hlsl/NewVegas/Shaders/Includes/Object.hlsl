@@ -3,7 +3,7 @@
 
 float getRoughness(float glossmap, float meshgloss){
     // return pow(glossmap, log(meshgloss));
-    return 1 - saturate(lerp(log(meshgloss)/6, 1, glossmap));
+    return 1 - log(meshgloss)/4 * glossmap;
     // return pow(1 - glossmap, meshgloss);
 }
 
