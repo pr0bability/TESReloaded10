@@ -1,4 +1,4 @@
-// basic object shader with one direct light and two point lights
+// basic object shader with one direct light and two point lights. Pass BSSM_ADTS10 PSO: SLS2034
 //
 // Parameters:
 
@@ -134,7 +134,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_3 = mul(TanSpaceProj, EyePosition.xyz - IN.position.xyz);
 
     OUT.texcoord_4.xyz = mul(TanSpaceProj, LightData[2].xyz - IN.position.xyz);
-    OUT.texcoord_4.w = LightData[1].w;
+    OUT.texcoord_4.w = LightData[2].w;
 
 
     // q3.xyz = normalize(LightData[1].xyz - IN.position.xyz); // light to point vector

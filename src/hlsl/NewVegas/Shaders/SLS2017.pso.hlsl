@@ -1,4 +1,4 @@
-// Basic lighting shader with one light
+// Basic lighting shader with one light Pass: BSSM_ADTS VSO: SLS2012
 //
 // Parameters:
 
@@ -44,9 +44,10 @@ struct VS_OUTPUT {
 #define useFog Toggles.y
 #define glossPower Toggles.z
 #define alphaTestRef Toggles.w
+#define tint green
 
 #include "Includes/Helpers.hlsl"
-#include "Includes/PBR.hlsl"
+#include "Includes/Object.hlsl"
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -60,15 +61,17 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
     normal.xyz = normalize(expand(normal.xyz));
 
+    float roughness = getRoughness(normal.a, glossPower);
+
     // final color
     float3 color = useVertexColor > 0 ? (texture0.rgb * linearize(IN.color_0.rgb)) : texture0.rgb;
     float3 eyeDir = normalize(IN.texcoord_3.xyz);
-    float3 final = PBR(0, 1 - normal.a, color, normal.xyz, eyeDir, normalize(IN.texcoord_1.xyz), linearize(PSLightColor[0].rgb) * IN.texcoord_1.w) + color * linearize(AmbientColor.rgb);
+    float3 final = getSunLighting(color, roughness, normal.xyz, eyeDir, IN.texcoord_1.xyz, PSLightColor[0].rgb, AmbientColor.rgb);
 
     // apply fog
     // final = useFog ? lerp(color, IN.color_1.rgb, IN.color_1.a) : color;
 
-    OUT.color_0.rgb = delinearize(final);
+    OUT.color_0.rgb = getFinalColor(final);
     OUT.color_0.a = texture0.a * AmbientColor.a;
 
     return OUT;

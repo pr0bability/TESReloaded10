@@ -1,4 +1,4 @@
-// Basic Lighting shader with one directional light and one point light
+// Basic Lighting shader with one directional light and one point light. Pass: BSSM_ADTS2 PSO: SLS2023
 //
 // Parameters:
 
@@ -46,7 +46,7 @@ struct VS_OUTPUT {
     float4 texcoord_2 : TEXCOORD2;
     float3 texcoord_3 : TEXCOORD3;
     float3 texcoord_4 : TEXCOORD4;
-    float4 texcoord_5 : TEXCOORD5;
+    float3 texcoord_5 : TEXCOORD5;
 };
 
 // Code:

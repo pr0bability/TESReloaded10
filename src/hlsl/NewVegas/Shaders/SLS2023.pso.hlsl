@@ -1,4 +1,4 @@
-// general object shader with one direct light and one point light
+// general object shader with one direct light and one point light Pass: BSSM_ADTS2 VSO: SLS2016
 //
 // Parameters:
 
@@ -46,15 +46,13 @@ struct VS_OUTPUT {
 #define useFog Toggles.y
 #define glossPower Toggles.z
 #define alphaTestRef Toggles.w
+#define tint blue
 
 #include "Includes/Helpers.hlsl"
-#include "Includes/PBR.hlsl"
+#include "Includes/Object.hlsl"
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-
-    float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
-    normal.xyz = normalize(expand(tex2D(NormalMap, IN.BaseUV.xy).xyz));
 
     float4 texture0 = linearize(tex2D(BaseMap, IN.BaseUV.xy));
 
@@ -62,17 +60,18 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 r1 = (AmbientColor.a >= 1 ? 0 : (texture0.w - alphaTestRef));
     clip(r1.xyzw);
 
+    float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
+    normal.xyz = normalize(expand(tex2D(NormalMap, IN.BaseUV.xy).xyz));
+
+    float roughness = getRoughness(normal.a, glossPower);
+
     float3 color = useVertexColor > 0 ? texture0.rgb * linearize(IN.color_0.rgb) : texture0.xyz;
-
     float3 eyeDir = normalize(IN.texcoord_3.xyz);
-    float3 final = PBR(0, 1 - normal.a, color, normal.xyz, eyeDir, normalize(IN.texcoord_1.xyz), linearize(PSLightColor[0].rgb) * IN.texcoord_1.w) + color * linearize(AmbientColor.rgb);
 
-    float atten = length(IN.texcoord_2.xyz / IN.texcoord_2.w);
-    float s = saturate(sqr(atten)); 
-    atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
-    final += PBR(0, 1 - normal.a, color, normal.xyz, eyeDir, normalize(IN.texcoord_2.xyz), linearize(PSLightColor[1].rgb) * atten);
+    float3 final = getSunLighting(color, roughness, normal.xyz, eyeDir, IN.texcoord_1.xyz, PSLightColor[0].rgb, AmbientColor.rgb);
+    final += getPointLightLighting(color, roughness, normal.xyz, eyeDir, IN.texcoord_2.xyz, IN.texcoord_2.w, PSLightColor[1].rgb);
 
-    OUT.color_0.rgb = delinearize(final);
+    OUT.color_0.rgb = getFinalColor(final);
     OUT.color_0.a = texture0.a * AmbientColor.a;
 
     return OUT;
