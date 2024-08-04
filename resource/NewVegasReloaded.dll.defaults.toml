@@ -509,6 +509,37 @@ GaussianWeight = 6.0
 [_Shaders.MotionBlur.Status]
 Enabled = false                      # Blur in direction of the camera when turning. 
 
+[_Shaders.PBR.Main]
+Roughness = 1.0
+Metallicness = 0.0
+AmbientScale = 3.0
+LightingScale = 1.0
+Saturation = 1.5
+
+[_Shaders.PBR.Rain]
+Roughness = 1.0
+Metallicness = 0.0
+AmbientScale = 3.0
+LightingScale = 1.0
+Saturation = 0.7
+
+[_Shaders.PBR.Night]
+Roughness = 1.0
+Metallicness = 0.0
+AmbientScale = 5.0
+LightingScale = 1.0
+Saturation = 1.0
+
+[_Shaders.PBR.NightRain]
+Roughness = 1.0
+Metallicness = 0.0
+AmbientScale = 2.6
+LightingScale = 1.0
+Saturation = 1.0
+
+[_Shaders.PBR.Status]
+Enabled = false                      # Adds PBR specular formula to object shaders
+
 [_Shaders.POM.Main]
 HeightMapScale = 0.55
 MaxSamples = 32

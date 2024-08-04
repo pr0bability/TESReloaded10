@@ -153,6 +153,7 @@
     <ClCompile Include="..\src\effects\LowHF.cpp" />
     <ClCompile Include="..\src\effects\MotionBlur.cpp" />
     <ClCompile Include="..\src\effects\Normals.cpp" />
+    <ClCompile Include="..\src\effects\PBR.cpp" />
     <ClCompile Include="..\src\effects\POM.cpp" />
     <ClCompile Include="..\src\effects\Rain.cpp" />
     <ClCompile Include="..\src\effects\ShadowsExterior.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\src\effects\LowHF.h" />
     <ClInclude Include="..\src\effects\MotionBlur.h" />
     <ClInclude Include="..\src\effects\Normals.h" />
+    <ClInclude Include="..\src\effects\PBR.h" />
     <ClInclude Include="..\src\effects\PointShadows.h" />
     <ClInclude Include="..\src\effects\PointShadows2.h" />
     <ClInclude Include="..\src\effects\POM.h" />

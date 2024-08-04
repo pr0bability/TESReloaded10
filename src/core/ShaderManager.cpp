@@ -56,6 +56,7 @@ void ShaderManager::Initialize() {
 
 	TheShaderManager->RegisterShaderCollection<TonemappingShaders>(&TheShaderManager->Shaders.Tonemapping);
 	TheShaderManager->RegisterShaderCollection<POMShaders>(&TheShaderManager->Shaders.POM);
+	TheShaderManager->RegisterShaderCollection<PBRShaders>(&TheShaderManager->Shaders.PBR);
 	TheShaderManager->RegisterShaderCollection<WaterShaders>(&TheShaderManager->Shaders.Water);
 	TheShaderManager->RegisterShaderCollection<SkyShaders>(&TheShaderManager->Shaders.Sky);
 	TheShaderManager->RegisterShaderCollection<SkinShaders>(&TheShaderManager->Shaders.Skin);
@@ -399,6 +400,7 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
 	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
+	if (strstr(PBRShadersNames, Name)) return Shaders.PBR;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
 
 	return Shaders.ExtraShaders;

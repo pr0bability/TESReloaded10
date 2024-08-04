@@ -38,6 +38,7 @@
 #include "Sky.h"
 #include "Skin.h"
 #include "POM.h"
+#include "PBR.h"
 #include "Terrain.h"
 #include "Grass.h"
 #include "ExtraShaders.h"
