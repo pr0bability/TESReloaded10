@@ -115,6 +115,7 @@ public:
 		WaterShaders*			Water;
 		TonemappingShaders*		Tonemapping;
 		POMShaders*				POM;
+		PBRShaders*				PBR;
 		ShaderCollection*		Blood;
 		SkyShaders*				Sky;
 		SkinShaders*			Skin;
