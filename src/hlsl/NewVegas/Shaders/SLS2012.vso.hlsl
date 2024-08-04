@@ -1,4 +1,4 @@
-// Generic lighting vertex shader for one directional light
+// Generic lighting vertex shader for one directional light. Pass: BSSM_ADTS PSO: SLS2017
 //
 // Parameters:
 
