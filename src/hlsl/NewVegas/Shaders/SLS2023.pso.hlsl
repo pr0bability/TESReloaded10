@@ -63,6 +63,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
     normal.xyz = normalize(expand(tex2D(NormalMap, IN.BaseUV.xy).xyz));
 
+    // float roughness = (1 - pow(normal.a, glossPower));
     float roughness = getRoughness(normal.a, glossPower);
 
     float3 color = useVertexColor > 0 ? texture0.rgb * linearize(IN.color_0.rgb) : texture0.xyz;
@@ -72,7 +73,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     final += getPointLightLighting(color, roughness, normal.xyz, eyeDir, IN.texcoord_2.xyz, IN.texcoord_2.w, PSLightColor[1].rgb);
 
     OUT.color_0.rgb = getFinalColor(final);
+    // OUT.color_0.rgb = lerp(delinearize(final), blue, 0.1);
     OUT.color_0.a = texture0.a * AmbientColor.a;
+    // OUT.color_0.a = 1;
 
     return OUT;
 };

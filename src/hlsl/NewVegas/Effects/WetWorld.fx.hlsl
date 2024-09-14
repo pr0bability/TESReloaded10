@@ -32,6 +32,7 @@ float4 TESR_SunAmount;
 float4 TESR_LightPosition[12];
 float4 TESR_ShadowLightPosition[12];
 float4 TESR_LightColor[24];
+float4 TESR_DebugVar;
 
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -54,6 +55,7 @@ static const float time3 = TESR_GameTime.z * 0.98f; // Ripple timing
 static const float time4 = TESR_GameTime.z * 0.99f; // Ripple timing
 static const float DrawD = TESR_OrthoData.x * 0.9; // Max draw distance for puddles 0-1000000
 static const float rippleScale = 120.0f;
+// static const float rippleScale = 80.0f;
 static const float refractionScale = 25;
 //------------------------------------------------------
 
@@ -112,6 +114,7 @@ float3 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 	float s = saturate(distance * distance); 
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
+	// return pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)) * specularBoost * atten;
     lightDir = normalize(lightDir);
 	float3 H = normalize(lightDir + eyeDirection);
 
@@ -247,16 +250,20 @@ float4 Wet( VSOUT IN ) : COLOR0
 
 	float3 halfwayDir = normalize(TESR_SunDirection.xyz - eyeDirection);
 	float glossiness = 1000;
-	float specularMask = saturate(puddlemask + pow((1 - shades(combinedNormals, blue)), 0.5));
+	// float specularMask = saturate(puddlemask + invlerp(1.0, 0.98, combinedNormals.z) * 0.5);
+	float specularMask = saturate(puddlemask + pow((1 - shades(combinedNormals, blue.xyz)), 0.5));
 
 	float4 sunColor = linearize(TESR_SunColor);
+	// float3 specular = pow(shades(combinedNormals, halfwayDir), lerp(1, 5, specularMask)) * inShadow * sunColor * 1000;
 
 	float fresnel = lerp(0, pow(1 - dot(-eyeDirection, combinedNormals), 5) * inShadow, 0.5 * TESR_WetWorldData.w);
 	float3 Ks = FresnelShlick(0.02, halfwayDir, TESR_SunDirection.xyz);
 
 	float3 puddleNormal = normalize(lerp(normal, combinedNormals, specularMask));
-	float roughness = lerp(0.00015, 0.00007, puddlemask);
-	float3 specular = modifiedBRDF(roughness, shades(puddleNormal, TESR_SunDirection.xyz), shades(puddleNormal, eyeDirection), shades(puddleNormal, halfwayDir), Ks);
+	float roughness = lerp(TESR_DebugVar.x, TESR_DebugVar.y, puddlemask);
+	// float roughness = lerp(0.00015, 0.00007, puddlemask);
+	float3 specular = modifiedBRDF(lerp(TESR_DebugVar.x * 0.00015, TESR_DebugVar.y * 0.0001, puddlemask), shades(puddleNormal, sunDir), shades(puddleNormal, eyeDirection), shades(puddleNormal, halfwayDir), Ks);
+	// float3 specular = PBR(0, 0.0002, fresnelColor, puddleNormal, eyeDirection, TESR_SunDirection.xyz, sunColor.rgb * 5);
 
 	for (int i=0; i < 12; i++){
 		specular += getPointLightSpecular(combinedNormals, TESR_ShadowLightPosition[i], worldPos.rgb, eyeDirection, TESR_LightColor[i].rgb, roughness);
@@ -266,8 +273,11 @@ float4 Wet( VSOUT IN ) : COLOR0
 	// transition between surface ripple and deeper puddles
 	puddleColor = lerp(rippleColor.rgb, puddleColor.rgb, puddlemask);
 
-	float4 color = float4(lerp(puddleColor, fresnelColor, fresnel * specularMask), 1.0);
-	color.rgb += specular * specularMask * inShadow * lerp(10, 50, saturate(sunHeight));
+	// float4 color = float4(lerp(puddleColor, fresnelColor, fresnel * specularMask), 1.0);
+	// float4 color = float4(lerp(puddleColor, fresnelColor, fresnel * specularMask), 1.0);
+	float4 color = float4(puddleColor, 1);
+	// color.rgb += specular * specularMask * 1000;
+	color.rgb += specular * sunColor.rgb * specularMask * inShadow * lerp(10, 50, saturate(sunHeight));
 	
 	color = delinearize(color);
     return float4(lerp(baseColor.rgb, color.rgb, LODfade), 1); // fade out puddles
