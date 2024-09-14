@@ -48,28 +48,21 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 r0;
     float3 eyeDir = -normalize(IN.location.xyz);
 
-    // float noise = tex2D(LODLandNoise, IN.BaseUV.xy * 1.75);
-    float noiseScale = 10000 * TESR_TerrainExtraData.y;
-    float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
-    float2 noiseUVLarge = fmod(IN.worldpos.xy + 1000000, noiseScale* 10) / noiseScale* 10;
-    float noise = tex2D(LODLandNoise, noiseUV).r;
-    noise *= tex2D(LODLandNoise, noiseUVLarge).r;
-    noise = lerp(1, noise, IN.texcoord_4.x);
+    float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_DebugVar.w);
+    noise = lerp(0, noise, IN.texcoord_4.x);
 
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
-    normal.xyz = expand(normal.xyz);
-    normal.z *= 0.4 + noise * 0.6;
-    normal.xyz = normalize(normal);
+    normal.xyz = normalize(expand(normal.xyz));
 
     float3 baseColor = linearize(tex2D(BaseMap, IN.BaseUV.xy).xyz);
-    baseColor = baseColor * ((noise * 0.5) + 0.5);
-    // baseColor = baseColor * noise;
 
-    // float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb * (noise * 0.3 + 0.7), eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, (0.5 + 0.5 * noise) * TESR_TerrainData.y, 1.0);
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, (0.5 + 0.5 * noise) * TESR_TerrainData.y * (1 - normal.a), 0.0);
+    float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 
-    // OUT.color_0.rgb = (IN.texcoord_5.w * (IN.texcoord_5.xyz - (baseColor * lighting))) + (baseColor * lighting);
-    OUT.color_0.rgb = getFinalColor(lighting, baseColor);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, roughness);
+
+    float3 final = getFinalColor(lighting, baseColor);
+
+    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.y));
     OUT.color_0.a = IN.texcoord_4.x;
 
     return OUT;

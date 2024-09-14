@@ -50,7 +50,7 @@ float3 PBR(float metallicness, float roughness, float3 albedo, float3 normal, fl
 
     float3 Ks = FresnelShlick(reflectance, halfway, eyeDir);
     float3 lambertDiffuse = (1 - metallicness) * (1 - Ks) * albedo/PI;
-    float3 spec = BRDF(roughness * roughness, NdotL, NdotV, NdotH, Ks);
+    float3 spec = BRDF(roughness, NdotL, NdotV, NdotH, Ks);
     // return (lambertDiffuse + spec) * NdotL * lightColor;
     return (lambertDiffuse + spec) * NdotL * lightColor * 5;
     // return (spec) * NdotL * lightColor;
