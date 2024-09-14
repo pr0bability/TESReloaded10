@@ -54,35 +54,29 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 r0 = LODTexParams.xyw;
 
     float4 normal = tex2D(NormalMap, IN.NormalUV);
-
-    float noiseScale = 10000 * TESR_TerrainExtraData.y;
-    float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
-    float2 noiseUVLarge = fmod(IN.worldpos.xy + 1000000, noiseScale * 10) / noiseScale * 10;
-    float noise = tex2D(LODLandNoise, noiseUV).r;
-    noise *= tex2D(LODLandNoise, noiseUVLarge).r;
     float3 parentNormal = tex2D(LODParentNormals, (IN.NormalUV * 0.5) + r0.xy).xyz;
+
+    float noise = tex2D(LODLandNoise, IN.NormalUV * TESR_DebugVar.w).r;
 
     normal.xyz = r0.z >= 1 ? normal : lerp(parentNormal, normal.xyz, LODTexParams.w);
     normal.xyz = expand(normal.xyz);
-    normal.z *= 0.4 + noise * 0.6;
     normal.xyz = normalize(normal.xyz);
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
-    float3 blendColor = linearize(tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128)))).rgb;
-    float3 baseColor = linearize(tex2D(BaseMap, uv).rgb);
+    float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
+    float3 baseColor = tex2D(BaseMap, uv).rgb;
     float3 eyeDir = -normalize(IN.location.xyz);
 
     // blending between parent tex and basemap + apply noise
-    baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.5) + 0.5);
+    baseColor = linearize(r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w));
+    
+    float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 
-    // float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb* ((noise * 0.3) + 0.7), eyeDir, IN.location, normal, AmbientColor.rgb, baseColor.rgb, (0.5 + 0.5 * noise) * TESR_TerrainData.y, 1.0);
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, eyeDir, IN.location, normal.xyz, AmbientColor.rgb, baseColor.rgb, (0.5 + 0.5 * noise) * TESR_TerrainData.y * (1 - normal.a), 0.0);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_1.xyz, PSLightColor[0].rgb, eyeDir, IN.location, normal.xyz, AmbientColor.rgb, baseColor.rgb, roughness);
 
-    // apply fog
-    // OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * lighting))) + (q5 * lighting);
-    OUT.color_0.rgb = getFinalColor(lighting, baseColor);
-    // OUT.color_0.rgb = selectColor(TESR_DebugVar.x, q5 * lighting, IN.color_1, r1, r2, lighting, q5, noise.xxx, normalize(IN.location), fresnel.xxx, float3(noiseUV, 0));
+    float3 final = getFinalColor(lighting, baseColor);
 
+    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.y));
     OUT.color_0.a = 1;
 
     return OUT;
