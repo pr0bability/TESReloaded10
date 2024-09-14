@@ -51,16 +51,22 @@ VS_OUTPUT main(VS_INPUT IN) {
     // float noise = tex2D(LODLandNoise, IN.BaseUV.xy * 1.75);
     float noiseScale = 10000 * TESR_TerrainExtraData.y;
     float2 noiseUV = fmod(IN.worldpos.xy + 1000000, noiseScale) / noiseScale;
-    float noise = linearize(tex2D(LODLandNoise, noiseUV)).r;
+    float2 noiseUVLarge = fmod(IN.worldpos.xy + 1000000, noiseScale* 10) / noiseScale* 10;
+    float noise = tex2D(LODLandNoise, noiseUV).r;
+    noise *= tex2D(LODLandNoise, noiseUVLarge).r;
+    noise = lerp(1, noise, IN.texcoord_4.x);
 
-    float3 normal = expand(tex2D(NormalMap, IN.BaseUV.xy).xyz);
+    float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
+    normal.xyz = expand(normal.xyz);
     normal.z *= 0.4 + noise * 0.6;
-    normal = normalize(normal);
+    normal.xyz = normalize(normal);
 
     float3 baseColor = linearize(tex2D(BaseMap, IN.BaseUV.xy).xyz);
-    baseColor = baseColor * noise;
+    baseColor = baseColor * ((noise * 0.5) + 0.5);
+    // baseColor = baseColor * noise;
 
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb * (noise * 0.3 + 0.7), eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, (0.5 + 0.5 * noise) * TESR_TerrainData.y, 1.0);
+    // float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb * (noise * 0.3 + 0.7), eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, (0.5 + 0.5 * noise) * TESR_TerrainData.y, 1.0);
+    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, (0.5 + 0.5 * noise) * TESR_TerrainData.y * (1 - normal.a), 0.0);
 
     // OUT.color_0.rgb = (IN.texcoord_5.w * (IN.texcoord_5.xyz - (baseColor * lighting))) + (baseColor * lighting);
     OUT.color_0.rgb = getFinalColor(lighting, baseColor);

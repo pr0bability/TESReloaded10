@@ -67,6 +67,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
     normal.xyz = normalize(expand(normal.xyz));
 
+    // float roughness = (1 - pow(normal.a, glossPower));
     float roughness = getRoughness(normal.a, glossPower);
 
     float3 color = useVertexColor > 0 ? texture0.rgb * linearize(IN.color_0.rgb) : texture0.rgb;
@@ -84,6 +85,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     }
 
     OUT.color_0.rgb = getFinalColor(final);
+    // OUT.color_0.rgb = delinearize(final);
+    // OUT.color_0.rgb = lerp(delinearize(final), magenta, 0.1);
     OUT.color_0.a = texture0.a * AmbientColor.a;
 
     return OUT;

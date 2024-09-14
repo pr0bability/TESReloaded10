@@ -15,6 +15,7 @@ float4 TESR_SunPosition: register(c13);
 float4 TESR_SunsetColor: register(c14); // sunsetColor.w is sky strength multiplier
 float4 TESR_HDRBloomData: register(c15);
 float4 TESR_SunDiskColor: register(c16);
+float4 TESR_DepthConstants: register(c17);
 
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
@@ -57,22 +58,28 @@ VS_OUTPUT main(VS_INPUT IN) {
     float sunHeight = shade(TESR_SunPosition.xyz, up);
 
     float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
-    float sunDir = dot(eyeDir, TESR_SunPosition.xyz);
-    float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
+    float sunDir = compress(dot(eyeDir, TESR_SunPosition.xyz));
+    float sunInfluence = pows(sunDir, SUNINFLUENCE);
 
     float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb);
     float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
     // draw the sun procedurally
-    // float sunDisk = smoothstep(0.9990, 0.9991, sunDir);
+    //float sunDisk = smoothstep(0.9990, 0.9991, sunDir);
     // float sunGlare = saturate(pow(saturate(sunDir), 400) * TESR_SunAmount.y * sunHeight);
-    // // skyColor = lerp(skyColor, sunColor, saturate(sunDisk + sunGlare)); // add sun disk and boost brightness during sunrise/sunset
+    // skyColor = lerp(skyColor, white.rgb, saturate(sunDisk)); // add sun disk and boost brightness during sunrise/sunset
     // skyColor += sunColor * saturate(sunDisk + sunGlare) * TESR_SunAmount.z * (TESR_SunAmount.x > 0); // add sun disk and boost brightness during sunrise/sunset
+    //skyColor += white * saturate(sunDisk); // add sun disk and boost brightness during sunrise/sunset
+    // skyColor += sunColor * saturate(sunDisk) * TESR_SunAmount.z; // add sun disk and boost brightness during sunrise/sunset
 
     OUT.color_0 = delinearize(float4(skyColor * TESR_SunsetColor.w, 1)) ; // multiply sky strength for HDR
 
     // dithering
 	OUT.color_0.rgb += ditherMat[ (IN.screen.x)%4 ][ (IN.screen.y)%4 ] / 255;
+
+    // OUT.color_0.rgb = lerp(green, red, sunDir);
+
+    // OUT.color_0.rgb = TESR_DepthConstants.zzz;
 
     return OUT;
 };

@@ -61,6 +61,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
     normal.xyz = normalize(expand(normal.xyz));
 
+    // float roughness = (1 - pow(normal.a, glossPower));
     float roughness = getRoughness(normal.a, glossPower);
 
     // final color
@@ -71,8 +72,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     // apply fog
     // final = useFog ? lerp(color, IN.color_1.rgb, IN.color_1.a) : color;
 
+    // OUT.color_0.rgb = delinearize(final);
     OUT.color_0.rgb = getFinalColor(final);
+    // OUT.color_0.rgb = lerp(delinearize(final), green, 0.1);
+    // OUT.color_0.rgb = PSLightColor[0].rgb *;
     OUT.color_0.a = texture0.a * AmbientColor.a;
+    // OUT.color_0.a = 1;
 
     return OUT;
 };

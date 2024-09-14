@@ -220,6 +220,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 		distantFog = pows(smoothstep(DistantFogRange, 1.0, normalizedDepth), 0.5); 	  // simple curve between a custom distance and the horizon
 		distantHeightFade = (DistantFogHeight == 0) ? (!isSky) : exp( -pointHeight / (80000 * DistantFogHeight)); 	// at HeightFade set to 0, filter out the sky
 
+		isSky = 0;
 		inScattering = inScattering * lerp(1, 0.5, isSky) + SunsetFog;        // lower inscattering in the sky
 		extinction *= (!isSky) * (1 - distantFog * isDayTimeFog);             // only apply extinction on No sky zones, and not in the range of distant fog during the day
 	}

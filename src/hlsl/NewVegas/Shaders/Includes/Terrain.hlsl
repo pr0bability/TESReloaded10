@@ -27,6 +27,11 @@ float combineRoughness(float4 coeffs1, float4 coeffs2, float roughness0=black.x,
     roughness += roughness5 * coeffs2.g;
     roughness += roughness6 * coeffs2.b;
 
+    // roughness = invlerp(TESR_DebugVar.x, TESR_DebugVar.y, roughness);
+    // roughness = ((roughness + TESR_DebugVar.x) - TESR_DebugVar.w) * TESR_DebugVar.z + TESR_DebugVar.w;
+    
+    // roughness = invlerps(0, TESR_DebugVar.x, roughness) * 0.5 + invlerps(TESR_DebugVar.x, 1, roughness) * 0.5;
+    // roughness = (roughness - TESR_DebugVar.y) * TESR_DebugVar.z + TESR_DebugVar.y;
 
     return saturate((1 - roughness) * TESR_TerrainData.y); // maps contain glossiness data, not roughness. We invert it
 }
@@ -59,8 +64,10 @@ float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eye
     float3 ambientColor = linearize(AmbientColor) * TESR_TerrainData.w;
     float ao = luma(albedo);
     float3 color = albedo;
-    // float3 color = albedo / ao;
     color = lerp(ao, color, TESR_TerrainExtraData.z);
+
+    // if (TESR_DebugVar.w > 0)
+    //     return roughness.rrr;
 
     if (TESR_TerrainExtraData.x){
         // PBR
@@ -82,5 +89,6 @@ float3 getFinalColor(float3 lighting, float3 color){
     // fog
     // return (IN.texcoord_7.w * (IN.texcoord_7.xyz - (vertexColor * lighting * color))) + (lighting * color * vertexColor);
 
+    // return delinearize(lighting * tint);
     return delinearize(lighting);
 }
