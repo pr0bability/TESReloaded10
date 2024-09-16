@@ -816,6 +816,16 @@ AmbientScale = 2.6
 LightingScale = 1.5
 TerrainSaturation = 1.0
 
+[_Shaders.Terrain.Parallax]
+Enabled = false                     # Turn on parallax occlusion mapping for terrain.
+HighQuality = false                 # Turn on high quality, increases detail for larger performance hit.
+Shadows = false						# Turn on self shadowing based on height maps.
+Height = 0.1                        # Controls depth. Note that high values will cause very bad results.
+MaxDistance = 2048                  # Controls the maximum distance for the parallax effect.
+Range = 0.5							# Controls quality based on distance.
+BlendRange = 0.25                   # Controls blending from POM into basic parallax based on distance.
+ShadowsFade = 2048                  # Shadows maximum distance, effect starts having less effect from half this.
+
 [_Shaders.Terrain.Status]
 Enabled = false                     # Not currently used. Replaces shaders used by terrain.
 

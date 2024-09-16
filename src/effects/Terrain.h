@@ -14,6 +14,16 @@ public:
 		float Fresnel;
 		float Saturation;
 	};
+	struct ParallaxSettingsStruct {
+		bool Enabled;
+		bool HighQuality;
+		bool Shadows;
+		float Height;
+		float MaxDistance;
+		float Range;
+		float BlendRange;
+		float ShadowsFade;
+	};
 	struct TerrainSettingsStruct {
 		TerrainSettings Default;
 		TerrainSettings Rain;
@@ -21,12 +31,19 @@ public:
 		TerrainSettings NightRain;
 	};
 	TerrainSettingsStruct Settings;
+	ParallaxSettingsStruct ParallaxSettings;
 
 	struct TerrainStruct {
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		ExtraData;
 	};
 	TerrainStruct	Constants;
+
+	struct ParallaxStruct {
+		D3DXVECTOR4     Data;
+		D3DXVECTOR4     ExtraData;
+	};
+	ParallaxStruct  ParallaxConstants;
 
 	bool			usePBR;
 	float			LodNoiseScale;
