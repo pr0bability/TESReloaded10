@@ -36,9 +36,9 @@ float combineRoughness(float4 coeffs1, float4 coeffs2, float roughness0=black.x,
     return saturate((1 - roughness) * TESR_TerrainData.y); // maps contain glossiness data, not roughness. We invert it
 }
 
-float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightColor, float3 eyeDir, float3 position, float3 normal, float3 albedo, float roughness=1.0, float metallicness=1.0){
+float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightColor, float3 eyeDir, float3 position, float3 normal, float3 albedo, float roughness = 1.0, float metallicness = 1.0, float parallaxMultiplier = 1.0) {
     float3 lightDir = lightPosition.xyz - position.xyz;
-    float3 pointlightColor = linearize(lightColor) * TESR_TerrainData.z;
+    float3 pointlightColor = linearize(lightColor) * TESR_TerrainData.z * parallaxMultiplier;
 
     if (TESR_TerrainExtraData.x){
         float atten = length(lightDir / lightPosition.w);
@@ -57,10 +57,10 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
     }
 }
 
-float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eyeDir, float3 position, float3 normal, float3 AmbientColor, float3 albedo, float roughness=1.0, float metallicness=1.0){
+float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eyeDir, float3 position, float3 normal, float3 AmbientColor, float3 albedo, float roughness=1.0, float metallicness=1.0, float parallaxMultiplier=1.0){
     float3 sunDir = mul(tbn, lightDir);
     // float3 eyeDir = -mul(tbn, normalize(position));
-    float3 lightColor = linearize(sunColor) * TESR_TerrainData.z;
+    float3 lightColor = linearize(sunColor) * TESR_TerrainData.z * parallaxMultiplier;
     float3 ambientColor = linearize(AmbientColor) * TESR_TerrainData.w;
     float ao = luma(albedo);
     float3 color = albedo;

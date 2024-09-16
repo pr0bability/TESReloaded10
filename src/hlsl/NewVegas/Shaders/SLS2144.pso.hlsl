@@ -10,7 +10,6 @@ float4 PSLightDir : register(c18);
 float4 PSLightPosition[8] : register(c19);
 
 
-
 // Registers:
 //
 //   Name            Reg   Size
@@ -27,72 +26,81 @@ float4 PSLightPosition[8] : register(c19);
 // Structures:
 
 struct VS_INPUT {
-    float2 texcoord_0 : TEXCOORD0;
-    float3 texcoord_1 : TEXCOORD1_centroid;
-    float3 texcoord_2 : TEXCOORD2_centroid;
-    float3 texcoord_3 : TEXCOORD3_centroid;
-    float3 texcoord_4 : TEXCOORD4_centroid;
-    float3 texcoord_5 : TEXCOORD5_centroid;
-    float4 color_0 : COLOR0;
-    float4 color_1 : COLOR1;
-    float4 texcoord_7 : TEXCOORD7_centroid;
+    float2 uv : TEXCOORD0;
+    float3 vertex_color : TEXCOORD1_centroid;
+    float3 lPosition : TEXCOORD2_centroid;
+    float3 tangent : TEXCOORD3_centroid;
+    float3 binormal : TEXCOORD4_centroid;
+    float3 normal : TEXCOORD5_centroid;
+    float4 blend_0 : COLOR0;
+    float4 blend_1 : COLOR1;
+    float4 viewPosition : TEXCOORD7_centroid;
+    float4 sPosition : POSITION1;
 };
 
 struct VS_OUTPUT {
     float4 color_0 : COLOR0;
 };
 
-#define tint green
-
 #include "includes/Helpers.hlsl"
 #include "includes/Terrain.hlsl"
+#include "includes/Parallax.hlsl"
 
 // Code:
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-
-    float4 normal0 = tex2D(NormalMap[0], IN.texcoord_0.xy);
-    float4 normal1 = tex2D(NormalMap[1], IN.texcoord_0.xy);
-    float4 normal2 = tex2D(NormalMap[2], IN.texcoord_0.xy);
-    float4 normal3 = tex2D(NormalMap[3], IN.texcoord_0.xy);
-    float4 normal4 = tex2D(NormalMap[4], IN.texcoord_0.xy);
-    float4 normal5 = tex2D(NormalMap[5], IN.texcoord_0.xy);
-    float4 normal6 = tex2D(NormalMap[6], IN.texcoord_0.xy);
-
-    float3 texture0 = tex2D(BaseMap[0], IN.texcoord_0.xy).rgb;
-    float3 texture1 = tex2D(BaseMap[1], IN.texcoord_0.xy).rgb;
-    float3 texture2 = tex2D(BaseMap[2], IN.texcoord_0.xy).rgb;
-    float3 texture3 = tex2D(BaseMap[3], IN.texcoord_0.xy).rgb;
-    float3 texture4 = tex2D(BaseMap[4], IN.texcoord_0.xy).rgb;
-    float3 texture5 = tex2D(BaseMap[5], IN.texcoord_0.xy).rgb;
-    float3 texture6 = tex2D(BaseMap[6], IN.texcoord_0.xy).rgb;
-
-    float3 tangent = normalize(IN.texcoord_3.xyz);
-    float3 binormal = normalize(IN.texcoord_4.xyz);
-    float3 normal = normalize(IN.texcoord_5.xyz);
+    
+    int texCount = 7;
+    float3 tangent = normalize(IN.tangent.xyz);
+    float3 binormal = normalize(IN.binormal.xyz);
+    float3 normal = normalize(IN.normal.xyz);
     float3x3 tbn = float3x3(tangent, binormal, normal);
+    float3 eyeDir = -mul(tbn, normalize(IN.viewPosition.xyz));
+
+    float dist = distance(IN.sPosition.xyz, IN.viewPosition.xyz);
+    float2 dx, dy;
+    dx = ddx(IN.uv.xy);
+    dy = ddy(IN.uv.xy);
     
-    float3 eyeDir = -mul(tbn, normalize(IN.texcoord_7.xyz));
+    float blends[7] = { IN.blend_0.x, IN.blend_0.y, IN.blend_0.z, IN.blend_0.w, IN.blend_1.x, IN.blend_1.y, IN.blend_1.z };
+    float2 coords[7];
+    [unroll] for (int i = 0; i < texCount; ++i)
+    {
+        coords[i] = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, BaseMap[i], blends[i]);
+    }
 
-    float3 baseColor = blendTextures(IN.color_0, IN.color_1, IN.texcoord_1, texture0, texture1, texture2, texture3, texture4, texture5, texture6);
-    float3 combinedNormal = normalize(expand(normal0.xyz) * IN.color_0.r + expand(normal1.xyz) * IN.color_0.g + expand(normal2.xyz) * IN.color_0.b + expand(normal3.xyz) * IN.color_0.a + expand(normal4.xyz) * IN.color_1.r + expand(normal5.xyz) * IN.color_1.g + expand(normal6.xyz) * IN.color_1.b);
-    float roughness = combineRoughness(IN.color_0, IN.color_1, normal0.a, normal1.a, normal2.a, normal3.a, normal4.a, normal5.a, normal6.a);
+    float4 normal0 = tex2D(NormalMap[0], coords[0]);
+    float4 normal1 = tex2D(NormalMap[1], coords[1]);
+    float4 normal2 = tex2D(NormalMap[2], coords[2]);
+    float4 normal3 = tex2D(NormalMap[3], coords[3]);
+    float4 normal4 = tex2D(NormalMap[4], coords[4]);
+    float4 normal5 = tex2D(NormalMap[5], coords[5]);
+    float4 normal6 = tex2D(NormalMap[6], coords[6]);
 
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.texcoord_7.xyz, combinedNormal, AmbientColor.rgb, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[0], PSLightColor[1].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[1], PSLightColor[2].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[2], PSLightColor[3].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[3], PSLightColor[4].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[4], PSLightColor[5].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[5], PSLightColor[6].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[6], PSLightColor[7].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
-    lighting += getPointLightLighting(tbn, PSLightPosition[7], PSLightColor[8].rgb, eyeDir, IN.texcoord_2.xyz, combinedNormal, baseColor, roughness);
+    float3 texture0 = tex2D(BaseMap[0], coords[0]).xyz;
+    float3 texture1 = tex2D(BaseMap[1], coords[1]).xyz;
+    float3 texture2 = tex2D(BaseMap[2], coords[2]).xyz;
+    float3 texture3 = tex2D(BaseMap[3], coords[3]).xyz;
+    float3 texture4 = tex2D(BaseMap[4], coords[4]).xyz;
+    float3 texture5 = tex2D(BaseMap[5], coords[5]).xyz;
+    float3 texture6 = tex2D(BaseMap[6], coords[6]).xyz;
 
-    // apply fog
-    // float3 finalColor = (IN.texcoord_7.w * (IN.texcoord_7.xyz - (IN.texcoord_1.xyz * lighting * baseColor))) + (lighting * baseColor * IN.texcoord_1.xyz);
+    float3 baseColor = blendTextures(IN.blend_0, IN.blend_1, IN.vertex_color, texture0, texture1, texture2, texture3, texture4, texture5, texture6);
+    float3 combinedNormal = normalize(expand(normal0.xyz) * IN.blend_0.r + expand(normal1.xyz) * IN.blend_0.g + expand(normal2.xyz) * IN.blend_0.b + expand(normal3.xyz) * IN.blend_0.a + expand(normal4.xyz) * IN.blend_1.r + expand(normal5.xyz) * IN.blend_1.g + expand(normal6.xyz) * IN.blend_1.b);
+    float roughness = combineRoughness(IN.blend_0, IN.blend_1, normal0.a, normal1.a, normal2.a, normal3.a, normal4.a, normal5.a, normal6.a);
+
+    float3 lightTS = mul(tbn, PSLightDir.xyz);
+    float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, dx, dy, lightTS, texCount, blends, coords, BaseMap);
+    
+    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.viewPosition.xyz, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+
+    int lightCount = 8;
+    [unroll] for (i = 0; i < lightCount; i++) {
+        lighting += getPointLightLighting(tbn, PSLightPosition[i], PSLightColor[i + 1].rgb, eyeDir, IN.lPosition.xyz, combinedNormal, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    }
+    
     float3 finalColor = getFinalColor(lighting, baseColor);
-    
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;

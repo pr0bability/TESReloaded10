@@ -3,6 +3,8 @@
 void TerrainShaders::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_TerrainData", &Constants.Data);
 	TheShaderManager->RegisterConstant("TESR_TerrainExtraData", &Constants.ExtraData);
+	TheShaderManager->RegisterConstant("TESR_TerrainParallaxData", &ParallaxConstants.Data);
+	TheShaderManager->RegisterConstant("TESR_TerrainParallaxExtraData", &ParallaxConstants.ExtraData);
 }
 
 
@@ -41,6 +43,15 @@ void TerrainShaders::UpdateSettings() {
 	Settings.NightRain.Specular = TheSettingManager->GetSettingF("Shaders.Terrain.NightRain", "Specular");
 	Settings.NightRain.LightScale = TheSettingManager->GetSettingF("Shaders.Terrain.NightRain", "LightingScale");
 	Settings.NightRain.AmbientScale = TheSettingManager->GetSettingF("Shaders.Terrain.NightRain", "AmbientScale");
+
+	ParallaxSettings.Enabled = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Enabled");
+	ParallaxSettings.HighQuality = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "HighQuality");
+	ParallaxSettings.Shadows = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Shadows");
+	ParallaxSettings.Height = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Height");
+	ParallaxSettings.MaxDistance = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "MaxDistance");
+	ParallaxSettings.Range = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Range");
+	ParallaxSettings.BlendRange = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "BlendRange");
+	ParallaxSettings.ShadowsFade = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "ShadowsFade");
 }
 
 void TerrainShaders::UpdateConstants() {
@@ -71,5 +82,15 @@ void TerrainShaders::UpdateConstants() {
 		TheShaderManager->GetTransitionValue(Settings.Rain.LightScale, Settings.NightRain.LightScale, 0.0), rainFactor);
 	Constants.Data.w = std::lerp(TheShaderManager->GetTransitionValue(Settings.Default.AmbientScale, Settings.Night.AmbientScale, 0.0),
 		TheShaderManager->GetTransitionValue(Settings.Rain.AmbientScale, Settings.NightRain.AmbientScale, 0.0), rainFactor);
+
+	ParallaxConstants.Data.x = ParallaxSettings.Enabled;
+	ParallaxConstants.Data.y = ParallaxSettings.HighQuality;
+	ParallaxConstants.Data.z = ParallaxSettings.Shadows;
+	ParallaxConstants.Data.w = ParallaxSettings.Height;
+
+	ParallaxConstants.ExtraData.x = ParallaxSettings.MaxDistance;
+	ParallaxConstants.ExtraData.y = ParallaxSettings.Range;
+	ParallaxConstants.ExtraData.z = ParallaxSettings.BlendRange;
+	ParallaxConstants.ExtraData.w = ParallaxSettings.ShadowsFade;
 };
 
