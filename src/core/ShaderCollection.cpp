@@ -25,3 +25,14 @@ void ShaderCollection::DisposeShaders() {
 		vertexShader->DisposeShader();
 	}
 }
+
+ShaderTemplate* ShaderCollection::GetTemplate(const char* Name) {
+	Logger::Log("Looking for template for %s", Name);
+	if (auto Template = Templates.find(Name); Template != Templates.end()) {
+		Logger::Log("TEMPLATE FOUND");
+		return &(Template->second);
+	}
+	else {
+		return NULL;
+	}
+}

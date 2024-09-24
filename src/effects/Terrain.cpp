@@ -47,11 +47,10 @@ void TerrainShaders::UpdateSettings() {
 	ParallaxSettings.Enabled = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Enabled");
 	ParallaxSettings.HighQuality = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "HighQuality");
 	ParallaxSettings.Shadows = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Shadows");
-	ParallaxSettings.Height = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Height");
+	ParallaxSettings.HeightBlend = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "HeightBlend");
 	ParallaxSettings.MaxDistance = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "MaxDistance");
-	ParallaxSettings.Range = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Range");
-	ParallaxSettings.BlendRange = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "BlendRange");
-	ParallaxSettings.ShadowsFade = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "ShadowsFade");
+	ParallaxSettings.Height = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "Height");
+	ParallaxSettings.ShadowsIntensity = TheSettingManager->GetSettingF("Shaders.Terrain.Parallax", "ShadowsIntensity");
 }
 
 void TerrainShaders::UpdateConstants() {
@@ -84,13 +83,12 @@ void TerrainShaders::UpdateConstants() {
 		TheShaderManager->GetTransitionValue(Settings.Rain.AmbientScale, Settings.NightRain.AmbientScale, 0.0), rainFactor);
 
 	ParallaxConstants.Data.x = ParallaxSettings.Enabled;
-	ParallaxConstants.Data.y = ParallaxSettings.HighQuality;
-	ParallaxConstants.Data.z = ParallaxSettings.Shadows;
-	ParallaxConstants.Data.w = ParallaxSettings.Height;
+	ParallaxConstants.Data.y = ParallaxSettings.Shadows;
+	ParallaxConstants.Data.z = ParallaxSettings.HeightBlend;
+	ParallaxConstants.Data.w = ParallaxSettings.HighQuality;
 
 	ParallaxConstants.ExtraData.x = ParallaxSettings.MaxDistance;
-	ParallaxConstants.ExtraData.y = ParallaxSettings.Range;
-	ParallaxConstants.ExtraData.z = ParallaxSettings.BlendRange;
-	ParallaxConstants.ExtraData.w = ParallaxSettings.ShadowsFade;
+	ParallaxConstants.ExtraData.y = ParallaxSettings.Height;
+	ParallaxConstants.ExtraData.z = ParallaxSettings.ShadowsIntensity;
 };
 
