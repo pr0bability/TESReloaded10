@@ -3,45 +3,67 @@ float4 TESR_TerrainParallaxExtraData : register(c36);
 
 // Complex Parallax Materials for Community Shaders
 // https://www.artstation.com/blogs/andreariccardi/3VPo/a-new-approach-for-parallax-mapping-presenting-the-contact-refinement-parallax-mapping-technique
-float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, float3 viewDirTS, sampler2D tex, float blend) {
+float getTerrainHeight(float2 coords, float2 dx, float2 dy, float blendFactor, int texCount, sampler2D tex[7], float blends[7], out float weights[7]) {
+    weights = blends;
+
+    float blendPower = blendFactor * 4;
+    float total = 0;
+    [unroll] for (int i = 0; i < texCount; i++){
+        blends[i] = pow(abs(blends[i]), 1 + 1 * blendFactor);
+        weights[i] = blends[i] * (0.001 + pow(abs(tex2Dgrad(tex[i], coords, dx, dy).a), blendPower));
+        total += weights[i];
+    }
+    
+    float invtotal = rcp(total);
+	
+    [unroll] for (i = 0; i < texCount; i++)
+    {
+        weights[i] *= invtotal;
+    }
+    
+    return pow(total, rcp(blendPower));
+}
+
+float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, float3 viewDirTS, int texCount, sampler2D tex[7], float blends[7], out float weights[7]) {
     // Check if parallax is active first.
-    if (!TESR_TerrainParallaxData.x)
+    if (!TESR_TerrainParallaxData.x) {
+        weights = blends;
         return coords;
+    }
     
     // Variables.
-    float v_maxDistance = TESR_TerrainParallaxExtraData.x;
-    float v_range = TESR_TerrainParallaxExtraData.y;
-    float v_blendRange = TESR_TerrainParallaxExtraData.z;
-    float v_height = TESR_TerrainParallaxData.w;
-    bool v_highQuality = TESR_TerrainParallaxData.y;
+    bool highQuality = TESR_TerrainParallaxData.w;
+    float maxDistance = TESR_TerrainParallaxExtraData.x;
+    float height = TESR_TerrainParallaxExtraData.y;
+    
+    float distanceBlend = saturate(distance / maxDistance);
+    float quality = saturate(1.0 - distanceBlend);
+    float blendFactor = TESR_TerrainParallaxData.z ? quality : 0.25;
 
     viewDirTS = normalize(viewDirTS);
-    distance /= v_maxDistance;
 
-    viewDirTS.z = ((viewDirTS.z * 0.5) + 0.5);
+    // Fix for angles.
+    viewDirTS.z = ((viewDirTS.z * 0.7) + 0.3);
     viewDirTS.xy /= viewDirTS.z;
 
-    float nearQuality = smoothstep(0.0, v_range, distance);
-    float nearBlendToMid = smoothstep(v_range - v_blendRange, v_range, distance);
-    float midBlendToFar = smoothstep(1.0 - v_blendRange, 1.0, distance);
-
-    float maxHeight = v_height * 0.1;
+    float maxHeight = height;
     float minHeight = maxHeight * 0.5;
 
     float2 output;
-    if (nearBlendToMid < 1.0) {
+    if (distanceBlend < 1.0)
+    {
         int numSteps;
-
-        float quality = 1.0 - nearQuality;
-        if (v_highQuality) {
-            numSteps = max(1, round(64 * quality));
-            numSteps = clamp(((numSteps + 3) / 4) * 4, 4, 64);
-        } else {
-            numSteps = max(1, round(32 * quality));
-            numSteps = clamp(((numSteps + 3) / 4) * 4, 4, 32);
+        
+        if (highQuality) {
+            numSteps = lerp(4, 32, quality);
+            numSteps = clamp((numSteps / 4) * 4, 4, 32);
+        }
+        else {
+            numSteps = lerp(4, 16, quality);
+            numSteps = clamp((numSteps / 4) * 4, 4, 16);
         }
 
-        float stepSize = 1.0 / ((float)numSteps + 1.0);
+        float stepSize = rcp((float) numSteps);
 
         float2 offsetPerStep = viewDirTS.xy * float2(maxHeight, maxHeight) * stepSize.xx;
         float2 prevOffset = viewDirTS.xy * float2(minHeight, minHeight) + coords.xy;
@@ -49,12 +71,8 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
         float prevBound = 1.0;
         float prevHeight = 1.0;
 
-        int numStepsTemp = numSteps;
-
         float2 pt1 = 0;
         float2 pt2 = 0;
-
-        bool contactRefinement = false;
 
         // Need fastopt otherwise compile times are crazy.
         [fastopt] while (numSteps > 0) {
@@ -64,52 +82,36 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
             float4 currentBound = prevBound.xxxx - float4(1, 2, 3, 4) * stepSize;
 
             float4 currHeight;
-            currHeight.x = tex2Dgrad(tex, currentOffset[0].xy, dx, dy).a;
-            currHeight.y = tex2Dgrad(tex, currentOffset[0].zw, dx, dy).a;
-            currHeight.z = tex2Dgrad(tex, currentOffset[1].xy, dx, dy).a;
-            currHeight.w = tex2Dgrad(tex, currentOffset[1].zw, dx, dy).a;
+            
+            currHeight.x = getTerrainHeight(currentOffset[0].xy, dx, dy, blendFactor, texCount, tex, blends, weights);
+            currHeight.y = getTerrainHeight(currentOffset[0].zw, dx, dy, blendFactor, texCount, tex, blends, weights);
+            currHeight.z = getTerrainHeight(currentOffset[1].xy, dx, dy, blendFactor, texCount, tex, blends, weights);
+            currHeight.w = getTerrainHeight(currentOffset[1].zw, dx, dy, blendFactor, texCount, tex, blends, weights);
 
             bool4 testResult = currHeight >= currentBound;
             [branch] if (any(testResult))
             {
-                float2 outOffset = 0;
                 [flatten] if (testResult.w)
                 {
-                    outOffset = currentOffset[1].xy;
                     pt1 = float2(currentBound.w, currHeight.w);
                     pt2 = float2(currentBound.z, currHeight.z);
                 }
                 [flatten] if (testResult.z)
                 {
-                    outOffset = currentOffset[0].zw;
                     pt1 = float2(currentBound.z, currHeight.z);
                     pt2 = float2(currentBound.y, currHeight.y);
                 }
                 [flatten] if (testResult.y)
                 {
-                    outOffset = currentOffset[0].xy;
                     pt1 = float2(currentBound.y, currHeight.y);
                     pt2 = float2(currentBound.x, currHeight.x);
                 }
                 [flatten] if (testResult.x)
                 {
-                    outOffset = prevOffset;
-
                     pt1 = float2(currentBound.x, currHeight.x);
                     pt2 = float2(prevBound, prevHeight);
                 }
-
-                if (contactRefinement) {
-                    break;
-                } else {
-                    contactRefinement = true;
-                    prevOffset = outOffset;
-                    prevBound = pt2.x;
-                    numSteps = numStepsTemp;
-                    stepSize /= (float)numSteps;
-                    offsetPerStep /= (float)numSteps;
-                    continue;
-                }
+                break;
             }
 
             prevOffset = currentOffset[1].zw;
@@ -124,93 +126,54 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
         float denominator = delta2 - delta1;
 
         float parallaxAmount = 0.0;
-        if (denominator == 0.0) {
+        if (denominator == 0.0)
+        {
             parallaxAmount = 0.0;
-        } else {
+        }
+        else
+        {
             parallaxAmount = (pt1.x * delta2 - pt2.x * delta1) / denominator;
         }
+        
+        distanceBlend *= distanceBlend;
 
-        if (v_highQuality) {
-            float delta2 = pt2.x - pt2.y;
-            float delta1 = pt1.x - pt1.y;
-
-            float denominator = delta2 - delta1;
-
-            float parallaxAmount = 0.0;
-            if (denominator == 0.0) {
-                parallaxAmount = 0.0;
-            } else {
-                parallaxAmount = (pt1.x * delta2 - pt2.x * delta1) / denominator;
-            }
-
-            float offset = (1.0 - parallaxAmount) * -maxHeight + minHeight;
-            output = viewDirTS.xy * offset + coords.xy;
-        } else {
-            float offset = (1.0 - pt1.x) * -maxHeight + minHeight;
-            output = viewDirTS.xy * offset + coords.xy;
-        }
-
-        if (nearBlendToMid > 0.0) {
-            float height = tex2D(tex, coords.xy).a;
-            height = height * maxHeight - minHeight;
-            output = lerp(output, viewDirTS.xy * height.xx + coords.xy, nearBlendToMid);
-        }
-    } else if (midBlendToFar < 1.0) {
-        float height = tex2D(tex, coords.xy).a;
-        if (midBlendToFar > 0.0) {
-            maxHeight *= (1 - midBlendToFar);
-            minHeight *= (1 - midBlendToFar);
-        }
-        height = height * maxHeight - minHeight;
-        output = viewDirTS.xy * height.xx + coords.xy;
-    } else {
-        output = coords;
+        float offset = (1.0 - parallaxAmount) * -maxHeight + minHeight;
+        return lerp(viewDirTS.xy * offset + coords.xy, coords, distanceBlend);
     }
-
-    return output;
+    
+    weights = blends;
+    return coords;
 }
 
-float getParallaxShadowMultipler(float distance, float2 dx, float2 dy, float3 lightTS, int tex_count, float blends[7], float2 coords[7], sampler2D tex[7]) {
-    if (!TESR_TerrainParallaxData.z)
+float getParallaxShadowMultipler(float distance, float2 coords, float2 dx, float2 dy, float3 lightTS, int texCount, float blends[7], sampler2D tex[7])
+{
+    if (!TESR_TerrainParallaxData.y)
         return 1.0;
     
-    float maxDistance = TESR_TerrainParallaxExtraData.w;
+    float maxDistance = TESR_TerrainParallaxExtraData.x;
+    float shadowsIntensity = TESR_TerrainParallaxExtraData.z;
     
-    float quality = 1.0 - smoothstep(maxDistance / 2, maxDistance, distance);
+    float quality = 1.0 - distance / maxDistance;
     
-    float multiplier = 1.0;
-    if (quality > 0.0) {
-        lightTS = normalize(lightTS);
-        lightTS.z = ((lightTS.z * 0.5) + 0.5);
-        lightTS.xy /= lightTS.z;
+    if (quality > 0.0)
+    {
+        float weights[7] = { 0, 0, 0, 0, 0, 0, 0 };
+        float sh0 = getTerrainHeight(coords, dx, dy, quality, texCount, tex, blends, weights);
 
-        float sh0 = 0;
-        [unroll] for (int i = 0; i < tex_count; ++i)
-        {
-            sh0 += tex2Dgrad(tex[i], coords[i], dx, dy).a * blends[i];
-        }
-        sh0 = saturate(sh0);
+        const float2 rayDir = lightTS.xy * 0.025;
+        float4 multipliers = rcp((float4(1, 2, 3, 4)));
 
-        const float height = 0.025;
-        const float2 rayDir = lightTS.xy * height;
-
-        const float h0 = 1.0 - sh0;
-
-        float sh = 0;
-        [unroll] for (i = 0; i < tex_count; ++i)
-        {
-            sh += tex2Dgrad(tex[i], coords[i] + rayDir, dx, dy).a * blends[i];
-        }
-        sh = saturate(sh);
+        float4 sh = getTerrainHeight(coords + rayDir * multipliers.x, dx, dy, quality, texCount, tex, blends, weights);
+        if (quality > 0.25)
+            sh.y = getTerrainHeight(coords + rayDir * multipliers.y, dx, dy, quality, texCount, tex, blends, weights);
+        if (quality > 0.5)
+            sh.z = getTerrainHeight(coords + rayDir * multipliers.z, dx, dy, quality, texCount, tex, blends, weights);
+        if (quality > 0.75)
+            sh.w = getTerrainHeight(coords + rayDir * multipliers.w, dx, dy, quality, texCount, tex, blends, weights);
         
-        const float h = 1.0 - sh;
-
-        // Compare the difference between the two heights to see if the height blocks it.
-        multiplier = 1.0 - saturate((h0 - h) * 7.0);
-        
-        // Fade out with distance.
-        multiplier = lerp(1.0, multiplier, quality);
+        return 1.0 - saturate(dot(max(0, sh - sh0), 1.0) * shadowsIntensity) * quality;
     }
     
-    return multiplier;
+    return 1.0;
 }
+

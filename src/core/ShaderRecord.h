@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ShaderTemplate.h"
+
 enum ShaderCompileType {
 	AlwaysOff,
 	AlwaysOn,
@@ -78,7 +80,7 @@ public:
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable);
 	virtual void			SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount) = 0;
 
-	static ShaderRecord*	LoadShader(const char* Name, const char* SubPath);
+	static ShaderRecord*	LoadShader(const char* Name, const char* SubPath, ShaderTemplate* Template = NULL);
 
 	const char* Name;
 	bool					HasRenderedBuffer;

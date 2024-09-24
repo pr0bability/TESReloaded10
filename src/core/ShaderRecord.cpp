@@ -79,7 +79,7 @@ void reportError(HRESULT result) {
 Loads the shader by name from a given subfolder (optionally). Shader will be compiled if needed.
 @returns the ShaderRecord for this shader.
 */
-ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
+ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, ShaderTemplate* Template) {
 	auto timer = TimeLogger();
 
 	ShaderRecord* ShaderProg = NULL;
@@ -93,10 +93,20 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 	char FileName[MAX_PATH];
 	char FileNameBinary[MAX_PATH];
 	
+	// Build filenames.
 	strcpy(FileName, ShadersPath);
 	if (SubPath) strcat(FileName, SubPath);
 	strcat(FileName, Name);
 	strcpy(FileNameBinary, FileName);
+
+	// If we have a template, we want to use the corresponding input file.
+	if (Template != NULL) {
+		memset(FileName, 0, MAX_PATH);
+		strcpy(FileName, ShadersPath);
+		if (SubPath) strcat(FileName, SubPath);
+		strcat(FileName, Template->Name);
+	}
+	
 	strcat(FileName, ".hlsl");
 
 	HRESULT prepass = D3DXPreprocessShaderFromFileA(FileName, NULL, NULL, &ShaderSource, &Errors);
@@ -126,7 +136,12 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 
 		if (Compile || !Function) {
 			// compile if option was enabled or compiled version not found
-			D3DXCompileShaderFromFileA(FileName, NULL, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
+
+			D3DXMACRO* defines = NULL;
+			if (Template != NULL)
+				defines = &(Template->Defines[0]);
+
+			D3DXCompileShaderFromFileA(FileName, defines, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
 			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 			if (Shader) {
 				Function = Shader->GetBufferPointer();
@@ -134,7 +149,10 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath) {
 				FileBinary.write((const char*)Function, Shader->GetBufferSize());
 				FileBinary.flush();
 				FileBinary.close();
-				Logger::Log("Shader compiled: %s", FileName);
+				if (Template == NULL)
+					Logger::Log("Shader compiled: %s", FileName);
+				else
+					Logger::Log("Shader compiled: %s using template: %s", FileNameBinary, FileName);
 			}
 		}
 
