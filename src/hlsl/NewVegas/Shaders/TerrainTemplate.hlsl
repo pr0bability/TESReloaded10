@@ -114,21 +114,9 @@ PS_OUTPUT main(PS_INPUT IN) {
     float blends[7] = { IN.blend_0.x, IN.blend_0.y, IN.blend_0.z, IN.blend_0.w, IN.blend_1.x, IN.blend_1.y, IN.blend_1.z };
     float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, texCount, BaseMap, blends, weights);
     
-    float3 baseColor = black.rgb;
-    float3 combinedNormal = black.rgb;
-    float roughness = 0;
-    float4 tempNormal;
-    [unroll] for (int i = 0; i < texCount; i++)
-    {
-        baseColor += linearize(tex2D(BaseMap[i], offsetUV).xyz) * weights[i];
-        tempNormal = tex2D(NormalMap[i], offsetUV);
-        combinedNormal += expand(tempNormal.xyz) * weights[i];
-        roughness += tempNormal.a * weights[i];
-
-    }
-    baseColor *= linearize(IN.vertex_color);
-    combinedNormal = normalize(combinedNormal);
-    roughness = saturate(1 - roughness);  // Invert glossiness of the map into rougness.
+    float roughness = 1.f;
+    float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
+    float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
 
     float3 lightTS = mul(tbn, PSLightDir.xyz);
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
@@ -137,7 +125,7 @@ PS_OUTPUT main(PS_INPUT IN) {
 
 #if defined(POINTLIGHT)
     int lightCount = 8;
-    [unroll] for (i = 0; i < lightCount; i++) {
+    [unroll] for (int i = 0; i < lightCount; i++) {
         lighting += getPointLightLighting(tbn, PSLightPosition[i], PSLightColor[i + 1].rgb, eyeDir, IN.lPosition.xyz, combinedNormal, baseColor, roughness, 1.0);
     }
 #   endif
