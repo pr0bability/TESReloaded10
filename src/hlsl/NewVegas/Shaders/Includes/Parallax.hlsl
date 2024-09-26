@@ -9,8 +9,10 @@ float getTerrainHeight(float2 coords, float2 dx, float2 dy, float blendFactor, i
     float blendPower = blendFactor * 4;
     float total = 0;
     [unroll] for (int i = 0; i < texCount; i++){
-        blends[i] = pow(abs(blends[i]), 1 + 1 * blendFactor);
-        weights[i] = blends[i] * (0.001 + pow(abs(tex2Dgrad(tex[i], coords, dx, dy).a), blendPower));
+        weights[i] = pow(abs(blends[i]), 1 + 1 * blendFactor);
+        if (weights[i] > 0.0) {
+            weights[i] *= 0.001 + pow(abs(tex2Dgrad(tex[i], coords, dx, dy).a), blendPower);
+        }
         total += weights[i];
     }
     
