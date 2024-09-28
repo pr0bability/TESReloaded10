@@ -79,7 +79,7 @@ void reportError(HRESULT result) {
 Loads the shader by name from a given subfolder (optionally). Shader will be compiled if needed.
 @returns the ShaderRecord for this shader.
 */
-ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, ShaderTemplate* Template) {
+ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, ShaderTemplate Template) {
 	auto timer = TimeLogger();
 
 	ShaderRecord* ShaderProg = NULL;
@@ -100,11 +100,11 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 	strcpy(FileNameBinary, FileName);
 
 	// If we have a template, we want to use the corresponding input file.
-	if (Template != NULL) {
+	if (Template.Name != NULL) {
 		memset(FileName, 0, MAX_PATH);
 		strcpy(FileName, ShadersPath);
 		if (SubPath) strcat(FileName, SubPath);
-		strcat(FileName, Template->Name);
+		strcat(FileName, Template.Name);
 	}
 	
 	strcat(FileName, ".hlsl");
@@ -138,8 +138,8 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 			// compile if option was enabled or compiled version not found
 
 			D3DXMACRO* defines = NULL;
-			if (Template != NULL)
-				defines = &(Template->Defines[0]);
+			if (Template.Name != NULL)
+				defines = &(Template.Defines[0]);
 
 			D3DXCompileShaderFromFileA(FileName, defines, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
 			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
@@ -149,7 +149,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 				FileBinary.write((const char*)Function, Shader->GetBufferSize());
 				FileBinary.flush();
 				FileBinary.close();
-				if (Template == NULL)
+				if (Template.Name == NULL)
 					Logger::Log("Shader compiled: %s", FileName);
 				else
 					Logger::Log("Shader compiled: %s using template: %s", FileNameBinary, FileName);

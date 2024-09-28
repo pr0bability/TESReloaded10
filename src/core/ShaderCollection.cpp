@@ -26,13 +26,12 @@ void ShaderCollection::DisposeShaders() {
 	}
 }
 
-ShaderTemplate* ShaderCollection::GetTemplate(const char* Name) {
-	Logger::Log("Looking for template for %s", Name);
-	if (auto Template = Templates.find(Name); Template != Templates.end()) {
-		Logger::Log("TEMPLATE FOUND");
-		return &(Template->second);
+ShaderTemplate ShaderCollection::GetTemplate(const char* Name) {
+	std::map<std::string, ShaderTemplate> templates = Templates();
+	if (auto temp = templates.find(Name); temp != templates.end()) {
+		return temp->second;
 	}
 	else {
-		return NULL;
+		return ShaderTemplate{};
 	}
 }
