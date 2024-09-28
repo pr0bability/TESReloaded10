@@ -1,17 +1,17 @@
 #pragma once
 
-#include<string>
 #include<map>
+#include<string>
 
 #include "ShaderTemplate.h"
 
 class ShaderCollection
 {
 public:
-	ShaderCollection(const char* ShaderName, std::map<std::string, ShaderTemplate> Temps = std::map<std::string, ShaderTemplate>()) {
+	ShaderCollection(const char* ShaderName) {
+		Logger::Log("ShaderCollection init: %s", ShaderName);
 		Name = ShaderName;
 		Enabled = TheSettingManager->GetMenuShaderEnabled(Name);
-		Templates = Temps;
 	};
 	virtual ~ShaderCollection() {};
 
@@ -29,6 +29,8 @@ public:
 	std::vector<NiD3DPixelShaderEx*>	PixelShaderList;
 	std::vector<NiD3DVertexShaderEx*>	VertexShaderList;
 
-	ShaderTemplate* GetTemplate(const char*);
-	std::map<std::string, ShaderTemplate> Templates;
+	virtual std::map<std::string, ShaderTemplate> Templates() {
+		return std::map<std::string, ShaderTemplate>();
+	};
+	ShaderTemplate GetTemplate(const char*);
 };

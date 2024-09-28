@@ -418,7 +418,7 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
 	bool enabled = Collection->Enabled;
 
-	ShaderTemplate* Template = Collection->GetTemplate(VertexShader->Name);
+	ShaderTemplate Template = Collection->GetTemplate(VertexShader->Name);
 
 	// Load generic, interior and exterior shaders
 	VertexShader->ShaderProg[ShaderRecordType::Default]  = (ShaderRecordVertex*)ShaderRecord::LoadShader(VertexShader->Name, NULL, Template);
@@ -446,7 +446,7 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
 	bool enabled = Collection->Enabled;
 
-	ShaderTemplate* Template = Collection->GetTemplate(PixelShader->Name);
+	ShaderTemplate Template = Collection->GetTemplate(PixelShader->Name);
 
 	PixelShader->ShaderProg[ShaderRecordType::Default]  = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->Name, NULL, Template);
 	PixelShader->ShaderProg[ShaderRecordType::Exterior] = (ShaderRecordPixel*)ShaderRecord::LoadShader(PixelShader->Name, "Exteriors\\", Template);
