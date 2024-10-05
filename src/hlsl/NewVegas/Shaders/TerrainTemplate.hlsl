@@ -1,5 +1,7 @@
 //  Template for terrain shaders for blending up to 7 textures and using up to 8 pointlights.
 
+#define TERRAIN
+
 #include "includes/Helpers.hlsl"
 #include "includes/Terrain.hlsl"
 #include "includes/Parallax.hlsl"
@@ -113,7 +115,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float weights[7] = { 0, 0, 0, 0, 0, 0, 0 };
     float blends[7] = { IN.blend_0.x, IN.blend_0.y, IN.blend_0.z, IN.blend_0.w, IN.blend_1.x, IN.blend_1.y, IN.blend_1.z };
     float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, texCount, BaseMap, blends, weights);
-    
+
     float roughness = 1.f;
     float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
     float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
