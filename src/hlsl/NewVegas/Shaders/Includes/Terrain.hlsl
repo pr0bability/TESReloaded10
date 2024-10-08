@@ -56,18 +56,19 @@ float3 getPointLightLighting(float3x3 tbn, float4 lightPosition, float3 lightCol
 
 float3 getSunLighting(float3x3 tbn, float3 lightDir, float3 sunColor, float3 eyeDir, float3 position, float3 normal, float3 AmbientColor, float3 albedo, float roughness = 1.0, float metallicness = 1.0, float parallaxMultiplier = 1.0) {
     float3 sunDir = mul(tbn, lightDir);
+    
     // float3 eyeDir = -mul(tbn, normalize(position));
     float3 lightColor = linearize(sunColor) * TESR_TerrainData.z * parallaxMultiplier;
     float3 ambientColor = linearize(AmbientColor) * TESR_TerrainData.w;
     float3 color = albedo;
     color = lerp(luma(albedo), color, TESR_TerrainExtraData.z);
 
-    // if (TESR_DebugVar.w > 0)
+    // if (TESR_DebugVar.x > 0)
     //     return roughness.rrr;
 
     if (TESR_TerrainExtraData.x) {
         // PBR
-        float3 aspect = PBR(saturate(metallicness * TESR_TerrainData.x), roughness, color, normal, eyeDir, sunDir, lightColor);
+        float3 aspect = PBR(saturate(metallicness * TESR_TerrainData.x), roughness, color, normal, eyeDir, sunDir, lightColor, TESR_DebugVar.y);
         return max(0, ambientColor * color + aspect);
     } else {
         // traditional lighting
