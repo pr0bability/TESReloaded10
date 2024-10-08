@@ -541,7 +541,7 @@ Saturation = 1.0
 Enabled = false                      # Adds PBR specular formula to object shaders
 
 [_Shaders.POM.Main]
-HeightMapScale = 0.55
+HeightMapScale = 0.4
 MaxSamples = 32
 MinSamples = 8
 
