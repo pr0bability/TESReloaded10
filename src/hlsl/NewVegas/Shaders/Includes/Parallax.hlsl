@@ -1,7 +1,11 @@
 #ifdef TERRAIN
 float4 TESR_TerrainParallaxData : register(c35);
 float4 TESR_TerrainParallaxExtraData : register(c36);
+#else
+float4 TESR_ParallaxData : register(c35);
+#endif
 
+#ifdef TERRAIN
 // Complex Parallax Materials for Community Shaders
 // https://www.artstation.com/blogs/andreariccardi/3VPo/a-new-approach-for-parallax-mapping-presenting-the-contact-refinement-parallax-mapping-technique
 float getTerrainHeight(float2 coords, float2 dx, float2 dy, float blendFactor, int texCount, sampler2D tex[7], float blends[7], out float weights[7]) {
@@ -47,7 +51,7 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
     #else
         bool highQuality = true;
         float maxDistance = 2048;
-        float height = 0.04;
+        float height = 0.1 * TESR_ParallaxData.x;
     #endif
     
     float distanceBlend = saturate(distance / maxDistance);

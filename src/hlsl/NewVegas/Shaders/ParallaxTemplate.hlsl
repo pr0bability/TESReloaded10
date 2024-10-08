@@ -78,6 +78,7 @@
 // PAR2023 - PARALLAX (NO_LIGHT)
 
 #include "includes/Helpers.hlsl"
+#include "includes/Parallax.hlsl"
 
 struct VS_INPUT
 {
@@ -165,7 +166,7 @@ VS_OUTPUT main(VS_INPUT IN)
     OUT.uv = IN.uv.xy;
     
     float3 eye = EyePosition.xyz - IN.position.xyz;
-    OUT.viewDir.xyz = normalize(mul(tbn, normalize(eye)));
+    OUT.viewDir.xyz = mul(tbn, eye);
     OUT.viewDir.w = length(eye);
     
     #ifndef NO_VERTEX_COLOR
@@ -284,8 +285,7 @@ struct PS_INPUT
     float4 viewDir : TEXCOORD7_centroid;
 };
 
-struct PS_OUTPUT
-{
+struct PS_OUTPUT {
     float4 color : COLOR0;
 };
 
@@ -369,11 +369,15 @@ PS_OUTPUT main(PS_INPUT IN)
     #endif
     
     // Parallax.
-    float3 viewDir = IN.viewDir.xyz;
+    float3 viewDir = normalize(IN.viewDir.xyz);
+    float distance = IN.viewDir.w;
     
-    float height = tex2D(HeightMap, IN.uv.xy).r;
-    float2 offsetUV = ((viewDir.xy / length(viewDir.xyz)) * uvtile(height)) + IN.uv.xy;
+    float2 dx, dy;
+    dx = ddx(IN.uv.xy);
+    dy = ddy(IN.uv.xy);
     
+    float2 offsetUV = getParallaxCoords(distance, IN.uv.xy, dx, dy, viewDir.xyz, HeightMap);
+
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
         float4 baseColor = tex2D(BaseMap, offsetUV.xy);
     #else
@@ -400,8 +404,7 @@ PS_OUTPUT main(PS_INPUT IN)
     #else
         float4 normal = tex2D(NormalMap, offsetUV.xy);
         normal.xyz = normalize(expand(normal.xyz));
-    
-        
+
         float att1, att2, finalAtt;
         float NdotL = shades(normal.xyz, IN.lightDir.xyz);
     #endif
@@ -430,6 +433,11 @@ PS_OUTPUT main(PS_INPUT IN)
         float shadowMask = tex2D(ShadowMaskMap, IN.shadowUVs.zw).x;
         shadowMultiplier = lerp(1, shadow, shadowMask);
     #endif
+    
+    #ifndef NO_LIGHT
+        shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, IN.lightDir.xyz, HeightMap);
+    #endif
+    
     lighting *= shadowMultiplier;
     
     // Other light sources.
