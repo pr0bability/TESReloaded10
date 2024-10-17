@@ -28,16 +28,28 @@
 #define magenta   float4 (1, 0, 1, 1)
 
 float3 linearize(float3 color) {
-    return pows(color, 2.2);
+    float3 linearRGBLo = color / 12.92;
+    float3 linearRGBHi = pow((color + 0.055) / 1.055, 2.4);
+    float3 linearRGB = (color <= 0.04045) ? linearRGBLo : linearRGBHi;
+    return linearRGB;
 }
 float4 linearize(float4 color) {
-    return float4(pows(color.rgb, 2.2), color.a);
-}
-float4 delinearize(float4 color) {
-    return float4(max(0.0, pows(color.rgb, 1.0/2.2)), color.a);
+    float3 linearRGBLo = color.rgb / 12.92;
+    float3 linearRGBHi = pow((color.rgb + 0.055) / 1.055, 2.4);
+    float3 linearRGB = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
+    return float4(linearRGB, color.a);
 }
 float3 delinearize(float3 color) {
-    return max(0.0, pows(color.rgb, 1.0/2.2));
+    float3 sRGBLo = color * 12.92;
+    float3 sRGBHi = (pow(abs(color), 1.0 / 2.4) * 1.055) - 0.055;
+    float3 sRGB = (color <= 0.0031308) ? sRGBLo : sRGBHi;
+    return sRGB;
+}
+float4 delinearize(float4 color) {
+    float3 sRGBLo = color.rgb * 12.92;
+    float3 sRGBHi = (pow(abs(color.rgb), 1.0 / 2.4) * 1.055) - 0.055;
+    float3 sRGB = (color.rgb <= 0.0031308) ? sRGBLo : sRGBHi;
+    return float4(sRGB, color.a);
 }
 
 float4 selectColor(float selector, float4 color0, float4 color1, float4 color2, float4 color3, float4 color4, float4 color5, float4 color6, float4 color7, float4 color8, float4 color9){

@@ -1,5 +1,10 @@
 //  Template for terrain shaders for blending up to 7 textures and using up to 8 pointlights.
 
+#if defined(__INTELLISENSE__)
+    #define PS
+    #define POINTLIGHT
+#endif
+
 #define TERRAIN
 
 #include "includes/Helpers.hlsl"
@@ -81,8 +86,7 @@ struct PS_INPUT
     float4 sPosition : POSITION1;
 };
 
-struct PS_OUTPUT
-{
+struct PS_OUTPUT {
     float4 color_0 : COLOR0;
 };
 
@@ -92,9 +96,9 @@ sampler2D BaseMap[7]:register(s0);
 sampler2D NormalMap[7]:register(s7);
 
 float4 AmbientColor : register(c1);
-float4 PSLightColor[10] : register(c3);
+float4 PSLightColor[13] : register(c3);
 float4 PSLightDir : register(c18);
-float4 PSLightPosition[8] : register(c19);
+float4 PSLightPosition[12] : register(c19);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
@@ -123,16 +127,18 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 lightTS = mul(tbn, PSLightDir.xyz);
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
-    float3 lighting = getSunLighting(tbn, PSLightDir.xyz, PSLightColor[0].rgb, eyeDir, IN.viewPosition.xyz, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
 
-#if defined(POINTLIGHT)
-    int lightCount = 8;
-    [unroll] for (int i = 0; i < lightCount; i++) {
-        lighting += getPointLightLighting(tbn, PSLightPosition[i], PSLightColor[i + 1].rgb, eyeDir, IN.lPosition.xyz, combinedNormal, baseColor, roughness, 1.0);
-    }
-#   endif
+    #if defined(POINTLIGHT)
+        int lightCount = 12;
+        float3 pointlightDir;
+        [unroll] for (int i = 0; i < lightCount; i++) {
+            pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
+            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb, eyeDir, combinedNormal, baseColor, roughness, 1.0);
+        }
+    #endif
     
-    float3 finalColor = getFinalColor(lighting, baseColor);
+    float3 finalColor = lighting;
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;

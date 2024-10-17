@@ -45,22 +45,21 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float4 r0;
     float3 eyeDir = -normalize(IN.location.xyz);
 
-    float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_DebugVar.w);
+    float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_DebugVar.w).r;
     noise = lerp(0, noise, IN.texcoord_4.x);
 
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
-    normal.xyz = normalize(expand(normal.xyz));
+    normal.rgb = normalize(expand(normal.rgb));
 
-    float3 baseColor = linearize(tex2D(BaseMap, IN.BaseUV.xy).xyz);
+    float3 baseColor = tex2D(BaseMap, IN.BaseUV.xy).rgb;
 
     float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 
-    float3 lighting = getSunLighting(float3x3(red.xyz, green.xyz, blue.xyz), IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, IN.location.xyz, normal, AmbientColor.rgb, baseColor, roughness);
+    float3 lighting = getSunLighting(IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, normal.rgb, AmbientColor.rgb, baseColor, roughness);
 
-    float3 final = getFinalColor(lighting, baseColor);
+    float3 final = lighting;
 
     OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.y));
     OUT.color_0.a = IN.texcoord_4.x;
