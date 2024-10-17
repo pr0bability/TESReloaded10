@@ -64,7 +64,7 @@ float3 getSunLighting(float3 lightDir, float3 sunColor, float3 eyeDir, float3 no
     float3 lightColor = sunColor * TESR_TerrainData.z * parallaxMultiplier;
     float3 ambientColor = AmbientColor * TESR_TerrainData.w;
     float3 color = albedo;
-    color = lerp(luma(albedo), color, TESR_TerrainExtraData.z);
+    color = lerp(luma(albedo), color, TESR_TerrainExtraData.y);
 
     if (TESR_TerrainExtraData.x) {
         // PBR.

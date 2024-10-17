@@ -30,8 +30,6 @@ public:
 		float AmbientScale;
 		float Roughness;
 		float Metallicness;
-		float Specular;
-		float Fresnel;
 		float Saturation;
 	};
 	struct ParallaxSettingsStruct {
@@ -43,6 +41,10 @@ public:
 		float Height;
 		float ShadowsIntensity;
 	};
+	struct LODSettingsStruct {
+		float NoiseScale;
+		float NoiseTile;
+	};
 	struct TerrainSettingsStruct {
 		TerrainSettings Default;
 		TerrainSettings Rain;
@@ -51,6 +53,7 @@ public:
 	};
 	TerrainSettingsStruct Settings;
 	ParallaxSettingsStruct ParallaxSettings;
+	LODSettingsStruct LODSettings;
 
 	struct TerrainStruct {
 		D3DXVECTOR4		Data;
@@ -65,7 +68,6 @@ public:
 	ParallaxStruct  ParallaxConstants;
 
 	bool			usePBR;
-	float			LodNoiseScale;
 
 	void	UpdateConstants();
 	void	RegisterConstants();

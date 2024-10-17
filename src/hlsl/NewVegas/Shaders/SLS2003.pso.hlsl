@@ -56,7 +56,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 normal = tex2D(NormalMap, IN.NormalUV);
     float3 parentNormal = tex2D(LODParentNormals, (IN.NormalUV * 0.5) + r0.xy).xyz;
 
-    float noise = tex2D(LODLandNoise, IN.NormalUV * TESR_DebugVar.w).r;
+    float noise = tex2D(LODLandNoise, IN.NormalUV * TESR_TerrainExtraData.w).r;
 
     normal.xyz = r0.z >= 1 ? normal.xyz : lerp(parentNormal, normal.xyz, LODTexParams.w);
     normal.xyz = expand(normal.xyz);
@@ -76,7 +76,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 final = lighting;
 
-    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.y));
+    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));
     OUT.color_0.a = 1;
 
     return OUT;
