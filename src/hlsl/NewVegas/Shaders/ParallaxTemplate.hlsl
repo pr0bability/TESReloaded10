@@ -3,10 +3,10 @@
 // VS
 //
 // AD
-// PAR2008 - LIGHTS = 2, PARALLAX (NO_FOG, NO_VERTEX_COLOR)
-// PAR2009 - LIGHTS = 2, PARALLAX, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR)
-// PAR2010 - LIGHTS = 3, PARALLAX (NO_FOG, NO_VERTEX_COLOR)
-// PAR2011 - LIGHTS = 3, PARALLAX, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR)
+// PAR2008 - LIGHTS = 2, PARALLAX (AD)
+// PAR2009 - LIGHTS = 2, PARALLAX, PROJ_SHADOW (AD)
+// PAR2010 - LIGHTS = 3, PARALLAX (AD)
+// PAR2011 - LIGHTS = 3, PARALLAX, PROJ_SHADOW (AD)
 //
 // ADTS
 // PAR2000 - PARALLAX
@@ -35,14 +35,14 @@
 // PS
 //
 // AD
-// PAR2013 - LIGHTS = 2, PARALLAX (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2014 - LIGHTS = 2, PARALLAX, SI (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2015 - LIGHTS = 2, PARALLAX, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2016 - LIGHTS = 2, PARALLAX, SI, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2017 - LIGHTS = 3, PARALLAX (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2018 - LIGHTS = 3, PARALLAX, SI (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2019 - LIGHTS = 3, PARALLAX, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
-// PAR2020 - LIGHTS = 3, PARALLAX, SI, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, OPT)
+// PAR2013 - LIGHTS = 2, PARALLAX (AD)
+// PAR2014 - LIGHTS = 2, PARALLAX, SI (AD)
+// PAR2015 - LIGHTS = 2, PARALLAX, PROJ_SHADOW (AD)
+// PAR2016 - LIGHTS = 2, PARALLAX, SI, PROJ_SHADOW (AD)
+// PAR2017 - LIGHTS = 3, PARALLAX (AD)
+// PAR2018 - LIGHTS = 3, PARALLAX, SI (AD)
+// PAR2019 - LIGHTS = 3, PARALLAX, PROJ_SHADOW (AD)
+// PAR2020 - LIGHTS = 3, PARALLAX, SI, PROJ_SHADOW (AD)
 //
 // ADTS
 // PAR2000 - PARALLAX
@@ -68,14 +68,39 @@
 // PAR2022 - LIGHTS = 3, PARALLAX (NO_FOG, NO_VERTEX_COLOR, DIFFUSE, ONLY_LIGHT, OPT)
 //
 // Specular
-// PAR2024 - PARALLAX (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, ONLY_SPECULAR)
-// PAR2025 - PARALLAX, PROJ_SHADOW (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, ONLY_SPECULAR)
-// PAR2026 - PARALLAX, POINT (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, ONLY_SPECULAR)
-// PAR2027 - PARALLAX, NUM_PT_LIGHTS = 2, POINT (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, ONLY_SPECULAR)
-// PAR2028 - PARALLAX, NUM_PT_LIGHTS = 3, POINT (NO_FOG, NO_VERTEX_COLOR, ONLY_LIGHT, ONLY_SPECULAR)
+// PAR2024 - PARALLAX (ONLY_SPECULAR)
+// PAR2025 - PARALLAX, PROJ_SHADOW (ONLY_SPECULAR)
+// PAR2026 - PARALLAX, POINT (ONLY_SPECULAR)
+// PAR2027 - PARALLAX, NUM_PT_LIGHTS = 2, POINT (ONLY_SPECULAR)
+// PAR2028 - PARALLAX, NUM_PT_LIGHTS = 3, POINT (ONLY_SPECULAR)
 //
 // Texture
 // PAR2023 - PARALLAX (NO_LIGHT)
+
+#if defined(__INTELLISENSE__)
+    #define PS
+    #define NO_LIGHT
+#endif
+
+#if defined(AD)
+    #define ONLY_LIGHT
+    #define OPT
+#endif
+
+#if defined(DIFFUSE)
+    #define ONLY_LIGHT
+    #define OPT
+#endif
+
+#if defined(ONLY_SPECULAR)
+    #define ONLY_LIGHT
+    #define SPECULAR
+#endif
+
+#ifdef ONLY_LIGHT
+    #define NO_FOG
+    #define NO_VERTEX_COLOR
+#endif
 
 #include "includes/Helpers.hlsl"
 #include "includes/Parallax.hlsl"
@@ -105,7 +130,7 @@ struct VS_OUTPUT
 #ifndef NO_LIGHT
     float4 lightDir : TEXCOORD1;
     #ifdef DIFFUSE
-        float4 lightAttenuation : TEXCOORD2;
+        float4 lightAtt : TEXCOORD2;
     #endif
     #ifdef SPECULAR
         float3 halfwayDir : TEXCOORD2;
@@ -113,14 +138,14 @@ struct VS_OUTPUT
 #endif
 #if LIGHTS > 1
     float4 light2Dir : TEXCOORD3;
-    float4 light2Attenuation : TEXCOORD4;
+    float4 light2Att : TEXCOORD4;
     #ifdef SPECULAR
         float3 halfway2Dir : TEXCOORD5;
     #endif
 #endif
 #if LIGHTS > 2  // Only used for AD and diffuse, no need for specular check.
     float4 light3Dir : TEXCOORD5;
-    float4 light3Attenuation : TEXCOORD6;
+    float4 light3Att : TEXCOORD6;
 #endif
 #if NUM_PT_LIGHTS > 1
     float4 light2Dir : TEXCOORD3;
@@ -175,34 +200,34 @@ VS_OUTPUT main(VS_INPUT IN)
     
     #ifndef NO_LIGHT
         #ifndef POINT
-            OUT.lightDir.w = 1;
+            OUT.lightDir.w = LightData[0].w;
             #ifndef DIFFUSE
                 OUT.lightDir.xyz = normalize(mul(tbn, LightData[0].xyz));
             #else
                 float3 light = LightData[0].xyz - IN.position.xyz;
                 OUT.lightDir.xyz = normalize(mul(tbn, light));
-                OUT.lightAttenuation.w = 0.5;
-                OUT.lightAttenuation.xyz = compress(light / LightData[0].w);
+                OUT.lightAtt.w = 0.5;
+                OUT.lightAtt.xyz = compress(light / LightData[0].w);
             #endif
             #ifdef SPECULAR
                 OUT.halfwayDir.xyz = normalize(mul(tbn, normalize(eye) + LightData[0].xyz));
             #endif
             #if LIGHTS > 1
                 float3 light2 = LightData[1].xyz - IN.position.xyz;
-                OUT.light2Dir.w = 1;
+                OUT.light2Dir.w = LightData[1].w;
                 OUT.light2Dir.xyz = mul(tbn, normalize(light2));
-                OUT.light2Attenuation.w = 0.5;
-                OUT.light2Attenuation.xyz = compress(light2 / LightData[1].w);
+                OUT.light2Att.w = 0.5;
+                OUT.light2Att.xyz = compress(light2 / LightData[1].w);
                 #ifdef SPECULAR
                     OUT.halfway2Dir.xyz = normalize(mul(tbn, normalize(eye + normalize(light2))));
                 #endif
             #endif
             #if LIGHTS > 2
                 float3 light3 = LightData[2].xyz - IN.position.xyz;
-                OUT.light3Dir.w = 1;
+                OUT.light3Dir.w = LightData[2].w;
                 OUT.light3Dir.xyz = mul(tbn, normalize(light3));
-                OUT.light3Attenuation.w = 0.5;
-                OUT.light3Attenuation.xyz = compress(light3 / LightData[2].w);
+                OUT.light3Att.w = 0.5;
+                OUT.light3Att.xyz = compress(light3 / LightData[2].w);
             #endif
         #else
             OUT.lightDir.w = LightData[0].w;
@@ -255,21 +280,21 @@ struct PS_INPUT
     float4 lightDir : TEXCOORD1_centroid;
 #endif
 #ifdef DIFFUSE
-    float4 lightAttenuation : TEXCOORD2;
+    float4 lightAtt : TEXCOORD2;
 #endif
 #if defined(SPECULAR) || defined(ONLY_SPECULAR)
     float3 halfwayDir : TEXCOORD2_centroid;
 #endif
 #if LIGHTS > 1
     float4 light2Dir : TEXCOORD3_centroid;
-    float4 light2Attenuation : TEXCOORD4;
+    float4 light2Att : TEXCOORD4;
     #ifdef SPECULAR
         float3 halfway2Dir : TEXCOORD5_centroid;
     #endif
 #endif
 #if LIGHTS > 2
     float4 light3Dir : TEXCOORD5_centroid;
-    float4 light3Attenuation : TEXCOORD6;
+    float4 light3Att : TEXCOORD6;
 #endif
 #if NUM_PT_LIGHTS > 1
     float4 light2Dir : TEXCOORD3_centroid;
@@ -380,8 +405,6 @@ PS_OUTPUT main(PS_INPUT IN)
 
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
         float4 baseColor = tex2D(BaseMap, offsetUV.xy);
-    #else
-        float4 baseColor = float4(0, 0, 0, 1);
     #endif
     
     // Vertex color.
@@ -395,8 +418,6 @@ PS_OUTPUT main(PS_INPUT IN)
     #endif
     
     // Lighting.
-    float3 lighting;
-    
     #ifdef NO_LIGHT
         OUT.color = 1;
         OUT.color.rgb = baseColor.rgb;
@@ -405,25 +426,21 @@ PS_OUTPUT main(PS_INPUT IN)
         float4 normal = tex2D(NormalMap, offsetUV.xy);
         normal.xyz = normalize(expand(normal.xyz));
 
-        float att1, att2, finalAtt;
         float NdotL = shades(normal.xyz, IN.lightDir.xyz);
     #endif
     
-    #ifdef DIFFUSE
-        att1 = tex2D(AttenuationMap, IN.lightAttenuation.xy).x;
-        att2 = tex2D(AttenuationMap, IN.lightAttenuation.zw).x;
-        finalAtt = saturate((1 - att1) - att2);
-        lighting = finalAtt * NdotL * PSLightColor[0].rgb;
-    #elif defined(ONLY_SPECULAR)
-        float specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfwayDir.xyz))), glossPower);
-        lighting = (0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[0].rgb;
+    #if !defined(ONLY_SPECULAR) && !defined(NO_LIGHT)
+        float att1, att2, finalAtt;
+        float3 lighting = NdotL * PSLightColor[0].rgb;
+    #else
+        float3 lighting = 0;
+    #endif
     
-        #ifdef POINT
-            float3 falloff = IN.lightDir.xyz / IN.lightDir.w;
-            lighting *= (1 - shades(falloff, falloff));
-        #endif
-    #elif !defined(NO_LIGHT)
-        lighting = NdotL * PSLightColor[0].rgb;
+    #if defined(DIFFUSE)
+        att1 = tex2D(AttenuationMap, IN.lightAtt.xy).x;
+        att2 = tex2D(AttenuationMap, IN.lightAtt.zw).x;
+        finalAtt = saturate(1 - att1 - att2);
+        lighting *= finalAtt;
     #endif
     
     // Shadows.
@@ -442,33 +459,17 @@ PS_OUTPUT main(PS_INPUT IN)
     
     // Other light sources.
     #if LIGHTS > 1
-        att1 = tex2D(AttenuationMap, IN.light2Attenuation.xy).x;
-        att2 = tex2D(AttenuationMap, IN.light2Attenuation.zw).x;
+        att1 = tex2D(AttenuationMap, IN.light2Att.xy).x;
+        att2 = tex2D(AttenuationMap, IN.light2Att.zw).x;
         finalAtt = saturate(1 - att1 - att2);
         lighting += (finalAtt * (shades(normal.xyz, normalize(IN.light2Dir.xyz)) * PSLightColor[1].rgb));
     #endif
     
     #if LIGHTS > 2
-        att1 = tex2D(AttenuationMap, IN.light3Attenuation.xy).x;
-        att2 = tex2D(AttenuationMap, IN.light3Attenuation.zw).x;
+        att1 = tex2D(AttenuationMap, IN.light3Att.xy).x;
+        att2 = tex2D(AttenuationMap, IN.light3Att.zw).x;
         finalAtt = saturate((1 - att1) - att2);
         lighting += (finalAtt * (shades(normal.xyz, normalize(IN.light3Dir.xyz)) * PSLightColor[2].rgb));
-    #endif
-    
-    #if NUM_PT_LIGHTS > 1
-        NdotL = shades(normal.xyz, IN.light2Dir.xyz);
-        specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway2Dir.xyz))), glossPower);
-        falloff = IN.light2Dir.xyz / IN.light2Dir.w;
-        falloff = 1 - shades(falloff, falloff);
-        lighting += (0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[1].rgb * falloff;
-    #endif
-    
-    #if NUM_PT_LIGHTS > 2
-        NdotL = shades(normal.xyz, IN.light3Dir.xyz);
-        specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway3Dir.xyz))), glossPower);
-        falloff = IN.light3Dir.xyz / IN.light3Dir.w;
-        falloff = 1 - shades(falloff, falloff);
-        lighting += (0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[2].rgb * falloff;
     #endif
     
     // Self emmitance.
@@ -482,27 +483,49 @@ PS_OUTPUT main(PS_INPUT IN)
     #endif
     
     #ifdef ONLY_LIGHT
-        finalColor.a = baseColor.a;
         finalColor.rgb = lighting.rgb;
-    #elif defined(ONLY_SPECULAR)
-        finalColor.a = weight(lighting.rgb);
-        finalColor.rgb = saturate(lighting.rgb);
     #else
-        finalColor.rgb = baseColor.rgb * max(lighting.rgb, 0);;
+        finalColor.rgb = baseColor.rgb * max(lighting.rgb, 0);
     #endif
     
     // Specular component (for not specular only variants).
     #ifdef SPECULAR
         float specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfwayDir.xyz))), glossPower);
-        float3 specular = saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[0].rgb) * IN.lightDir.w);
     
-        finalColor.rgb += specular * shadowMultiplier;
+        #if defined(POINT)
+            float3 falloff = IN.lightDir.xyz / IN.lightDir.w;
+            float att = 1 - shades(falloff, falloff);
+        #else
+            float att = IN.lightDir.w;
+        #endif
+    
+        float3 specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[0].rgb) * att;
+    
+        finalColor.rgb += saturate(specular * shadowMultiplier);
     
         #if LIGHTS > 1
             NdotL = shades(normal.xyz, IN.light2Dir.xyz);
             specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway2Dir.xyz))), glossPower);
-            specular = saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[1].rgb) * finalAtt);
-            finalColor.rgb += specular;
+            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[1].rgb) * finalAtt;
+            finalColor.rgb += saturate(specular);
+        #endif
+    
+        #if NUM_PT_LIGHTS > 1
+            NdotL = shades(normal.xyz, IN.light2Dir.xyz);
+            specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway2Dir.xyz))), glossPower);
+            falloff = IN.light2Dir.xyz / IN.light2Dir.w;
+            att = 1 - shades(falloff, falloff);
+            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[1].rgb) * att;
+            finalColor.rgb += saturate(specular);
+        #endif
+    
+        #if NUM_PT_LIGHTS > 2
+            NdotL = shades(normal.xyz, IN.light3Dir.xyz);
+            specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway3Dir.xyz))), glossPower);
+            falloff = IN.light3Dir.xyz / IN.light3Dir.w;
+            att = 1 - shades(falloff, falloff);
+            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * PSLightColor[2].rgb) * att;
+            finalColor.rgb += saturate(specular);
         #endif
     #endif
     
@@ -515,7 +538,18 @@ PS_OUTPUT main(PS_INPUT IN)
         #endif
     #endif
     
-    OUT.color.rgba = finalColor.rgba;
+    OUT.color.rgb = finalColor.rgb;
+    
+    #if defined(DIFFUSE)
+        OUT.color.a = 1;
+    #elif defined(ONLY_SPECULAR)
+        OUT.color.rgb = saturate(OUT.color.rgb);
+        OUT.color.a = weight(finalColor.rgb);
+    #elif defined(ONLY_LIGHT)
+        OUT.color.a = baseColor.a;
+    #elif !defined(NO_LIGHT)
+        OUT.color.a = baseColor.a * AmbientColor.a;
+    #endif
 
     return OUT;
 };
