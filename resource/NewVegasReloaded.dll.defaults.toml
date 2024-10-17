@@ -541,9 +541,7 @@ Saturation = 1.0
 Enabled = false                      # Adds PBR specular formula to object shaders
 
 [_Shaders.POM.Main]
-HeightMapScale = 0.4
-MaxSamples = 32
-MinSamples = 8
+HeightMapScale = 0.4                 # Parallax occlusion mapping scale. Keep 0.4 for a widely working value.
 
 [_Shaders.POM.Status]
 Enabled = false                      # Not currently used. Parallax occlusion mapping on object shaders to simulate extra detail.
@@ -779,42 +777,33 @@ SpecularStrength = 1.0              # Strength of the effect for specular boost 
 Enabled = true                      # Shader that boosts a few lighting effects: specular boost, sky lighting and fresnel boost.
 
 [_Shaders.Terrain.Main]
-UsePBR = true
-Fresnel = 0.3
-Specular = 0.5
-Roughness = 0.95
-Metallicness = 0.0
-AmbientScale = 3.0
-LightingScale = 0.8
-TerrainSaturation = 1.5
-LODNoiseScale = 1.0
+UsePBR = true                       # Use PBR lighting, disable to use vanilla.
+Roughness = 1.0                     # Scale texture roughness, higher roughness decreases specular.
+Metallicness = 0.0                  # Add metallicness.
+AmbientScale = 1.0                  # Scale ambient lighting.
+LightingScale = 1.0                 # Scale non-ambient lighting (sun or spotlights).
+TerrainSaturation = 1.0             # Control terrain saturation.
 
 [_Shaders.Terrain.Rain]
-Fresnel = 0.3
-Specular = 0.5
-Roughness = 0.4
-Metallicness = 0.0
-AmbientScale = 3.0
-LightingScale = 0.8
-TerrainSaturation = 0.7
+Roughness = 0.7                     # Scale texture roughness, higher roughness decreases specular.
+Metallicness = 0.0                  # Add metallicness.
+AmbientScale = 1.0                  # Scale ambient lighting.
+LightingScale = 1.0                 # Scale non-ambient lighting (sun or spotlights).
+TerrainSaturation = 1.0             # Control terrain saturation.
 
 [_Shaders.Terrain.Night]
-Fresnel = 0.3
-Specular = 0.5
-Roughness = 0.8
-Metallicness = 0.0
-AmbientScale = 5.0
-LightingScale = 2.3
-TerrainSaturation = 1.0
+Roughness = 1.0                     # Scale texture roughness, higher roughness decreases specular.
+Metallicness = 0.0                  # Add metallicness.
+AmbientScale = 1.0                  # Scale ambient lighting.
+LightingScale = 1.0                 # Scale non-ambient lighting (sun or spotlights).
+TerrainSaturation = 1.0             # Control terrain saturation.
 
 [_Shaders.Terrain.NightRain]
-Fresnel = 0.3
-Specular = 0.5
-Roughness = 0.3
-Metallicness = 0.0
-AmbientScale = 2.6
-LightingScale = 1.5
-TerrainSaturation = 1.0
+Roughness = 0.6                     # Scale texture roughness, higher roughness decreases specular.
+Metallicness = 0.0                  # Add metallicness.
+AmbientScale = 1.0                  # Scale ambient lighting.
+LightingScale = 1.0                 # Scale non-ambient lighting (sun or spotlights).
+TerrainSaturation = 1.0             # Control terrain saturation.
 
 [_Shaders.Terrain.Parallax]
 Enabled = false                     # Turn on parallax occlusion mapping for terrain.
@@ -824,6 +813,10 @@ HighQuality = false                 # Turn on high quality. Double the number of
 MaxDistance = 2048                  # Controls the maximum distance for the parallax and shadow effects.
 Height = 0.1						# Controls the height. Changing can break the visuals, especially with low max steps.
 ShadowsIntensity = 2.0              # Intensity of self shadowing.
+
+[_Shaders.Terrain.LOD]
+LODNoiseScale = 0.7                 # Amount of noise applied to LOD.
+LODNoiseTile = 2.7                  # LOD noise texture tiling modifier.
 
 [_Shaders.Terrain.Status]
 Enabled = false                     # Not currently used. Replaces shaders used by terrain.

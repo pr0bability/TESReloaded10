@@ -47,7 +47,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 eyeDir = -normalize(IN.location.xyz);
 
-    float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_DebugVar.w).r;
+    float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_TerrainExtraData.w).r;
     noise = lerp(0, noise, IN.texcoord_4.x);
 
     float4 normal = tex2D(NormalMap, IN.BaseUV.xy);
@@ -61,7 +61,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 final = lighting;
 
-    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.y));
+    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));
     OUT.color_0.a = IN.texcoord_4.x;
 
     return OUT;

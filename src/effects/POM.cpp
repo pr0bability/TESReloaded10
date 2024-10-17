@@ -6,8 +6,6 @@ void POMShaders::RegisterConstants() {
 
 void POMShaders::UpdateSettings() {
 		Constants.Data.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");
-		Constants.Data.y = TheSettingManager->GetSettingF("Shaders.POM.Main", "MinSamples");
-		Constants.Data.z = TheSettingManager->GetSettingF("Shaders.POM.Main", "MaxSamples");
 }
 
 void POMShaders::UpdateConstants() {}
