@@ -49,7 +49,7 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
         float maxDistance = TESR_TerrainParallaxExtraData.x;
         float height = TESR_TerrainParallaxExtraData.y;
     #else
-        bool highQuality = true;
+        bool highQuality = false;
         float maxDistance = 2048;
         float height = 0.1 * TESR_ParallaxData.x;
     #endif
@@ -78,12 +78,12 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
         int numSteps;
         
         if (highQuality) {
-            numSteps = lerp(4, 32, quality);
-            numSteps = clamp((numSteps / 4) * 4, 4, 32);
+            numSteps = lerp(4, 64, quality);
+            numSteps = clamp((numSteps / 4) * 4, 4, 64);
         }
         else {
-            numSteps = lerp(4, 16, quality);
-            numSteps = clamp((numSteps / 4) * 4, 4, 16);
+            numSteps = lerp(4, 32, quality);
+            numSteps = clamp((numSteps / 4) * 4, 4, 32);
         }
 
         float stepSize = rcp((float) numSteps);
