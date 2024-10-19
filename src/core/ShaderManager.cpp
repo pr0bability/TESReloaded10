@@ -400,8 +400,9 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
 	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
-	if (strstr(PBRShadersNames, Name)) return Shaders.PBR;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
+
+	if (Shaders.PBR->GetTemplate(Name).Name != NULL) return Shaders.PBR;
 
 	return Shaders.ExtraShaders;
 }
