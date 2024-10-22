@@ -1,5 +1,5 @@
 <div align="center">
-    <a href="https://dlpnd.github.io/nvr-wiki/"><img src="https://i.imgur.com/SUr8ORH.png" width="1024" alt="EOP" /></a>
+    <a href="https://dlpnd.github.io/nvr-wiki/"><img src="https://i.imgur.com/SUr8ORH.png" width="1024" alt="NVR" /></a>
 </div>
 
 <div align="center">
@@ -38,6 +38,8 @@ The configuration is stored in `NewVegasReloaded/nvse/Plugins/NewVegasReloaded.d
 
 ----
 ## Building from source
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/pr0bability/TESReloaded10/build.yml?style=for-the-badge&color=a87300)
+
 **Requirements**
 * [Microsoft Visual Studio 2019](https://community.chocolatey.org/packages/visualstudio2019community)
 * [DirectX SDK 2009](https://community.chocolatey.org/packages/directx-sdk)

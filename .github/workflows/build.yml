@@ -1,4 +1,4 @@
-name: Build and Release EOP on GitHub
+name: Build New Vegas Reloaded
 
 on: [push]
 
