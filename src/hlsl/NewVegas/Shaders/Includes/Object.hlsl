@@ -1,31 +1,115 @@
+#if defined(__INTELLISENSE__)
+    #include "Pointlights.hlsl"
+    #include "PBR.hlsl"
+#else
+    #include "includes/Pointlights.hlsl"
+    #include "includes/PBR.hlsl"
+#endif
 
-#include "includes/PBR.hlsl"
+float4 TESR_PBRData : register(c32);
+float4 TESR_PBRExtraData : register(c33);
+
+float getRoughness(float gloss) {
+    return saturate((1 - gloss) * TESR_PBRData.y);
+}
 
 float getRoughness(float glossmap, float meshgloss){
     // return pow(glossmap, log(meshgloss));    
     // no gloss = 1
     // full gloss = 0
 
-    return 1 - log(meshgloss)/4 * glossmap;
+    return saturate(1 - log(meshgloss) / 4 * glossmap);
     // return 1 - saturate(log(meshgloss)/4 + glossmap);
     // return pow(1 - glossmap, meshgloss);
 }
 
-float3 getSunLighting(float3 albedo, float roughness, float3 normal, float3 eyeDirection, float3 lightDirection, float3 lightColor, float3 ambient){
-    // return roughness.rrr;
-    return PBR(0, roughness, albedo, normal.xyz, eyeDirection, normalize(lightDirection), linearize(lightColor)) + albedo * linearize(ambient);
+// Vanilla
+float3 getVanillaLighting(float3 lightDir, float radius, float3 lightColor, float3 viewDir, float3 normal, float3 albedo, float gloss, float glossPower) {
+    float att = vanillaAtt(lightDir, radius);
+    
+    lightDir = normalize(lightDir);
+    viewDir = normalize(viewDir);
+    float3 halfwayDir = normalize(lightDir + viewDir);
+    
+    float NdotL = shades(normal.xyz, normalize(lightDir.xyz));
+    
+    #if defined(ONLY_SPECULAR)
+        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float3 lighting = saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
+    #elif defined(SPECULAR)
+        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float3 lighting = albedo.rgb * NdotL * lightColor.rgb * att;
+        lighting += saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
+    #else
+        float3 lighting = albedo.rgb * NdotL * lightColor.rgb * att;
+    #endif
+    
+    return lighting;
 }
 
-float3 getPointLightLighting(float3 albedo, float roughness, float3 normal, float3 eyeDirection, float3 lightDirection, float distance, float3 lightColor){
-    float atten = length(lightDirection / distance);
-    float s = saturate(sqr(atten)); 
-    atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
-    // return float(0).rrr;
-    return PBR(0, roughness, albedo, normal.xyz, eyeDirection, normalize(lightDirection), linearize(lightColor) * atten);
+float3 getVanillaLightingAtt(float3 lightDir, float att, float3 lightColor, float3 viewDir, float3 normal, float3 albedo, float gloss, float glossPower) {
+    float NdotL = shades(normal.xyz, normalize(lightDir.xyz));
+    
+    lightDir = normalize(lightDir);
+    viewDir = normalize(viewDir);
+    float3 halfwayDir = normalize(lightDir + viewDir);
+    
+    #if defined(ONLY_SPECULAR)
+        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float3 lighting = saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
+    #elif defined(SPECULAR)
+        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float3 lighting = albedo.rgb * NdotL * lightColor.rgb * att;
+        lighting += saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
+    #else
+        float3 lighting = albedo.rgb * NdotL * lightColor.rgb * att;
+    #endif
+    
+    return lighting;
 }
 
-float3 getFinalColor(float3 finalColor){
-    // return finalColor;
-    return delinearize(finalColor);
-    // return delinearize(finalColor) * tint;
+// PBR
+float3 getPointLightLighting(float3 lightDir, float radius, float3 lightColor, float3 viewDir, float3 normal, float3 albedo, float roughness) {
+    lightColor = lightColor * TESR_PBRData.z;
+    albedo = lerp(luma(albedo), albedo, TESR_PBRExtraData.x);
+    
+    float att = vanillaAtt(lightDir, radius);
+    
+    #if defined(ONLY_SPECULAR)
+        return att * PBRSpecular(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #elif defined(SPECULAR)
+        return att * PBR(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #else
+        return att * PBRDiffuse(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #endif
+}
+
+float3 getPointLightLightingAtt(float3 lightDir, float att, float3 lightColor, float3 viewDir, float3 normal, float3 albedo, float roughness) {
+    lightColor = lightColor * TESR_PBRData.z;
+    albedo = lerp(luma(albedo), albedo, TESR_PBRExtraData.x);
+    
+    #if defined(ONLY_SPECULAR)
+        return att * PBRSpecular(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #elif defined(SPECULAR)
+        return att * PBR(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #else
+    return att * PBRDiffuse(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #endif
+}
+
+float3 getSunLighting(float3 lightDir, float3 lightColor, float3 viewDir, float3 normal, float3 albedo, float roughness) {
+    lightColor = lightColor * TESR_PBRData.z;
+    albedo = lerp(luma(albedo), albedo, TESR_PBRExtraData.x);
+    
+    #if defined(ONLY_SPECULAR)
+        return PBRSunSpecular(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #elif defined(SPECULAR)
+        return PBRSun(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #else
+        return PBRDiffuse(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+    #endif
+}
+
+float3 getAmbientLighting(float3 ambient, float3 albedo) {
+    return ambient * TESR_PBRData.w * albedo;
 }

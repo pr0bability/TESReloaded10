@@ -510,32 +510,39 @@ GaussianWeight = 6.0
 Enabled = false                      # Blur in direction of the camera when turning. 
 
 [_Shaders.PBR.Main]
-Roughness = 1.0
-Metallicness = 0.0
-AmbientScale = 3.0
-LightingScale = 1.0
-Saturation = 1.5
+Roughness = 1.0                      # Roughness scale.
+Metallicness = 0.0                   # Metalicness scale - unused, no metalic maps yet.
+AmbientScale = 1.0                   # Ambient lighting scale.
+LightingScale = 1.0                  # Directional and point light scale.
+Saturation = 1.0                     # Color saturation.
 
 [_Shaders.PBR.Rain]
-Roughness = 1.0
-Metallicness = 0.0
-AmbientScale = 3.0
-LightingScale = 1.0
-Saturation = 0.7
+Roughness = 1.0                      # Roughness scale.
+Metallicness = 0.0                   # Metalicness scale - unused, no metalic maps yet.
+AmbientScale = 1.0                   # Ambient lighting scale.
+LightingScale = 1.0                  # Directional and point light scale.
+Saturation = 1.0                     # Color saturation.
 
 [_Shaders.PBR.Night]
-Roughness = 1.0
-Metallicness = 0.0
-AmbientScale = 5.0
-LightingScale = 1.0
-Saturation = 1.0
+Roughness = 1.0                      # Roughness scale.
+Metallicness = 0.0                   # Metalicness scale - unused, no metalic maps yet.
+AmbientScale = 1.0                   # Ambient lighting scale.
+LightingScale = 1.0                  # Directional and point light scale.
+Saturation = 1.0                     # Color saturation.
 
 [_Shaders.PBR.NightRain]
-Roughness = 1.0
-Metallicness = 0.0
-AmbientScale = 2.6
-LightingScale = 1.0
-Saturation = 1.0
+Roughness = 1.0                      # Roughness scale.
+Metallicness = 0.0                   # Metalicness scale - unused, no metalic maps yet.
+AmbientScale = 1.0                   # Ambient lighting scale.
+LightingScale = 1.0                  # Directional and point light scale.
+Saturation = 1.0                     # Color saturation.
+
+[_Shaders.PBR.Interiors]
+Roughness = 1.0                      # Roughness scale.
+Metallicness = 0.0                   # Metalicness scale - unused, no metalic maps yet.
+AmbientScale = 1.0                   # Ambient lighting scale.
+LightingScale = 1.0                  # Directional and point light scale.
+Saturation = 1.0                     # Color saturation.
 
 [_Shaders.PBR.Status]
 Enabled = false                      # Adds PBR specular formula to object shaders
