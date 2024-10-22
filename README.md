@@ -1,100 +1,45 @@
-# TESReloaded
-TESReloaded is a custom made graphical extender for Bethesda games Oblivion, Fallout New Vegas and Skyrim, developped by [Alenet](https://github.com/Alenett) and maintained by [Llde](https://github.com/llde).
+<div align="center">
+    <a href="https://dlpnd.github.io/nvr-wiki/"><img src="https://i.imgur.com/SUr8ORH.png" width="1024" alt="EOP" /></a>
+</div>
 
-It overrides the rendering pipeline to inject various effects that can be completely configured.
+<div align="center">
+
+## What is New Vegas Reloaded?
+
+New Vegas Reloaded is a custom graphical extender for Obsidian's "Fallout: New Vegas". It overrides the rendering pipeline to inject various effects that can be completely configured.
+
+Started originally as part of the [TESReloaded](https://github.com/llde/TESReloaded10) project, it has now branched off into it's own project.
 
 It relies on the script Extender of each game, such as [xOBSE](https://github.com/llde/xOBSE) or [xNVSE](https://github.com/xNVSE/NVSE). The script extender must be installed first. 
+</div>
+
+## Features
+For a full list of features and screenshots, please consult the [wiki](https://dlpnd.github.io/nvr-wiki/)
+
+## Contributions
+This project wouldn't be possible without all the amazing contributions from the Fallout New Vegas and Bethesda modding community. If you want to contribute, please reach out on the [Discord](https://discord.com/invite/QgN6mR6eTK)!  Thank you to all of our contributors so far! 
+<div align=center>
+  <a href="https://github.com/pr0bability/TESReloaded10/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=pr0bability/TESReloaded10" />
+  </a>
+  </p>
+</div>
 
 ----
-## Features
-The mod supports the following effects (more to come):
-* **Ambient occlusion**
+## Installation
 
-Proximity shadowing.
-
-* **BloodLens**
-
-Blood effects on the screen when hurt.
-
-* **Bloom**
-
-Increases brightness of lights and light blurriness.
-
-* **Cinema**
-
-Grain and film effects
-
-* **Coloring**
-
-Color fine tuning.
-
-* **Depth of Field**
-
-Dynamic depth of field based on distance.
-
-* **Godrays**
-
-Sun beam effects.
-
-* **LowHF**
-
-Screen and sound effects during low health/fatigue.
-
-* **MotionBlur**
-
-Motion blur during camera movements.
-
-* **POM Shaders**
-
-Parallax occlusion mapping to add bump effect to surfaces.
-
-* **Rain**
-
-Precipitation shader that replaces vanilla rain effect.
-
-* **Shadows (for exteriors and interiors)**
-
-Post process and forward shadows in exteriors during the day, and support to up to four light sources in interiors.
-
-* **Sharpening**
-
-Increases detail contrast.
-
-* **SMAA**
-
-Anti Aliasing.
-
-* **Snow/Snow accumulation**
-
-Snow precipitation, and white blanket effect on the surfaces.
-
-* **Watersurface/Underwater**
-
-Overhaul of the look of the water surfaces/lighting under water, caustics.
-
-* **Volumetric Fog**
-
-Exponential fog which adds up with depth.
-
-* **WaterLens** 
-
-Droplets appear on the screen went getting in and out of water
-
-* **WetWorld**
-
-Water puddles appear during rainy weather.
-
+[Check the Wiki page for the most up-do-date instructions on how to install](https://dlpnd.github.io/nvr-wiki/docs/Installation)
 
 ----
 ## Configuration
 
-To activate/Deactivate each effect, press O in game to bring up the menu. Navigate the menu with the arrow keys, and activate/deactivate effects and increase/decrease effect values with the numpad +/- keys.
+To activate/Deactivate each effect, press <kbd>O</kbd> in game to bring up the menu. Navigate the menu with the arrow keys, and activate/deactivate effects and increase/decrease effect values with the numpad <kbd>+</kbd>/<kbd>-</kbd> keys.
 
-The configuration is stored in the `.dll.config` file and can be edited directly with a text editor.
+The configuration is stored in `NewVegasReloaded/nvse/Plugins/NewVegasReloaded.dll.toml` and can be edited directly with a text editor.
 
 ----
 ## Building from source
-To build, with Visual Studio 2019 (Community Edition) with Desktop Development librairies, Windows SDK and DirectX9 SDK installed, run the `build.bat` file in command line, with the following command:
+To build, with Visual Studio 2019 (Community Edition) with Desktop Development libraries, Windows SDK and DirectX9 SDK installed, run the `build.bat` file in command line, with the following command:
 
 ```bat
 build.bat "ProjectName" "C:/DeployFolder/"
@@ -102,17 +47,6 @@ build.bat "ProjectName" "C:/DeployFolder/"
 
  * `"Project Name"` can be either `OblivionReloaded` or `NewVegasReloaded`. 
  * The second argument is optional, and can be used to copy the built library to the game folder or (preferably) to a mod folder managed by [Mod Organizer 2](https://vivanewvegas.github.io/mo2.html). Otherwise, the built files can be found in the `/build/` folder at the root, to be copied manually.
-
-----
-## Installation
-
-First Make sure that xOBSE/xNVSE is installed.
-
-The files from the built folder must be then copied into the game Data folder.
-
-To use a mod manager, create a zip with the contents of the `/build/` folder and drag & drop it into the mod list.
-
-It can be helpful to create a separate mod with only the `.config` file to try different settings.
 
 ----
 ## Troubleshooting
@@ -138,10 +72,4 @@ Solution: Disable "First Person Shadow" setting in Enhanced Camera .ini.
 
 ----
 ## License
-Check [License](License.md) for the licensing terms.
-
-
-----
-## Contributing
-
-If you want to contribute, create a fork of the project, and [join the discord](https://discord.com/invite/QgN6mR6eTK) to discuss possible developments.
+Check [License.md](License.md) for the licensing terms.
