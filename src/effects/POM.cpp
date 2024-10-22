@@ -6,6 +6,7 @@ void POMShaders::RegisterConstants() {
 
 void POMShaders::UpdateSettings() {
 		Constants.Data.x = TheSettingManager->GetSettingF("Shaders.POM.Main", "HeightMapScale");
+		Constants.Data.y = TheSettingManager->GetSettingF("Shaders.PBR.Status", "Enabled");
 }
 
 void POMShaders::UpdateConstants() {}
