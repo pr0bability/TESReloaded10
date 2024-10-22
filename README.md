@@ -9,8 +9,6 @@
 New Vegas Reloaded is a custom graphical extender for Obsidian's "Fallout: New Vegas". It overrides the rendering pipeline to inject various effects that can be completely configured.
 
 Started originally as part of the [TESReloaded](https://github.com/llde/TESReloaded10) project, it has now branched off into it's own project.
-
-It relies on the script Extender of each game, such as [xOBSE](https://github.com/llde/xOBSE) or [xNVSE](https://github.com/xNVSE/NVSE). The script extender must be installed first. 
 </div>
 
 ## Features
