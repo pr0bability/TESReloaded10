@@ -12,7 +12,8 @@ Started originally as part of the [TESReloaded](https://github.com/llde/TESReloa
 </div>
 
 ## Features
-For a full list of features and screenshots, please consult the [wiki](https://dlpnd.github.io/nvr-wiki/)
+![](https://i.imgur.com/SLXwTZO.jpeg)
+For a full list of features, installation guides, screenshots and more please consult the [NVR Wiki](https://dlpnd.github.io/nvr-wiki/)
 
 ## Contributions
 This project wouldn't be possible without all the amazing contributions from the Fallout New Vegas and Bethesda modding community. If you want to contribute, please reach out on the [Discord](https://discord.com/invite/QgN6mR6eTK)!  Thank you to all of our contributors so far! 
@@ -37,36 +38,19 @@ The configuration is stored in `NewVegasReloaded/nvse/Plugins/NewVegasReloaded.d
 
 ----
 ## Building from source
-To build, with Visual Studio 2019 (Community Edition) with Desktop Development libraries, Windows SDK and DirectX9 SDK installed, run the `build.bat` file in command line, with the following command:
+**Requirements**
+* [Microsoft Visual Studio 2019](https://community.chocolatey.org/packages/visualstudio2019community)
+* [DirectX SDK 2009](https://community.chocolatey.org/packages/directx-sdk)
 
-```bat
-build.bat "ProjectName" "C:/DeployFolder/"
+**Building**
+
+Run the `build.bat` file in command line, with the following command:
+
+```shell
+build.bat "NewVegasReloaded" "C:/DeployFolder/"
 ```
 
- * `"Project Name"` can be either `OblivionReloaded` or `NewVegasReloaded`. 
  * The second argument is optional, and can be used to copy the built library to the game folder or (preferably) to a mod folder managed by [Mod Organizer 2](https://vivanewvegas.github.io/mo2.html). Otherwise, the built files can be found in the `/build/` folder at the root, to be copied manually.
-
-----
-## Troubleshooting
-
-If the mod loaded properly, a message will appear at the bottom of the title screen with the version number. If not, try reinstalling directX or the directX SDK.
-
-### TESReloaded is not compatible with the following mods:
-* **ENB**
-
-If you want extra control over the look of your game, use Reshade which is compatible.
-
-* **Improved Lighting Shaders**
-
-Problem: Big areas covered in broken shaders results in bright blue surfaces. 
-
-Solution: Remove the TESReloaded Shaders with "SLS" in the name, as they are the source of the conflict. Only post process shadows will be working.
-
-* **Enhanced Camera**
-
-Problem: Crash when loading a game.
-
-Solution: Disable "First Person Shadow" setting in Enhanced Camera .ini. 
 
 ----
 ## License
