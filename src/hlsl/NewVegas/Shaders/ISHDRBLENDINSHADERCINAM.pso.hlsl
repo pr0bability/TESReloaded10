@@ -4,7 +4,7 @@
 // Parameters:
 sampler2D Src0 : register(s0);
 sampler2D DestBlend : register(s1);
-sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
+sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 float4 HDRParam : register(c1);
 float3 BlurScale : register(c2);
@@ -18,7 +18,7 @@ float4 TESR_HDRBloomData : register(c25);
 float4 TESR_HDRData : register(c27);
 float4 TESR_LotteData : register(c28);
 float4 TESR_ToneMapping : register(c29);
-float4 TESR_BloomData : register(c30); //
+float4 TESR_BloomExtraData : register(c30); // .x - NVR bloom on/off.
 float4 TESR_ReciprocalResolution : register(c31); //
 
 
@@ -101,22 +101,22 @@ VS_OUTPUT main(VS_INPUT IN) {
     final.rgb = lerp(luma(final.rgb).xxx, final.rgb, Cinematic.x * cinematicScalar); // saturation
     final.rgb = lerp(final.rgb, tint * luma(final.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     
-    if (TESR_BloomData.w){
+    if (TESR_BloomExtraData.x){
         // NVR bloom
-        float4 NVRbloom = sampleBox(TESR_BloomBuffer, IN.texcoord_1.xy, 0.5); // already linear
+        float4 NVRbloom = linearize(tex2D(TESR_BloomBuffer, IN.texcoord_1.xy)); // already linear
 
         if (gammaSpacePostProcess){ // Always do the new bloom in linear space as it's designed for that
             final.rgb = linearize(final.rgb);
         }
-        final.rgb = lerp(final.rgb, NVRbloom.rgb * TESR_BloomData.z, TESR_HDRBloomData.x * 0.15); 
+        final.rgb = lerp(final.rgb, NVRbloom.rgb * TESR_HDRBloomData.y, saturate(TESR_HDRBloomData.x));
     }else{
         // vanilla bloom
         // scale bloom while maintaining color
         float4 bloom = tex2D(Src0, IN.ScreenOffset.xy);
-        if (!gammaSpacePostProcess){
-            // linearize bloom
-            bloom.rgb = pows(bloom.rgb, 1/TESR_ToneMapping.w);
-        }
+        //if (!gammaSpacePostProcess){
+        //    // linearize bloom
+        //    bloom.rgb = pows(bloom.rgb, 1/TESR_ToneMapping.w);
+        //}
         bloom.rgb = TESR_HDRBloomData.x * pows(bloom.rgb, TESR_HDRBloomData.y);
 
         float q0 = 1.0 / max(bloom.w, HDRParam.x); // HDRParam.x is brights cutoff (clamp)

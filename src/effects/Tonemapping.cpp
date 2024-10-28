@@ -20,8 +20,8 @@ void TonemappingShaders::UpdateConstants() {
 		Constants.ToneMapping.y = TheShaderManager->GetTransitionValue(Settings.Main.WeatherContrast, Settings.Night.WeatherContrast, Settings.Interiors.WeatherContrast);
 		Constants.ToneMapping.z = TheShaderManager->GetTransitionValue(Settings.Main.ToneMappingColor, Settings.Night.ToneMappingColor, Settings.Interiors.ToneMappingColor);
 		Constants.ToneMapping.w = TheShaderManager->GetTransitionValue(Settings.Main.Linearization, Settings.Night.Linearization, Settings.Interiors.Linearization);
-		Constants.BloomData.x = TheShaderManager->GetTransitionValue(Settings.Main.BloomStrength, Settings.Night.BloomStrength, Settings.Interiors.BloomStrength);
-		Constants.BloomData.y = TheShaderManager->GetTransitionValue(Settings.Main.BloomExponent, Settings.Night.BloomExponent, Settings.Interiors.BloomExponent);
+		Constants.BloomData.x = TheShaderManager->GetTransitionValue(Settings.Main.BloomBlend, Settings.Night.BloomBlend, Settings.Interiors.BloomBlend);
+		Constants.BloomData.y = TheShaderManager->GetTransitionValue(Settings.Main.BloomStrength, Settings.Night.BloomStrength, Settings.Interiors.BloomStrength);
 		Constants.BloomData.z = TheShaderManager->GetTransitionValue(Settings.Main.WeatherModifier, Settings.Night.WeatherModifier, Settings.Interiors.WeatherModifier);
 		Constants.BloomData.w = TheShaderManager->GetTransitionValue(Settings.Main.TonemapWhitePoint, Settings.Night.TonemapWhitePoint, Settings.Interiors.TonemapWhitePoint);
 		Constants.HDRData.x = TheShaderManager->GameState.isExterior ? Settings.Main.TonemappingMode : Settings.Interiors.TonemappingMode;
@@ -62,8 +62,8 @@ void TonemappingShaders::UpdateSettings() {
 	Settings.Main.WeatherContrast = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "WeatherContrast");
 	Settings.Main.ToneMappingColor = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "ToneMappingColor");
 	Settings.Main.Linearization = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "Linearization");
-	Settings.Main.BloomStrength = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Blending");
-	Settings.Main.BloomExponent = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "BloomExponent");
+	Settings.Main.BloomBlend = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Blending");
+	Settings.Main.BloomStrength = TheSettingManager->GetSettingF("Shaders.Bloom.Main", "Strength");
 	Settings.Main.WeatherModifier = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "WeatherModifier");
 	Settings.Main.TonemapWhitePoint = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "TonemapWhitePoint");
 	Settings.Main.TonemappingMode = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "TonemappingMode");
@@ -80,8 +80,8 @@ void TonemappingShaders::UpdateSettings() {
 	Settings.Night.WeatherContrast = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "WeatherContrast");
 	Settings.Night.ToneMappingColor = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "ToneMappingColor");
 	Settings.Night.Linearization = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "Linearization");
-	Settings.Night.BloomStrength = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "Blending");
-	Settings.Night.BloomExponent = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "BloomExponent");
+	Settings.Night.BloomBlend = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "Blending");
+	Settings.Night.BloomStrength = TheSettingManager->GetSettingF("Shaders.Bloom.Night", "Strength");
 	Settings.Night.WeatherModifier = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "WeatherModifier");
 	Settings.Night.TonemapWhitePoint = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "TonemapWhitePoint");
 	Settings.Night.TonemappingMode = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "TonemappingMode");
@@ -98,8 +98,8 @@ void TonemappingShaders::UpdateSettings() {
 	Settings.Interiors.WeatherContrast = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "WeatherContrast");
 	Settings.Interiors.ToneMappingColor = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "ToneMappingColor");
 	Settings.Interiors.Linearization = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "Linearization");
-	Settings.Interiors.BloomStrength = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Blending");
-	Settings.Interiors.BloomExponent = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "BloomExponent");
+	Settings.Interiors.BloomBlend = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Blending");
+	Settings.Interiors.BloomStrength = TheSettingManager->GetSettingF("Shaders.Bloom.Interiors", "Strength");
 	Settings.Interiors.WeatherModifier = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "WeatherModifier");
 	Settings.Interiors.TonemapWhitePoint = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "TonemapWhitePoint");
 	Settings.Interiors.TonemappingMode = TheSettingManager->GetSettingF("Shaders.Tonemapping.Interiors", "TonemappingMode");

@@ -10,8 +10,8 @@ public:
 		float WeatherContrast;
 		float ToneMappingColor;
 		float Linearization;
+		float BloomBlend;
 		float BloomStrength;
-		float BloomExponent;
 		float WeatherModifier;
 		float TonemapWhitePoint;
 		float TonemappingMode;
