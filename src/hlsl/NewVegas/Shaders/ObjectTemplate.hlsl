@@ -531,14 +531,17 @@ PS_OUTPUT main(PS_INPUT IN) {
     
     float roughness = getRoughness(normal.a);
     
-    if (TESR_DebugVar.y > 0.0) {
-        OUT.color.a = 1;
-        if (TESR_DebugVar.y > 0.1)
-            OUT.color.rgb = roughness.xxx;
-        else
-            OUT.color.rgb = normal.aaa;
-        return OUT;
-    }
+    //if (TESR_DebugVar.x > 0.0)
+    //    roughness = SpecularAA(normal.xyz, roughness, TESR_DebugVar.z, TESR_DebugVar.w);
+    
+    //if (TESR_DebugVar.y > 0.0) {
+    //    OUT.color.a = 1;
+    //    if (TESR_DebugVar.y > 0.1)
+    //        OUT.color.rgb = roughness.xxx;
+    //    else
+    //        OUT.color.rgb = normal.aaa;
+    //    return OUT;
+    //}
     
     #ifndef NO_VERTEX_COLOR
         #if defined(HAIR)

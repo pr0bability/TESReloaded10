@@ -1,7 +1,20 @@
-// PBR calculation.
+// PBR calculations.
 #if defined(__INTELLISENSE__)
     #include "Helpers.hlsl"
 #endif
+
+// Geometric specular AA
+// http://www.jp.square-enix.com/tech/library/pdf/ImprovedGeometricSpecularAA.pdf
+// https://www.jcgt.org/published/0010/02/02/paper.pdf
+float SpecularAA(float3 normal, float roughness, float sigma, float kappa) {
+    float SIGMA2 = 0.15915494;
+    float KAPPA = 0.18;
+    float3 dndu = ddx(normal);
+    float3 dndv = ddy(normal);
+    float variance = SIGMA2 * (dot(dndu, dndu) + dot(dndv, dndv));
+    float kernel_roughness = min(KAPPA, variance);
+    return sqrt(saturate(roughness * roughness + kernel_roughness));
+}
 
 // Fresnel
 // Schlick approximation
