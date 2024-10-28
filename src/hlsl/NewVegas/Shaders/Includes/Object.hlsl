@@ -10,7 +10,7 @@ float4 TESR_PBRData : register(c32);
 float4 TESR_PBRExtraData : register(c33);
 
 float getRoughness(float gloss) {
-    return saturate((1 - gloss) * TESR_PBRData.y);
+    return saturate(max(0.043, 1 - gloss) * TESR_PBRData.y);
 }
 
 float getRoughness(float glossmap, float meshgloss){
