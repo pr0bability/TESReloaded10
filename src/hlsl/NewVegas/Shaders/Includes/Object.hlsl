@@ -31,13 +31,13 @@ float3 getVanillaLighting(float3 lightDir, float radius, float3 lightColor, floa
     viewDir = normalize(viewDir);
     float3 halfwayDir = normalize(lightDir + viewDir);
     
-    float NdotL = shades(normal.xyz, normalize(lightDir.xyz));
+    float NdotL = shades(normal.xyz, lightDir.xyz);
     
     #if defined(ONLY_SPECULAR)
-        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float specStrength = gloss * pow(abs(shades(normal.xyz, halfwayDir.xyz)), glossPower);
         float3 lighting = saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
     #elif defined(SPECULAR)
-        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float specStrength = gloss * pow(abs(shades(normal.xyz, halfwayDir.xyz)), glossPower);
         float3 lighting = albedo.rgb * NdotL * lightColor.rgb * att;
         lighting += saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
     #else
@@ -48,17 +48,17 @@ float3 getVanillaLighting(float3 lightDir, float radius, float3 lightColor, floa
 }
 
 float3 getVanillaLightingAtt(float3 lightDir, float att, float3 lightColor, float3 viewDir, float3 normal, float3 albedo, float gloss, float glossPower) {
-    float NdotL = shades(normal.xyz, normalize(lightDir.xyz));
-    
     lightDir = normalize(lightDir);
     viewDir = normalize(viewDir);
     float3 halfwayDir = normalize(lightDir + viewDir);
     
+    float NdotL = shades(normal.xyz, lightDir.xyz);
+    
     #if defined(ONLY_SPECULAR)
-        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float specStrength = gloss * pow(abs(shades(normal.xyz, halfwayDir.xyz)), glossPower);
         float3 lighting = saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
     #elif defined(SPECULAR)
-        float specStrength = gloss * pow(abs(shades(normal.xyz, normalize(halfwayDir.xyz))), glossPower);
+        float specStrength = gloss * pow(abs(shades(normal.xyz, halfwayDir.xyz)), glossPower);
         float3 lighting = albedo.rgb * NdotL * lightColor.rgb * att;
         lighting += saturate(((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * lightColor.rgb) * att);
     #else
