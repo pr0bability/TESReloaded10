@@ -79,8 +79,9 @@
 
 #if defined(__INTELLISENSE__)
     #define PS
-    #define LIGHTS 2
-    #define SPECULAR
+    #define ONLY_SPECULAR
+    #define POINT
+    #define NUM_PT_LIGHTS 3
 #endif
 
 #if defined(AD)
@@ -134,16 +135,10 @@ struct VS_OUTPUT
     #ifdef DIFFUSE
         float4 lightAtt : TEXCOORD2;
     #endif
-    #ifdef SPECULAR
-        float3 halfwayDir : TEXCOORD2;
-    #endif
 #endif
 #if LIGHTS > 1
     float4 light2Dir : TEXCOORD3;
     float4 light2Att : TEXCOORD4;
-    #ifdef SPECULAR
-        float3 halfway2Dir : TEXCOORD5;
-    #endif
 #endif
 #if LIGHTS > 2  // Only used for AD and diffuse, no need for specular check.
     float4 light3Dir : TEXCOORD5;
@@ -151,11 +146,9 @@ struct VS_OUTPUT
 #endif
 #if NUM_PT_LIGHTS > 1
     float4 light2Dir : TEXCOORD3;
-    float3 halfway2Dir : TEXCOORD4;
 #endif
 #if NUM_PT_LIGHTS > 2
     float4 light3Dir : TEXCOORD5;
-    float3 halfway3Dir : TEXCOORD6;
 #endif
 #ifdef PROJ_SHADOW
     float4 shadowUVs : TEXCOORD8;
@@ -204,15 +197,12 @@ VS_OUTPUT main(VS_INPUT IN)
         #ifndef POINT
             OUT.lightDir.w = LightData[0].w;
             #ifndef DIFFUSE
-                OUT.lightDir.xyz = normalize(mul(tbn, LightData[0].xyz));
+                OUT.lightDir.xyz = mul(tbn, LightData[0].xyz);
             #else
                 float3 light = LightData[0].xyz - IN.position.xyz;
                 OUT.lightDir.xyz = mul(tbn, light);
                 OUT.lightAtt.w = 0.5;
                 OUT.lightAtt.xyz = compress(light / LightData[0].w);
-            #endif
-            #ifdef SPECULAR
-                OUT.halfwayDir.xyz = normalize(mul(tbn, normalize(eye) + LightData[0].xyz));
             #endif
             #if LIGHTS > 1
                 float3 light2 = LightData[1].xyz - IN.position.xyz;
@@ -220,9 +210,6 @@ VS_OUTPUT main(VS_INPUT IN)
                 OUT.light2Dir.xyz = mul(tbn, light2);
                 OUT.light2Att.w = 0.5;
                 OUT.light2Att.xyz = compress(light2 / LightData[1].w);
-                #ifdef SPECULAR
-                    OUT.halfway2Dir.xyz = normalize(mul(tbn, normalize(eye + normalize(light2))));
-                #endif
             #endif
             #if LIGHTS > 2
                 float3 light3 = LightData[2].xyz - IN.position.xyz;
@@ -234,16 +221,13 @@ VS_OUTPUT main(VS_INPUT IN)
         #else
             OUT.lightDir.w = LightData[0].w;
             OUT.lightDir.xyz = mul(tbn, LightData[0].xyz - IN.position.xyz);
-            OUT.halfwayDir.xyz = normalize(mul(tbn, normalize(eye) + OUT.lightDir.xyz));
             #if NUM_PT_LIGHTS > 1
                 OUT.light2Dir.w = LightData[1].w;
                 OUT.light2Dir.xyz = mul(tbn, LightData[1].xyz - IN.position.xyz);
-                OUT.halfway2Dir.xyz = normalize(mul(tbn, normalize(eye + normalize(OUT.light2Dir.xyz))));
             #endif
             #if NUM_PT_LIGHTS > 2
                 OUT.light3Dir.w = LightData[2].w;
                 OUT.light3Dir.xyz = mul(tbn, LightData[2].xyz - IN.position.xyz);
-                OUT.halfway3Dir.xyz = normalize(mul(tbn, normalize(eye + normalize(OUT.light3Dir.xyz))));
             #endif
         #endif
     #endif
@@ -284,15 +268,9 @@ struct PS_INPUT
 #ifdef DIFFUSE
     float4 lightAtt : TEXCOORD2;
 #endif
-#if defined(SPECULAR) || defined(ONLY_SPECULAR)
-    float3 halfwayDir : TEXCOORD2_centroid;
-#endif
 #if LIGHTS > 1
     float4 light2Dir : TEXCOORD3_centroid;
     float4 light2Att : TEXCOORD4;
-    #ifdef SPECULAR
-        float3 halfway2Dir : TEXCOORD5_centroid;
-    #endif
 #endif
 #if LIGHTS > 2
     float4 light3Dir : TEXCOORD5_centroid;
@@ -300,11 +278,9 @@ struct PS_INPUT
 #endif
 #if NUM_PT_LIGHTS > 1
     float4 light2Dir : TEXCOORD3_centroid;
-    float3 halfway2Dir : TEXCOORD4_centroid;
 #endif
 #if NUM_PT_LIGHTS > 2
     float4 light3Dir : TEXCOORD5_centroid;
-    float3 halfway3Dir : TEXCOORD6_centroid;
 #endif
 #ifdef PROJ_SHADOW
     float4 shadowUVs : TEXCOORD8;
@@ -432,7 +408,7 @@ PS_OUTPUT main(PS_INPUT IN)
     #endif
     
     #ifndef NO_LIGHT
-        shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, IN.lightDir.xyz, HeightMap);
+        shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, normalize(IN.lightDir.xyz), HeightMap);
     #endif
     
     // Lighting.
@@ -465,9 +441,6 @@ PS_OUTPUT main(PS_INPUT IN)
                 lighting = getPointLightLighting(IN.lightDir.xyz, IN.lightDir.w, PSLightColor[0].rgb, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
             else
                 lighting = getVanillaLighting(IN.lightDir.xyz, IN.lightDir.w, PSLightColor[0].rgb, IN.viewDir.xyz, normal.xyz, baseColor.rgb, normal.a, glossPower);
-            OUT.color.a = 1;
-            OUT.color.rgb = lighting;
-            return OUT;
         #endif
     
         // Self emmitance.
