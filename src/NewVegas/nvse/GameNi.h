@@ -30,6 +30,7 @@ class NiTriStrips;
 class NiPixelData;
 class NiParticles;
 class NiLines;
+class NiFixedString;
 class NiGeometryGroupManager;
 class NiScreenElements;
 class NiSourceCubeMap;
@@ -53,6 +54,7 @@ class NiDX9RenderState;
 class NiDX92DBufferData;
 
 class BSShaderAccumulator;
+class BSShaderProperty;
 class BSFadeNode;
 class BSMultiBoundNode;
 class BSSegmentedTriShape;
@@ -85,6 +87,81 @@ struct NiRTTI {
 };
 assert(sizeof(NiRTTI) == 0x008);
 
+enum NiMemEventType {
+	NI_UNKNOWN = 0x0,
+	NI_OPER_NEW = 0x1,
+	NI_OPER_NEW_ARRAY = 0x2,
+	NI_OPER_DELETE = 0x3,
+	NI_OPER_DELETE_ARRAY = 0x4,
+	NI_MALLOC = 0x5,
+	NI_REALLOC = 0x6,
+	NI_ALIGNEDMALLOC = 0x7,
+	NI_ALIGNEDREALLOC = 0x8,
+	NI_FREE = 0x9,
+	NI_ALIGNEDFREE = 0xA,
+	NI_EXTERNAL_MALLOC = 0xB,
+	NI_EXTERNAL_REALLOC = 0xC,
+	NI_EXTERNAL_ALIGNEDMALLOC = 0xD,
+	NI_EXTERNAL_ALGINEDREALLOC = 0xE,
+	NI_EXTERNAL_FREE = 0xF,
+	NI_EXTERNAL_ALIGNEDFREE = 0x10,
+};
+
+class NiAllocator {
+public:
+	virtual void	Destroy(bool);
+	virtual void*	Allocate(size_t& stSizeInBytes, size_t& stAlignment, NiMemEventType eEventType, bool bProvideAccurateSizeOnDeallocate, const char* pcFile, int iLine, const char* pcFunction);
+	virtual void	Deallocate(void* pvMemory, NiMemEventType eEventType, size_t stSizeInBytes);
+	virtual void*	Reallocate(void* pvMemory, size_t& stSizeInBytes, size_t& stAlignment, NiMemEventType eEventType, bool bProvideAccurateSizeOnDeallocate, size_t stSizeCurrent, const char* pcFile, int iLine, const char* pcFunction);
+	virtual void*	AllocateExternal(size_t& stSizeInBytes, size_t& stAlignment, NiMemEventType eEventType, bool bProvideAccurateSizeOnDeallocate, const char* pcFile, int iLine, const char* pcFunction);
+	virtual void	DeallocateExternal(void* pvMemory, NiMemEventType eEventType, size_t stSizeInBytes);
+	virtual void*	ReallocateExternal(void* pvMemory, size_t* stSizeInBytes, size_t* stAlignment, NiMemEventType eEventType, bool bProvideAccurateSizeOnDeallocate, size_t stSizeCurrent, const char* pcFile, int iLine, const char* pcFunction);
+	virtual void	Initialize();
+	virtual void	Shutdown();
+	virtual bool	VerifyAddress(const void* pvMemory);
+};
+
+struct NiMemManager {
+	NiAllocator* m_pkAllocator;
+
+	static NiMemManager* GetSingleton();
+};
+
+[[nodiscard]]
+extern __declspec(allocator) void* NiNew(size_t stSize);
+[[nodiscard]]
+extern __declspec(allocator) void* NiAlloc(size_t stSize);
+[[nodiscard]]
+extern __declspec(allocator) void* NiAlignedAlloc(size_t stSize, size_t stAlignment);
+extern void		NiFree(void* pvMem);
+extern void		NiAlignedFree(void* pvMem);
+extern void		NiDelete(void* pvMem, size_t stElementSize);
+
+template <typename T_Data>
+[[nodiscard]]
+__declspec(restrict) __declspec(allocator) T_Data* NiNew() {
+	return (T_Data*)NiNew(sizeof(T_Data));
+}
+
+template <typename T_Data>
+[[nodiscard]]
+__declspec(restrict) __declspec(allocator) T_Data* NiAlloc(UInt32 auiCount = 1) {
+	return (T_Data*)NiAlloc(sizeof(T_Data) * auiCount);
+}
+
+template <typename T, const UInt32 ConstructorPtr = 0, typename... Args>
+[[nodiscard]]
+__declspec(restrict)T* NiCreate(Args &&... args) {
+	auto* alloc = NiNew<T>();
+	if constexpr (ConstructorPtr) {
+		ThisStdCall(ConstructorPtr, alloc, std::forward<Args>(args)...);
+	}
+	else {
+		memset(alloc, 0, sizeof(T));
+	}
+	return static_cast<T*>(alloc);
+}
+
 class NiPoint2 {
 public:
 	float	x;
@@ -107,8 +184,19 @@ public:
 	D3DXVECTOR4		toD3DXVEC4() {
 		return D3DXVECTOR4(x, y, z, 1.0);
 	}
+
+	static const NiPoint3 ZERO;
 };
 assert(sizeof(NiPoint3) == 0x00C);
+
+class NiPoint4 {
+public:
+	float x;
+	float y;
+	float z;
+	float w;
+};
+assert(sizeof(NiPoint4) == 0x10);
 
 class NiVector4 {
 public:
@@ -215,7 +303,7 @@ public:
 	float	Bottom;		// 0C
 	float	Near;		// 10
 	float	Far;		// 14
-	UInt8	Ortho;		// 18
+	bool	Ortho;		// 18
 	UInt8	pad18[3];
 };
 assert(sizeof(NiFrustum) == 0x01C);
@@ -245,6 +333,20 @@ public:
 	float	b;
 };
 assert(sizeof(NiViewport) == 0x010);
+
+template <class T> class NiRect {
+public:
+	NiRect(T left = T(0), T right = T(0), T top = T(0), T bottom = T(0))
+	{
+		m_left = left;
+		m_right = right;
+		m_top = top;
+		m_bottom = bottom;
+	}
+
+	T m_left, m_right, m_top, m_bottom;
+};
+assert(sizeof(NiRect<float>) == 0x10);
 
 class NiColor {
 public:
@@ -397,6 +499,8 @@ public:
 };
 assert(sizeof(NiPixelFormat) == 0x044);
 
+class NiMemObject {};
+
 class NiRefObject {
 public:
 	virtual void		Destructor(bool freeThis);	// 00
@@ -441,9 +545,9 @@ public:
 	virtual void							Unk_20();
 	virtual void							Unk_21();
 	virtual void							Unk_22();
-    
-    
-    void LogObjectAttributes();
+	
+	
+	void LogObjectAttributes();
 };
 assert(sizeof(NiObject) == 0x008);
 
@@ -469,14 +573,14 @@ public:
 assert(sizeof(NiObjectNET) == 0x018);
 
 struct PropertyNode{
-    PropertyNode* next;
-    PropertyNode* prev;
-    NiProperty* data;
+	PropertyNode* next;
+	PropertyNode* prev;
+	NiProperty* data;
 };
 struct PropertyList {
-    PropertyNode* first;
-    PropertyNode* last;
-    UInt32 count;
+	PropertyNode* first;
+	PropertyNode* last;
+	UInt32 count;
 };
 
 
@@ -547,7 +651,7 @@ public:
 	float GetDistance(NiPoint3* Point);
 	NiBound*	GetWorldBound();
 	float		GetWorldBoundRadius();
-    
+	
 	NiNode*					m_parent;				// 018
 	UInt32					unk001C;				// 01C
 	NiBound*				m_kWorldBound;			// 020
@@ -600,7 +704,7 @@ class SceneGraph : public NiNode {
 public:
 	void				UpdateParticleShaderFoV(float FoV);
 	void				SetNearDistance(float Distance);
-    
+	
 	NiCamera*			camera;					// AC
 	UInt32				unkB0;					// B0
 	NiCullingProcess*	cullingProcess;			// B4
@@ -807,24 +911,24 @@ public:
 	UInt32				Unk30;					// 30
 	
 	bool IsPartitionEnabled(UInt32 partitionIndex);
-    
+	
 };
 assert(sizeof(NiSkinInstance) == 0x34);
 
 class DismemberPartition {
 public:
-    UInt8 Enabled;
-    UInt8 StartCap;  //Questionable, but it's the only way I can make sense of that code
-    UInt16 bodyPart;
+	UInt8 Enabled;
+	UInt8 StartCap;  //Questionable, but it's the only way I can make sense of that code
+	UInt16 bodyPart;
 }; 
 assert(sizeof(DismemberPartition) == 4);
 
 class BSDismemberSkinInstance : public NiSkinInstance {
 public:
-    UInt32 partitionNumber;
-    DismemberPartition* partitions;
-    UInt8  IsRenderable;  //In Load this is made in OR with every partition->Enabled flag
-    UInt8  pad[3];
+	UInt32 partitionNumber;
+	DismemberPartition* partitions;
+	UInt8  IsRenderable;  //In Load this is made in OR with every partition->Enabled flag
+	UInt8  pad[3];
 };
 assert(sizeof(BSDismemberSkinInstance) == 0x40);
 
@@ -838,7 +942,7 @@ public:
 		kType_Stencil,
 		kType_Texturing,
 	};
-    virtual PropertyType GetPropertyType();
+	virtual PropertyType GetPropertyType();
 };
 assert(sizeof(NiProperty) == 0x18);
 
@@ -989,6 +1093,8 @@ assert(sizeof(NiRenderedTexture) == 0x040);
 
 class NiD3DTextureStage;
 class NiD3DShaderConstantMap;
+class NiShaderConstantMapEntry;
+class NiShaderConstantMap;
 
 enum ShaderDefinitionEnum
 {
@@ -1017,9 +1123,127 @@ enum ShaderDefinitionEnum
   kShaderDefinition_VolumetricFogShader = 0x22,
 };
 
-
-class NiD3DShaderDeclaration : public NiObject {
+class  NiShaderDeclaration : public NiObject {
 public:
+	NiShaderDeclaration();
+	virtual ~NiShaderDeclaration();
+
+	enum ShaderParameter
+	{
+		SHADERPARAM_INVALID = 0xFFFFFFFF,
+		SHADERPARAM_NI_POSITION = 0x0,
+		SHADERPARAM_NI_BLENDWEIGHT = 0x1,
+		SHADERPARAM_NI_BLENDINDICES = 0x2,
+		SHADERPARAM_NI_NORMAL = 0x3,
+		SHADERPARAM_NI_COLOR = 0x4,
+		SHADERPARAM_NI_TEXCOORD0 = 0x5,
+		SHADERPARAM_NI_TEXCOORD1 = 0x6,
+		SHADERPARAM_NI_TEXCOORD2 = 0x7,
+		SHADERPARAM_NI_TEXCOORD3 = 0x8,
+		SHADERPARAM_NI_TEXCOORD4 = 0x9,
+		SHADERPARAM_NI_TEXCOORD5 = 0xA,
+		SHADERPARAM_NI_TEXCOORD6 = 0xB,
+		SHADERPARAM_NI_TEXCOORD7 = 0xC,
+		SHADERPARAM_NI_TANGENT = 0xD,
+		SHADERPARAM_NI_BINORMAL = 0xE,
+		SHADERPARAM_DATA_ZERO = 0xF,
+		SHADERPARAM_DATA_ONE = 0x10,
+		SHADERPARAM_SKIP_COUNT_MASK = 0x40000000,
+		SHADERPARAM_EXTRA_DATA_MASK = 0x80000000,
+	};
+
+	enum ShaderParameterType
+	{
+		SPTYPE_FLOAT1 = 0x0,
+		SPTYPE_FLOAT2 = 0x1,
+		SPTYPE_FLOAT3 = 0x2,
+		SPTYPE_FLOAT4 = 0x3,
+		SPTYPE_UBYTECOLOR = 0x4,
+		SPTYPE_UBYTE4 = 0x5,
+		SPTYPE_SHORT2 = 0x6,
+		SPTYPE_SHORT4 = 0x7,
+		SPTYPE_NORMUBYTE4 = 0x8,
+		SPTYPE_NORMSHORT2 = 0x9,
+		SPTYPE_NORMSHORT4 = 0xA,
+		SPTYPE_NORMUSHORT2 = 0xB,
+		SPTYPE_NORMUSHORT4 = 0xC,
+		SPTYPE_UDEC3 = 0xD,
+		SPTYPE_NORMDEC3 = 0xE,
+		SPTYPE_FLOAT16_2 = 0xF,
+		SPTYPE_FLOAT16_4 = 0x10,
+		SPTYPE_NONE = 0x11,
+		SPTYPE_COUNT = 0x12,
+	};
+
+	enum ShaderParameterTesselator
+	{
+		SPTESS_DEFAULT = 0x0,
+		SPTESS_PARTIALU = 0x1,
+		SPTESS_PARTIALV = 0x2,
+		SPTESS_CROSSUV = 0x3,
+		SPTESS_UV = 0x4,
+		SPTESS_LOOKUP = 0x5,
+		SPTESS_LOOKUPPRESAMPLED = 0x6,
+		SPTESS_COUNT = 0x7,
+	};
+
+	enum ShaderParameterUsage
+	{
+		SPUSAGE_POSITION = 0x0,
+		SPUSAGE_BLENDWEIGHT = 0x1,
+		SPUSAGE_BLENDINDICES = 0x2,
+		SPUSAGE_NORMAL = 0x3,
+		SPUSAGE_PSIZE = 0x4,
+		SPUSAGE_TEXCOORD = 0x5,
+		SPUSAGE_TANGENT = 0x6,
+		SPUSAGE_BINORMAL = 0x7,
+		SPUSAGE_TESSFACTOR = 0x8,
+		SPUSAGE_POSITIONT = 0x9,
+		SPUSAGE_COLOR = 0xA,
+		SPUSAGE_FOG = 0xB,
+		SPUSAGE_DEPTH = 0xC,
+		SPUSAGE_SAMPLE = 0xD,
+		SPUSAGE_COUNT = 0xE,
+	};
+
+	class ShaderRegisterEntry
+	{
+	public:
+		UInt32						m_uiRegister;
+		UInt32						m_uiPackingOffset;
+		ShaderParameter				m_eInput;
+		ShaderParameterType			m_eType;
+		ShaderParameterTesselator	m_eTesselator;
+		ShaderParameterUsage		m_eUsage;
+		UInt32						m_uiUsageIndex;
+	};
+
+	class ShaderRegisterStream
+	{
+	public:
+		bool					m_bValid;
+		UInt32					m_uiEntryCount;
+		ShaderRegisterEntry* m_pkEntries;
+		UInt32					m_uiStride;
+	};
+
+	virtual bool SetEntry(UInt32 uiEntry, UInt32 uiRegister, NiShaderDeclaration::ShaderParameter eInput, NiShaderDeclaration::ShaderParameterType eType, UInt32 uiStream);
+	virtual bool RemoveEntry(UInt32 uiEntry, UInt32 uiStream = 0);
+};
+assert(sizeof(NiShaderDeclaration) == 0x8);
+
+class NiD3DShaderDeclaration : public NiShaderDeclaration {
+public:
+	virtual bool							SetEntryAlt(UInt32 uiStream, UInt32 uiEntry, UInt32 uiRegister, NiShaderDeclaration::ShaderParameter eInput, NiShaderDeclaration::ShaderParameterType eType, NiShaderDeclaration::ShaderParameterUsage eUsage, UInt32 uiIndex, NiD3DShaderDeclaration::ShaderParameterTesselator eTess);
+	virtual void							SetConstantData(UInt32 uiStartRegister, UInt32 uiNumRegisters, float* pfData);
+	virtual void							ClearAllEntries(UInt32 uiStream);
+	virtual UInt32							GetVertexStride(UInt32 uiStream);
+	virtual void							SetSoftwareVertexProcessing();
+	virtual bool							GetSoftwareVertexProcessing();
+	virtual NiVBChip*						PackUntransformedVB(NiGeometryData* pkData, NiSkinInstance* pkSkin, NiSkinPartition::Partition* pkPartition, UInt16 usDirtyFlags, NiVBChip* pkOldVBChip, UInt32 uiStream, void* pvLockedBuff = nullptr, void* a = nullptr, void* b = nullptr);
+	virtual bool							GenerateVertexParameters(LPDIRECT3DVERTEXDECLARATION9* pkDeclaration, UInt32* uiNumStreams);
+	virtual LPDIRECT3DVERTEXDECLARATION9	GetD3DDeclaration();
+
 	NiDX9Renderer*				Renderer;		// 008
 	NiDX9VertexBufferManager*	BufferManager;	// 00C
 	IDirect3DDevice9*			Device;			// 010
@@ -1036,13 +1260,19 @@ assert(sizeof(NiD3DShaderDeclaration) == 0x02C);
 
 class NiDX9ShaderDeclaration : public NiD3DShaderDeclaration {
 public:
-	UInt32		Unk02C;			// 02C
-	UInt32		Unk030;			// 030
-	UInt8		Unk034;			// 034
-	UInt8		Unk035[3];		// 035
+	NiDX9ShaderDeclaration();
+	virtual ~NiDX9ShaderDeclaration();
 
+	D3DVERTEXELEMENT9* m_pkElements;
+	LPDIRECT3DVERTEXDECLARATION9	m_hVertexDecl;
+	bool							m_bSoftwareVB;
+	D3DDECLTYPE						ms_aeTypes[18];
+	D3DDECLMETHOD					ms_aeMethods[7];
+	D3DDECLUSAGE					ms_aeUsage[14];
+
+	static NiDX9ShaderDeclaration* Create(NiDX9Renderer* apRenderer, UInt32 auiMaxStreamEntryCount, UInt32 auiStreamCount);
 };
-assert(sizeof(NiDX9ShaderDeclaration) == 0x038);
+assert(sizeof(NiDX9ShaderDeclaration) == 0x0D4);
 
 class ShaderRecord;
 
@@ -1098,6 +1328,27 @@ public:
 };
 assert(sizeof(NiD3DPixelShader) == 0x30);
 
+class NiD3DRSEntry : public NiMemObject {
+public:
+	D3DRENDERSTATETYPE	m_uiRenderState;
+	UInt32				m_uiValue;
+	NiD3DRSEntry*		m_pkNext;
+	NiD3DRSEntry*		m_pkPrev;
+};
+assert(sizeof(NiD3DRSEntry) == 0x10);
+
+class NiD3DRenderStateGroup : public NiMemObject {
+public:
+	bool			m_bRendererOwned;
+	UInt32			m_uiStateCount;
+	NiD3DRSEntry*	m_pkRenderStates;
+	UInt32			m_uiSavedStateCount;
+	NiD3DRSEntry*	m_pkSavedRenderStates;
+
+	NiD3DRSEntry*	FindRenderStateEntry(UInt32 auiState, bool& abInSaveList);
+};
+assert(sizeof(NiD3DRenderStateGroup) == 0x14);
+
 class NiD3DPass {
 public:
 	void**							_vtbl;						// 00
@@ -1128,6 +1379,56 @@ assert(sizeof(NiD3DPass) == 0x68);
 
 class NiShader : public NiRefObject {
 public:
+	NiShader();
+	virtual ~NiShader();
+
+	virtual NiRTTI*						GetRTTI();
+	virtual NiNode*						IsNiNode();
+	virtual BSFadeNode*					IsFadeNode();
+	virtual BSMultiBoundNode*			IsMultiBoundNode();
+	virtual NiGeometry*					IsGeometry();
+	virtual NiTriBasedGeom*				IsTriBasedGeometry();
+	virtual NiTriStrips*				IsTriStrips();
+	virtual NiTriShape*					IsTriShape();
+	virtual BSSegmentedTriShape*		IsSegmentedTriShape();
+	virtual BSResizableTriShape*		IsResizableTriShape();
+	virtual NiParticles*				IsParticlesGeom();
+	virtual NiLines*					IsLinesGeom();
+	virtual void*						IsBhkNiCollisionObject();
+	virtual bhkBlendCollisionObject*	IsBhkBlendCollisionObject();
+	virtual bhkRigidBody*				IsBhkRigidBody();
+	virtual bhkLimitedHingeConstraint*	IsBhkLimitedHingeConstraint();
+	virtual bool						IsInitialized();
+	virtual void						Initialize();
+	virtual bool						SetupGeometry(NiGeometry* apGeometry);
+	virtual UInt32						PreProcessPipeline(NiGeometry* apGeometry, const NiSkinInstance* apSkin, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual void						UpdatePipeline(NiGeometry* apGeometry, const NiSkinInstance* apSkin, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual void						SetupRenderingPass(NiGeometry* apGeometry, const NiSkinInstance* apSkin, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual UInt32						SetupTransformations(NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual UInt32						SetupTransformationsAlt(NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual UInt32						SetupShaderPrograms(NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	// Do not use
+	virtual NiGeometryBufferData*		vPrepareGeometryForRendering(NiGeometry* apGeometry, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties);
+	virtual UInt32						PostRender(NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual UInt32						PostProcessPipeline(NiGeometry* apGeometry, const NiSkinInstance* apSkin, NiGeometryBufferData* apRendererData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound);
+	virtual void						SetupTextures(const NiPropertyState* apProperties);
+	virtual void						UpdateConstants(const NiPropertyState* apProperties);
+	virtual void						SetBlendAlpha(const NiPropertyState* apProperties);
+	virtual void						SetTestAlpha(const NiPropertyState* apProperties);
+	virtual void						PreRenderSetup(const NiPropertyState* apProperties, bool abFirstPass);
+	virtual void						PostRenderSetup(const NiPropertyState* apProperties);
+	virtual int							HasPasses();
+	virtual int							EndPass();
+	virtual void						StreamCanSkip();
+	virtual NiShaderDeclaration*		CreateShaderDeclaration(UInt32 auiMaxStreamEntryCount, UInt32 auiStreamCount = 1);
+	virtual bool						AppendRenderPass(UInt32& auiPassId);
+	virtual bool						SetAlphaOverride(UInt32 auiPassId, bool abAlphaBlend, bool abUsePreviousSrcBlendMode, UInt32 aeSrcBlendMode, bool abUsePreviousDestBlendMode, UInt32 aeDestBlendMode);
+	virtual void						SetUsesNiRenderState(bool abUses);
+	virtual bool						SetGPUProgram(UInt32 auiPassId, void* apProgram, UInt32& auiProgramId);
+	virtual NiShaderConstantMap*		CreateShaderConstantMap(UInt32 auiPassId, UInt32 auiProgramId);
+	virtual bool						AppendTextureSampler(UInt32 auiPassId, UInt32& auiSamplerId, const NiFixedString& arSemantic, const NiFixedString& arVariableName, UInt32 auiInstance = 0);
+	virtual void*						GetShaderInstanceDesc();
+
 	char*		Name;					// 008
 	UInt32		Unk00C;					// 00C
 	UInt8		Unk010;					// 010
@@ -1137,6 +1438,19 @@ assert(sizeof(NiShader) == 0x14);
 
 class NiD3DShaderInterface : public NiShader {
 public:
+	virtual NiD3DShaderDeclaration*		GetShaderDecl();
+	virtual void						SetShaderDecl(NiD3DShaderDeclaration* pkShaderDecl);
+	virtual void						HandleResetDevice(void* pkShaderDecl);
+	virtual void						HandleLostDevice();
+	virtual void						DestroyRendererData();
+	virtual bool						RecreateRendererData();
+	virtual bool						GetVSPresentAllPasses();
+	virtual bool						GetVSPresentAnyPass();
+	virtual bool						GetPSPresentAllPasses();
+	virtual bool						GetPSPresentAnyPass();
+	virtual bool						GetIsBestImplementation();
+	virtual void						SetIsBestImplementation(bool bIsBest);
+
 	IDirect3DDevice9*	D3DDevice;		// 014
 	NiDX9Renderer*		D3DRenderer;	// 018
 	NiDX9RenderState*	D3DRenderState;	// 01C
@@ -1146,6 +1460,8 @@ assert(sizeof(NiD3DShaderInterface) == 0x24);
 
 class NiD3DShader : public NiD3DShaderInterface {
 public:
+	virtual void ResetPasses();
+
 	UInt8					IsInitialized;		// 024
 	UInt8					Unk021;				// 025
 	UInt8					pad021[2];
@@ -1192,6 +1508,30 @@ public:
 		TYPE_BSDistantTreeShader = 0x19,
 	};
 
+	virtual void SetRenderPass(UInt32 aeType);
+	virtual void SetShaders(UInt32 aeType);
+	// Seems to focus on tree shadows in most shaders
+	virtual void SetupStaticTextures(UInt32 aeType);
+	// Seems to focus on the fog in most shaders
+	virtual void Func_63(UInt32 aeType);
+	virtual void RestoreSavedStates(UInt32 aeType);
+	virtual void RestoreTechnique(UInt32 uiLastPass);
+	// Checks for bUnk64
+	virtual void ConfigureTextureStages();
+	virtual void ConfigureAllTextureStages();
+	virtual void StartMultiPass(const NiPropertyState* apProperties);
+	virtual void StopMultiPass();
+	virtual NiDX9ShaderDeclaration* GetShaderDeclaration(NiGeometry*, BSShaderProperty* property);
+	virtual void InitShaderConstants();
+	// Reloads/ loads shader files and setups passes
+	virtual void Reinitialize();
+	virtual void ClearAllTextureStages();
+	virtual void ClearTextureStages(NiD3DPass* apPass);
+	virtual void Func_75();
+	virtual void CreateNewPass();
+	virtual void Func_77();
+	virtual void Func_78(UInt32* apeType, int a2);
+
 	NiD3DPass* pass;
 	void* Unk60;
 	bool Unk64;
@@ -1234,6 +1574,99 @@ public:
 	NiD3DPixelShader*	pPixelShaders[33];
 };
 assert(sizeof(ParallaxShader) == 0x160);
+
+class GeometryDecalShader : public BSShader {
+public:
+	virtual void Func_79();
+
+	NiD3DPass*						spPasses[2];
+	NiD3DVertexShader*				spVertexShaders[2];
+	NiD3DPixelShader*				spPixelShaders[2];
+	void*							spWorldViewProjTranspose;
+	void*							spSkinModelViewProj;
+	void*							spBones;
+
+	static GeometryDecalShader* __stdcall CreateShader();
+
+	static GeometryDecalShader* GetShader();
+};
+assert(sizeof(GeometryDecalShader) == 0x90);
+
+class Lighting30Shader : public BSShader {
+public:
+	NiD3DShaderConstantMap*	spPixelConstantMapTexEffect;
+	NiD3DShaderConstantMap*	spVertexConstantMapTexEffect;
+	NiD3DShaderConstantMap*	spPixelConstantMapDefault;
+	NiD3DShaderConstantMap*	spVertexConstantMapDefault;
+	NiDX9ShaderDeclaration*	spShaderDeclaration7C;
+	NiDX9ShaderDeclaration*	spShaderDeclaration80;
+	NiDX9ShaderDeclaration*	spShaderDeclaration84_VC;
+	NiDX9ShaderDeclaration*	spShaderDeclaration88;
+	NiDX9ShaderDeclaration*	spShaderDeclaration8C_S;
+	NiDX9ShaderDeclaration*	spShaderDeclaration90;
+	NiDX9ShaderDeclaration*	spShaderDeclaration94_VC_S;
+	NiDX9ShaderDeclaration*	spShaderDeclaration98;
+	DWORD					dword9C;
+	DWORD					dwordA0;
+
+	static NiD3DPass** GetAllPasses();
+};
+assert(sizeof(Lighting30Shader) == 0xA4);
+
+class TallGrassShader : public BSShader {
+public:
+	virtual void InitShaders();
+	virtual void InitPasses();
+
+	NiD3DPass*					spPasses[44];
+	float						fWindTime;
+	int							unk120;
+	bool						unk124;
+	NiD3DVertexShader*			spVertexShaders[24];
+	NiD3DPixelShader*			spPixelShaders[7];
+	NiPoint4*					pInstanceData;
+	NiShaderConstantMapEntry*	pInstanceDataEntry;
+	UInt16						ucInstanceCount;
+	NiColorAlpha				kLightColor;
+	NiPoint4					kLightData;
+	NiColorAlpha				kAlphaTestRef;
+
+	static inline const NiRTTI* const ms_RTTI = (NiRTTI*)0x1200508;
+
+	static TallGrassShader* Create(NiDX9ShaderDeclaration* apShaderDeclaration);
+	static TallGrassShader* __stdcall CreateShader();
+
+	NiD3DPass* GetPass(UInt32 auID) { return spPasses[auID]; }
+	NiD3DVertexShader* GetVertexShader(UInt32 auID) { return spVertexShaders[auID]; };
+	NiD3DPixelShader* GetPixelShader(UInt32 auID) { return spPixelShaders[auID]; };
+
+	static TallGrassShader* GetShader();
+
+	struct VertexConstants {
+		struct DrawDistanceSettings {
+			float		fGrass_11F9EE0;
+			float		fGrass_11F9EE4;
+			float		fGrassStartFadeDistance;
+			float		fGrassFadeRange;
+		};
+
+		struct ConstantGroup {
+			NiPoint4				kModelViewProj;
+			NiColorAlpha			kDiffuseColor;
+			NiPoint4				kScaleMask;
+			NiPoint4				kPointLighting;
+			NiPoint2				kGrassSway;
+			NiPoint2				kGrassWindMagnitude;
+			DrawDistanceSettings	kDrawDistances;
+			NiColorAlpha			kAmbientColor;
+			NiColorAlpha			kDimmer;
+			NiPoint4				kShadowProjData;
+		};
+
+		static ConstantGroup* const GroupedConstants;
+
+	};
+};
 
 class ImageSpaceEffect {
 public:
@@ -1365,11 +1798,11 @@ public:
 	virtual void							SetNormalization(void* u1);						// 0E
 	virtual void							func_0F(UInt32 u1);								// 0F
 	virtual float							GetVar088();									// 10
-	virtual void							func_11(float u1);								// 11
-	virtual void							func_12(float u1, float u2);					// 12
-	virtual BOOL							func_13();										// 13
-	virtual void							func_14(BOOL u1);								// 14
-	virtual void							func_15(UInt32 u1);								// 15
+	virtual void							GetCameraNearAndFar(float* fNear, float* fFar);	// 11
+	virtual void							SetCameraNearAndFar(float fNear, float fFar);	// 12
+	virtual bool							GetLeftHanded();
+	virtual void							SetLeftHanded(bool bLeft);
+	virtual void							PurgeMaterial(NiMaterialProperty* pkMaterial);	// 15
 	virtual void							InitializeRenderStates();						// 16
 	virtual void							BackUpAllStates();								// 17
 	virtual void 							RestoreRenderState(D3DRENDERSTATETYPE state);	// 18
@@ -1466,8 +1899,8 @@ public:
 	virtual void			Unk_26();
 	virtual void			Unk_27();
 	virtual void			Unk_28();
-	virtual void			Unk_29();
-	virtual void			Unk_2A();
+	virtual void			SetDepthClear(float afValue);
+	virtual float			GetDepthClear() const;
 	virtual void			Unk_2B();
 	virtual void			Unk_2C();
 	virtual void			Unk_2D();
@@ -1536,11 +1969,30 @@ public:
 	virtual void			RenderTriStrips(NiTriStrips* obj);
 	virtual void			RenderTriShape2(NiTriShape* obj);
 	virtual void			RenderTriStrips2(NiTriStrips* obj);
+	virtual void			E70140(void*);
 	virtual void			RenderParticles(NiParticles* obj);
 	virtual void			RenderLines(NiLines* obj);
 	virtual void			RenderScreenTexture();
 
-	UInt32					Unk008[126];				// 008
+	BSShaderAccumulator*	m_spBSShaderAccum;
+	NiPropertyState*		m_pkCurrProp;
+	NiDynamicEffectState*	m_pkCurrEffects;
+	NiShader*				m_spErrorShader;
+	void*					m_spInitialDefaultMaterial;
+	void*					m_spCurrentDefaultMaterial;
+	void*					m_spAccum;
+	float					unk024;
+	float					unk028;
+	NiRenderer*				ms_pkRenderer;
+	NiRect<float>			m_kDisplaySafeZone;
+	char					unk040[62];
+	UInt32					m_kRendererLock[8];
+	char					unk0A0[94];
+	UInt32					m_kPrecacheCriticalSection[8];
+	char					unk120[95];
+	UInt32					m_kSourceDataCriticalSection[8];
+	char					unk1AC[92];
+	UInt32					m_eSavedFrameState;
 	UInt32					SceneState;					// 200
 	UInt32					m_uiFrameID;
 	bool					m_bRenderTargetGroupActive;
@@ -1628,61 +2080,152 @@ public:
 		REFRESHRATE_DEFAULT = 0
 	};
 
-	void							SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE State, DWORD Value);
-	void							PackGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiD3DShaderDeclaration* ShaderDeclaration);
-	void							PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiSkinPartition::Partition* Partition, NiD3DShaderDeclaration* ShaderDeclaration);
-	void							CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform);
+	enum TexFormat {
+		TEX_RGB555 = 0x0,
+		TEX_RGB565 = 0x1,
+		TEX_RGB888 = 0x2,
+		TEX_RGBA5551 = 0x3,
+		TEX_RGBA4444 = 0x4,
+		TEX_RGBA8888 = 0x5,
+		TEX_PAL8 = 0x6,
+		TEX_PALA8 = 0x7,
+		TEX_DXT1 = 0x8,
+		TEX_DXT3 = 0x9,
+		TEX_DXT5 = 0xA,
+		TEX_BUMP88 = 0xB,
+		TEX_BUMPLUMA556 = 0xC,
+		TEX_BUMPLUMA888 = 0xD,
+		TEX_L8 = 0xE,
+		TEX_A8 = 0xF,
+		TEX_R16F = 0x10,
+		TEX_RG32F = 0x11,
+		TEX_RGBA64F = 0x12,
+		TEX_R32F = 0x13,
+		TEX_RG64F = 0x14,
+		TEX_RGBA128F = 0x15,
+		TEX_DEFAULT = 0x16,
+		TEX_NUM = 0x16,
+	};
 
-	LPDIRECT3D9						ms_pkD3D9;
-	UInt32							unk284;
-	IDirect3DDevice9*				device;							// 288
-	D3DCAPS9						caps;							// 28C
-	HANDLE							deviceWindow;					// 3BC
-	HANDLE							focusWindow;					// 3C0
-	char							rendererInfo[0x200];			// 3C4
-	UInt32							adapterIdx;						// 5C4
-	UInt32							d3dDevType;						// 5C8 - D3DDEVTYPE
-	UInt32							m_uiBehaviorFlags;
-	D3DFORMAT						m_eAdapterFormat;
-	bool							m_bSWVertexCapable;
-	bool							m_bSWVertexSwitchable;
-	const NiDX9AdapterDesc*			m_pkAdapterDesc;
-	const NiDX9DeviceDesc*			m_pkDeviceDesc;
-	UInt32							m_uiBackground;
-	float							m_fZClear;
-	UInt32							m_uiStencilClear;
-	UInt32							m_uiRendFlags;
-	char							m_acBehavior[32];
-	NiTMap<void*, void*>			PrePackObjects;					// 610 - NiTPointerMap <NiVBBlock *, NiDX9Renderer::PrePackObject *>
-	UInt32							Unk620[153];					// 620
-	NiRenderTargetGroup*			defaultRTGroup;					// 884 - back buffer
-	NiRenderTargetGroup*			currentRTGroup;					// 888
-	NiRenderTargetGroup*			currentscreenRTGroup;			// 88C
+	enum DeviceDesc
+	{
+		DEVDESC_PURE = 0x0,
+		DEVDESC_HAL_HWVERTEX = 0x1,
+		DEVDESC_HAL_MIXEDVERTEX = 0x2,
+		DEVDESC_HAL_SWVERTEX = 0x3,
+		DEVDESC_REF = 0x4,
+		DEVDESC_REF_HWVERTEX = 0x5,
+		DEVDESC_REF_MIXEDVERTEX = 0x6,
+		DEVDESC_NUM = 0x7,
+	};
+
+	class PrePackObject {
+	public:
+		NiGeometryData*					m_pkData;
+		NiSkinInstance*					m_pkSkin;
+		NiSkinPartition::Partition*		m_pkPartition;
+		NiD3DShaderDeclaration*			m_pkShaderDecl;
+		UInt32							m_uiBonesPerPartition;
+		UInt32							m_uiBonesPerVertex;
+		NiGeometryBufferData*			m_pkBuffData;
+		UInt32							m_uiStream;
+		PrePackObject*					m_pkNext;
+	};
+
+	void								SetSamplerState(DWORD Sampler, D3DSAMPLERSTATETYPE State, DWORD Value);
+	void								PackGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiD3DShaderDeclaration* ShaderDeclaration);
+	void								PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiSkinPartition::Partition* Partition, NiD3DShaderDeclaration* ShaderDeclaration);
+	void								CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform);
+
+	LPDIRECT3DVERTEXDECLARATION9		hParticleVertexDecls[2];
+	IDirect3DDevice9*					device;
+	D3DCAPS9							m_kD3DCaps9;
+	HWND								m_kWndDevice;
+	HWND								m_kWndFocus;
+	char								m_acDriverDesc[512];
+	UInt32								adapterIdx;						// 5C4
+	D3DDEVTYPE							d3dDevType;						// 5C8 - D3DDEVTYPE
+	UInt32								m_uiBehaviorFlags;
+	D3DFORMAT							m_eAdapterFormat;
+	bool								m_bSWVertexCapable;
+	bool								m_bSWVertexSwitchable;
+	const NiDX9AdapterDesc*				m_pkAdapterDesc;
+	const NiDX9DeviceDesc*				m_pkDeviceDesc;
+	UInt32								m_uiBackground;
+	float								m_fZClear;
+	UInt32								m_uiStencilClear;
+	UInt32								m_uiRendFlags;
+	char								m_acBehavior[32];
+	NiTMap<void*, void*>				PrePackObjects;					// 610 - NiTPointerMap <NiVBBlock *, NiDX9Renderer::PrePackObject *>
+	void*								m_pkBatchHead;
+	void*								m_pkBatchTail;
+	NiPropertyState*					m_pkBatchedPropertyState;
+	NiDynamicEffectState*				m_pkBatchedEffectState;
+	NiD3DShaderInterface*				m_spBatchedShader;
+	NiPoint3							m_kCamRight;
+	NiPoint3							m_kCamUp;
+	NiPoint3							m_kModelCamRight;
+	NiPoint3							m_kModelCamUp;
+	NiBound								m_kWorldBound;
+	const NiBound						m_kDefaultBound;
+	float								m_fNearDepth;
+	float								m_fDepthRange;
+	D3DXMATRIX							m_kD3DIdentity;
+	D3DVIEWPORT9						m_kD3DPort;
+	UInt32								m_uiHWBones;
+	UInt32								m_uiMaxStreams;
+	UInt32								m_uiMaxPixelShaderVersion;
+	UInt32								m_uiMaxVertexShaderVersion;
+	bool								m_bMipmapCubeMaps;
+	bool								m_bDynamicTexturesCapable;
+	UInt32								m_uiResetCounter;
+	bool								m_bDeviceLost;
+	NiPixelFormat*						m_aapkTextureFormats[4][22];
+	NiPixelFormat*						m_apkDefaultTextureFormat[4];
+	NiPixelData*						m_aspDefaultTextureData[4];
+	TexFormat							m_eReplacementDataFormat;
+	NiRenderTargetGroup*				defaultRTGroup;					// 884 - back buffer
+	NiRenderTargetGroup*				currentRTGroup;					// 888
+	NiRenderTargetGroup*				currentscreenRTGroup;			// 88C
 	NiTMap<HWND*, NiRenderTargetGroup*>	screenRTGroups;					// 890 - NiTPointerMap <HWND *, NiPointer <NiRenderTargetGroup> >
-	UInt32							Unk8A0[6];						// 8A0
-	NiDX9RenderState*				renderState;					// 8B8
-	UInt32							Unk8BC[33];						// 8BC
-	D3DXMATRIXA16					worldMatrix;				// 940
-	D3DXMATRIX						viewMatrix;					// 980
-	D3DXMATRIX						projMatrix;					// 9C0
-	D3DXMATRIX						UnkMatrix;					// A00
-	D3DXMATRIX						invViewMatrix;				// A40
-	UInt32							UnkA80[6];					// A80
-	UInt32							width;						// A98
-	UInt32							height;						// A9C
-	UInt32							flags;						// AA0
-	UInt32							windowDevice;				// AA4
-	UInt32							windowFocus;				// AA8
-	UInt32							adapterType;				// AAC
-	UInt32							deviceType;					// AB0
-	FrameBufferFormat				frameBufferFormat;			// AB4
-	DepthStencilFormat				depthStencilFormat;			// AB8
-	PresentationInterval			presentationInterval;		// ABC
-	SwapEffect						swapEffect;					// AC0
-	FrameBufferMode					frameBufferMode;			// AC4
-	UInt32							backBufferCount;			// AC8
-	RefreshRate						refreshRate;				// ACC
-	UInt32							UnkAD0[44];					// AD0
+	UInt32								m_uiMaxNumRenderTargets;
+	bool								m_bIndependentBitDepths;
+	bool								m_bMRTPostPixelShaderBlending;
+	UInt32								Unk8A0[4];						// 8A0
+	NiDX9RenderState*					renderState;					// 8B8
+	UInt32								Unk8BC[33];						// 8BC
+	D3DXMATRIXA16						worldMatrix;				// 940
+	D3DXMATRIX							viewMatrix;					// 980
+	D3DXMATRIX							projMatrix;					// 9C0
+	D3DXMATRIX							viewProjMatrix;			    // A00
+	D3DXMATRIX							invViewMatrix;				// A40
+	UInt32								UnkA80[3];					// A80
+	UInt16								m_usNumScreenTextureVerts;
+	UInt16*								m_pusScreenTextureIndices;
+	UInt32								m_uiNumScreenTextureIndices;
+	UInt32								width;						// A98
+	UInt32								height;						// A9C
+	UInt32								flags;						// AA0
+	HWND								windowDevice;				// AA4
+	HWND								windowFocus;				// AA8
+	UInt32								adapterType;				// AAC
+	DeviceDesc							deviceType;					// AB0
+	FrameBufferFormat					frameBufferFormat;			// AB4
+	DepthStencilFormat					depthStencilFormat;			// AB8
+	PresentationInterval				presentationInterval;		// ABC
+	SwapEffect							swapEffect;					// AC0
+	FrameBufferMode						frameBufferMode;			// AC4
+	UInt32								backBufferCount;			// AC8
+	RefreshRate							refreshRate;				// ACC
+	bool								unkAD0;                     // AD0
+	UInt32								m_kResetNotifyFuncsp[4];
+	UInt32								m_kResetNotifyFuncData[4];
+	UInt32								m_kLostDeviceNotifyFuncs[4];
+	UInt32								m_kLostDeviceNotifyFuncData[4];
+	NiTMap<D3DFORMAT, NiPixelFormat*>	m_kDepthStencilFormats;
+	NiFrustum							m_kCachedFrustum;
+	NiRect<float>						m_kCachedPort;
+	void*								unkB50[12];
 
 	static NiDX9Renderer* GetSingleton() { return *(NiDX9Renderer**)0x11C73B4; };
 };
@@ -1745,19 +2288,69 @@ public:
 };
 assert(sizeof(BSRenderedTexture) == 0x40);
 
+class BSShaderManager {
+public:
+	enum ShaderType : UInt32 {
+		BSSM_SHADER_DEFAULT			= 0,
+		BSSM_SHADER_SHADOWLIGHT		= 1,
+		BSSM_SHADER_TALL_GRASS		= 2,
+		BSSM_SHADER_DISTANT_LOD		= 3,
+		BSSM_SHADER_ST_BRANCH		= 4,
+		BSSM_SHADER_ST_FROND		= 5,
+		BSSM_SHADER_ST_LEAF			= 6,
+		BSSM_SHADER_BLOOD_SPLATTER	= 7,
+		BSSM_SHADER_DISTANT_TREE	= 8,
+		BSSM_SHADER_DEBUG			= 9,
+		BSSM_SHADER_SKY				= 10,
+		//							  11
+		//							  12
+		BSSM_SHADER_HAIR			= 13,
+		BSSM_SHADER_SKIN			= 14,
+		BSSM_SHADER_PARALLAX		= 15,
+		BSSM_SHADER_GEOM_DECAL		= 16,
+		BSSM_SHADER_WATER			= 17,
+		// 						      18
+		// 						      19
+		// 						      20
+		// 						      21
+		// 						      22
+		// 						      23
+		BSSM_SHADER_PARTICLE		= 24,
+		BSSM_SHADER_BOLT			= 25,
+		BSSM_SHADER_BEAM			= 26,
+		//							  27,
+		//							  28,
+		BSSM_SHADER_LIGHTING30		= 29,
+		BSSM_SHADER_PRECIPITATION	= 30,
+		// 						      31
+		BSSM_SHADER_TILE			= 32,
+		BSSM_SHADER_NOLIGHTING		= 33,
+		BSSM_SHADER_VOLUMETRIC_FOG	= 34
+	};
+
+	static float* const fDepthBias;
+	static NiPoint3* const kCameraPos;
+
+	static BSShader** pspShaders;
+
+	static NiDX9Renderer* GetRenderer();
+
+	static BSShader* GetShader(ShaderType aiShaderIndex);
+};
+
 class NiAlphaProperty : public NiProperty {
 public:
 	enum AlphaFlags {
-        ALPHA_BLEND_MASK    = 0x0001,
-        SRC_BLEND_MASK      = 0x001e,
-        SRC_BLEND_POS       = 1,
-        DEST_BLEND_MASK     = 0x01e0,
-        DEST_BLEND_POS      = 5,
-        TEST_ENABLE_MASK    = 0x0200,
-        TEST_FUNC_MASK      = 0x1c00,
-        TEST_FUNC_POS       = 10,
-        ALPHA_NOSORTER_MASK = 0x2000
-    };
+		ALPHA_BLEND_MASK    = 0x0001,
+		SRC_BLEND_MASK      = 0x001e,
+		SRC_BLEND_POS       = 1,
+		DEST_BLEND_MASK     = 0x01e0,
+		DEST_BLEND_POS      = 5,
+		TEST_ENABLE_MASK    = 0x0200,
+		TEST_FUNC_MASK      = 0x1c00,
+		TEST_FUNC_POS       = 10,
+		ALPHA_NOSORTER_MASK = 0x2000
+	};
 
 	UInt16	flags;			// 018
 	UInt8	alphaTestRef;	// 01A
