@@ -9,6 +9,7 @@ public:
 	void				UpdateSceneCameraData();
 	void				SetupSceneCamera();
 	void				CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget, bool HDR);
+	void                ToggleDepthDirection(bool inverted);
     float               GetObjectDistance(NiBound* Bound);
 	D3DXMATRIX			WorldViewProjMatrix;
 	D3DXMATRIX			ViewProjMatrix;

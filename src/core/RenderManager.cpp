@@ -209,6 +209,45 @@ void RenderManager::SetupSceneCamera() {
 
 }
 
+/*
+* Toggle depth direction between normal and inverse.
+*/
+void RenderManager::ToggleDepthDirection(bool inverted) {
+	if (inverted) {
+		*BSShaderManager::fDepthBias = 0.00002;
+		NiDX9Renderer::GetSingleton()->SetDepthClear(0.f);
+	}
+	else {
+		*BSShaderManager::fDepthBias = -0.00002;
+		NiDX9Renderer::GetSingleton()->SetDepthClear(1.f);
+	}
+
+	GeometryDecalShader* pGeomDecalShader = GeometryDecalShader::GetShader();
+	for (UInt32 i = 0; i < 2; i++) {
+		bool bSaved = false;
+		NiD3DRSEntry* pEntry = pGeomDecalShader->spPasses[i]->RenderStateGroup->FindRenderStateEntry(D3DRS_DEPTHBIAS, bSaved);
+		if (pEntry)
+			pEntry->m_uiValue = *BSShaderManager::fDepthBias;
+	}
+
+	for (UInt32 i = 0; i < 112; i++) {
+		bool bSaved = false;
+		NiD3DRSEntry* pEntry = Lighting30Shader::GetAllPasses()[i]->RenderStateGroup->FindRenderStateEntry(D3DRS_DEPTHBIAS, bSaved);
+		if (pEntry)
+			pEntry->m_uiValue = *BSShaderManager::fDepthBias;
+	}
+
+	TallGrassShader* pGrassShader = TallGrassShader::GetShader();
+	for (UInt32 i = 0; i < 44; i++) {
+		bool bSaved = false;
+		NiD3DRSEntry* pEntry = pGrassShader->GetPass(i)->RenderStateGroup->FindRenderStateEntry(D3DRS_DEPTHBIAS, bSaved);
+		if (pEntry)
+			pEntry->m_uiValue = *BSShaderManager::fDepthBias;
+	}
+
+	Logger::Log("Depth inversion status: %d, %f", TheSettingManager->SettingsMain.Main.InvertedDepth, NiDX9Renderer::GetSingleton()->m_fZClear);
+}
+
 // detect if dxvk is present
 bool getDXVKPresent() {
 	DWORD  verHandle = 0;

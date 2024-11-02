@@ -24,6 +24,9 @@ extern "C" {
 				Logger::Log("JG not found");
 			}
 
+			if (TheSettingManager->SettingsMain.Main.InvertedDepth)
+				TheRenderManager->ToggleDepthDirection(true);
+
 			break;
 		}
 	}

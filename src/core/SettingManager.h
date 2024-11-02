@@ -14,6 +14,7 @@ struct SettingsMainStruct {
 		bool	MemoryHeapManagement;
 		bool	MemoryTextureManagement;
 		bool	ReplaceIntro;
+		bool    InvertedDepth;
         bool    SkipFog;
         bool    RenderEffects;
         bool    RenderPreTonemapping;
@@ -363,10 +364,13 @@ public:
 	void					CreateNodeS(Configuration::ConfigNode* Node, const char* Section, const char* Key, const char* Value, bool Reboot);
 	bool					GetMenuShaderEnabled(const char* Name);
 	void					SetMenuShaderEnabled(const char* Name, bool enabled);
+	bool					GetMenuMiscEnabled(const char* Name);
+	void					SetMenuMiscEnabled(const char* Name, bool enabled);
 	SettingsWaterStruct*	GetSettingsWater(const char* PlayerLocation);
 	SettingsColoringStruct* GetSettingsColoring(const char* PlayerLocation);
 	SettingsWeatherStruct*	GetSettingsWeather(const char* WeatherName);
 	void					SetSettingsWeather(TESWeather* Weather);
+	bool					IsShaderForced(const char* Name);
 
 	template <typename T> static std::string	ToString(const T Value);
 	template <typename T> static T				FromString(const char* Value);

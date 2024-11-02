@@ -5,8 +5,12 @@ void __fastcall RenderHook(Main* This, UInt32 edx, BSRenderedTexture* RenderedTe
 extern void(__thiscall* SetShaders)(BSShader*, UInt32);
 void __fastcall SetShadersHook(BSShader* This, UInt32 edx, UInt32 PassIndex);
 
+void __fastcall NiDX9RenderState__SetRenderStateEx(NiDX9RenderState* apThis, void*, D3DRENDERSTATETYPE aeState, UInt32 auiValue, UInt32, bool abSave);
+
 extern HRESULT(__thiscall* SetSamplerState)(NiDX9RenderState*, UInt32, D3DSAMPLERSTATETYPE, UInt32, UInt8);
 HRESULT __fastcall SetSamplerStateHook(NiDX9RenderState* This, UInt32 edx, UInt32 Sampler, D3DSAMPLERSTATETYPE Type, UInt32 Value, UInt8 Save);
+
+void __fastcall NiDX9Renderer__SetCameraDataEx(NiDX9Renderer* apThis, void*, const NiPoint3& kWorldLoc, const NiPoint3& kWorldDir, const NiPoint3& kWorldUp, const NiPoint3& kWorldRight, const NiFrustum& kFrustum, const NiRect<float>& kPort);
 
 extern void(__thiscall* RenderWorldSceneGraph)(Main*, Sun*, UInt8, UInt8, UInt8);
 void __fastcall RenderWorldSceneGraphHook(Main* This, UInt32 edx, Sun* SkySun, UInt8 IsFirstPerson, UInt8 WireFrame, UInt8 Arg4);
