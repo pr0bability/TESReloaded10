@@ -972,42 +972,88 @@ public:
 };
 assert(sizeof(NiD3DTextureStage) == 0x00C);
 
-class NiD3DShaderConstantMapEntry {
+class NiShaderConstantMapEntry : public NiRefObject {
 public:
-	void**				_vtbl;				// 00
-	UInt32				Unk04;				// 04
-	UInt32				Unk08;				// 08
-	char*				Key;				// 0C
-	UInt32				Internal;			// 10
-	UInt32				Flags;				// 14
-	UInt32				Extra;				// 18
-	UInt32				ShaderRegister;		// 1C
-	UInt32				RegisterCount;		// 20
-	char*				VariableName;		// 24
-	UInt32				DataSize;			// 28
-	UInt32				DataStride;			// 2C
-	void*				DataSource;			// 30
-	UInt8				Unk34;				// 34
-	UInt8				pad34[3];
+	bool			bActive;
+	UInt32			m_kKey;
+	UInt32			m_uiInternal;
+	UInt32			m_uiFlags;
+	UInt32			m_uiExtra;
+	UInt32			m_uiShaderRegister;
+	UInt32			m_uiRegisterCount;
+	UInt32			m_kVariableName;
+	UInt32			m_uiDataSize;
+	UInt32			m_uiDataStride;
+	void*			m_pvDataSource;
+	bool			m_bOwnData;
+	bool			m_bVariableHookupValid;
+	bool			m_bColumnMajor;
 };
-assert(sizeof(NiD3DShaderConstantMapEntry) == 0x038);
+assert(sizeof(NiShaderConstantMapEntry) == 0x38);
 
-class NiD3DShaderConstantMap {
+class NiShaderConstantMap : public NiRefObject {
 public:
-	void**									_vtbl;				// 00
-	UInt32									Unk04;				// 04
-	UInt32									Unk08;				// 08
-	NiTArray<NiD3DShaderConstantMapEntry*>	Entries;			// 0C
-	UInt8									Modified;			// 1C
-	UInt8									pad1C[3];
-	NiD3DShaderProgram*						LastShaderProgram;	// 20
-	UInt32									Unk24;				// 24
-	IDirect3DDevice9*						Device;				// 28
-	NiDX9Renderer*							Renderer;			// 2C
-	NiDX9RenderState*						RenderState;		// 30
+	NiShaderConstantMap();
+	virtual ~NiShaderConstantMap();
 
+	virtual UInt32	AddEntry(const char* pszKey, UInt32 uiFlags, UInt32 uiExtra, UInt32 uiShaderRegister, UInt32 uiRegisterCount, const char* pszVariableName = "", UInt32 uiDataSize = 0, UInt32 uiDataStride = 0, const void* pvDataSource = 0, bool bCopyData = false);
+	virtual UInt32	AddEntryAlt(const char* pszKey, UInt32 uiExtra, UInt32 uiShaderRegister, const char* pszVariableName);
+	virtual UInt32	AddAttributeEntry(const char* pszKey, UInt32 uiFlags, UInt32 uiExtra, UInt32 uiShaderRegister, UInt32 uiRegisterCount, const char* pszVariableName, UInt32 uiDataSize, UInt32 uiDataStride, const void* pvDataSource, bool bCopyData = false);
+	virtual UInt32	AddConstantEntry(const char* pszKey, UInt32 uiFlags, UInt32 uiExtra, UInt32 uiShaderRegister, UInt32 uiRegisterCount, const char* pszVariableName, UInt32 uiDataSize, UInt32 uiDataStride, const void* pvDataSource, bool bCopyData = false);
+	virtual UInt32	AddGlobalEntry(const char* pszKey, UInt32 uiFlags, UInt32 uiExtra, UInt32 uiShaderRegister, UInt32 uiRegisterCount, const char* pszVariableName, UInt32 uiDataSize, UInt32 uiDataStride, const void* pvDataSource, bool bCopyData = false);
+	virtual UInt32	AddOperatorEntry(const char* pszKey, UInt32 uiFlags, UInt32 uiExtra, UInt32 uiShaderRegister, UInt32 uiRegisterCount, const char* pszVariableName);
+	virtual UInt32	AddObjectEntry(const char* pszKey, UInt32 uiShaderRegister, const char* pszVariableName, UInt32 uiObjectIndex, UInt32 eObjectType);
+	virtual void	Func0009();
 };
-assert(sizeof(NiD3DShaderConstantMap) == 0x034);
+
+class NiD3DShaderConstantMap : public NiShaderConstantMap {
+public:
+	NiD3DShaderConstantMap();
+	virtual ~NiD3DShaderConstantMap();
+
+	virtual NiRTTI						GetRTTI();
+	virtual NiNode*						IsNiNode();
+	virtual BSFadeNode*					IsFadeNode();
+	virtual void*						IsMultiBoundNode();
+	virtual NiGeometry*					IsGeometry();
+	virtual NiTriBasedGeom*				IsTriBasedGeometry();
+	virtual NiTriStrips*				IsTriStrips();
+	virtual NiTriShape*					IsTriShape();
+	virtual void*						IsSegmentedTriShape();
+	virtual void*						IsResizableTriShape();
+	virtual NiParticles*				IsParticlesGeom();
+	virtual NiLines*					IsLinesGeom();
+	virtual void*						IsBhkNiCollisionObject();
+	virtual void*						IsBhkBlendCollisionObject();
+	virtual bhkRigidBody*				IsBhkRigidBody();
+	virtual void*						IsBhkLimitedHingeConstraint();
+	virtual UInt32						AddPredefinedEntry(const char* apszKey, UInt32 auiExtra, UInt32 auiShaderRegister = 0, const char* apszVariableName = "", UInt32 auiDataSize = 0, UInt32 auiDataStride = 0, void* pvDataSource = 0, bool bCopyData = false);
+	virtual UInt32						RemoveEntry(const char* apszKey);
+	virtual NiShaderConstantMapEntry*	GetEntry(const char* apszKey);
+	virtual int							GetEntryAtIndex(UInt32 auiIndex);
+	virtual UInt32						SetShaderConstants(NiD3DShaderProgram* apShaderProgram, NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apBuffData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound, UInt32 auiPass = 0, bool abGlobal = false);
+	virtual UInt32						GetEntryIndex(const char* apszKey);
+	virtual UInt32						InsertEntry(NiShaderConstantMapEntry* apEntry);
+	virtual UInt32						InsertDefinedEntry(NiShaderConstantMapEntry* apEntry);
+	virtual UInt32						SetupPredefinedEntry(NiShaderConstantMapEntry* apEntry);
+	virtual UInt32						SetDefinedConstant(NiD3DShaderProgram* apShaderProgram, NiShaderConstantMapEntry* apEntry, NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apBuffData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound, UInt32 auiPass);
+	virtual UInt32						SetConstantConstant(NiD3DShaderProgram* apShaderProgram, NiShaderConstantMapEntry* apEntry, UInt32 auiPass);
+	virtual UInt32						SetAttributeConstant(NiD3DShaderProgram* apShaderProgram, NiShaderConstantMapEntry* apEntry, NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apBuffData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound, UInt32 auiPass, bool abGlobal, NiExtraData* apExtraData);
+	virtual UInt32						SetGlobalConstant(NiD3DShaderProgram* apShaderProgram, NiShaderConstantMapEntry* apEntry, UInt32 auiPass);
+	virtual UInt32						SetOperatorConstant(NiD3DShaderProgram* apShaderProgram, NiShaderConstantMapEntry* apEntry, NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound, UInt32 auiPass);
+	virtual UInt32						SetupObjectEntry(NiShaderConstantMapEntry* apEntry);
+	virtual UInt32						SetObjectConstant(NiD3DShaderProgram* apShaderProgram, NiShaderConstantMapEntry* apEntry, NiGeometry* apGeometry, const NiSkinInstance* apSkin, const NiSkinPartition::Partition* apPartition, NiGeometryBufferData* apBuffData, const NiPropertyState* apProperties, const NiDynamicEffectState* apEffects, const NiTransform& arWorld, const NiBound& arWorldBound, UInt32 auiPass);
+
+	NiTArray<NiShaderConstantMapEntry*>			m_aspEntries;
+	NiTArray<NiShaderConstantMapEntry*>			m_aspDefinedEntries;
+	bool										m_bModified;
+	NiD3DShaderProgram*							m_pkLastShaderProgram;
+	UInt32										m_eLastError;
+	LPDIRECT3DDEVICE9							m_pkD3DDevice;
+	NiDX9Renderer*								m_pkD3DRenderer;
+	NiDX9RenderState*							m_pkD3DRenderState;
+};
+assert(sizeof(NiD3DShaderConstantMap) == 0x40);
 
 class NiD3DShaderDeclaration : public NiObject {
 public:
@@ -1095,38 +1141,33 @@ assert(sizeof(NiD3DPass) == 0x064);
 
 class NiShader : public NiRefObject {
 public:
-	char*		Name;					// 008
-	UInt32		Unk00C;					// 00C
+	char*			m_kName;
+	UInt32			m_uiImplementation;
+	bool			m_bInitialized;
 };
-assert(sizeof(NiShader) == 0x010);
+assert(sizeof(NiShader) == 0x014);
 
 class NiD3DShaderInterface : public NiShader {
 public:
-	IDirect3DDevice9*	D3DDevice;		// 010
-	NiDX9Renderer*		D3DRenderer;	// 014
-	NiDX9RenderState*	D3DRenderState;	// 018
-	UInt8				Unk01C;			// 01C
-	UInt8				Unk01D;			// 01D
-	UInt8				pad[2];
+	LPDIRECT3DDEVICE9	m_pkD3DDevice;
+	NiDX9Renderer*		m_pkD3DRenderer;
+	NiDX9RenderState*	m_pkD3DRenderState;
+	bool				m_bIsBestImplementation;
 };
-assert(sizeof(NiD3DShaderInterface) == 0x020);
+assert(sizeof(NiD3DShaderInterface) == 0x24);
 
 class NiD3DShader : public NiD3DShaderInterface {
 public:
-	UInt8					IsInitialized;		// 020
-	UInt8					Unk021;				// 021
-	UInt8					pad021[2];
-	NiD3DShaderDeclaration* ShaderDeclaration;	// 024
-	NiD3DRenderStateGroup*  RenderStateGroup;	// 028
-	NiD3DShaderConstantMap* PixelConstantMap;	// 02C
-	NiD3DShaderConstantMap* VertexConstantMap;	// 030
-	UInt32					CurrentPassIndex;	// 034
-	UInt32					PassCount;			// 038
-	NiD3DPass*				CurrentPass;		// 03C
-	NiTArray<NiD3DPass*>	Passes;				// 040
-	UInt32					Unk050[8];			// 050
+	bool						m_bUsesNiRenderState;
+	bool						m_bUsesNiLightState;
+	NiD3DShaderDeclaration*		m_spShaderDecl;
+	NiD3DRenderStateGroup*		m_pkRenderStateGroup;
+	NiD3DShaderConstantMap*		m_spPixelConstantMap;
+	NiD3DShaderConstantMap*  	m_spVertexConstantMap;
+	UInt32						m_uiCurrentPass;
+
 };
-assert(sizeof(NiD3DShader) == 0x70);
+assert(sizeof(NiD3DShader) == 0x3C);
 
 class BSShader : public NiD3DShader {
 public:
