@@ -37,3 +37,9 @@ __forceinline T_Ret ThisStdCall(UInt32 _addr, const void* _this, Args ...args)
 {
 	return ((T_Ret(__thiscall*)(const void*, Args...))_addr)(_this, std::forward<Args>(args)...);
 }
+
+template <typename T_Ret = void, typename ...Args>
+__forceinline T_Ret CdeclCall(UInt32 _addr, Args ...args)
+{
+	return ((T_Ret(__cdecl*)(Args...))_addr)(std::forward<Args>(args)...);
+}

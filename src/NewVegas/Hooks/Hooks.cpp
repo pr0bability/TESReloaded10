@@ -38,6 +38,12 @@ void AttachHooks() {
 	if (SettingsMain->FlyCam.Enabled) DetourAttach(&(PVOID&)UpdateFlyCam, &UpdateFlyCamHook);
 	DetourTransactionCommit();
 
+	// SetSamplerState hook.
+	SafeWrite32(0x10EF674, (UInt32)NiDX9RenderState__SetRenderStateEx);
+	SafeWrite32(0x10F08F4, (UInt32)NiDX9RenderState__SetRenderStateEx);
+
+	// SetCameraData hook.
+	SafeWrite32(0x10EE648, (UInt32)NiDX9Renderer__SetCameraDataEx);
 
 	SafeWriteCall(0xBE0B73, (UInt32)NiD3DVertexShaderEx::Free);
 	SafeWriteCall(0xBE0AF3, (UInt32)NiD3DPixelShaderEx::Free);
@@ -45,6 +51,7 @@ void AttachHooks() {
 	SafeWrite32(0x00466606, sizeof(TESWeatherEx));
 	SafeWrite32(0x0046CF9B, sizeof(TESWeatherEx));
 
+	SafeWrite8(0xB575AA, 0x75);				// Prevent shader package destruction
 	SafeWrite8(0x008751C0, 0);				// Stops to clear the depth buffer when rendering the 1st person node
 	SafeWrite16(0x0086A170, 0x9090);		// Avoids to pause the game when ALT-TAB
 
