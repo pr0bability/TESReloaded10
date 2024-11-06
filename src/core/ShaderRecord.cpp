@@ -370,6 +370,10 @@ void ShaderRecord::SetCT() {
 		//Logger::Log("Resolving depth buffer for shader %s", Name);
 		TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture);
 	}
+
+	// reset samplers
+	for (int i = 0; i < 16; i++)
+		TheRenderManager->renderState->SetTexture(i, nullptr);
 	
 	// binds textures
 	ShaderTextureValue* Sampler;
