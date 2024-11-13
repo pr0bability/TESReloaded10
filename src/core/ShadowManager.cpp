@@ -23,6 +23,14 @@ void ShadowManager::Initialize() {
     TheShadowManager->ShadowMapBlurVertex = (ShaderRecordVertex*) ShaderRecord::LoadShader("ShadowMapBlur.vso", "Shadows\\");
     TheShadowManager->ShadowMapBlurPixel = (ShaderRecordPixel*) ShaderRecord::LoadShader("ShadowMapBlur.pso", "Shadows\\");
 
+	// Make sure samplers are not reset on SetCT as that causes errors.
+	TheShadowManager->ShadowMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowMapPixel->ClearSamplers = false;
+	TheShadowManager->ShadowCubeMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowCubeMapPixel->ClearSamplers = false;
+	TheShadowManager->ShadowMapBlurVertex->ClearSamplers = false;
+	TheShadowManager->ShadowMapBlurPixel->ClearSamplers = false;
+
 	TheShadowManager->ShadowShadersLoaded = true;
     if (TheShadowManager->ShadowMapVertex == nullptr || TheShadowManager->ShadowMapPixel == nullptr  || TheShadowManager->ShadowMapBlurVertex  == nullptr
         || TheShadowManager->ShadowCubeMapVertex == nullptr || TheShadowManager->ShadowCubeMapPixel == nullptr || TheShadowManager->ShadowMapBlurPixel  == nullptr ){

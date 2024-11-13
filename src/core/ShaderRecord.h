@@ -85,6 +85,7 @@ public:
 	const char* Name;
 	bool					HasRenderedBuffer;
 	bool					HasDepthBuffer;
+	bool					ClearSamplers;
 };
 
 class ShaderRecordVertex : public ShaderRecord {

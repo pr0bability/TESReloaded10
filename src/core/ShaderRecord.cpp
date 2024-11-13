@@ -19,6 +19,7 @@ ShaderRecord::ShaderRecord() {
 
 	HasRenderedBuffer = false;
 	HasDepthBuffer = false;
+	ClearSamplers = true;
 
 }
 ShaderRecord::~ShaderRecord() {}
@@ -372,8 +373,10 @@ void ShaderRecord::SetCT() {
 	}
 
 	// reset samplers
-	for (int i = 0; i < 16; i++)
-		TheRenderManager->renderState->SetTexture(i, nullptr);
+	if (ClearSamplers) {
+		for (int i = 0; i < 16; i++)
+			TheRenderManager->renderState->SetTexture(i, nullptr);
+	}
 	
 	// binds textures
 	ShaderTextureValue* Sampler;
