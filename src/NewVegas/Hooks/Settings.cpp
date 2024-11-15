@@ -25,6 +25,8 @@ bool __fastcall ReadSettingHook(INISettingCollection* This, UInt32 edx, GameSett
 		Setting->iValue = 0;
 	else if (!strcmp(Setting->Name, "bUseWaterHiRes:Water"))
 		Setting->iValue = 1;
+	else if (!strcmp(Setting->Name, "bForceHighDetailReflections:Water"))
+		Setting->iValue = 0;
 	return r;
 
 }
