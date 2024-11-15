@@ -108,6 +108,7 @@ public:
 		VolumetricFogEffect*	VolumetricFog;
 		WaterLensEffect*		WaterLens;
 		WetWorldEffect*			WetWorld;
+		SMAAEffect*				SMAA;
 		EffectsList				ExtraEffects;
 	};
 

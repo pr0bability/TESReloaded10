@@ -36,279 +36,157 @@
  * policies, either expressed or implied, of the copyright holders.
  */
 
-float4 TESR_ReciprocalResolution;
-#define SMAA_PIXEL_SIZE TESR_ReciprocalResolution.xy
-#define SMAA_HLSL_3 1
+float4 TESR_SMAAResolution;
 
-// Configurable Defines
-//-----------------------------------------------------------------------------
-
-/**
- * SMAA_THRESHOLD specifies the threshold or sensitivity to edges.
- * Lowering this value you will be able to detect more edges at the expense of
- * performance. 
- *
- * Range: [0, 0.5]
- *   0.1 is a reasonable value, and allows to catch most visible edges.
- *   0.05 is a rather overkill value, that allows to catch 'em all.
- *
- *   If temporal supersampling is used, 0.2 could be a reasonable value, as low
- *   contrast edges are properly filtered by just 2x.
- */
-#ifndef SMAA_THRESHOLD
-#define SMAA_THRESHOLD 0.1
+#ifndef SMAA_RT_METRICS
+#define SMAA_RT_METRICS TESR_SMAAResolution
 #endif
 
-/**
- * SMAA_DEPTH_THRESHOLD specifies the threshold for depth edge detection.
- * 
- * Range: depends on the depth range of the scene.
- */
-#ifndef SMAA_DEPTH_THRESHOLD
-#define SMAA_DEPTH_THRESHOLD (0.1 * SMAA_THRESHOLD)
-#endif
+#define SMAA_HLSL_3
+
+#define SMAA_PRESET_ULTRA
+
+#include "includes/SMAA.hlsl"
+
+sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
+sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
+sampler2D TESR_SMAA_Edges : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
+sampler2D TESR_SMAA_Blend : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
+sampler2D TESR_SMAA_AreaTex : register(s4) < string ResourceName = "Effects\SMAA_AreaTex.dds"; > = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; ADDRESSW = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
+sampler2D TESR_SMAA_SearchTex : register(s5) < string ResourceName = "Effects\SMAA_SearchTex.dds"; > = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; ADDRESSW = CLAMP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; SRGBTEXTURE = FALSE; };
 
 /**
- * SMAA_MAX_SEARCH_STEPS specifies the maximum steps performed in the
- * horizontal/vertical pattern searches, at each side of the pixel.
- *
- * In number of pixels, it's actually the double. So the maximum line length
- * perfectly handled by, for example 16, is 64 (by perfectly, we meant that
- * longer lines won't look as good, but still antialiased).
- *
- * Range: [0, 98]
+ * Function wrappers
  */
-#ifndef SMAA_MAX_SEARCH_STEPS
-#define SMAA_MAX_SEARCH_STEPS 32
-#endif
-
-/**
- * SMAA_MAX_SEARCH_STEPS_DIAG specifies the maximum steps performed in the
- * diagonal pattern searches, at each side of the pixel. In this case we jump
- * one pixel at time, instead of two.
- *
- * Range: [0, 20]; set it to 0 to disable diagonal processing.
- *
- * On high-end machines it is cheap (between a 0.8x and 0.9x slower for 16 
- * steps), but it can have a significant impact on older machines.
- */
-#ifndef SMAA_MAX_SEARCH_STEPS_DIAG
-#define SMAA_MAX_SEARCH_STEPS_DIAG 16
-#endif
-
-/**
- * SMAA_CORNER_ROUNDING specifies how much sharp corners will be rounded.
- *
- * Range: [0, 100]; set it to 100 to disable corner detection.
- */
-#ifndef SMAA_CORNER_ROUNDING
-#define SMAA_CORNER_ROUNDING 25
-#endif
-
-/**
- * Predicated thresholding allows to better preserve texture details and to
- * improve performance, by decreasing the number of detected edges using an
- * additional buffer like the light accumulation buffer, object ids or even the
- * depth buffer (the depth buffer usage may be limited to indoor or short range
- * scenes).
- *
- * It locally decreases the luma or color threshold if an edge is found in an
- * additional buffer (so the global threshold can be higher).
- *
- * This method was developed by Playstation EDGE MLAA team, and used in 
- * Killzone 3, by using the light accumulation buffer. More information here:
- *     http://iryoku.com/aacourse/downloads/06-MLAA-on-PS3.pptx 
- */
-#ifndef SMAA_PREDICATION
-#define SMAA_PREDICATION 0
-#endif
-
-/**
- * Threshold to be used in the additional predication buffer. 
- *
- * Range: depends on the input, so you'll have to find the magic number that
- * works for you.
- */
-#ifndef SMAA_PREDICATION_THRESHOLD
-#define SMAA_PREDICATION_THRESHOLD 0.01
-#endif
-
-/**
- * How much to scale the global threshold used for luma or color edge
- * detection when using predication.
- *
- * Range: [1, 5]
- */
-#ifndef SMAA_PREDICATION_SCALE
-#define SMAA_PREDICATION_SCALE 2.0
-#endif
-
-/**
- * How much to locally decrease the threshold.
- *
- * Range: [0, 1]
- */
-#ifndef SMAA_PREDICATION_STRENGTH
-#define SMAA_PREDICATION_STRENGTH 0.4
-#endif
-
-/**
- * Temporal reprojection allows to remove ghosting artifacts when using
- * temporal supersampling. We use the CryEngine 3 method which also introduces
- * velocity weighting. This feature is of extreme importance for totally
- * removing ghosting. More information here:
- *    http://iryoku.com/aacourse/downloads/13-Anti-Aliasing-Methods-in-CryENGINE-3.pdf
- *
- * Note that you'll need to setup a velocity buffer for enabling reprojection.
- * For static geometry, saving the previous depth buffer is a viable
- * alternative.
- */
-#ifndef SMAA_REPROJECTION
-#define SMAA_REPROJECTION 0
-#endif
-
-/**
- * SMAA_REPROJECTION_WEIGHT_SCALE controls the velocity weighting. It allows to
- * remove ghosting trails behind the moving object, which are not removed by
- * just using reprojection. Using low values will exhibit ghosting, while using
- * high values will disable temporal supersampling under motion.
- *
- * Behind the scenes, velocity weighting removes temporal supersampling when
- * the velocity of the subsamples differs (meaning they are different objects).
- *
- * Range: [0, 80]
- */
-#define SMAA_REPROJECTION_WEIGHT_SCALE 30.0
-
-/**
- * In the last pass we leverage bilinear filtering to avoid some lerps.
- * However, bilinear filtering is done in gamma space in DX9, under DX9
- * hardware (but not in DX9 code running on DX10 hardware), which gives
- * inaccurate results.
- *
- * So, if you are in DX9, under DX9 hardware, and do you want accurate linear
- * blending, you must set this flag to 1.
- *
- * It's ignored when using SMAA_HLSL_4, and of course, only has sense when
- * using sRGB read and writes on the last pass.
- */
-#ifndef SMAA_DIRECTX9_LINEAR_BLEND
-#define SMAA_DIRECTX9_LINEAR_BLEND 0
-#endif
-
-/**
- * On ATI compilers, discard cannot be used in vertex shaders. Thus, they need
- * to be compiled separately. These macros allow to easily accomplish it.
- */
-#ifndef SMAA_ONLY_COMPILE_VS
-#define SMAA_ONLY_COMPILE_VS 0
-#endif
-#ifndef SMAA_ONLY_COMPILE_PS
-#define SMAA_ONLY_COMPILE_PS 0
-#endif
-
-//-----------------------------------------------------------------------------
-// End of Configurable Defines
-
-#include "SMAA.h"
-
-sampler2D TESR_SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = POINT; SRGBTEXTURE = TRUE; };
-sampler2D TESR_RenderedBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
-sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
-sampler2D TESR_areaTex : register(s3) < string ResourceName = "Effects\SMAA_AreaTex.dds"; > = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; ADDRESSW = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; SRGBTEXTURE = FALSE; };
-sampler2D TESR_searchTex : register(s4) < string ResourceName = "Effects\SMAA_SearchTex.dds"; > = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; ADDRESSW = CLAMP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; SRGBTEXTURE = FALSE; };
-
 void DX9_SMAAEdgeDetectionVS(inout float4 position : POSITION,
                              inout float2 texcoord : TEXCOORD0,
                              out float4 offset[3] : TEXCOORD1) {
-    SMAAEdgeDetectionVS(position, position, texcoord, offset);
+    SMAAEdgeDetectionVS(texcoord, offset);
 }
 
 void DX9_SMAABlendingWeightCalculationVS(inout float4 position : POSITION,
                                          inout float2 texcoord : TEXCOORD0,
                                          out float2 pixcoord : TEXCOORD1,
                                          out float4 offset[3] : TEXCOORD2) {
-    SMAABlendingWeightCalculationVS(position, position, texcoord, pixcoord, offset);
+    SMAABlendingWeightCalculationVS(texcoord, pixcoord, offset);
 }
 
 void DX9_SMAANeighborhoodBlendingVS(inout float4 position : POSITION,
                                     inout float2 texcoord : TEXCOORD0,
-                                    out float4 offset[2] : TEXCOORD1) {
-    SMAANeighborhoodBlendingVS(position, position, texcoord, offset);
+                                    out float4 offset : TEXCOORD1) {
+    SMAANeighborhoodBlendingVS(texcoord, offset);
 }
 
 
 float4 DX9_SMAALumaEdgeDetectionPS(float4 position : SV_POSITION,
                                    float2 texcoord : TEXCOORD0,
-                                   float4 offset[3] : TEXCOORD1,
-                                   uniform SMAATexture2D colorGammaTex) : COLOR {
-    return SMAALumaEdgeDetectionPS(texcoord, offset, colorGammaTex);
+                                   float4 offset[3] : TEXCOORD1) : COLOR {
+    return float4(SMAALumaEdgeDetectionPS(texcoord, offset, TESR_RenderedBuffer), 0.0, 0.0);
 }
 
 float4 DX9_SMAAColorEdgeDetectionPS(float4 position : SV_POSITION,
                                     float2 texcoord : TEXCOORD0,
-                                    float4 offset[3] : TEXCOORD1,
-                                    uniform SMAATexture2D colorGammaTex) : COLOR {
-    return SMAAColorEdgeDetectionPS(texcoord, offset, colorGammaTex);
+                                    float4 offset[3] : TEXCOORD1) : COLOR {
+    return float4(SMAAColorEdgeDetectionPS(texcoord, offset, TESR_RenderedBuffer), 0.0, 0.0);
 }
 
 float4 DX9_SMAADepthEdgeDetectionPS(float4 position : SV_POSITION,
                                     float2 texcoord : TEXCOORD0,
-                                    float4 offset[3] : TEXCOORD1,
-                                    uniform SMAATexture2D TESR_DepthBuffer) : COLOR {
-    return SMAADepthEdgeDetectionPS(texcoord, offset, TESR_DepthBuffer);
+                                    float4 offset[3] : TEXCOORD1) : COLOR {
+    return float4(SMAADepthEdgeDetectionPS(texcoord, offset, TESR_DepthBuffer), 0.0, 0.0);
 }
 
 float4 DX9_SMAABlendingWeightCalculationPS(float4 position : SV_POSITION,
                                            float2 texcoord : TEXCOORD0,
                                            float2 pixcoord : TEXCOORD1,
-                                           float4 offset[3] : TEXCOORD2,
-                                           uniform SMAATexture2D TESR_RenderedBuffer, 
-                                           uniform SMAATexture2D TESR_areaTex, 
-                                           uniform SMAATexture2D TESR_searchTex) : COLOR {
-    return SMAABlendingWeightCalculationPS(texcoord, pixcoord, offset, TESR_RenderedBuffer, TESR_areaTex, TESR_searchTex, 0);
+                                           float4 offset[3] : TEXCOORD2) : COLOR {
+    return SMAABlendingWeightCalculationPS(texcoord, pixcoord, offset, TESR_SMAA_Edges, TESR_SMAA_AreaTex, TESR_SMAA_SearchTex, 0.0);
 }
 
 float4 DX9_SMAANeighborhoodBlendingPS(float4 position : SV_POSITION,
                                       float2 texcoord : TEXCOORD0,
-                                      float4 offset[2] : TEXCOORD1,
-                                      uniform SMAATexture2D TESR_SourceBuffer,
-                                      uniform SMAATexture2D TESR_RenderedBuffer) : COLOR {
-    return SMAANeighborhoodBlendingPS(texcoord, offset, TESR_SourceBuffer, TESR_RenderedBuffer);
+                                      float4 offset : TEXCOORD1) : COLOR {
+    return SMAANeighborhoodBlendingPS(texcoord, offset, TESR_RenderedBuffer, TESR_SMAA_Blend);
 }
 
-technique
-{
-    pass
-	{
+/**
+ * Techniques.
+ */
+technique LumaEdgeDetection {
+    pass LumaEdgeDetection {
         VertexShader = compile vs_3_0 DX9_SMAAEdgeDetectionVS();
-        PixelShader = compile ps_3_0 DX9_SMAAColorEdgeDetectionPS(TESR_RenderedBuffer);
-
+        PixelShader = compile ps_3_0 DX9_SMAALumaEdgeDetectionPS();
+        ZEnable = false;
         SRGBWriteEnable = false;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        // We will be creating the stencil buffer for later usage.
         StencilEnable = true;
         StencilPass = REPLACE;
-		StencilFunc = ALWAYS;
         StencilRef = 1;
     }
+}
 
-    pass
-	{
-		VertexShader = compile vs_3_0 DX9_SMAABlendingWeightCalculationVS();
-		PixelShader = compile ps_3_0 DX9_SMAABlendingWeightCalculationPS(TESR_RenderedBuffer, TESR_areaTex, TESR_searchTex);
-
+technique ColorEdgeDetection {
+    pass ColorEdgeDetection {
+        VertexShader = compile vs_3_0 DX9_SMAAEdgeDetectionVS();
+        PixelShader = compile ps_3_0 DX9_SMAAColorEdgeDetectionPS();
+        ZEnable = false;
         SRGBWriteEnable = false;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        // We will be creating the stencil buffer for later usage.
+        StencilEnable = true;
+        StencilPass = REPLACE;
+        StencilRef = 1;
+    }
+}
+
+technique DepthEdgeDetection {
+    pass DepthEdgeDetection {
+        VertexShader = compile vs_3_0 DX9_SMAAEdgeDetectionVS();
+        PixelShader = compile ps_3_0 DX9_SMAADepthEdgeDetectionPS();
+        ZEnable = false;
+        SRGBWriteEnable = false;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        // We will be creating the stencil buffer for later usage.
+        StencilEnable = true;
+        StencilPass = REPLACE;
+        StencilRef = 1;
+    }
+}
+
+technique BlendWeightCalculation {
+    pass BlendWeightCalculation {
+        VertexShader = compile vs_3_0 DX9_SMAABlendingWeightCalculationVS();
+        PixelShader = compile ps_3_0 DX9_SMAABlendingWeightCalculationPS();
+        ZEnable = false;
+        SRGBWriteEnable = false;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        // Here we want to process only marked pixels.
         StencilEnable = true;
         StencilPass = KEEP;
         StencilFunc = EQUAL;
         StencilRef = 1;
     }
+}
 
-    pass
-	{
+technique NeighborhoodBlending {
+    pass NeighborhoodBlending {
         VertexShader = compile vs_3_0 DX9_SMAANeighborhoodBlendingVS();
-        PixelShader = compile ps_3_0 DX9_SMAANeighborhoodBlendingPS(TESR_SourceBuffer, TESR_RenderedBuffer);
-		
-        SRGBWriteEnable = true;
+        PixelShader = compile ps_3_0 DX9_SMAANeighborhoodBlendingPS();
+        ZEnable = false;
+        SRGBWriteEnable = false;
+        AlphaBlendEnable = false;
+        AlphaTestEnable = false;
+
+        // Here we want to process all the pixels.
         StencilEnable = false;
-    }	
+    }
 }
