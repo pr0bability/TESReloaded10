@@ -45,6 +45,7 @@ void DetectorWindowDumpAttributesHook();
 
 void __fastcall MuzzleLightCullingFix(MuzzleFlash* This);
 
+BSFogProperty* __cdecl ShadowSceneNode__GetFogPropertyEx(UInt32 aeType);
 NiPoint2* __fastcall WaterFogRemover(NiPoint2* point, void*, float x, float y);
 
 void DetectorWindowDumpAttributes(HWND TreeView, UInt32 Msg, WPARAM wParam, LPTVINSERTSTRUCTA lParam);
