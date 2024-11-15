@@ -63,9 +63,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 mdl11 = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), r0.xyzw);
 
     // fog
-    float q2 = 1 - saturate((FogParam.x - length(mdl11)) / FogParam.y);
-    // log r0.x, r0.x
-    OUT.color_1.a = exp2(q2.x * FogParam.z);
+    float fogStrength = log2(1 - saturate((FogParam.x - length(mdl11)) / FogParam.y));
+    OUT.color_1.a = exp2(fogStrength * FogParam.z);
     OUT.color_1.rgb = FogColor.rgb;
 
     OUT.position.w = dot(ModelViewProj[3].xyzw, r0.xyzw);

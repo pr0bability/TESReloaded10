@@ -482,6 +482,14 @@ void __fastcall MuzzleLightCullingFix(MuzzleFlash* This) {
 	ThisCall(0x9BB8A0, This);
 }
 
+BSFogProperty* __cdecl ShadowSceneNode__GetFogPropertyEx(UInt32 aeType) {
+	if (TheSettingManager->SettingsMain.Main.SkipFog && !TheShaderManager->GameState.isUnderwater) {
+		aeType = 1;  // Use UI scene node and thus render no fog.
+	}
+
+	return BSShaderManager::GetShadowSceneNode(static_cast<BSShaderManager::SceneGraphType>(aeType))->fogProperty;
+}
+
 NiPoint2* __fastcall WaterFogRemover(NiPoint2* point, void*, float x, float y)
 {
 	point->x = 0.f;
