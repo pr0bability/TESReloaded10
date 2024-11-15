@@ -53,6 +53,7 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterEffect<VolumetricFogEffect>(&TheShaderManager->Effects.VolumetricFog);
 	TheShaderManager->RegisterEffect<WaterLensEffect>(&TheShaderManager->Effects.WaterLens);
 	TheShaderManager->RegisterEffect<WetWorldEffect>(&TheShaderManager->Effects.WetWorld);
+	TheShaderManager->RegisterEffect<SMAAEffect>(&TheShaderManager->Effects.SMAA);
 
 	TheShaderManager->RegisterShaderCollection<TonemappingShaders>(&TheShaderManager->Shaders.Tonemapping);
 	TheShaderManager->RegisterShaderCollection<POMShaders>(&TheShaderManager->Shaders.POM);
@@ -739,6 +740,9 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Effects.BloodLens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.WaterLens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.LowHF->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
+	Effects.SMAA->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
 	Effects.Sharpening->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// cinema effect gets rendered very last because of vignetting/letterboxing
