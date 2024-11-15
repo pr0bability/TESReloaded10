@@ -262,10 +262,15 @@ void __fastcall RenderReflectionsHook(WaterManager* This, UInt32 edx, NiCamera* 
 	D3DXVECTOR4* ShadowData = &TheShaderManager->Effects.ShadowsExteriors->Constants.Data;
 	float ShadowDataBackup = ShadowData->x;
 
+	D3DXVECTOR4* TerrainParallaxData = &TheShaderManager->Shaders.Terrain->ParallaxConstants.Data;
+	float TerrainParallaxBackup = TerrainParallaxData->x;
+
 	if (DWNode::Get()) DWNode::AddNode("BEGIN REFLECTIONS RENDERING", NULL, NULL);
 	ShadowData->x = -1.0f; // Disables the shadows rendering for water reflections (the geo is rendered with the same shaders used in the normal scene!)
+	TerrainParallaxData->x = 0;
 	(*RenderReflections)(This, Camera, SceneNode);
 	ShadowData->x = ShadowDataBackup;
+	TerrainParallaxData->x = TerrainParallaxBackup;
 	if (DWNode::Get()) DWNode::AddNode("END REFLECTIONS RENDERING", NULL, NULL);
 }
 
