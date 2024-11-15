@@ -19,8 +19,8 @@ OffsetY = 15.0
 OffsetZ = 5.0
 
 [_Main.Develop.Main]
-CompileEffects = 2      # 1 to always recompile, 2 to recompile newer versions.
-CompileShaders = 2      # 1 to always recompile, 2 to recompile newer versions.
+CompileEffects = 1      # 1 to always recompile, 2 to recompile newer versions.
+CompileShaders = 1      # 1 to always recompile, 2 to recompile newer versions.
 DebugMode = false       # Enables debug features like capture shaders and print shadowmaps.
 DebugVar1 = 0.0         # Custom variable used when developing shaders.
 DebugVar2 = 0.0         # Custom variable used when developing shaders.
