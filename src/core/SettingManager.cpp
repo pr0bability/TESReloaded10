@@ -1351,8 +1351,6 @@ bool SettingManager::IsShaderForced(const char* Name) {
 	if (SettingsMain.Main.InvertedDepth) {
 		if (!strcmp(Name, "Sky"))
 			return true;
-		if (!strcmp(Name, "VolumetricFog"))
-			return true;
 	}
 	return false;
 }

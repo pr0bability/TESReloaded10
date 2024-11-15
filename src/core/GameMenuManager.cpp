@@ -384,8 +384,8 @@ void GameMenuManager::HandleInput() {
 					TheRenderManager->ToggleDepthDirection(true);
 					TheSettingManager->SetMenuMiscEnabled("InvertedDepth", true);
 
-					// Force Sky and Fog shaders to avoid vanilla issues.
-					for (const char * ShaderName : { "Sky", "VolumetricFog", }) {
+					// Force Sky shaders to avoid DI issues with vanilla shaders.
+					for (const char * ShaderName : { "Sky" }) {
 						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(ShaderName);
 						if (!ShaderEnabled)
 							TheShaderManager->SwitchShaderStatus(ShaderName);
