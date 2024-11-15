@@ -83,6 +83,11 @@ void AttachHooks() {
 		SafeWriteJump(0x0063A5CB, 0x0063A5DE);
 	}
 
+	// Vanilla fog remover.
+	for (UInt32 uiAddress : {0x6335EE, 0xB795FA, 0xB7AE86, 0xB7B539, 0xB7C3AB, 0xB86738, 0xBAA43B, 0xBB1B5B, 0xBB1FA5, 0xBB670E, 0xBBDF26, 0xBBE3EC, 0xBC6E33, 0xBD4BED }) {
+		SafeWriteCall(uiAddress, (UInt32)ShadowSceneNode__GetFogPropertyEx);
+	}
+
 	if (TheSettingManager->SettingsMain.Main.RemoveUnderwater)
 		SafeWriteCall(0x4EC8EE, UInt32(WaterFogRemover));
 

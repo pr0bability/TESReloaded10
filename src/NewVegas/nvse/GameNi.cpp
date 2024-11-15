@@ -61,6 +61,10 @@ float* const BSShaderManager::fDepthBias = (float*)0x1200458;
 NiPoint3* const BSShaderManager::kCameraPos = (NiPoint3*)0x11F474C;
 BSShader** BSShaderManager::pspShaders = (BSShader**)0x11F9548;
 
+ShadowSceneNode* BSShaderManager::GetShadowSceneNode(UInt32 aeType) {
+	return ((ShadowSceneNode**)0x11F91C8)[aeType];
+}
+
 NiDX9Renderer* BSShaderManager::GetRenderer() {
 	return *(NiDX9Renderer**)0x11F9508;
 }

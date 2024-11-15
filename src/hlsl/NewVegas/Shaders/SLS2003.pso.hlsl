@@ -75,8 +75,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 lighting = getSunLighting(IN.texcoord_1.xyz, PSLightColor[0].rgb, eyeDir, normal.xyz, AmbientColor.rgb, baseColor.rgb, roughness);
 
     float3 final = lighting;
+    final = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));  // Apply noise.
+    final = lerp(final, IN.color_1.rgb, IN.color_1.a);  // Apply fog.
 
-    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));
+    OUT.color_0.rgb = final;
     OUT.color_0.a = 1;
 
     return OUT;

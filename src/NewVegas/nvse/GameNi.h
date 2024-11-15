@@ -64,7 +64,9 @@ class EffectShaderProperty;
 class BSRenderPass;
 class BSPortalGraph;
 
+class BSFogProperty;
 class ShadowSceneLight;
+class ShadowSceneNode;
 class AnimSequenceBase;
 
 class TESObjectREFR;
@@ -2290,6 +2292,14 @@ assert(sizeof(BSRenderedTexture) == 0x40);
 
 class BSShaderManager {
 public:
+	enum SceneGraphType : UInt32 {
+		BSSM_SSN_WORLD				= 0,
+		BSSM_SSN_MENU_OBJECT_3D		= 1,
+		BSSM_SSN_UNK_2				= 2,
+		BSSM_SSN_MENU_PLAYER_3D		= 3,
+		BSSM_SSN_COUNT				= 4,
+	};
+
 	enum ShaderType : UInt32 {
 		BSSM_SHADER_DEFAULT			= 0,
 		BSSM_SHADER_SHADOWLIGHT		= 1,
@@ -2332,6 +2342,8 @@ public:
 	static NiPoint3* const kCameraPos;
 
 	static BSShader** pspShaders;
+
+	static ShadowSceneNode* GetShadowSceneNode(UInt32 aeType);
 
 	static NiDX9Renderer* GetRenderer();
 
@@ -2533,7 +2545,7 @@ public:
 	UInt8								byte130;			// 130
 	UInt8								byte131;			// 131
 	UInt8								pad132[2];			// 132
-	void*								fogProperty;		// 134 BSFogProperty*
+	BSFogProperty*						fogProperty;		// 134 BSFogProperty*
 	UInt32								unk138;				// 138
 	UInt32								array13C[4];		// 13C BSSimpleArray<NiFrustumPlanes>
 	UInt32								array14C[4];		// 14C BSSimpleArray<void>

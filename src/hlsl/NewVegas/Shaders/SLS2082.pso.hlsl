@@ -25,6 +25,7 @@ float4 PSLightColor[10] : register(c3);
 // Structures:
 
 struct VS_INPUT {
+    
     float2 BaseUV : TEXCOORD0;
     float3 texcoord_3 : TEXCOORD3_centroid;
     float texcoord_4 : TEXCOORD4_centroid;
@@ -60,8 +61,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 lighting = getSunLighting(IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, normal.rgb, AmbientColor.rgb, baseColor, roughness);
 
     float3 final = lighting;
+    final = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));  // Apply noise.
+    final = lerp(final, IN.texcoord_5.rgb, IN.texcoord_5.a);  // Apply fog.
 
-    OUT.color_0.rgb = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));
+    OUT.color_0.rgb = final;
     OUT.color_0.a = IN.texcoord_4.x;
 
     return OUT;

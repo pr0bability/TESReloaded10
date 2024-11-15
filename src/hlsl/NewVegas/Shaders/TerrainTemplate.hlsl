@@ -32,7 +32,8 @@ struct VS_OUTPUT {
     float3 tangent : TEXCOORD3;
     float3 binormal : TEXCOORD4;
     float3 normal : TEXCOORD5;
-    float4 viewPosition : TEXCOORD7;
+    float4 fog : TEXCOORD6;
+    float3 viewPosition : TEXCOORD7;
 };
 
 #ifdef VS
@@ -46,7 +47,6 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
     float3 mdl0;
-    float4 r0;
 
     mdl0.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
 
@@ -61,10 +61,17 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.tangent.xyz = IN.tangent.xyz;
     OUT.binormal.xyz = IN.binormal.xyz;
     OUT.normal.xyz = IN.normal.xyz;
-    r0.zw = FogParam.z;
-    r0.xy = 1 - saturate((FogParam.x - length(mdl0.xyz)) / FogParam.y);
-    // lit r0, r0
-    OUT.viewPosition.w = r0.z;
+    
+    // Fog.
+    float4 fog;
+    fog.zw = FogParam.z;
+    fog.xy = 1 - saturate((FogParam.x - length(mdl0.xyz)) / FogParam.y);
+    
+    fog = lit(fog.x, fog.y, fog.w);
+    
+    OUT.fog.a = fog.z;
+    OUT.fog.rgb = FogColor.rgb;
+    
     OUT.viewPosition.xyz = mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz;
 
     return OUT;
@@ -82,7 +89,8 @@ struct PS_INPUT
     float3 normal : TEXCOORD5_centroid;
     float4 blend_0 : COLOR0;
     float4 blend_1 : COLOR1;
-    float4 viewPosition : TEXCOORD7_centroid;
+    float4 fog : TEXCOORD6_centroid;
+    float3 viewPosition : TEXCOORD7_centroid;
     float4 sPosition : POSITION1;
 };
 
@@ -139,6 +147,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     #endif
     
     float3 finalColor = lighting;
+    finalColor = lerp(finalColor, IN.fog.rgb, IN.fog.a); // Apply fog.
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;

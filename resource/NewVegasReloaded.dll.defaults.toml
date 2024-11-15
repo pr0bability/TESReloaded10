@@ -58,6 +58,7 @@ InvertedDepth = true        # Toggle to invert the depth buffer, fixing Z-fighti
 ReplaceIntro = false        # Controls rendering of the main menu custom video.
 ScreenshotKey = 87          # Keycode for custom screenshot hotkey (removes HUD and saves as jpg).
 HDRScreenshot = false       # Save screenshots in fbx (use with DXVK HDR)
+SkipFog = true				# Removes vanilla fog, which is not compatible with NVR fog nor depth inversion.
 
 [_Main.Main.Precipitations]
 RemovePrecipitations = false   # Disables vanilla rain and other precipitations.

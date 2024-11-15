@@ -61,15 +61,16 @@ VS_OUTPUT main(VS_INPUT IN) {
     r0.z = 1 - r0.x;
     
     OUT.texcoord_0.xy = (r0.zy * 0.9921875) + (1.0 / 256);
-
-    r0.xy = sqr(LandBlendParams.zw - IN.position.xy);
-    r0.zw = FogParam.z;
-
     OUT.texcoord_3.xyz = LightData[0].xyz;
     OUT.texcoord_4.x = 1 - saturate((9625.59961 - sqrt(r0.y + r0.x)) * 0.000375600968);
+    
+    // Fog.
+    r0.xy = sqr(LandBlendParams.zw - IN.position.xy);
+    r0.zw = FogParam.z;
     r0.xy = 1 - saturate((FogParam.x - length(mdl4.xyz)) / FogParam.y);
+    
+    r0 = lit(r0.x, r0.y, r0.w);
 
-    // lit r0, r0
     OUT.texcoord_5.w = r0.z;
     OUT.texcoord_5.xyz = FogColor.rgb;
 
