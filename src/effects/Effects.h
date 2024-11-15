@@ -32,6 +32,7 @@
 #include "VolumetricFog.h"
 #include "WaterLens.h"
 #include "WetWorld.h"
+#include "SMAA.h"
 
 #include "Water.h"
 #include "Tonemapping.h"

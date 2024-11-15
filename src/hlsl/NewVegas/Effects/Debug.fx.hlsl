@@ -20,6 +20,8 @@ sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; 
 sampler2D TESR_AvgLumaBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_PointShadowBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_BloomBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_SMAA_Edges : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SMAA_Blend : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 
 struct VSOUT {
@@ -127,6 +129,8 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	color = displayDepth(color, IN.UVCoord, float2(0.3, 0.05), float2(0.15, 0.15));
 	color = displayShadows(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15));
 	color = displayBloom(color, IN.UVCoord, float2(0.7, 0.05), float2(0.15, 0.15), TESR_BloomBuffer);
+    color = displayBuffer(color, IN.UVCoord, float2(0.1, 0.25), float2(0.15, 0.15), TESR_SMAA_Edges);
+    color = displayBuffer(color, IN.UVCoord, float2(0.3, 0.25), float2(0.15, 0.15), TESR_SMAA_Blend);
 
     return float4(color.rgb, 1);
 }

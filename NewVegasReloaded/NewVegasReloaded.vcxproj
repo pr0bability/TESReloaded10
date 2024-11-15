@@ -156,6 +156,7 @@
     <ClCompile Include="..\src\effects\PBR.cpp" />
     <ClCompile Include="..\src\effects\POM.cpp" />
     <ClCompile Include="..\src\effects\Rain.cpp" />
+    <ClCompile Include="..\src\effects\SMAA.cpp" />
     <ClCompile Include="..\src\effects\ShadowsExterior.cpp" />
     <ClCompile Include="..\src\effects\ShadowsInteriors.cpp" />
     <ClCompile Include="..\src\effects\Sharpening.cpp" />
@@ -234,6 +235,7 @@
     <ClInclude Include="..\src\effects\PointShadows2.h" />
     <ClInclude Include="..\src\effects\POM.h" />
     <ClInclude Include="..\src\effects\Rain.h" />
+    <ClInclude Include="..\src\effects\SMAA.h" />
     <ClInclude Include="..\src\effects\ShadowsExterior.h" />
     <ClInclude Include="..\src\effects\ShadowsInteriors.h" />
     <ClInclude Include="..\src\effects\Sharpening.h" />
