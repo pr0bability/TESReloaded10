@@ -30,12 +30,12 @@ void RenderPass::RenderGeometry(NiGeometry* Geo) {
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
 	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(GeoData, GeoData->VertCount);
+	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(Geo, GeoData, GeoData->VertCount);
 }
 
 
 // draws the geo data from the Geometry buffer
-void RenderPass::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount) {
+void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData, UINT verticesCount) {
 	int StartIndex = 0;
 	int PrimitiveCount = 0;
 
@@ -50,11 +50,12 @@ void RenderPass::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT vertices
 	else
 		TheRenderManager->renderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
 
-	for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-		PrimitiveCount = GeoData->ArrayLengths?GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
-
-		TheRenderManager->device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, verticesCount, StartIndex, PrimitiveCount);
-		StartIndex += PrimitiveCount + 2;
+	NiTriStrips* pStrips = Geo->IsTriStrips();
+	if (pStrips) {
+		ThisStdCall(0xE74840, NiDX9Renderer::GetSingleton(), Geo);  // RenderTriStripsAlt
+	}
+	else {
+		ThisStdCall(0xE745A0, NiDX9Renderer::GetSingleton(), Geo);  // RenderTriShapeAlt
 	}
 }
 
@@ -210,7 +211,7 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 		}
 
 		TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
-		DrawGeometryBuffer(GeoData, Partition->Vertices);
+		DrawGeometryBuffer(Geo, GeoData, Partition->Vertices);
 	}
 }
 

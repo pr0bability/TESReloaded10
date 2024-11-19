@@ -17,7 +17,7 @@ public:
 	virtual void RenderGeometry(NiGeometry* Geo);
 	virtual void RegisterConstants() {};
 
-	void DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
+	void DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData, UINT verticesCount);
 	void RenderAccum();
 };
 
