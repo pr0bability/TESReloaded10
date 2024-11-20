@@ -3151,6 +3151,10 @@ public:
 	TESObjectCELL*		parentCell;				// 040
 	ExtraDataList		extraDataList;			// 044
 	TESObjectREFRData*	renderData;				// 064	- (05C in FOSE)
+
+	static TESObjectREFR* FindReferenceFor3D(NiAVObject* apObject) {
+		return CdeclCall<TESObjectREFR*>(0x56F930, apObject);
+	}
 };
 assert(sizeof(TESObjectREFR) == 0x068);
 

@@ -48,6 +48,25 @@ void NiDelete(void* pvMem, size_t stElementSize) {
 		NiMemManager::GetSingleton()->m_pkAllocator->Deallocate(pvMem, NI_OPER_DELETE, stElementSize);
 }
 
+// NiRefObject
+UInt32* const NiRefObject::ms_uiObjects = (UInt32*)0x11F4400;
+
+// 0x4968B0
+NiRefObject::NiRefObject() {
+	m_uiRefCount = 0;
+	InterlockedIncrement(ms_uiObjects);
+}
+
+// 0xA5D3D0
+NiRefObject::~NiRefObject() {
+	InterlockedDecrement(ms_uiObjects);
+}
+
+// 0xCFCC20
+void NiRefObject::DeleteThis() {
+	delete this;
+}
+
 NiD3DRSEntry* NiD3DRenderStateGroup::FindRenderStateEntry(UInt32 auiState, bool& abInSaveList) {
 	return ThisStdCall<NiD3DRSEntry*>(0xE7F000, this, auiState, &abInSaveList);
 }
@@ -277,4 +296,16 @@ void NiDX9Renderer::CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransf
 
 bool BSShaderProperty::IsLightingProperty() {
 	return (type == ShaderDefinitionEnum::kShaderDefinition_ShadowLightShader || type == ShaderDefinitionEnum::kShaderDefinition_Lighting30Shader);
-}	
+}
+
+bool NiAVObject::GetBit(UInt32 auData) const {
+	return m_flags & auData;
+}
+
+bool NiAVObject::GetHasPropertyController() const {
+	return GetBit(HAS_PROPERTY_CONTROLLER);
+}
+
+NiGeometryData::Consistency NiGeometryData::GetConsistency() const {
+	return (Consistency)(m_usDirtyFlags & CONSISTENCY_MASK);
+}

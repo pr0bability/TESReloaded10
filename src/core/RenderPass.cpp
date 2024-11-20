@@ -2,11 +2,32 @@
 
 
 void RenderPass::RenderAccum() {
-	if (GeometryList.empty()) return;
+	if (GeometryList.empty() && GeometryInstances.empty()) return;
 
 	// Could add setup of device/renderstate/current shaders here
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
+	RenderState->SetVertexShader(InstancedVertexShader->ShaderHandle, false);
+
+	// Render instanced geometry
+	while (!GeometryInstances.empty()) {
+		auto head = GeometryInstances.begin();
+
+		NiGeometryData* geoData = head->first;
+		std::vector<NiGeometry*> &geometries = head->second;
+
+		if (!geometries.empty()) {
+			UpdateConstants(geometries.front());
+			PixelShader->SetCT();
+			InstancedVertexShader->SetCT();
+
+			RenderInstancedGeometry(geometries);
+		}
+
+		GeometryInstances.erase(geoData);
+		geoData->DecRefCount();
+	}
+
 	RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
 
 	// Render normal geometry
@@ -28,17 +49,83 @@ void RenderPass::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryData* ModelData = Geo->geomData;
 	NiGeometryBufferData* GeoData = ModelData->BuffData;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
-
+	
 	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(Geo, GeoData, GeoData->VertCount);
+	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(Geo, GeoData);
 }
 
+// Render instanced geometries.
+void RenderPass::RenderInstancedGeometry(std::vector<NiGeometry*> &geometries) {
+	// Since all geometries are the same form, take the first one and set up render state based on it.
+	NiGeometry* geo = geometries.front();
+	NiGeometryData* geoData = geo->geomData;
+	NiGeometryBufferData* bufferData = geo->geomData->BuffData;
+	NiD3DShaderDeclaration* shaderDeclaration = geo->shader->ShaderDeclaration;
+
+	shaderDeclaration->SetEntry(6, 0, NiShaderDeclaration::SHADERPARAM_NI_TEXCOORD4, NiShaderDeclaration::SPTYPE_FLOAT4, 1);
+	shaderDeclaration->SetEntry(7, 0, NiShaderDeclaration::SHADERPARAM_NI_TEXCOORD5, NiShaderDeclaration::SPTYPE_FLOAT4, 1);
+	shaderDeclaration->SetEntry(8, 0, NiShaderDeclaration::SHADERPARAM_NI_TEXCOORD6, NiShaderDeclaration::SPTYPE_FLOAT4, 1);
+	shaderDeclaration->SetEntry(9, 0, NiShaderDeclaration::SHADERPARAM_NI_TEXCOORD7, NiShaderDeclaration::SPTYPE_FLOAT4, 1);
+
+	TheRenderManager->PackGeometryBuffer(bufferData, geoData, NULL, shaderDeclaration);
+
+	for (UInt32 i = 0; i < bufferData->StreamCount; i++) {
+		TheRenderManager->device->SetStreamSource(i, bufferData->VBChip[i]->VB, 0, bufferData->VertexStride[i]);
+	}
+
+	if (!bufferData->IB) return; // breaks on hand models for some reason? TODO: figure out what breaks for hands
+	TheRenderManager->device->SetIndices(bufferData->IB);
+	if (bufferData->FVF)
+		TheRenderManager->renderState->SetFVF(bufferData->FVF, false);
+	else
+		TheRenderManager->renderState->SetVertexDeclaration(shaderDeclaration->GetD3DDeclaration(), false);
+
+	UInt16 count = geometries.size();
+
+	IDirect3DDevice9* device = NiDX9Renderer::GetSingleton()->device;
+
+	IDirect3DVertexBuffer9* vertexBuffer = nullptr;
+	
+	device->CreateVertexBuffer(
+		sizeof(D3DXMATRIX) * count,
+		D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+		0,
+		D3DPOOL_DEFAULT,
+		&vertexBuffer,
+		nullptr
+	);
+
+	D3DXMATRIX* instanceData = nullptr;
+
+	vertexBuffer->Lock(0, sizeof(D3DXMATRIX) * count, reinterpret_cast<void**>(&instanceData), D3DLOCK_NOSYSLOCK);
+
+	for (UInt16 i = 0; i < count; i++) {
+		TheRenderManager->CreateD3DMatrix(&instanceData[i], &geometries[i]->m_worldTransform);
+	}
+
+	vertexBuffer->Unlock();
+
+	device->SetStreamSourceFreq(0, D3DSTREAMSOURCE_INDEXEDDATA | count);
+
+	device->SetStreamSourceFreq(1, D3DSTREAMSOURCE_INSTANCEDATA | 1ul);
+	device->SetStreamSource(1, vertexBuffer, 0, sizeof(D3DXMATRIX));
+
+	NiTriStrips* pStrips = geo->IsTriStrips();
+	if (pStrips) {
+		ThisStdCall(0xE74840, NiDX9Renderer::GetSingleton(), geo);  // RenderTriStripsAlt
+	}
+	else {
+		ThisStdCall(0xE745A0, NiDX9Renderer::GetSingleton(), geo);  // RenderTriShapeAlt
+	}
+
+	vertexBuffer->Release();
+
+	device->SetStreamSourceFreq(0, 1);
+	device->SetStreamSourceFreq(1, 1);
+}
 
 // draws the geo data from the Geometry buffer
-void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData, UINT verticesCount) {
-	int StartIndex = 0;
-	int PrimitiveCount = 0;
-
+void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData) {
 	for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 		TheRenderManager->device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
 	}
@@ -73,7 +160,29 @@ bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
 
-	GeometryList.push(Geo);
+	if (EnableInstancing) {
+		if (Geo->geomData->BuffData->StreamCount > 1)
+			GeometryList.push(Geo);
+		else if (Geo->geomData->GetConsistency() == NiGeometryData::MUTABLE)
+			GeometryList.push(Geo);
+		else if (Geo->m_controller || Geo->GetHasPropertyController())
+			GeometryList.push(Geo);
+		else {
+			std::vector<NiGeometry*>& instances = GeometryInstances[Geo->geomData];
+
+			if (instances.empty())
+				Geo->geomData->IncRefCount();
+
+			if (instances.size() < MaxInstances)
+				instances.push_back(Geo);
+			else
+				GeometryList.push(Geo);
+		}
+	}
+	else {
+		GeometryList.push(Geo);
+	}
+
 	return true;
 }
 
@@ -110,7 +219,29 @@ bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo) {
 	if (!AProp) return false;
 	if (!(AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK) && !(AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK)) return false;
 
-	GeometryList.push(Geo);
+	if (EnableInstancing) {
+		if (Geo->geomData->BuffData->StreamCount > 1)
+			GeometryList.push(Geo);
+		else if (Geo->geomData->GetConsistency() == NiGeometryData::MUTABLE)
+			GeometryList.push(Geo);
+		else if (Geo->m_controller || Geo->GetHasPropertyController())
+			GeometryList.push(Geo);
+		else {
+			std::vector<NiGeometry*>& instances = GeometryInstances[Geo->geomData];
+
+			if (instances.empty())
+				Geo->geomData->IncRefCount();
+			
+			if (instances.size() < MaxInstances)
+				instances.push_back(Geo);
+			else
+				GeometryList.push(Geo);
+		}
+	}
+	else {
+		GeometryList.push(Geo);
+	}
+
 	return true;
 }
 
@@ -159,7 +290,9 @@ bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo) {
 		Geo->skinInstance->SkinPartition->Partitions) {
 
 		// only accum if valid data preset
-		if (Geo->skinInstance->SkinPartition->Partitions[0].BuffData) GeometryList.push(Geo);
+		if (Geo->skinInstance->SkinPartition->Partitions[0].BuffData) {
+			GeometryList.push(Geo);
+		}
 	
 		// we return true in any case because we still found skinned geo either way
 		return true;
@@ -211,7 +344,7 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 		}
 
 		TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
-		DrawGeometryBuffer(Geo, GeoData, Partition->Vertices);
+		DrawGeometryBuffer(Geo, GeoData);
 	}
 }
 

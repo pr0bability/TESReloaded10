@@ -16,8 +16,10 @@ void ShadowManager::Initialize() {
 
 	// load the shaders
 	TheShadowManager->ShadowMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowMap.vso", "Shadows\\");
+	TheShadowManager->ShadowMapVertexInstanced = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowMapInstanced.vso", "Shadows\\");
 	TheShadowManager->ShadowMapPixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("ShadowMap.pso", "Shadows\\");
 	TheShadowManager->ShadowCubeMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowCubeMap.vso", "Shadows\\");
+	TheShadowManager->ShadowCubeMapVertexInstanced = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowCubeMapInstanced.vso", "Shadows\\");
 	TheShadowManager->ShadowCubeMapPixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("ShadowCubeMap.pso", "Shadows\\");
 
     TheShadowManager->ShadowMapBlurVertex = (ShaderRecordVertex*) ShaderRecord::LoadShader("ShadowMapBlur.vso", "Shadows\\");
@@ -25,8 +27,10 @@ void ShadowManager::Initialize() {
 
 	// Make sure samplers are not reset on SetCT as that causes errors.
 	TheShadowManager->ShadowMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowMapVertexInstanced->ClearSamplers = false;
 	TheShadowManager->ShadowMapPixel->ClearSamplers = false;
 	TheShadowManager->ShadowCubeMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowCubeMapVertexInstanced->ClearSamplers = false;
 	TheShadowManager->ShadowCubeMapPixel->ClearSamplers = false;
 	TheShadowManager->ShadowMapBlurVertex->ClearSamplers = false;
 	TheShadowManager->ShadowMapBlurPixel->ClearSamplers = false;
@@ -528,6 +532,11 @@ void ShadowManager::RenderShadowMaps() {
 	}
 	if (!Player->parentCell) return;
 
+	// INSTANCING TEST.
+	geometryPass->EnableInstancing = TheShaderManager->Effects.Debug->Constants.DebugVar.x > 0;
+	alphaPass->EnableInstancing = TheShaderManager->Effects.Debug->Constants.DebugVar.x > 0;
+	// ---
+
 	auto timer = TimeLogger();
 
 	// prepare some pointers to the device and surfaces
@@ -580,12 +589,16 @@ void ShadowManager::RenderShadowMaps() {
 	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
 
 		geometryPass->VertexShader = ShadowMapVertex;
+		geometryPass->InstancedVertexShader = ShadowMapVertexInstanced;
 		geometryPass->PixelShader = ShadowMapPixel;
 		alphaPass->VertexShader = ShadowMapVertex;
+		alphaPass->InstancedVertexShader = ShadowMapVertexInstanced;
 		alphaPass->PixelShader = ShadowMapPixel;
 		skinnedGeoPass->VertexShader = ShadowMapVertex;
+		skinnedGeoPass->InstancedVertexShader = ShadowMapVertexInstanced;
 		skinnedGeoPass->PixelShader = ShadowMapPixel;
 		speedTreePass->VertexShader = ShadowMapVertex;
+		speedTreePass->InstancedVertexShader = ShadowMapVertexInstanced;
 		speedTreePass->PixelShader = ShadowMapPixel;
 
 		if (ExteriorEnabled && SunDir->z > 0.0f) {
@@ -628,12 +641,16 @@ void ShadowManager::RenderShadowMaps() {
 
 	AlphaEnabled = ShadowsInteriors->Forms.AlphaEnabled;
 	geometryPass->VertexShader = ShadowCubeMapVertex;
+	geometryPass->InstancedVertexShader = ShadowCubeMapVertexInstanced;
 	geometryPass->PixelShader = ShadowCubeMapPixel;
 	alphaPass->VertexShader = ShadowCubeMapVertex;
+	alphaPass->InstancedVertexShader = ShadowCubeMapVertexInstanced;
 	alphaPass->PixelShader = ShadowCubeMapPixel;
 	skinnedGeoPass->VertexShader = ShadowCubeMapVertex;
+	skinnedGeoPass->InstancedVertexShader = ShadowCubeMapVertexInstanced;
 	skinnedGeoPass->PixelShader = ShadowCubeMapPixel;
 	speedTreePass->VertexShader = ShadowCubeMapVertex;
+	speedTreePass->InstancedVertexShader = ShadowCubeMapVertexInstanced;
 	speedTreePass->PixelShader = ShadowCubeMapPixel;
 
 	auto shadowMapTimer = TimeLogger();
