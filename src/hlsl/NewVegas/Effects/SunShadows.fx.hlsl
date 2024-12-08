@@ -73,6 +73,7 @@ float GetLightAmountValue(sampler2D shadowBuffer, float4x4 lightTransform, float
 	// 1: VSM
 	// 2: simple ESM
 	// 3: filtered ESM
+	// 4: poisson 32x
 
 	float4 LightSpaceCoord = ScreenCoordToTexCoord(mul(coord, lightTransform));
 	float4 shadowBufferValue = tex2D(shadowBuffer, LightSpaceCoord.xy);
@@ -82,7 +83,7 @@ float GetLightAmountValue(sampler2D shadowBuffer, float4x4 lightTransform, float
 		GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z),
 		GetLightAmountValueESM(shadowBufferValue.x, LightSpaceCoord.z),
 		GetLightAmountValueESSM(shadowBufferValue.x, LightSpaceCoord.z),
-		0.0,
+		GetLightAmountValuePoisson(shadowBuffer, LightSpaceCoord),
 	};
 	return dot(shadows, shadowMode);
 }
