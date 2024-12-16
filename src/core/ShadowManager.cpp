@@ -156,6 +156,20 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
     	if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling containers
 		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
+		if (Node->IsKindOf<NiSwitchNode>()) {
+			// NiSwitchNode - only render active children (if exists) to the shadow map.
+			NiSwitchNode* SwitchNode = static_cast<NiSwitchNode*>(Node);
+			if (SwitchNode->m_iIndex < 0)
+				continue;
+
+			child = Node->m_children.data[SwitchNode->m_iIndex];
+			if (!child->IsGeometry())
+				containers.push(child);
+			else
+				AccumObject(&containers, child, Forms);
+			continue;
+		}
+
 		for (int i = 0; i < Node->m_children.end; i++) {
 			child = Node->m_children.data[i];
 			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling children
