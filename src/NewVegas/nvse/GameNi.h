@@ -86,8 +86,48 @@ class ImageSpaceShaderParam;
 struct NiRTTI {
 	const char* name;
 	NiRTTI*		parent;
+
+	const char* GetName() const { return name; }
+	const NiRTTI* GetBase() const { return parent; }
+
+	bool IsKindOf(const NiRTTI& apRTTI) const {
+		for (const NiRTTI* i = this; i; i = i->GetBase()) {
+			if (i == &apRTTI)
+				return true;
+		}
+		return false;
+	}
+
+	bool IsKindOf(const NiRTTI* apRTTI) const {
+		for (const NiRTTI* i = this; i; i = i->GetBase()) {
+			if (i == apRTTI)
+				return true;
+		}
+		return false;
+	}
+
+	template <typename T_RTTI>
+	bool IsKindOf() const {
+		return IsKindOf(T_RTTI::ms_RTTI);
+	}
+
+	bool IsExactKindOf(const NiRTTI* const apRTTI) const {
+		return this == apRTTI;
+	}
+
+	bool IsExactKindOf(const NiRTTI& apRTTI) const {
+		return this == &apRTTI;
+	}
+
+	template <typename T_RTTI>
+	bool IsExactKindOf() const {
+		return IsExactKindOf(T_RTTI::ms_RTTI);
+	}
 };
 assert(sizeof(NiRTTI) == 0x008);
+
+#define NIRTTI_ADDRESS(address) \
+	static inline const NiRTTI* const ms_RTTI = (NiRTTI*)address;
 
 enum NiMemEventType {
 	NI_UNKNOWN = 0x0,
@@ -514,7 +554,7 @@ assert(sizeof(NiRefObject) == 0x008);
 
 class NiObject : public NiRefObject {
 public:
-	virtual const NiRTTI*					GetRTTI();
+	virtual const NiRTTI*					GetRTTI() const;
 	virtual NiNode*							IsNiNode();
 	virtual BSFadeNode*						IsFadeNode();
 	virtual BSMultiBoundNode*				IsMultiBoundNode();
@@ -547,7 +587,30 @@ public:
 	virtual void							Unk_20();
 	virtual void							Unk_21();
 	virtual void							Unk_22();
-	
+
+	NIRTTI_ADDRESS(0x11F4418);
+
+	template <class T_RTTI>
+	bool IsKindOf() const {
+		return IsKindOf(T_RTTI::ms_RTTI);
+	}
+
+	template <class T_RTTI>
+	bool IsExactKindOf() const {
+		return IsExactKindOf(T_RTTI::ms_RTTI);
+	}
+
+	bool IsKindOf(const NiRTTI& apRTTI) const;
+
+	bool IsKindOf(const NiRTTI* const apRTTI) const;
+
+	bool IsExactKindOf(const NiRTTI* const apRTTI) const;
+
+	bool IsExactKindOf(const NiRTTI& apRTTI) const;
+
+	static bool IsExactKindOf(const NiRTTI& apRTTI, NiObject* apObject);
+
+	static bool IsExactKindOf(const NiRTTI* const apRTTI, NiObject* apObject);
 	
 	void LogObjectAttributes();
 };
@@ -676,6 +739,8 @@ public:
 	virtual bool		Unk_3D();
 	virtual bool		Unk_3E();
 	virtual bool		Unk_3F();
+
+	NIRTTI_ADDRESS(0x11F4428);
 	
 	void				New(UInt16 Children);
 
@@ -688,8 +753,37 @@ public:
 	virtual void	Unk_40();
 
 	UInt32			unkAC[2];		// AC
+
+	NIRTTI_ADDRESS(0x11D5E70);
 };
 assert(sizeof(NiBillboardNode) == 0xB4);
+
+class NiSwitchNode : public NiNode {
+public:
+	enum {
+		UPDATE_ONLY_ACTIVE_CHILD = 1,
+		UPDATE_CONTROLLERS = 2,
+	};
+
+	UInt16						m_usFlags;
+	SInt32						m_iIndex;
+	float						m_fSavedTime;
+	UInt32						m_uiRevID;
+	NiTArray<UInt32>			m_kChildRevID;
+
+	CREATE_OBJECT(NiSwitchNode, 0xA94550);
+	NIRTTI_ADDRESS(0x11F5EB4);
+};
+assert(sizeof(NiSwitchNode) == 0xCC);
+
+class NiLODNode : public NiSwitchNode {
+public:
+	void*			m_spLODData;
+	bool			m_bLODActive;
+
+	static SInt32 ms_iGlobalLOD;
+};
+assert(sizeof(NiLODNode) == 0xD4);
 
 class NiCamera : public NiAVObject {
 public:
