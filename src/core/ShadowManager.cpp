@@ -705,7 +705,7 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
-	timer.LogTime("ShadowManager::RenderShadowMaps");
+	shadowMapsRenderTime = timer.LogTime("ShadowManager::RenderShadowMaps");
 }
 
 
