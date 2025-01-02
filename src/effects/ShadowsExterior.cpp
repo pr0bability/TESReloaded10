@@ -226,7 +226,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	//memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
 
 	// Initialize shadow buffer
-	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, D3DFMT_G16R16);
+	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width, TheRenderManager->height, D3DFMT_G16R16);
 }
 
 
