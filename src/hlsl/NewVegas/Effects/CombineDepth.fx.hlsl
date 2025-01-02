@@ -48,10 +48,13 @@ float4 CombineDepth(VSOUT IN) : COLOR0
 	float worldDepth = tex2D(TESR_DepthBufferWorld, IN.UVCoord).x;
 	float viewModelDepth = tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x;
 	
+    float originalDepth = min(worldDepth, viewModelDepth);
+	
 	if (TESR_DepthConstants.z){ // inverted Depth
+        originalDepth = max(worldDepth, viewModelDepth);
 		worldDepth = 1 - worldDepth;
 		viewModelDepth = 1 - viewModelDepth;
-	}
+    }
 
 	// convert depths to linear in order to combine them
 	float linearWorldDepth = readDepth(worldDepth, nearZ, farZ);
@@ -60,7 +63,7 @@ float4 CombineDepth(VSOUT IN) : COLOR0
 	float depth = min(linearWorldDepth, linearViewModelDepth); // Get closest value from both depths
 	float packedDepth = packDepth(depth, nearZ, farZ); // encode back to non converted depth format for easier reconstruction using matrices
 	
-	return float4(depth / farZ, packedDepth, 1.0, 1.0) ;// scale values back to 0 - 1 to avoid overflow
+	return float4(depth / farZ, packedDepth, originalDepth, 1.0) ;// scale values back to 0 - 1 to avoid overflow
 }
  
 technique

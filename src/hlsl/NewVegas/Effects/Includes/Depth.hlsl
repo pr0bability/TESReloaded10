@@ -4,6 +4,8 @@
 float4x4 TESR_ProjectionTransform;
 float4x4 TESR_InvProjectionTransform;
 float4x4 TESR_ViewTransform;
+float4x4 TESR_InvProjectionFixTransform;
+float4x4 TESR_InvViewTransform;
 float4 TESR_DepthConstants;
 float4 TESR_CameraData;
 float4 TESR_CameraPosition;
@@ -51,16 +53,19 @@ float getHomogenousDepth(float2 uv){
 	return length(camera_vector);
 }
 
-float4 reconstructWorldPosition(float2 uv){
-    // float4 screenpos = float4(uv * 2.0 - 1.0f, tex2D(TESR_DepthBuffer, uv).x, 1.0f);
-    // screenpos.y = -screenpos.y;
-    // float4 viewpos = mul(screenpos, TESR_InvWorldViewProjectionTransform);
-    // viewpos.xyz /= viewpos.w;
-    // return viewpos;
+float4 reconstructWorldPosition(float2 uv, out float viewDepth){
+    float x = uv.x * 2 - 1;
+    float y = (1 - uv.y) * 2 - 1;
+    float z = tex2D(TESR_DepthBuffer, uv).z;
+    float4 clipSpace = float4(x, y, z, 1.0f);
 
+    float4 viewSpace = mul(clipSpace, TESR_InvProjectionFixTransform);
+	
+    viewSpace /= viewSpace.w;
+	
+    viewDepth = viewSpace.z;
+	
+    float4 worldSpace = mul(viewSpace, TESR_InvViewTransform);
 
-	float depth = readDepth(uv);
-	float3 camera_vector = toWorld(uv) * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
-	return world_pos;
+    return float4(worldSpace.xyz, 1.0f);
 }

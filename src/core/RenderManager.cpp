@@ -73,6 +73,8 @@ void RenderManager::UpdateSceneCameraData() {
 
 void RenderManager::SetupSceneCamera() {
 
+	Logger::Log("SetupSceneCamera");
+
 	NiCamera* Camera = WorldSceneGraph->camera;
 
 	if (Camera) {
@@ -190,6 +192,61 @@ void RenderManager::SetupSceneCamera() {
 		ViewProjMatrix = viewMatrix * projMatrix;
 		D3DXMatrixInverse(&InvProjMatrix, NULL, &projMatrix);
 		InvViewProjMatrix = InvProjMatrix * invViewMatrix;
+
+		// Test for correct proj and invProj with inversion.
+		float FmN = Frustum->Far - Frustum->Near;
+		float fInvFmN = 1.0f / FmN;
+
+		ProjMatrixFix._11 = 2.0f / FrustumWidth;
+		ProjMatrixFix._21 = 0.0f;
+		ProjMatrixFix._31 = -RpL / FrustumWidth;
+		ProjMatrixFix._41 = 0.0f;
+		ProjMatrixFix._12 = 0.0f;
+		ProjMatrixFix._22 = 2.0f / FrustumHeight;
+		ProjMatrixFix._32 = -TpB / FrustumHeight;
+		ProjMatrixFix._42 = 0.0f;
+		ProjMatrixFix._13 = 0.0f;
+		ProjMatrixFix._23 = 0.0f;
+		if (TheSettingManager->SettingsMain.Main.InvertedDepth) {
+			ProjMatrixFix._33 = -(Frustum->Near * fInvFmN);
+			ProjMatrixFix._43 = Frustum->Near * Frustum->Far * fInvFmN;
+		}
+		else {
+			ProjMatrixFix._33 = Frustum->Far * fInvFmN;
+			ProjMatrixFix._43 = -(Frustum->Near * Frustum->Far * fInvFmN);
+		}
+		// A "w-friendly" projection matrix to make fog, w-buffering work
+		ProjMatrixFix._14 = 0.0f;
+		ProjMatrixFix._24 = 0.0f;
+		ProjMatrixFix._34 = 1.0f;
+		ProjMatrixFix._44 = 0.0f;
+
+		/*InvProjMatrixFix._11 = FrustumWidth / 2.0f;
+		InvProjMatrixFix._21 = 0.0f;
+		InvProjMatrixFix._31 = 0.0f;
+		InvProjMatrixFix._41 = RpL / 2.0f;
+		InvProjMatrixFix._12 = 0.0f;
+		InvProjMatrixFix._22 = FrustumHeight / 2.0f;
+		InvProjMatrixFix._32 = 0.0f;
+		InvProjMatrixFix._42 = TpB / 2.0f;
+		InvProjMatrixFix._13 = 0.0f;
+		InvProjMatrixFix._23 = 0.0f;
+		InvProjMatrixFix._33 = 0.0f;
+		InvProjMatrixFix._43 = 1.0f;
+		InvProjMatrixFix._14 = 0.0f;
+		InvProjMatrixFix._24 = 0.0f;
+		if (TheSettingManager->SettingsMain.Main.InvertedDepth) {
+			InvProjMatrixFix._43 = FmN / (Frustum->Near * Frustum->Far);
+			InvProjMatrixFix._44 = 1.0f / (float)Frustum->Far;
+		}
+		else {
+			InvProjMatrixFix._43 = (Frustum->Near - Frustum->Far) / (Frustum->Near * Frustum->Far);
+			InvProjMatrixFix._44 = 1.0f / (float)Frustum->Near;
+		}*/
+
+		D3DXMatrixInverse(&InvProjMatrixFix, NULL, &ProjMatrixFix);
+
+		InvViewProjMatrixFix = InvProjMatrixFix * InvViewMatrix;
 
 		CameraForward = Forward.toD3DXVEC4();
 		CameraPosition = WorldTranslate->toD3DXVEC4();

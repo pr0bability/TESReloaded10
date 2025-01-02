@@ -61,12 +61,13 @@ float ChebyshevUpperBound(float2 moments, float distance)
 	float p = (moments.x > distance); //0: in shadow, 1: in light
 
 	// Compute variance.    
-	float Variance = moments.y - moments.x * moments.x;
-	Variance = max(Variance, MIN_VARIANCE);
+	float variance = moments.y - moments.x * moments.x;
+	variance = max(variance, MIN_VARIANCE);
 
 	// Compute the Chebyshev upper bound.
 	float d = distance - moments.x;
-	float p_max = invlerps(BLEED_CORRECTION, 1.0, Variance / (Variance + d*d));
+	//float p_max = invlerps(BLEED_CORRECTION, 1.0, variance / (variance + d*d));
+    float p_max = variance / (variance + d * d);
 	return max(p, p_max);
 }
 

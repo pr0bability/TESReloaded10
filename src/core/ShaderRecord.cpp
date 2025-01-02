@@ -83,6 +83,7 @@ Loads the shader by name from a given subfolder (optionally). Shader will be com
 ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, ShaderTemplate Template) {
 	auto timer = TimeLogger();
 
+	D3DXMACRO* defines = NULL;
 	ShaderRecord* ShaderProg = NULL;
 	ID3DXBuffer* ShaderSource = NULL;
 	ID3DXBuffer* Shader = NULL;
@@ -106,11 +107,13 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 		strcpy(FileName, ShadersPath);
 		if (SubPath) strcat(FileName, SubPath);
 		strcat(FileName, Template.Name);
+
+		defines = &(Template.Defines[0]);
 	}
 	
 	strcat(FileName, ".hlsl");
 
-	HRESULT prepass = D3DXPreprocessShaderFromFileA(FileName, NULL, NULL, &ShaderSource, &Errors);
+	HRESULT prepass = D3DXPreprocessShaderFromFileA(FileName, defines, NULL, &ShaderSource, &Errors);
 	bool Compile = ShouldCompileShader(FileNameBinary, FileName, (ShaderCompileType)TheSettingManager->SettingsMain.Develop.CompileShaders);
 	if (prepass == D3D_OK) {
 
@@ -137,11 +140,6 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 
 		if (Compile || !Function) {
 			// compile if option was enabled or compiled version not found
-
-			D3DXMACRO* defines = NULL;
-			if (Template.Name != NULL)
-				defines = &(Template.Defines[0]);
-
 			D3DXCompileShaderFromFileA(FileName, defines, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
 			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 			if (Shader) {
@@ -283,7 +281,8 @@ void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32
 
 	size_t SamplerPos = Source.find(("register ( s" + std::to_string(Index) + " )"));
 	if (SamplerPos == std::string::npos) {
-		Logger::Log("[ERROR] %s  cannot be binded: sampler index not found", Name);
+		Logger::Log("[ERROR] %s  cannot be binded: sampler index %d not found", Name, Index);
+		Logger::Log(Source.c_str());
 		return;
 	}
 

@@ -104,6 +104,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 	}
     if (TESR_ShadowData.x != 1.0f) r0 = mul(r0, TESR_ShadowWorldTransform);
 	r0 = mul(r0, TESR_ShadowViewProjTransform);
+    //r0.z = max(0, r0.z);  // Pancaking.
 	OUT.position = r0;
     OUT.texcoord_0 = r0;
 	OUT.texcoord_1 = IN.texcoord_0;

@@ -1,5 +1,6 @@
 // Image space shadows shader for Oblivion Reloaded
 
+float4x4 TESR_ViewProjectionTransform;
 float4x4 TESR_WorldViewProjectionTransform;
 float4x4 TESR_ShadowCameraToLightTransformNear;
 float4x4 TESR_ShadowCameraToLightTransformMiddle;
@@ -14,10 +15,10 @@ float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferNear : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferMiddle : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferFar : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferLod : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
+sampler2D TESR_ShadowMapBufferNear : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_ShadowMapBufferMiddle : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_ShadowMapBufferFar : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_ShadowMapBufferLod : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_PointShadowBuffer : register(s6)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -89,7 +90,7 @@ float GetLightAmountValue(sampler2D shadowBuffer, float4x4 lightTransform, float
 
 float GetLightAmount(float4 coord, float depth)
 {
-	float blendArea = 0.9; // 20 % of each cascade to overlap
+    float blendArea = 1.0;  //0.9; // 20 % of each cascade to overlap
 	float shadow;
 
 	// getting all shadow values from cascades as negative (to be able to use the dot product to chose the correct one)
@@ -125,7 +126,7 @@ float GetLightAmount(float4 coord, float depth)
 	};
 
 	// apply blending to each cascade shadow
-	shadows *= fadeIn * fadeOut;
+	//shadows *= fadeIn * fadeOut;
 
 	// filter the shadow based on the current valid cascades
 	return 1 - dot(shadows, cascade);
@@ -201,19 +202,16 @@ float4 Shadow(VSOUT IN) : COLOR0
 	// clip((uv < 0.5) - 1); // compute in half res
 	// uv *= 2;
 
-	float depth = readDepth(uv);
-	float3 camera_vector = toWorld(uv) * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
-	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
-	float uniformDepth = length(camera_vector);
+    float depth;
+    float4 worldPos = reconstructWorldPosition(uv, depth);
 
 	// Sample Screen Space shadows
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 	if (!TESR_ShadowFade.y) return Shadow; // disable shadow maps if ShadowFade.y == 0 (setting for shadow map disabled)
 
 	// Sample shadows from shadowmaps
-	float sunShadows = GetLightAmount(pos, depth); 
-	sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, uniformDepth)); //fade shadows along last cascade
+    float sunShadows = GetLightAmount(worldPos, depth);
+    //sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)); //fade shadows along last cascade
 
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
@@ -230,11 +228,6 @@ technique {
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Shadow();
-	}
-
-	pass {
-		VertexShader = compile vs_3_0 FrameVS();
 	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
 	}
 
@@ -242,4 +235,9 @@ technique {
 		VertexShader = compile vs_3_0 FrameVS();
 	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
 	}
+
+    pass {
+        VertexShader = compile vs_3_0 FrameVS();
+        PixelShader = compile ps_3_0 Shadow();
+    }
 }

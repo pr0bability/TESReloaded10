@@ -60,7 +60,7 @@ void AttachHooks() {
 	SafeWriteJump(Jumpers::DetectorWindow::ConsoleCommandHook, (UInt32)DetectorWindowConsoleCommandHook);
 	SafeWriteCall(Jumpers::DetectorWindow::SetNodeName, (UInt32)DetectorWindowSetNodeName);
 	SafeWriteJump(Jumpers::RenderInterface::Hook, (UInt32)RenderInterfaceHook);
-	SafeWriteJump(Jumpers::Shadows::RenderShadowMapHook, (UInt32)RenderShadowMapHook);
+	//  SafeWriteJump(Jumpers::Shadows::RenderShadowMapHook, (UInt32)RenderShadowMapHook);
 	//	SafeWriteJump(Jumpers::Shadows::RenderShadowMap1Hook,		(UInt32)RenderShadowMap1Hook);
 	SafeWriteJump(Jumpers::Shadows::AddCastShadowFlagHook, (UInt32)AddCastShadowFlagHook);
 	SafeWriteJump(Jumpers::Shadows::LeavesNodeNameHook, (UInt32)LeavesNodeNameHook);

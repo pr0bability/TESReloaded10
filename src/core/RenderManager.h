@@ -13,8 +13,11 @@ public:
     float               GetObjectDistance(NiBound* Bound);
 	D3DXMATRIX			WorldViewProjMatrix;
 	D3DXMATRIX			ViewProjMatrix;
+	D3DXMATRIX			ProjMatrixFix;
 	D3DXMATRIX			InvViewProjMatrix;
+	D3DXMATRIX			InvViewProjMatrixFix;
 	D3DXMATRIX			InvProjMatrix;
+	D3DXMATRIX			InvProjMatrixFix;
 	D3DXMATRIX			InvViewMatrix;
 	D3DXMATRIX			ViewMatrix;
 	D3DXVECTOR4			CameraData;

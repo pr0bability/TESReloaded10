@@ -209,7 +209,8 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
-	ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
+	//ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
+	ShadowMap->ShadowCameraToLight = (*ViewProj);
 	TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, ViewProj);
     /*for (int i = 1; i < 4; i++){
         IDirect3DSurface9* targ= nullptr;
@@ -519,6 +520,8 @@ D3DXMATRIX ShadowManager::GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir) {
 * Renders the different shadow maps: Near, Far, Ortho.
 */
 void ShadowManager::RenderShadowMaps() {
+	Logger::Log("RenderShadowMaps");
+
 	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // cancel out if rendering effects is disabled
 
 	// track point lights for interiors and exteriors
@@ -565,6 +568,7 @@ void ShadowManager::RenderShadowMaps() {
 	else
 		RenderState->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL, RenderStateArgs);
 
+	//RenderState->SetRenderState(D3DRS_STENCILENABLE, 0, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_STENCILENABLE, 1, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_STENCILREF, 0, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS, RenderStateArgs);
@@ -591,6 +595,7 @@ void ShadowManager::RenderShadowMaps() {
 
 	// Render all shadow maps
 	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
+	//D3DXVECTOR4 SunDir = D3DXVECTOR4(0.57735f, 0.57735f, 0.57735f, 1);
 	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
 
 		geometryPass->VertexShader = ShadowMapVertex;
@@ -608,14 +613,16 @@ void ShadowManager::RenderShadowMaps() {
 			auto shadowMapTimer = TimeLogger();
 
 			for (int i = MapNear; i < MapOrtho; i++) {
+				std::string message = "ShadowManager::RenderShadowMap ";
+				message += std::to_string(i);
+				Logger::Log("Rendering %s", message);
+
 				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View);
+				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View, SunDir);
 
 				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 				if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
-
-				std::string message = "ShadowManager::RenderShadowMap ";
-				message += std::to_string(i);
+				
 				shadowMapTimer.LogTime(message.c_str());
 			}
 		}

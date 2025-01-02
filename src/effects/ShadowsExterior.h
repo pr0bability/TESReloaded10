@@ -126,6 +126,7 @@ public:
 	struct ShadowTextures {
 		IDirect3DTexture9* ShadowPassTexture;
 		IDirect3DSurface9* ShadowPassSurface;
+		IDirect3DVertexBuffer9* ShadowPassVertexBuffer;
 		IDirect3DCubeTexture9* ShadowCubeMapTexture[ShadowCubeMapsMax];
 		IDirect3DSurface9* ShadowCubeMapSurface[ShadowCubeMapsMax][6];
 		IDirect3DTexture9* ShadowSpotlightTexture[SpotLightsMax];
@@ -134,13 +135,23 @@ public:
 	};
 	ShadowTextures	Textures;
 
-	void		clearShadowsBuffer();
-	void		UpdateConstants();
-	void		UpdateSettings();
-	void		RegisterConstants();
-	void		RegisterTextures();
+	void			clearShadowsBuffer();
+	void			UpdateConstants();
+	void			UpdateSettings();
+	void			RegisterConstants();
+	void			RegisterTextures();
+	void            Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer);
 
-	void		GetCascadeDepths();
-	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);
-	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXMATRIX View);
+	void			GetSceneBounds(D3DXVECTOR3& min, D3DXVECTOR3& max);
+	void			GetCascadeDepths();
+	D3DXMATRIX		GetOrthoViewProj(D3DXMATRIX View);
+	D3DXMATRIX		GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXMATRIX View, D3DXVECTOR4* SunDir);
+
+private:
+	void			ComputeNearAndFar(float& nearPlane, float& farPlane, D3DXVECTOR3 minExtents, D3DXVECTOR3 maxExtents, D3DXVECTOR3* frustumCorners);
+	D3DXMATRIX		GetCascadeViewProj_Math(ShadowMapSettings* ShadowMap, D3DXMATRIX View);
+	D3DXMATRIX		GetCascadeViewProj_MLP(ShadowMapSettings* ShadowMap, D3DXMATRIX View, D3DXVECTOR4* SunDir);
+	D3DXMATRIX		GetCascadeViewProj_FixedWS(ShadowMapSettings* ShadowMap, D3DXMATRIX View, D3DXVECTOR4* SunDir);
+	D3DXMATRIX		GetCascadeViewProj_DX(ShadowMapSettings* ShadowMap, D3DXMATRIX View, D3DXVECTOR4* SunDir);
+	D3DXMATRIX		GetCascadeViewProj_ShaderX7(ShadowMapSettings* ShadowMap, D3DXMATRIX View, D3DXVECTOR4* SunDir);
 };

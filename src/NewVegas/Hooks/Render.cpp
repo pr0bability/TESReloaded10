@@ -5,6 +5,8 @@ void __fastcall RenderHook(Main* This, UInt32 edx, BSRenderedTexture* RenderedTe
 	
 	SettingsMainStruct* SettingsMain = &TheSettingManager->SettingsMain;
 
+	Logger::Log("RENDERHOOK");
+
 	TheFrameRateManager->UpdatePerformance();
 	TheCameraManager->SetSceneGraph();
 	TheRenderManager->UpdateSceneCameraData();
@@ -12,6 +14,10 @@ void __fastcall RenderHook(Main* This, UInt32 edx, BSRenderedTexture* RenderedTe
 
 	TheShaderManager->UpdateConstants();
 	//if (SettingsMain->Develop.TraceShaders && InterfaceManager->IsActive(Menu::MenuType::kMenuType_None) && Global->OnKeyDown(SettingsMain->Develop.TraceShaders) && DWNode::Get() == NULL) DWNode::Create();
+	
+	// Render shadow maps before the world.
+	TheShadowManager->RenderShadowMaps();
+	
 	(*Render)(This, RenderedTexture, Arg2, Arg3);
 
 }
@@ -93,6 +99,7 @@ HRESULT __fastcall SetSamplerStateHook(NiDX9RenderState* This, UInt32 edx, UInt3
 }
 
 void __fastcall NiDX9Renderer__SetCameraDataEx(NiDX9Renderer* apThis, void*, const NiPoint3& kWorldLoc, const NiPoint3& kWorldDir, const NiPoint3& kWorldUp, const NiPoint3& kWorldRight, const NiFrustum& kFrustum, const NiRect<float>& kPort) {
+	
 	if (apThis->m_bDeviceLost)
 		return;
 
