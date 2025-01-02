@@ -230,11 +230,6 @@ technique {
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-		PixelShader = compile ps_3_0 Shadow();
-	}
-
-	pass {
-		VertexShader = compile vs_3_0 FrameVS();
 	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
 	}
 
@@ -242,4 +237,10 @@ technique {
 		VertexShader = compile vs_3_0 FrameVS();
 	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
 	}
+
+    pass {
+        VertexShader = compile vs_3_0 FrameVS();
+        PixelShader = compile ps_3_0 Shadow();
+    }
+
 }
