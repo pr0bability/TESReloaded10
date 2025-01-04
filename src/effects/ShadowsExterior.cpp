@@ -875,7 +875,21 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj_MLP(ShadowMapSettings* Shad
 		//Logger::Log("Corner %d: %f %f %f", i, frustumCorners[i].x, frustumCorners[i].y, frustumCorners[i].z);
 	}
 
-	Logger::Log("sunDir: %f %f %f", SunDir->x, SunDir->y, SunDir->z);
+	D3DXVECTOR3 sun(*SunDir);
+	Logger::Log("Sun %f %f %f", sun.x, sun.y, sun.z);
+
+	float theta = atan2f(sun.y, sun.x);
+	float phi = acosf(sun.z);
+	theta = BankerRound(theta * 2400.0f) / 2400.0f;
+	phi = BankerRound(phi * 2400.0f) / 2400.0f;
+	
+
+	sun.x = sinf(phi) * cosf(theta);
+	sun.y = sinf(phi) * sinf(theta);
+	sun.z = cosf(phi);
+
+	D3DXVec3Normalize(&sun, &sun);
+	Logger::Log("Sun %f %f %f", sun.x, sun.y, sun.z);
 
 	// Get the corners of the current cascade slice of the view frustum.
 	for (auto i = 0; i < 4; ++i)
@@ -959,7 +973,7 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj_MLP(ShadowMapSettings* Shad
 	Logger::Log("maxExtents %f %f %f", maxExtents.x, maxExtents.y, maxExtents.z);
 	Logger::Log("cascadeExtents %f %f %f", cascadeExtents.x, cascadeExtents.y, cascadeExtents.z);
 
-	D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * Settings.Exteriors.ShadowMapFarPlane;
+	D3DXVECTOR3 shadowCameraPos = frustumCenter + sun * Settings.Exteriors.ShadowMapFarPlane;
 	//D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * nearPlane;
 	//D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * (-minExtents.z);
 	//D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * (minExtents.z);
@@ -991,7 +1005,7 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj_MLP(ShadowMapSettings* Shad
 	if (TheShaderManager->Effects.Debug->Constants.DebugVar.y) {
 		// Create the rounding matrix, by projecting the world-space origin and determining
 		// the fractional offset in texel space.
-		float sMapSize = 1024.0f; //ShadowMap->ShadowMapViewPort.Height;
+		float sMapSize = 2048.0f; //ShadowMap->ShadowMapViewPort.Height;
 
 		D3DXVECTOR4 shadowOrigin(-sceneCamera->m_worldTransform.pos.x, -sceneCamera->m_worldTransform.pos.y, -sceneCamera->m_worldTransform.pos.z, 1.0f);
 		Logger::Log("Shadow origin WS: (%f, %f, %f, %f)", shadowOrigin.x, shadowOrigin.y, shadowOrigin.z, shadowOrigin.w);

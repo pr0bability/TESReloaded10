@@ -185,7 +185,8 @@ void ShaderManager::UpdateConstants() {
 
 	bool IsThirdPersonView = !TheCameraManager->IsFirstPerson();
 	Sky* WorldSky = Tes->sky;
-	NiNode* SunRoot = WorldSky->sun->RootNode;
+	Sun* WorldSun = WorldSky->sun;
+	NiNode* SunRoot = WorldSun->RootNode;
 	TESClimate* currentClimate = WorldSky->firstClimate;
 	TESWeather* currentWeather = WorldSky->firstWeather;
 	TESWeather* previousWeather = WorldSky->secondWeather;
@@ -257,8 +258,14 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.GameTime.w = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 
 	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
+	ShaderConst.SunPosition.w = 0.0f;
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
-	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
+	ShaderConst.SunPosition.w = 1.0f;
+
+	ShaderConst.SunDir = WorldSun->SunDirLight->direction.toD3DXVEC4() * -1.0f;
+	ShaderConst.SunDir.w = 0.0f;
+	D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
+	ShaderConst.SunDir.w = 1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
 	if (GameState.isExterior && GameState.dayLight > 0.5)
