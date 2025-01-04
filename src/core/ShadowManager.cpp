@@ -609,7 +609,7 @@ void ShadowManager::RenderShadowMaps() {
 
 			for (int i = MapNear; i < MapOrtho; i++) {
 				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, View);
+				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, SunDir);
 
 				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 				if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
