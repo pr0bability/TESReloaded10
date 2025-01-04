@@ -183,8 +183,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	};
 	for (int i = 0; i <= MapLod; i++) {
 		// create one texture per Exterior ShadowMap type
-		float multiple = (i == MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
-		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
+		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution;
 
 		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
 		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
@@ -285,68 +284,136 @@ D3DXMATRIX ShadowsExteriorEffect::GetOrthoViewProj(D3DXMATRIX View) {
 }
 
 
-// calculates the minimum area viewproj matrix for a given cascade using cascade depth and frustum corners
-D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXMATRIX View) {
-	D3DXMATRIX Proj;
-	float FarPlane = Settings.Exteriors.ShadowMapFarPlane;
-	float Radius = ShadowMap->ShadowMapRadius;
-	NiCamera* Camera = WorldSceneGraph->camera;
+// Banker round helper.
+float BankerRound(float num) {
+	float rounded = round(num);
+	if (fabs(rounded - num) == 0.5f) {
+		return 2.0 * round(0.5 * num);
+	}
+	return rounded;
+}
 
-	// calculating the size of the shadow cascade
-	float znear = ShadowMap->ShadowMapNear;
-	float zfar = ShadowMap->ShadowMapRadius;
 
-	float w = Camera->Frustum.Right - Camera->Frustum.Left;
-	float h = Camera->Frustum.Top - Camera->Frustum.Bottom;
+// Round a vector using the banker round method.
+void Vector3Round(D3DXVECTOR3* out, D3DXVECTOR3* in) {
+	out->x = BankerRound(in->x);
+	out->y = BankerRound(in->y);
+	out->z = BankerRound(in->z);
+}
 
-	float ar = h / w;
+void Vector4Round(D3DXVECTOR4* out, D3DXVECTOR4* in) {
+	out->x = BankerRound(in->x);
+	out->y = BankerRound(in->y);
+	out->z = BankerRound(in->z);
+	out->w = BankerRound(in->w);
+}
 
-	//Logger::Log("fov %f   %f   %f", WorldSceneGraph->cameraFOV, Player->GetFoV(false), Player->GetFoV(true));
-	float fov = TheRenderManager->FOVData.z;
-	float fovY = TheRenderManager->FOVData.w;
 
-	float tanHalfHFOV = tanf(fov * 0.5f);
-	float tanHalfVFOV = tanf(fovY * 0.5f);
+// Generate the ViewProj matrix for a particular shadow cascade.
+// Inspired by MJP's https://mynameismjp.wordpress.com/2013/09/10/shadow-maps/ article and code example.
+D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR4* SunDir) {
+	// Get z-range for this cascade.
+	NiCamera* sceneCamera = WorldSceneGraph->camera;
+	float depthRange = (sceneCamera->Frustum.Far - sceneCamera->Frustum.Near);
+	float zNear = ShadowMap->ShadowMapNear / depthRange;
+	float zFar = ShadowMap->ShadowMapRadius / depthRange;
 
-	float xn = znear * tanHalfHFOV;
-	float xf = zfar * tanHalfHFOV;
-	float yn = znear * tanHalfVFOV;
-	float yf = zfar * tanHalfVFOV;
+	// Calculate the frustum corners in world space (from a unit cube in projective space).
+	D3DXMATRIX invViewProj = TheRenderManager->InvViewProjMatrix;
 
-	D3DXVECTOR4 frustrumPoints[8];
-
-	// near face
-	frustrumPoints[0] = D3DXVECTOR4(xn, yn, znear, 1.0);
-	frustrumPoints[1] = D3DXVECTOR4(-xn, yn, znear, 1.0);
-	frustrumPoints[2] = D3DXVECTOR4(xn, -yn, znear, 1.0);
-	frustrumPoints[3] = D3DXVECTOR4(-xn, -yn, znear, 1.0);
-
-	// far face
-	frustrumPoints[4] = D3DXVECTOR4(xf, yf, zfar, 1.0);
-	frustrumPoints[5] = D3DXVECTOR4(-xf, yf, zfar, 1.0);
-	frustrumPoints[6] = D3DXVECTOR4(xf, -yf, zfar, 1.0);
-	frustrumPoints[7] = D3DXVECTOR4(-xf, -yf, zfar, 1.0);
-
-	// values of the final light frustrum
-	float left = 0.0f;
-	float right = 0.0f;
-	float bottom = 0.0f;
-	float top = 0.0f;
-
-	// transform from camera to world then to light space
-	D3DXMATRIX m = TheRenderManager->InvViewMatrix * View;
-	D3DXVECTOR4 p;
-	for (int i = 0; i < 8; i++) {
-		D3DXVec4Transform(&p, &frustrumPoints[i], &m);
-
-		// extend frustrum to include all corners
-		if (p.x < left || left == 0.0f) left = p.x;
-		if (p.x > right || right == 0.0f) right = p.x;
-		if (p.y > top || top == 0.0f) top = p.y;
-		if (p.y < bottom || bottom == 0.0f) bottom = p.y;
+	D3DXVECTOR3 frustumCorners[8] = {
+		D3DXVECTOR3(-1.0f,  1.0f, 0.0f),  // Near plane.
+		D3DXVECTOR3( 1.0f,  1.0f, 0.0f),
+		D3DXVECTOR3( 1.0f, -1.0f, 0.0f),
+		D3DXVECTOR3(-1.0f, -1.0f, 0.0f),
+		D3DXVECTOR3(-1.0f,  1.0f, 1.0f),  // Far plane.
+		D3DXVECTOR3( 1.0f,  1.0f, 1.0f),
+		D3DXVECTOR3( 1.0f, -1.0f, 1.0f),
+		D3DXVECTOR3(-1.0f, -1.0f, 1.0f),
+	};
+	for (auto i = 0; i < 8; ++i) {
+		D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], &invViewProj);
 	}
 
+	// Get the corners of the current cascade slice of the view frustum.
+	for (auto i = 0; i < 4; ++i)
+	{
+		D3DXVECTOR3 cornerRay = frustumCorners[i + 4] - frustumCorners[i];
+		D3DXVECTOR3 nearCornerRay = cornerRay * zNear;
+		D3DXVECTOR3 farCornerRay = cornerRay * zFar;
+		frustumCorners[i + 4] = frustumCorners[i] + farCornerRay;
+		frustumCorners[i] = frustumCorners[i] + nearCornerRay;
+	}
 
-	D3DXMatrixOrthoOffCenterRH(&Proj, left, right, bottom, top, FarPlane * 0.6f, 1.4f * FarPlane);
-	return View * Proj;
+	// Calculate the centroid of the view frustum slice.
+	D3DXVECTOR3 frustumCenter(0.0f, 0.0f, 0.0f);
+	for (auto i = 0; i < 8; ++i)
+		frustumCenter = frustumCenter + frustumCorners[i];
+	frustumCenter *= 1.0f / 8.0f;
+	
+	// Must be kept stable.
+	D3DXVECTOR3 upDir(0.0f, 0.0f, 1.0f);
+
+	D3DXVECTOR3 minExtents, maxExtents;
+	if (TheShaderManager->Effects.Debug->Constants.DebugVar.y) {
+		// Calculate the radius of a bounding sphere surrounding the frustum corners
+		float sphereRadius = 0.0f;
+		for (auto i = 0; i < 8; ++i)
+		{
+			D3DXVECTOR3 centerToCorner = frustumCorners[i] - frustumCenter;
+			float dist = D3DXVec3Length(&centerToCorner);
+			sphereRadius = max(sphereRadius, dist);
+		}
+		sphereRadius = std::ceil(sphereRadius * 16.0f) / 16.0f;
+		maxExtents = D3DXVECTOR3(sphereRadius, sphereRadius, sphereRadius);
+		minExtents = -maxExtents;
+	}
+	else {
+		// Create a temporary view matrix for the light
+		D3DXVECTOR3 lightCameraPos = frustumCenter;
+		D3DXVECTOR3 lookAt = frustumCenter - D3DXVECTOR3(*SunDir);
+		D3DXMATRIX lightView;
+		D3DXMatrixLookAtRH(&lightView, &lightCameraPos, &lookAt, &upDir);
+		// Calculate an AABB around the frustum corners
+		D3DXVECTOR3 mins(FLT_MAX, FLT_MAX, FLT_MAX);
+		D3DXVECTOR3 maxes(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+		for (auto i = 0; i < 8; ++i)
+		{
+			D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], &lightView);
+			D3DXVec3Minimize(&mins, &mins, &frustumCorners[i]);
+			D3DXVec3Maximize(&maxes, &maxes, &frustumCorners[i]);
+		}
+		minExtents = mins;
+		maxExtents = maxes;
+	}
+	float nearPlane = Settings.Exteriors.ShadowMapFarPlane * 0.6f;
+	float farPlane = Settings.Exteriors.ShadowMapFarPlane * 1.6f;
+	
+	D3DXVECTOR3 cascadeExtents = maxExtents - minExtents;
+	D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * Settings.Exteriors.ShadowMapFarPlane;
+	D3DXMATRIX shadowView, shadowProj, shadowViewProj;
+
+	D3DXMatrixLookAtRH(&shadowView, &shadowCameraPos, &frustumCenter, &upDir);
+	D3DXMatrixOrthoOffCenterRH(&shadowProj, minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, nearPlane, farPlane);
+	shadowViewProj = shadowView * shadowProj;
+
+	if (TheShaderManager->Effects.Debug->Constants.DebugVar.y) {
+		// Create the rounding matrix, by projecting the world-space origin and determining
+		// the fractional offset in texel space.
+		float sMapSize = Settings.Exteriors.ShadowMapResolution;
+		D3DXVECTOR4 shadowOrigin(-sceneCamera->m_worldTransform.pos.x, -sceneCamera->m_worldTransform.pos.y, -sceneCamera->m_worldTransform.pos.z, 1.0f);
+		D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
+		D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);
+		D3DXVECTOR4 roundedOrigin, roundOffset;
+		Vector4Round(&roundedOrigin, &shadowOrigin);
+		D3DXVec4Subtract(&roundOffset, &roundedOrigin, &shadowOrigin);
+		D3DXVec4Scale(&roundOffset, &roundOffset, 2.0f / sMapSize);
+
+		shadowProj._41 = shadowProj._41 + roundOffset.x;
+		shadowProj._42 = shadowProj._42 + roundOffset.y;
+
+		shadowViewProj = shadowView * shadowProj;
+	}
+	return shadowViewProj;
 }
+

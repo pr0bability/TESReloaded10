@@ -142,5 +142,5 @@ public:
 
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);
-	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXMATRIX View);
+	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR4* SunDir);
 };

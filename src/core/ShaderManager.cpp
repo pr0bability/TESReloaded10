@@ -253,7 +253,9 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.GameTime.w = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 
 	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
+	ShaderConst.SunPosition.w = 0.0f;
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
+	ShaderConst.SunPosition.w = 1.0f;
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
