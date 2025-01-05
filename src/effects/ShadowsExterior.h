@@ -75,11 +75,15 @@ public:
 		float					ShadowMapNear;
 	};
 
+	struct ShadowMapStruct {
+		int					CascadeResolution;
+		bool				StabilizeCascades;
+	};
+
 	struct ExteriorsStruct {
 		bool				Enabled;
 		bool                BlurShadowMaps;
 		int					Quality;
-		int					ShadowMapResolution;
 		int					OrthoMapResolution;
 		float				OrthoRadius;
 		float				ShadowRadius;
@@ -115,6 +119,7 @@ public:
 	};
 
 	struct SettingsShadowStruct {
+		ShadowMapStruct     ShadowMaps;
 		ScreenSpaceStruct	ScreenSpace;
 		ExteriorsStruct		Exteriors;
 		InteriorsStruct		Interiors;
@@ -139,6 +144,7 @@ public:
 	void		UpdateSettings();
 	void		RegisterConstants();
 	void		RegisterTextures();
+	void		RecreateTextures(bool cascades, bool ortho, bool cubemaps);
 
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);
