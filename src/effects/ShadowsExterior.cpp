@@ -64,13 +64,23 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
 	Settings.Exteriors.ShadowRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowsRadius");
 	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
-	Settings.Exteriors.ShadowMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMapResolution");
 	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
 	Settings.Exteriors.ShadowMapFarPlane = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowMapFarPlane");
 	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
 	Settings.Exteriors.BlurShadowMaps = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "BlurShadowMaps");
 	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
 	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
+
+	// Shadow maps specific configuration.
+	bool cascadeSettingsChanged = false;
+
+	int oldCascadeResolution = Settings.ShadowMaps.CascadeResolution;
+	Settings.ShadowMaps.CascadeResolution = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "CascadeResolution"), 0, 3) + 1) * 512;
+
+	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
+		cascadeSettingsChanged = true;
+
+	Settings.ShadowMaps.StabilizeCascades = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "StabilizeCascades");
 
 	//Shadows Cascade settings
 	GetCascadeDepths();
@@ -144,6 +154,9 @@ void ShadowsExteriorEffect::UpdateSettings() {
 
 	// if the effect was turned off the buffer must be cleared
 	if (!Enabled || (isExterior && !Settings.Exteriors.Enabled) || (!isExterior && !Settings.Interiors.Enabled)) clearShadowsBuffer();
+
+	// If certain shadow map settings were changed, recreate the textures and surfaces.
+	RecreateTextures(cascadeSettingsChanged, false, false);
 }
 
 
@@ -172,6 +185,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 }
 
 void ShadowsExteriorEffect::RegisterTextures() {
+	ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
 	// initialize cascade shadowmaps
@@ -183,8 +197,6 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	};
 	for (int i = 0; i <= MapLod; i++) {
 		// create one texture per Exterior ShadowMap type
-		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution;
-
 		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
 		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
 		
@@ -229,6 +241,61 @@ void ShadowsExteriorEffect::RegisterTextures() {
 }
 
 
+/*
+ * Recreate specific shadow maps, to be used after specific settings change.
+ */
+void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cubemaps) {
+	if (cascades) {
+		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
+		std::vector<const char*>ShadowBufferNames = {
+			"TESR_ShadowMapBufferNear",
+			"TESR_ShadowMapBufferMiddle",
+			"TESR_ShadowMapBufferFar",
+			"TESR_ShadowMapBufferLod",
+		};
+		for (int i = 0; i <= MapLod; i++) {
+			// Release the old textures and surfaces first.
+			auto map = &ShadowMaps[i];
+
+			if (map->ShadowMapSurface) {
+				map->ShadowMapSurface->Release();
+				map->ShadowMapSurface = nullptr;
+			}
+			if (map->ShadowMapTexture) {
+				map->ShadowMapTexture->Release();
+				map->ShadowMapTexture = nullptr;
+			};
+			if (map->ShadowMapDepthSurface) {
+				map->ShadowMapDepthSurface->Release();
+				map->ShadowMapDepthSurface = nullptr;
+			};
+			if (map->BlurShadowVertexBuffer) {
+				map->BlurShadowVertexBuffer->Release();
+				map->BlurShadowVertexBuffer = nullptr;
+			};
+
+			// Recreate everything.
+			TheTextureManager->InitTexture(ShadowBufferNames[i], &map->ShadowMapTexture, &map->ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
+			TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &map->ShadowMapDepthSurface, NULL);
+
+			// initialize the frame vertices for future shadow blurring
+			TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &map->BlurShadowVertexBuffer);
+			map->ShadowMapViewPort = { 0, 0, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+			map->ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
+		}
+
+		SunShadowsEffect* sunShadows = TheShaderManager->Effects.SunShadows;
+		ShaderTextureValue* Sampler;
+		for (UInt32 c = 0; c < sunShadows->TextureShaderValuesCount; c++) {
+			Sampler = &sunShadows->TextureShaderValues[c];
+			if (!memcmp(Sampler->Name, "TESR_ShadowMapBuffer", 20) && Sampler->Texture->Texture) {
+				Sampler->Texture->Texture = nullptr;
+			}
+		}
+	}
+}
+
+
 void ShadowsExteriorEffect::GetCascadeDepths() {
 	float camFar = Settings.Exteriors.ShadowRadius;
 	float logFactor = 0.9f;
@@ -246,7 +313,7 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 			logFactor);
 
 		// filtering objects occupying less than 10 pixels in the shadow map
-		ShadowMaps[i].Forms.MinRadius = 10.0f * ShadowMaps[i].ShadowMapRadius / Settings.Exteriors.ShadowMapResolution;
+		ShadowMaps[i].Forms.MinRadius = 10.0f * ShadowMaps[i].ShadowMapRadius / Settings.ShadowMaps.CascadeResolution;
 	}
 
 	// Get Near distance for each cascade
@@ -355,7 +422,7 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	D3DXVECTOR3 upDir(0.0f, 0.0f, 1.0f);
 
 	D3DXVECTOR3 minExtents, maxExtents;
-	if (TheShaderManager->Effects.Debug->Constants.DebugVar.y) {
+	if (Settings.ShadowMaps.StabilizeCascades) {
 		// Calculate the radius of a bounding sphere surrounding the frustum corners
 		float sphereRadius = 0.0f;
 		for (auto i = 0; i < 8; ++i)
@@ -397,10 +464,10 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	D3DXMatrixOrthoOffCenterRH(&shadowProj, minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, nearPlane, farPlane);
 	shadowViewProj = shadowView * shadowProj;
 
-	if (TheShaderManager->Effects.Debug->Constants.DebugVar.y) {
+	if (Settings.ShadowMaps.StabilizeCascades) {
 		// Create the rounding matrix, by projecting the world-space origin and determining
 		// the fractional offset in texel space.
-		float sMapSize = Settings.Exteriors.ShadowMapResolution;
+		float sMapSize = Settings.ShadowMaps.CascadeResolution;
 		D3DXVECTOR4 shadowOrigin(-sceneCamera->m_worldTransform.pos.x, -sceneCamera->m_worldTransform.pos.y, -sceneCamera->m_worldTransform.pos.z, 1.0f);
 		D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
 		D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);
