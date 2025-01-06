@@ -388,15 +388,17 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	// Calculate the frustum corners in world space (from a unit cube in projective space).
 	D3DXMATRIX invViewProj = TheRenderManager->InvViewProjMatrix;
 
+	float ndcNear = 1.0f ? TheRenderManager->IsReversedDepth() : 0.0f;
+	float ndcFar = 1.0f - ndcNear;
 	D3DXVECTOR3 frustumCorners[8] = {
-		D3DXVECTOR3(-1.0f,  1.0f, 0.0f),  // Near plane.
-		D3DXVECTOR3( 1.0f,  1.0f, 0.0f),
-		D3DXVECTOR3( 1.0f, -1.0f, 0.0f),
-		D3DXVECTOR3(-1.0f, -1.0f, 0.0f),
-		D3DXVECTOR3(-1.0f,  1.0f, 1.0f),  // Far plane.
-		D3DXVECTOR3( 1.0f,  1.0f, 1.0f),
-		D3DXVECTOR3( 1.0f, -1.0f, 1.0f),
-		D3DXVECTOR3(-1.0f, -1.0f, 1.0f),
+		D3DXVECTOR3(-1.0f,  1.0f, ndcNear), // Near plane.
+		D3DXVECTOR3( 1.0f,  1.0f, ndcNear),
+		D3DXVECTOR3( 1.0f, -1.0f, ndcNear),
+		D3DXVECTOR3(-1.0f, -1.0f, ndcNear),
+		D3DXVECTOR3(-1.0f,  1.0f, ndcFar),  // Far plane.
+		D3DXVECTOR3( 1.0f,  1.0f, ndcFar),
+		D3DXVECTOR3( 1.0f, -1.0f, ndcFar),
+		D3DXVECTOR3(-1.0f, -1.0f, ndcFar),
 	};
 	for (auto i = 0; i < 8; ++i) {
 		D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], &invViewProj);
