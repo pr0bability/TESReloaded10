@@ -209,7 +209,7 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
-	ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
+	ShadowMap->ShadowCameraToLight = (*ViewProj);
 	TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, ViewProj);
     /*for (int i = 1; i < 4; i++){
         IDirect3DSurface9* targ= nullptr;

@@ -171,8 +171,12 @@ float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blu
 	float4 color1 = tex2D(TESR_RenderedBuffer, IN.UVCoord) * WeightSum;
 	float3 normal = GetNormal(IN.UVCoord);
 	float depth = tex2D(TESR_DepthBuffer, IN.UVCoord).y;
+	
+    if (invertedDepth) {
+        depth = 1 - depth;
+    }
 
-	float depth1 = readDepth(IN.UVCoord);
+    float depth1 = readDepth(IN.UVCoord);
 	clip(endFade - depth1);
 
 	// coeff for blurring to increase blur depthDrop on surfaces facing away from the camera
