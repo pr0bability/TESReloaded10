@@ -4,10 +4,12 @@
 float4x4 TESR_ProjectionTransform;
 float4x4 TESR_InvProjectionTransform;
 float4x4 TESR_ViewTransform;
+float4x4 TESR_InvViewTransform;
 float4 TESR_DepthConstants;
 float4 TESR_CameraData;
 float4 TESR_CameraPosition;
 
+static const float invertedDepth = TESR_DepthConstants.z;
 static const float nearZ = TESR_CameraData.x;
 static const float farZ = TESR_CameraData.y;
 static const float Q = farZ/(farZ - nearZ);
@@ -19,11 +21,16 @@ float readDepth(float2 coord)
 
 float3 reconstructPosition(float2 uv)
 {
-    float4 screenpos = float4(uv * 2.0 - 1.0f, tex2D(TESR_DepthBuffer, uv).y, 1.0f);
-    screenpos.y = -screenpos.y;
-    float4 viewpos = mul(screenpos, TESR_InvProjectionTransform);
-    viewpos.xyz /= viewpos.w;
-    return viewpos.xyz;
+    float x = uv.x * 2 - 1;
+    float y = (1 - uv.y) * 2 - 1;
+    float z = tex2D(TESR_DepthBuffer, uv).y;
+    float4 clipSpace = float4(x, y, z, 1.0f);
+
+    float4 viewSpace = mul(clipSpace, TESR_InvProjectionTransform);
+	
+    viewSpace /= viewSpace.w;
+	
+    return viewSpace.xyz;
 }
 
 float3 projectPosition(float3 position){
@@ -51,16 +58,19 @@ float getHomogenousDepth(float2 uv){
 	return length(camera_vector);
 }
 
-float4 reconstructWorldPosition(float2 uv){
-    // float4 screenpos = float4(uv * 2.0 - 1.0f, tex2D(TESR_DepthBuffer, uv).x, 1.0f);
-    // screenpos.y = -screenpos.y;
-    // float4 viewpos = mul(screenpos, TESR_InvWorldViewProjectionTransform);
-    // viewpos.xyz /= viewpos.w;
-    // return viewpos;
+float4 reconstructWorldPosition(float2 uv, out float viewDepth){
+    float x = uv.x * 2 - 1;
+    float y = (1 - uv.y) * 2 - 1;
+    float z = tex2D(TESR_DepthBuffer, uv).y;
+    float4 clipSpace = float4(x, y, z, 1.0f);
 
+    float4 viewSpace = mul(clipSpace, TESR_InvProjectionTransform);
+	
+    viewSpace /= viewSpace.w;
+	
+    viewDepth = viewSpace.z;
+	
+    float4 worldSpace = mul(viewSpace, TESR_InvViewTransform);
 
-	float depth = readDepth(uv);
-	float3 camera_vector = toWorld(uv) * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
-	return world_pos;
+    return float4(worldSpace.xyz, 1.0f);
 }
