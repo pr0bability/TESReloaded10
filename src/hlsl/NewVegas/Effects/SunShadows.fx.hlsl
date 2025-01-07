@@ -14,13 +14,10 @@ float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferNear : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferMiddle : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferFar : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_ShadowMapBufferLod : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_PointShadowBuffer : register(s6)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_ShadowAtlas : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_NormalsBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_PointShadowBuffer : register(s3)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_NoiseSampler : register(s4) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 #define SSS_STEPNUM 5
 
@@ -67,15 +64,18 @@ float4 ScreenCoordToTexCoord(float4 coord){
 	return coord;
 }
 
-float GetLightAmountValue(sampler2D shadowBuffer, float4x4 lightTransform, float4 coord){
+float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, float offsetY){
 	// Quality : shadow technique
 	// 0: disabled
 	// 1: VSM
 	// 2: simple ESM
 	// 3: filtered ESM
 
-	float4 LightSpaceCoord = ScreenCoordToTexCoord(mul(coord, lightTransform));
-	float4 shadowBufferValue = tex2D(shadowBuffer, LightSpaceCoord.xy);
+    float4 LightSpaceCoord = ScreenCoordToTexCoord(mul(coord, lightTransform));
+    LightSpaceCoord.xy *= 0.5;
+    LightSpaceCoord.x += offsetX;
+    LightSpaceCoord.y += offsetY;
+    float4 shadowBufferValue = tex2D(TESR_ShadowAtlas, LightSpaceCoord.xy);
 
 	float4 shadowMode = {TESR_ShadowData.w == 1.0f, TESR_ShadowData.w == 2.0f, TESR_ShadowData.w == 3.0f, TESR_ShadowData.w == 4.0f};
 	float4 shadows = {
@@ -95,11 +95,11 @@ float GetLightAmount(float4 coord, float depth)
 	// getting all shadow values from cascades as negative (to be able to use the dot product to chose the correct one)
 	// shadows are inverted to mean 1 if in shadow to allow dot product filtering
 	float4 shadows = {
-		1 - GetLightAmountValue(TESR_ShadowMapBufferNear, TESR_ShadowCameraToLightTransformNear, coord),
-		1 - GetLightAmountValue(TESR_ShadowMapBufferMiddle, TESR_ShadowCameraToLightTransformMiddle, coord),
-		1 - GetLightAmountValue(TESR_ShadowMapBufferFar, TESR_ShadowCameraToLightTransformFar, coord),
-		1 - GetLightAmountValue(TESR_ShadowMapBufferLod, TESR_ShadowCameraToLightTransformLod, coord),
-	};
+        1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0f, 0.0f),
+		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5f, 0.0f),
+		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0f, 0.5f),
+		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5f, 0.5f),
+    };
 
 	float4 cascade = {
 		depth < TESR_ShadowRadius.x,
