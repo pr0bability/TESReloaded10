@@ -188,28 +188,18 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
-	// initialize cascade shadowmaps
-	std::vector<const char*>ShadowBufferNames = {
-		"TESR_ShadowMapBufferNear",
-		"TESR_ShadowMapBufferMiddle",
-		"TESR_ShadowMapBufferFar",
-		"TESR_ShadowMapBufferLod",
-	};
+	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F);
+	TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+
 	for (int i = 0; i <= MapLod; i++) {
-		// create one texture per Exterior ShadowMap type
-		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
-		
-		// initialize the frame vertices for future shadow blurring
-		TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
-		ShadowMaps[i].ShadowMapViewPort = { 0, 0, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+		ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f};
 		ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 	}
 
 	// ortho texture
 	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
-	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMaps[MapOrtho].ShadowMapTexture, &ShadowMaps[MapOrtho].ShadowMapSurface, orthoMapRes, orthoMapRes, D3DFMT_G32R32F);
-	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[MapOrtho].ShadowMapDepthSurface, NULL);
+	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMapOrthoTexture, &ShadowMapOrthoSurface, orthoMapRes, orthoMapRes, D3DFMT_G32R32F);
+	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMapOrthoDepthSurface, NULL);
 	ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
 	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
 
@@ -246,49 +236,34 @@ void ShadowsExteriorEffect::RegisterTextures() {
  */
 void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cubemaps) {
 	if (cascades) {
-		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
-		std::vector<const char*>ShadowBufferNames = {
-			"TESR_ShadowMapBufferNear",
-			"TESR_ShadowMapBufferMiddle",
-			"TESR_ShadowMapBufferFar",
-			"TESR_ShadowMapBufferLod",
+		if (ShadowAtlasSurface) {
+			ShadowAtlasSurface->Release();
+			ShadowAtlasSurface = nullptr;
+		}
+		if (ShadowAtlasTexture) {
+			ShadowAtlasTexture->Release();
+			ShadowAtlasTexture = nullptr;
 		};
+		if (ShadowAtlasDepthSurface) {
+			ShadowAtlasDepthSurface->Release();
+			ShadowAtlasDepthSurface = nullptr;
+		};
+
+		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
+
+		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+
 		for (int i = 0; i <= MapLod; i++) {
-			// Release the old textures and surfaces first.
-			auto map = &ShadowMaps[i];
-
-			if (map->ShadowMapSurface) {
-				map->ShadowMapSurface->Release();
-				map->ShadowMapSurface = nullptr;
-			}
-			if (map->ShadowMapTexture) {
-				map->ShadowMapTexture->Release();
-				map->ShadowMapTexture = nullptr;
-			};
-			if (map->ShadowMapDepthSurface) {
-				map->ShadowMapDepthSurface->Release();
-				map->ShadowMapDepthSurface = nullptr;
-			};
-			if (map->BlurShadowVertexBuffer) {
-				map->BlurShadowVertexBuffer->Release();
-				map->BlurShadowVertexBuffer = nullptr;
-			};
-
-			// Recreate everything.
-			TheTextureManager->InitTexture(ShadowBufferNames[i], &map->ShadowMapTexture, &map->ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
-			TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &map->ShadowMapDepthSurface, NULL);
-
-			// initialize the frame vertices for future shadow blurring
-			TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &map->BlurShadowVertexBuffer);
-			map->ShadowMapViewPort = { 0, 0, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
-			map->ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
+			ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+			ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 		}
 
 		SunShadowsEffect* sunShadows = TheShaderManager->Effects.SunShadows;
 		ShaderTextureValue* Sampler;
 		for (UInt32 c = 0; c < sunShadows->TextureShaderValuesCount; c++) {
 			Sampler = &sunShadows->TextureShaderValues[c];
-			if (!memcmp(Sampler->Name, "TESR_ShadowMapBuffer", 20) && Sampler->Texture->Texture) {
+			if (!memcmp(Sampler->Name, "TESR_ShadowAtlas", 15) && Sampler->Texture->Texture) {
 				Sampler->Texture->Texture = nullptr;
 			}
 		}
@@ -470,7 +445,8 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 		// Create the rounding matrix, by projecting the world-space origin and determining
 		// the fractional offset in texel space.
 		float sMapSize = Settings.ShadowMaps.CascadeResolution;
-		D3DXVECTOR4 shadowOrigin(-sceneCamera->m_worldTransform.pos.x, -sceneCamera->m_worldTransform.pos.y, -sceneCamera->m_worldTransform.pos.z, 1.0f);
+		NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;  // We are working in camera relative world space.
+		D3DXVECTOR4 shadowOrigin(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z, 1.0f);
 		D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
 		D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);
 		D3DXVECTOR4 roundedOrigin, roundOffset;

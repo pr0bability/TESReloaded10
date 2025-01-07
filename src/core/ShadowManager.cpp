@@ -185,14 +185,10 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 }
 
 // Go through accumulations and render found objects
-void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* DepthSurface) {
+void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort) {
 	IDirect3DDevice9* Device = TheRenderManager->device;
 
-	Device->SetRenderTarget(0, RenderTarget);
-	Device->SetDepthStencilSurface(DepthSurface);
 	Device->SetViewport(ViewPort);
-
-	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
 	Device->BeginScene();
 	
@@ -205,17 +201,12 @@ void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort, IDirect3DSurface9* Rend
 }
 
 
-void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj) {
+void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DXMATRIX* ViewProj) {
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
 	ShadowMap->ShadowCameraToLight = (*ViewProj);
 	TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, ViewProj);
-    /*for (int i = 1; i < 4; i++){
-        IDirect3DSurface9* targ= nullptr;
-        Device->GetRenderTarget(i , &targ);
-        Logger::Log("%u  : %08X", i, targ );
-    }*/
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
@@ -234,7 +225,7 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 		AccumExteriorCell(Player->parentCell, ShadowMap);
 	}
 
-	RenderAccums(&ShadowMap->ShadowMapViewPort, ShadowMap->ShadowMapSurface, ShadowMap->ShadowMapDepthSurface);
+	RenderAccums(&ShadowMap->ShadowMapViewPort);
 }
 
 
@@ -322,7 +313,11 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Shadows->Constants.ShadowViewProj = View * Proj;
 	TheShaderManager->SpotLightWorldToLightMatrix[LightIndex] = (Shadows->Constants.ShadowViewProj);
 
-	RenderAccums(&ShadowCubeMapViewPort, Shadows->Textures.ShadowSpotlightSurface[LightIndex], Shadows->Textures.ShadowCubeMapDepthSurface);
+	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
+	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
+	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
+	RenderAccums(&ShadowCubeMapViewPort);
 }
 
 
@@ -449,7 +444,12 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		Shadows->Constants.ShadowViewProj = View * Proj;
-		RenderAccums(&ShadowCubeMapViewPort, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face], Shadows->Textures.ShadowCubeMapDepthSurface);
+
+		Device->SetRenderTarget(0, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]);
+		Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
+		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
+		RenderAccums(&ShadowCubeMapViewPort);
 	}
 }
 
@@ -607,12 +607,16 @@ void ShadowManager::RenderShadowMaps() {
 			D3DXMATRIX View = GetViewMatrix(&At, SunDir);
 			auto shadowMapTimer = TimeLogger();
 
+			Device->SetRenderTarget(0, Shadows->ShadowAtlasSurface);
+			Device->SetDepthStencilSurface(Shadows->ShadowAtlasDepthSurface);
+			Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
 			for (int i = MapNear; i < MapOrtho; i++) {
 				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
 				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, SunDir);
 
 				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
-				if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
+				// if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
 
 				std::string message = "ShadowManager::RenderShadowMap ";
 				message += std::to_string(i);
@@ -623,6 +627,10 @@ void ShadowManager::RenderShadowMaps() {
 		// render ortho map if one of the effects using ortho is active
 		if (TheShaderManager->orthoRequired) {
 			auto shadowMapTimer = TimeLogger();
+
+			Device->SetRenderTarget(0, Shadows->ShadowMapOrthoSurface);
+			Device->SetDepthStencilSurface(Shadows->ShadowMapOrthoDepthSurface);
+			Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
 			ShadowData->z = 1; // identify ortho map in shader constant
 			D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
@@ -655,6 +663,7 @@ void ShadowManager::RenderShadowMaps() {
 		// render the cubemaps for each light
 		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
 
+			// Render targets set in function due to rendering multiple faces.
 			RenderShadowCubeMap(ShadowLights, i);
 
 			std::string message = "ShadowManager::RenderShadowCubeMap ";
@@ -669,6 +678,7 @@ void ShadowManager::RenderShadowMaps() {
 		for (int i = 0; i < SpotLightsMax; i++) {
 			if (!SpotLights[i] || SpotLights[i]->Spec.r == 0) continue; //bypass lights with no radius
 
+			// Render targets set in function.
 			RenderShadowSpotlight(SpotLights, i);
 
 			std::string message = "ShadowManager::RenderShadowSpotLight";
@@ -695,11 +705,8 @@ void ShadowManager::RenderShadowMaps() {
 			GetCurrentDirectoryA(MAX_PATH, Filename);
 			strcat(Filename, "\\Test");
 			if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES) CreateDirectoryA(Filename, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap0.jpg", D3DXIFF_JPG, Shadows->ShadowMaps[MapNear].ShadowMapSurface, NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap1.jpg", D3DXIFF_JPG, Shadows->ShadowMaps[MapMiddle].ShadowMapSurface, NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap2.jpg", D3DXIFF_JPG, Shadows->ShadowMaps[MapFar].ShadowMapSurface, NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap3.jpg", D3DXIFF_JPG, Shadows->ShadowMaps[MapLod].ShadowMapSurface, NULL, NULL);
-			D3DXSaveSurfaceToFileA(".\\Test\\shadowmap4.jpg", D3DXIFF_JPG, Shadows->ShadowMaps[MapOrtho].ShadowMapSurface, NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmapatlas.jpg", D3DXIFF_JPG, Shadows->ShadowAtlasSurface, NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmaportho.jpg", D3DXIFF_JPG, Shadows->ShadowMapOrthoSurface, NULL, NULL);
 
 			InterfaceManager->ShowMessage("Textures taken!");
 		}
@@ -712,42 +719,42 @@ void ShadowManager::RenderShadowMaps() {
 /*
 * Filters the Shadow Map of given index using a 2 pass gaussian blur
 */
-void ShadowManager::BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
-    IDirect3DDevice9* Device = TheRenderManager->device;
-    NiDX9RenderState* RenderState = TheRenderManager->renderState;
-    IDirect3DTexture9* SourceShadowMap = ShadowMap->ShadowMapTexture;
-    IDirect3DSurface9* TargetShadowMap = ShadowMap->ShadowMapSurface;
-
-    Device->SetDepthStencilSurface(NULL);
-    RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
-    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
-    RenderState->SetVertexShader(ShadowMapBlurVertex->ShaderHandle, false);
-    RenderState->SetPixelShader(ShadowMapBlurPixel->ShaderHandle, false);
-	RenderState->SetFVF(FrameFVF, false);
-	Device->SetStreamSource(0, ShadowMap->BlurShadowVertexBuffer, 0, sizeof(FrameVS));
-	Device->SetRenderTarget(0, TargetShadowMap);
-	
-	// Pass map resolution to shader as a constant
-	D3DXVECTOR4 inverseRes = { ShadowMap->ShadowMapInverseResolution, ShadowMap->ShadowMapInverseResolution, 0.0f, 0.0f };
-	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
-	RenderState->SetTexture(0, SourceShadowMap);
-
-	// blur in two passes, vertically and horizontally
-	D3DXVECTOR4 Blur[2] = {
-		D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.0f),
-		D3DXVECTOR4(0.0f, 1.0f, 0.0f, 0.0f),
-	};
-
-	for (int i = 0; i < 2; i++) {
-		// set blur direction shader constants
-		ShadowMapBlurPixel->SetShaderConstantF(1, &Blur[i], 1);
-
-		Device->BeginScene();
-		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2); // draw call to execute the shader
-		Device->EndScene();
-	}
-
-	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
-    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
-}
+//void ShadowManager::BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
+//    IDirect3DDevice9* Device = TheRenderManager->device;
+//    NiDX9RenderState* RenderState = TheRenderManager->renderState;
+//    IDirect3DTexture9* SourceShadowMap = ShadowMap->ShadowMapTexture;
+//    IDirect3DSurface9* TargetShadowMap = ShadowMap->ShadowMapSurface;
+//
+//    Device->SetDepthStencilSurface(NULL);
+//    RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
+//    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
+//    RenderState->SetVertexShader(ShadowMapBlurVertex->ShaderHandle, false);
+//    RenderState->SetPixelShader(ShadowMapBlurPixel->ShaderHandle, false);
+//	RenderState->SetFVF(FrameFVF, false);
+//	Device->SetStreamSource(0, ShadowMap->BlurShadowVertexBuffer, 0, sizeof(FrameVS));
+//	Device->SetRenderTarget(0, TargetShadowMap);
+//	
+//	// Pass map resolution to shader as a constant
+//	D3DXVECTOR4 inverseRes = { ShadowMap->ShadowMapInverseResolution, ShadowMap->ShadowMapInverseResolution, 0.0f, 0.0f };
+//	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
+//	RenderState->SetTexture(0, SourceShadowMap);
+//
+//	// blur in two passes, vertically and horizontally
+//	D3DXVECTOR4 Blur[2] = {
+//		D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.0f),
+//		D3DXVECTOR4(0.0f, 1.0f, 0.0f, 0.0f),
+//	};
+//
+//	for (int i = 0; i < 2; i++) {
+//		// set blur direction shader constants
+//		ShadowMapBlurPixel->SetShaderConstantF(1, &Blur[i], 1);
+//
+//		Device->BeginScene();
+//		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2); // draw call to execute the shader
+//		Device->EndScene();
+//	}
+//
+//	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+//    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+//}
 

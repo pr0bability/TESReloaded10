@@ -63,9 +63,6 @@ public:
 
 	struct ShadowMapSettings {
 		D3DXMATRIX				ShadowCameraToLight;
-		IDirect3DTexture9*		ShadowMapTexture;
-		IDirect3DSurface9*		ShadowMapSurface;
-		IDirect3DSurface9*		ShadowMapDepthSurface;
 		D3DVIEWPORT9			ShadowMapViewPort;
 		frustum					ShadowMapFrustum;
 		IDirect3DVertexBuffer9* BlurShadowVertexBuffer;
@@ -138,6 +135,16 @@ public:
 		IDirect3DSurface9* ShadowCubeMapDepthSurface;
 	};
 	ShadowTextures	Textures;
+
+	// Main shadow atlas, used for cascades.
+	IDirect3DTexture9* ShadowAtlasTexture;
+	IDirect3DSurface9* ShadowAtlasSurface;
+	IDirect3DSurface9* ShadowAtlasDepthSurface;
+
+	// Ortho shadows for various effects.
+	IDirect3DTexture9* ShadowMapOrthoTexture;
+	IDirect3DSurface9* ShadowMapOrthoSurface;
+	IDirect3DSurface9* ShadowMapOrthoDepthSurface;
 
 	void		clearShadowsBuffer();
 	void		UpdateConstants();
