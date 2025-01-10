@@ -430,11 +430,12 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 		minExtents = mins;
 		maxExtents = maxes;
 	}
-	float nearPlane = Settings.Exteriors.ShadowMapFarPlane * 0.6f;
-	float farPlane = Settings.Exteriors.ShadowMapFarPlane * 1.6f;
-	
 	D3DXVECTOR3 cascadeExtents = maxExtents - minExtents;
-	D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * Settings.Exteriors.ShadowMapFarPlane;
+
+	float nearPlane = 0.0f;  // Shadow casters are pancaked to near plane in the vertex shader.
+	float farPlane = cascadeExtents.z;
+	D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * -minExtents.z;
+	
 	D3DXMATRIX shadowView, shadowProj, shadowViewProj;
 
 	D3DXMatrixLookAtRH(&shadowView, &shadowCameraPos, &frustumCenter, &upDir);
