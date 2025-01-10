@@ -32,7 +32,7 @@ public:
 	void					ExecuteCommands(NiAVObject* CameraNode);
 	void					GetPlane(D3DXPLANE* plane, float a, float b, float c, float d);
 	void					SetFrustum(frustum* Frustum, D3DMATRIX* Matrix);
-	bool					InFrustum(frustum* frustum, NiNode* Node);
+	bool					InFrustum(frustum* frustum, NiNode* Node, bool skipNear = false);
 
 	Actor*					DialogTarget;
 	NiPoint3				From;

@@ -104,6 +104,10 @@ VS_OUTPUT main(VS_INPUT IN) {
 	}
     if (TESR_ShadowData.x != 1.0f) r0 = mul(r0, TESR_ShadowWorldTransform);
 	r0 = mul(r0, TESR_ShadowViewProjTransform);
+	
+	// Pancaking to ensure geometry outside of near plane is not culled.
+    r0.z = max(r0.z, 0.0f);
+	
 	OUT.position = r0;
     OUT.texcoord_0 = r0;
 	OUT.texcoord_1 = IN.texcoord_0;
