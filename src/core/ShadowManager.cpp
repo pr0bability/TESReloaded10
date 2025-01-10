@@ -241,7 +241,7 @@ void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
 		NiNode* RefNode = GetRefNode(Entry->item, &ShadowMap->Forms);
-		if (RefNode && TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) 
+		if (RefNode && TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode, true)) 
 			AccumChildren(RefNode, &ShadowMap->Forms, false);
 
 		Entry = Entry->next;

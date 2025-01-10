@@ -190,7 +190,7 @@ void CameraManager::SetFrustum(frustum* Frustum, D3DMATRIX* Matrix) {
 /*
 * Checks wether the given node is in the frustrum using its radius for the current type of Shadow map.
 */
-bool CameraManager::InFrustum(frustum* frustum, NiNode* Node) {
+bool CameraManager::InFrustum(frustum* frustum, NiNode* Node, bool skipNear) {
 	NiBound* Bound = Node->GetWorldBound();
 	if (!Bound) return false;
 
@@ -200,7 +200,7 @@ bool CameraManager::InFrustum(frustum* frustum, NiNode* Node) {
 		Bound->Center.z - TheRenderManager->CameraPosition.z 
 	};
 
-	for (int i = 0; i < 6; ++i) {
+	for (int i = skipNear ? 1 : 0; i < 6; ++i) {
 		if (D3DXPlaneDotCoord(&frustum->plane[i], &Position) <= -Bound->Radius)
 			return false;
 	}
