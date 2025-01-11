@@ -232,7 +232,7 @@ void	SceneGraph::SetNearDistance(float Distance) {
 }
 
 NiProperty*	 NiGeometry::GetProperty(NiProperty::PropertyType Type) {
-	return propertyState.prop[Type];
+	return propertyState.m_aspProps[Type];
 }
 
 
@@ -303,6 +303,10 @@ void NiDX9Renderer::PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiG
 
 void NiDX9Renderer::CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform) {
 	ThisCall(0x00E6FE30, this, SkinInstance, WorldTrasform, false, 3, true); 
+}
+
+void NiDX9RenderState::SetCullMode(NiStencilProperty::DrawMode aeMode) {
+	SetRenderState(D3DRS_CULLMODE, m_auiCullModeMapping[aeMode][LeftHanded], RenderStateArgs);
 }
 
 bool BSShaderProperty::IsLightingProperty() {

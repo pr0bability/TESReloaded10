@@ -29,6 +29,18 @@ void RenderPass::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryBufferData* GeoData = ModelData->BuffData;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
+	// Set proper cull based on stencil property.
+	NiProperty* pProp = Geo->GetProperty(NiProperty::PropertyType::kType_Stencil);
+
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	if (pProp) {
+		NiStencilProperty* pStencilProp = static_cast<NiStencilProperty*>(pProp);
+		RenderState->SetCullMode(pStencilProp->GetDrawMode());
+	}
+	else {
+		RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW, RenderStateArgs);
+	}
+
 	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
 	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(GeoData, GeoData->VertCount);
 }
@@ -187,6 +199,18 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryBufferData* GeoData = ModelData->BuffData;
 	NiSkinInstance* SkinInstance = Geo->skinInstance;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
+
+	// Set proper cull based on stencil property.
+	NiProperty* pProp = Geo->GetProperty(NiProperty::PropertyType::kType_Stencil);
+
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	if (pProp) {
+		NiStencilProperty* pStencilProp = static_cast<NiStencilProperty*>(pProp);
+		RenderState->SetCullMode(pStencilProp->GetDrawMode());
+	}
+	else {
+		RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW, RenderStateArgs);
+	}
 
 	NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
 	D3DPRIMITIVETYPE PrimitiveType = (SkinPartition->Partitions[0].Strips == 0) ? D3DPT_TRIANGLELIST : D3DPT_TRIANGLESTRIP;
