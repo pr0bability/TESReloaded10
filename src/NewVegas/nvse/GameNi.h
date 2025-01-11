@@ -12,6 +12,7 @@ class NiDynamicEffectState;
 class NiProperty;
 class NiFogProperty;
 class NiAlphaProperty;
+class NiShadeProperty;
 class NiMaterialProperty;
 class NiTexturingProperty;
 class NiCullingProcess;
@@ -1042,16 +1043,99 @@ public:
 };
 assert(sizeof(NiProperty) == 0x18);
 
+class NiStencilProperty : public NiProperty {
+public:
+	enum TestFunc {
+		TEST_NEVER,
+		TEST_LESS,
+		TEST_EQUAL,
+		TEST_LESSEQUAL,
+		TEST_GREATER,
+		TEST_NOTEQUAL,
+		TEST_GREATEREQUAL,
+		TEST_ALWAYS,
+		TEST_MAX
+	};
+
+	enum Action {
+		ACTION_KEEP,
+		ACTION_ZERO,
+		ACTION_REPLACE,
+		ACTION_INCREMENT,
+		ACTION_DECREMENT,
+		ACTION_INVERT,
+		ACTION_MAX
+	};
+
+	enum {
+		ENABLE_MASK = 0x1,
+		FAILACTION_MASK = 0xE,
+		FAILACTION_POS = 0x1,
+		ZFAILACTION_MASK = 0x70,
+		ZFAILACTION_POS = 0x4,
+		PASSACTION_MASK = 0x380,
+		PASSACTION_POS = 0x7,
+		DRAWMODE_MASK = 0xC00,
+		DRAWMODE_POS = 0xA,
+		TESTFUNC_MASK = 0xF000,
+		TESTFUNC_POS = 0xC,
+	};
+
+	enum DrawMode {
+		DRAW_CCW_OR_BOTH = 0,
+		DRAW_CCW = 1,
+		DRAW_CW = 2,
+		DRAW_BOTH = 3,
+		DRAW_MAX,
+	};
+
+	Bitfield16	m_usFlags;
+	UInt32		m_uiRef;
+	UInt32		m_uiMask;
+
+	CREATE_OBJECT(NiStencilProperty, 0xA6F410);
+
+	bool IsEnabled() const {
+		return m_usFlags.GetBit(ENABLE_MASK);
+	}
+
+	void SetDrawMode(NiStencilProperty::DrawMode aeDraw) {
+		m_usFlags.SetField(aeDraw, DRAWMODE_MASK, DRAWMODE_POS);
+	}
+
+	NiStencilProperty::DrawMode GetDrawMode() const {
+		return (NiStencilProperty::DrawMode)m_usFlags.GetField(DRAWMODE_MASK, DRAWMODE_POS);
+	}
+};
+assert(sizeof(NiStencilProperty) == 0x24);
+
 class NiPropertyState {
 public:
-	NiProperty* prop[6];
-	// 0 00
-	// 1 04
-	// 2 08
-	// 3 0C
-	// 4 10
-	// 5 14
+	enum PropertyID {
+		ALPHA = 0,
+		CULLING = 1,
+		MATERIAL = 2,
+		SHADE = 3,
+		STENCIL = 4,
+		TEXTURING = 5,
+		UNK = 6,
+		MAX,
+	};
+
+	union {
+		struct {
+			NiAlphaProperty*		m_spAlphaProperty;
+			NiProperty*				m_spCullingProperty;
+			NiMaterialProperty*		m_spMaterialProperty;
+			NiShadeProperty*		m_spShadeProperty;
+			NiStencilProperty*		m_spStencilProperty;
+			NiTexturingProperty*	m_spTextureProperty;
+			NiProperty*				m_spUnknownProperty;
+		};
+		NiProperty*		m_aspProps[MAX];
+	};
 };
+assert(sizeof(NiPropertyState) == 0x1C);
 
 class NiGeometry : public NiAVObject {
 public:
@@ -1065,7 +1149,6 @@ public:
 	NiProperty*			GetProperty(NiProperty::PropertyType Type);
 
 	NiPropertyState		propertyState;	// 9C
-	UInt32				unkB4;			// B4
 	NiGeometryData*		geomData;		// B8
 	NiSkinInstance*		skinInstance;	// BC This seems to be a BSDismemberSkinInstance (old NiSkinInstance constructor is never used)
 	NiD3DShader*		shader;			// C0
@@ -1958,7 +2041,10 @@ public:
 	float							MaxFogFactor;					// 0084
 	float							MaxFogValue;					// 0088
 	NiColor							CurrentFogColor;				// 008C
-	UInt32                          Unk98[23];						// 0098
+	UInt32							m_uiCurrentFogColor;
+	D3DCMPFUNC						m_auiStencilTestMapping[NiStencilProperty::TEST_MAX];
+	D3DSTENCILOP					m_auiStencilActionMapping[NiStencilProperty::ACTION_MAX];
+	D3DCULL							m_auiCullModeMapping[NiStencilProperty::DRAW_MAX][2];
 	UInt32							LeftHanded;						// 00F4
 	UInt32							Unk0F8[10];						// 00F8
 	NiRenderStateSetting			RenderStateSettings[256];		// 0120
@@ -1975,6 +2061,8 @@ public:
 	NiDX9Renderer*					Renderer;						// 10FC
 	UInt32							unk1000[(0x1018 - 0x1000) >> 2];// 1100
 	D3DCAPS9						Caps;							// 1118
+
+	void SetCullMode(NiStencilProperty::DrawMode aeMode);
 };
 assert(offsetof(NiDX9RenderState, Device) == 0x10F8);
 assert(sizeof(NiDX9RenderState) == 0x1248);

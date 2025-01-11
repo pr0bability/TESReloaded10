@@ -43,3 +43,53 @@ __forceinline T_Ret CdeclCall(UInt32 _addr, Args ...args)
 {
 	return ((T_Ret(__cdecl*)(Args...))_addr)(std::forward<Args>(args)...);
 }
+
+/**
+ *	A bitfield.
+ */
+template <typename T>
+class Bitfield
+{
+public:
+	Bitfield() { field = 0; }
+	~Bitfield() { }
+
+	void	Clear(void) { field = 0; }						//!< Clears all bits
+	void	RawSet(UInt32 data) { field = data; }					//!< Modifies all bits
+
+	void	Set(UInt32 data) { field |= data; }					//!< Sets individual bits
+	void	Clear(UInt32 data) { field &= ~data; }					//!< Clears individual bits
+	void	Unset(UInt32 data) { Clear(data); }					//!< Clears individual bits
+	void	Mask(UInt32 data) { field &= data; }					//!< Masks individual bits
+	void	Toggle(UInt32 data) { field ^= data; }					//!< Toggles individual bits
+	void	SetBit(UInt32 data, bool state)
+	{
+		if (state) Set(data); else Clear(data);
+	}
+
+	void	SetField(T data, T mask, T pos) {
+		field = (field & ~mask) | (data << pos);
+	}
+
+	T		GetField(T mask, T pos) const {
+		return (field & mask) >> pos;
+	}
+
+	T		Get(void) const { return field; }					//!< Gets all bits
+	T		GetBit(UInt32 data) const { return field & data; }			//!< Gets individual bits
+	T		Extract(UInt32 bit) const { return (field >> bit) & 1; }		//!< Extracts a bit
+	T		ExtractField(UInt32 shift, UInt32 length)					//!< Extracts a series of bits
+	{
+		return (field >> shift) & (0xFFFFFFFF >> (32 - length));
+	}
+
+	bool	IsSet(UInt32 data) const { return ((field & data) == data) ? true : false; }	//!< Are all these bits set?
+	bool	IsUnSet(UInt32 data) const { return (field & data) ? false : true; }			//!< Are all these bits clear?
+	bool	IsClear(UInt32 data) const { return IsUnSet(data); }							//!< Are all these bits clear?
+
+	T		field;	//!< bitfield data
+};
+
+typedef Bitfield <UInt8>	Bitfield8;		//!< An 8-bit bitfield
+typedef Bitfield <UInt16>	Bitfield16;		//!< A 16-bit bitfield
+typedef Bitfield <UInt32>	Bitfield32;		//!< A 32-bit bitfield
