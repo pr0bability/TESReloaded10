@@ -607,7 +607,6 @@ NightMinDarkness = 0.35              # Darkness of shadows during dark moon phas
 Quality = 2                          # Not used.
 ShadowMapFarPlane = 32768            # Used for shadow frustum. Don't change this value.
 OrthoMapResolution = 1024            # Resolution of the texture used to store the ortho map.
-ShadowMode = 1                       # Shadow algorithm used. 1: Variance Shadow Maps, 2: unfiltered Exponenial Shadow Map, 3: filtered ESM.
 ShadowsRadius = 8000                 # Max distance for rendering of shadow from the camera.
 OrthoRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Wether to cast shadows from point lights. Requires a slight darkening of the entire screen.
@@ -668,8 +667,7 @@ Enabled = true                       # Wether to render screen space contact/det
 RenderDistance = 12000               # Max distance at which to compute screen space shadows
 
 [_Shaders.ShadowsExteriors.ShadowMaps]
-CascadeResolution = 3				 # Resolution used for shadow cascades. 0: 512, 1: 1024, 2: 1536, 3: 2048
-StabilizeCascades = true             # Whether to stabilize shadow cascades. Eliminates camera movement shimmer, but is slightly slower and wastes a bit of resolution.
+CascadeResolution = 2				 # Resolution used for shadow cascades. 0: 1024, 1: 1536, 2: 2048
 
 [_Shaders.ShadowsExteriors.Status]
 Enabled = true                       # Post process sun and pointlights shadows in exteriors.
