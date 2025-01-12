@@ -80,7 +80,15 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
 		cascadeSettingsChanged = true;
 
-	Settings.ShadowMaps.StabilizeCascades = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "StabilizeCascades");
+	// Mipmaps and anisotropy are disabled due to deferred shadows - derivatives are messed up and causing artifacts.
+	// https://aras-p.info/blog/2010/01/07/screenspace-vs-mip-mapping/
+	/*bool oldMips = Settings.ShadowMaps.Mipmaps;
+	Settings.ShadowMaps.Mipmaps = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Mipmaps");
+
+	if (oldMips != Settings.ShadowMaps.Mipmaps)
+		cascadeSettingsChanged = true;
+
+	Settings.ShadowMaps.Anisotropy = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Anisotropy"), 0, 2)) * 8;*/
 
 	//Shadows Cascade settings
 	GetCascadeDepths();
@@ -156,7 +164,8 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	if (!Enabled || (isExterior && !Settings.Exteriors.Enabled) || (!isExterior && !Settings.Interiors.Enabled)) clearShadowsBuffer();
 
 	// If certain shadow map settings were changed, recreate the textures and surfaces.
-	RecreateTextures(cascadeSettingsChanged, false, false);
+	if (texturesInitialized)
+		RecreateTextures(cascadeSettingsChanged, false, false);
 }
 
 
@@ -188,7 +197,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
-	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F);
+	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
 	TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
 
 	for (int i = 0; i <= MapLod; i++) {
@@ -228,6 +237,8 @@ void ShadowsExteriorEffect::RegisterTextures() {
 
 	// Initialize shadow buffer
 	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width, TheRenderManager->height, D3DFMT_G16R16);
+
+	texturesInitialized = true;
 }
 
 
@@ -251,7 +262,7 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 
 		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 
-		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F);
+		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
 		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
 
 		for (int i = 0; i <= MapLod; i++) {
