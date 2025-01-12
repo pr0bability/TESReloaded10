@@ -626,6 +626,9 @@ void ShadowManager::RenderShadowMaps() {
 			}
 		}
 
+		if (Shadows->Settings.ShadowMaps.Mipmaps)
+			Shadows->ShadowAtlasTexture->GenerateMipSubLevels();
+
 		// render ortho map if one of the effects using ortho is active
 		if (TheShaderManager->orthoRequired) {
 			auto shadowMapTimer = TimeLogger();

@@ -74,7 +74,8 @@ public:
 
 	struct ShadowMapStruct {
 		int					CascadeResolution;
-		bool				StabilizeCascades;
+		bool				Mipmaps;
+		int					Anisotropy;
 	};
 
 	struct ExteriorsStruct {
@@ -145,7 +146,7 @@ public:
 	IDirect3DTexture9* ShadowMapOrthoTexture;
 	IDirect3DSurface9* ShadowMapOrthoSurface;
 	IDirect3DSurface9* ShadowMapOrthoDepthSurface;
-
+	
 	void		clearShadowsBuffer();
 	void		UpdateConstants();
 	void		UpdateSettings();
@@ -156,4 +157,7 @@ public:
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);
 	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR4* SunDir);
+
+private:
+	bool		texturesInitialized;
 };

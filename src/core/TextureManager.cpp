@@ -30,10 +30,14 @@ void TextureManager::Initialize() {
 /*
 * Creates a texture of the given size and format and binds a surface to it, so it can be used as render target.
 */
-void TextureManager::InitTexture(const char* Name, IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT Format) {
+void TextureManager::InitTexture(const char* Name, IDirect3DTexture9** Texture, IDirect3DSurface9** Surface, int Width, int Height, D3DFORMAT Format, bool mipmaps) {
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	// create a texture to receive the surface contents
-	HRESULT create = Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, Format, D3DPOOL_DEFAULT, Texture, NULL);
+	HRESULT create;
+	if (!mipmaps)
+		create = Device->CreateTexture(Width, Height, 1, D3DUSAGE_RENDERTARGET, Format, D3DPOOL_DEFAULT, Texture, NULL);
+	else
+		create = Device->CreateTexture(Width, Height, 0, D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP, Format, D3DPOOL_DEFAULT, Texture, NULL);
 
 	if (FAILED(create)) {
 		Logger::Log("[ERROR] : Failed to init texture %s", Name);
