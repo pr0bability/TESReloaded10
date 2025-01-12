@@ -10,8 +10,9 @@ public:
 	};
 	SunShadowStruct	Constants;
 
-	void	UpdateConstants() {};
+	void	SetCT();
 
+	void	UpdateConstants() {};
 	void	RegisterConstants() {};
 	void	UpdateSettings() {};
 

@@ -165,6 +165,7 @@
     <ClCompile Include="..\src\effects\Snow.cpp" />
     <ClCompile Include="..\src\effects\SnowAccumulation.cpp" />
     <ClCompile Include="..\src\effects\Specular.cpp" />
+    <ClCompile Include="..\src\effects\SunShadows.cpp" />
     <ClCompile Include="..\src\effects\Terrain.cpp" />
     <ClCompile Include="..\src\effects\Tonemapping.cpp" />
     <ClCompile Include="..\src\effects\Underwater.cpp" />
