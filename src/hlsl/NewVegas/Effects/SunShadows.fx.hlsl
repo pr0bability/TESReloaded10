@@ -7,7 +7,7 @@ float4x4 TESR_ShadowCameraToLightTransformFar;
 float4x4 TESR_ShadowCameraToLightTransformLod;
 float4 TESR_ReciprocalResolution;
 float4 TESR_ViewSpaceLightDir;
-float4 TESR_ShadowData; // x: quality, y: darkness, z: nearmap resolution, w: farmap resolution
+float4 TESR_ShadowData; // x: quality, y: darkness, z: texel size
 float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
@@ -25,6 +25,9 @@ static const float DARKNESS = 1-TESR_ShadowData.y;
 static const float SSS_DIST = 2000;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
+
+static const float4 Bias = float4(0.0001f, 0.00005f, 0.00001f, 0.000003f);
+static const float4 BleedReduction = float4(0.6f, 0.6f, 0.6f, 0.6f);
 
 
 struct VSOUT
@@ -64,41 +67,32 @@ float4 ScreenCoordToTexCoord(float4 coord){
 	return coord;
 }
 
-float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, float offsetY){
-	// Quality : shadow technique
-	// 0: disabled
-	// 1: VSM
-	// 2: simple ESM
-	// 3: filtered ESM
-
+float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, float offsetY, float bias, float bleedReduction) {
     float4 LightSpaceCoord = ScreenCoordToTexCoord(mul(coord, lightTransform));
+	
+	// Offset to the correct position in the atlas.
     LightSpaceCoord.xy *= 0.5;
     LightSpaceCoord.x += offsetX;
     LightSpaceCoord.y += offsetY;
+	
     float4 shadowBufferValue = tex2D(TESR_ShadowAtlas, LightSpaceCoord.xy);
-
-	float4 shadowMode = {TESR_ShadowData.w == 1.0f, TESR_ShadowData.w == 2.0f, TESR_ShadowData.w == 3.0f, TESR_ShadowData.w == 4.0f};
-	float4 shadows = {
-		GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z),
-		GetLightAmountValueESM(shadowBufferValue.x, LightSpaceCoord.z),
-		GetLightAmountValueESSM(shadowBufferValue.x, LightSpaceCoord.z),
-		0.0,
-	};
-	return dot(shadows, shadowMode);
+    float shadow = GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z, bias, bleedReduction);
+	
+	return shadow;
 }
 
 float GetLightAmount(float4 coord, float depth)
 {
-    float blendArea = 0.9; // 20 % of each cascade to overlap
+    float blendArea = 0.9f; // 20 % of each cascade to overlap
 	float shadow;
 
 	// getting all shadow values from cascades as negative (to be able to use the dot product to chose the correct one)
 	// shadows are inverted to mean 1 if in shadow to allow dot product filtering
 	float4 shadows = {
-        1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0f, 0.0f),
-		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5f, 0.0f),
-		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0f, 0.5f),
-		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5f, 0.5f),
+        1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0f, 0.0f, Bias.x, BleedReduction.x),
+		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5f, 0.0f, Bias.y, BleedReduction.y),
+		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0f, 0.5f, Bias.z, BleedReduction.z),
+		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5f, 0.5f, Bias.w, BleedReduction.w),
     };
 
 	float4 cascade = {

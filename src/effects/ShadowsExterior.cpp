@@ -75,7 +75,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	bool cascadeSettingsChanged = false;
 
 	int oldCascadeResolution = Settings.ShadowMaps.CascadeResolution;
-	Settings.ShadowMaps.CascadeResolution = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "CascadeResolution"), 0, 3) + 1) * 512;
+	Settings.ShadowMaps.CascadeResolution = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "CascadeResolution"), 0, 2) + 2) * 512;
 
 	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
 		cascadeSettingsChanged = true;
@@ -399,37 +399,19 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	D3DXVECTOR3 upDir(0.0f, 0.0f, 1.0f);
 
 	D3DXVECTOR3 minExtents, maxExtents;
-	if (Settings.ShadowMaps.StabilizeCascades) {
-		// Calculate the radius of a bounding sphere surrounding the frustum corners
-		float sphereRadius = 0.0f;
-		for (auto i = 0; i < 8; ++i)
-		{
-			D3DXVECTOR3 centerToCorner = frustumCorners[i] - frustumCenter;
-			float dist = D3DXVec3Length(&centerToCorner);
-			sphereRadius = max(sphereRadius, dist);
-		}
-		sphereRadius = std::ceil(sphereRadius * 16.0f) / 16.0f;
-		maxExtents = D3DXVECTOR3(sphereRadius, sphereRadius, sphereRadius);
-		minExtents = -maxExtents;
+
+	// Calculate the radius of a bounding sphere surrounding the frustum corners
+	float sphereRadius = 0.0f;
+	for (auto i = 0; i < 8; ++i)
+	{
+		D3DXVECTOR3 centerToCorner = frustumCorners[i] - frustumCenter;
+		float dist = D3DXVec3Length(&centerToCorner);
+		sphereRadius = max(sphereRadius, dist);
 	}
-	else {
-		// Create a temporary view matrix for the light
-		D3DXVECTOR3 lightCameraPos = frustumCenter;
-		D3DXVECTOR3 lookAt = frustumCenter - D3DXVECTOR3(*SunDir);
-		D3DXMATRIX lightView;
-		D3DXMatrixLookAtRH(&lightView, &lightCameraPos, &lookAt, &upDir);
-		// Calculate an AABB around the frustum corners
-		D3DXVECTOR3 mins(FLT_MAX, FLT_MAX, FLT_MAX);
-		D3DXVECTOR3 maxes(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-		for (auto i = 0; i < 8; ++i)
-		{
-			D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], &lightView);
-			D3DXVec3Minimize(&mins, &mins, &frustumCorners[i]);
-			D3DXVec3Maximize(&maxes, &maxes, &frustumCorners[i]);
-		}
-		minExtents = mins;
-		maxExtents = maxes;
-	}
+	sphereRadius = std::ceil(sphereRadius * 16.0f) / 16.0f;
+	maxExtents = D3DXVECTOR3(sphereRadius, sphereRadius, sphereRadius);
+	minExtents = -maxExtents;
+	
 	D3DXVECTOR3 cascadeExtents = maxExtents - minExtents;
 
 	float nearPlane = 0.0f;  // Shadow casters are pancaked to near plane in the vertex shader.
@@ -442,24 +424,23 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	D3DXMatrixOrthoOffCenterRH(&shadowProj, minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, nearPlane, farPlane);
 	shadowViewProj = shadowView * shadowProj;
 
-	if (Settings.ShadowMaps.StabilizeCascades) {
-		// Create the rounding matrix, by projecting the world-space origin and determining
-		// the fractional offset in texel space.
-		float sMapSize = Settings.ShadowMaps.CascadeResolution;
-		NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;  // We are working in camera relative world space.
-		D3DXVECTOR4 shadowOrigin(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z, 1.0f);
-		D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
-		D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);
-		D3DXVECTOR4 roundedOrigin, roundOffset;
-		Vector4Round(&roundedOrigin, &shadowOrigin);
-		D3DXVec4Subtract(&roundOffset, &roundedOrigin, &shadowOrigin);
-		D3DXVec4Scale(&roundOffset, &roundOffset, 2.0f / sMapSize);
+	// Create the rounding matrix, by projecting the world-space origin and determining
+	// the fractional offset in texel space.
+	float sMapSize = Settings.ShadowMaps.CascadeResolution;
+	NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;  // We are working in camera relative world space.
+	D3DXVECTOR4 shadowOrigin(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z, 1.0f);
+	D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
+	D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);
+	D3DXVECTOR4 roundedOrigin, roundOffset;
+	Vector4Round(&roundedOrigin, &shadowOrigin);
+	D3DXVec4Subtract(&roundOffset, &roundedOrigin, &shadowOrigin);
+	D3DXVec4Scale(&roundOffset, &roundOffset, 2.0f / sMapSize);
 
-		shadowProj._41 = shadowProj._41 + roundOffset.x;
-		shadowProj._42 = shadowProj._42 + roundOffset.y;
+	shadowProj._41 = shadowProj._41 + roundOffset.x;
+	shadowProj._42 = shadowProj._42 + roundOffset.y;
 
-		shadowViewProj = shadowView * shadowProj;
-	}
+	shadowViewProj = shadowView * shadowProj;
+
 	return shadowViewProj;
 }
 
