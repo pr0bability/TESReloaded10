@@ -1,6 +1,4 @@
 static const float BIAS = 0.018;
-static const float MIN_VARIANCE = 0.000005;
-static const float BLEED_CORRECTION = 0.6;
 
 
 float GetPointLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir, float Distance) {
@@ -55,33 +53,31 @@ float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal)
 	return GetPointLightAtten(light.xyz, light.w, normal);
 }
 
-float ChebyshevUpperBound(float2 moments, float distance)
-{
-	// get traditional shadow value
-	float p = (moments.x > distance); //0: in shadow, 1: in light
 
-	// Compute variance.    
-	float Variance = moments.y - moments.x * moments.x;
-	Variance = max(Variance, MIN_VARIANCE);
-
-	// Compute the Chebyshev upper bound.
-	float d = distance - moments.x;
-	float p_max = invlerps(BLEED_CORRECTION, 1.0, Variance / (Variance + d*d));
-	return max(p, p_max);
+// Reduces VSM light bleedning
+float ReduceLightBleeding(float pMax, float amount) {
+    // Remove the [0, amount] tail and linearly rescale (amount, 1].
+    return invlerps(amount, 1.0f, pMax);
 }
 
-// Exponential Soft Shadow Maps
-float GetLightAmountValueESSM(float depth, float depthCompare){
-	return exp(-80 * depthCompare) * depth;
+
+float ChebyshevUpperBound(float2 moments, float mean, float minVariance,
+                          float lightBleedingReduction) {
+    // Compute variance
+    float variance = moments.y - (moments.x * moments.x);
+    variance = max(variance, minVariance);
+
+    // Compute probabilistic upper bound
+    float d = mean - moments.x;
+    float pMax = variance / (variance + (d * d));
+
+    pMax = ReduceLightBleeding(pMax, lightBleedingReduction);
+
+    // One-tailed Chebyshev
+    return (mean <= moments.x ? 1.0f : pMax);
 }
 
-// Exponential Shadow Maps
-float GetLightAmountValueESM(float depth, float depthCompare){
-	return exp(-500 * (depthCompare - depth));
-}
 
-float GetLightAmountValueVSM(float2 moments, float depthCompare)
-{
-	//returns wether the coordinates are in shadow (0), light (1) or penumbra.
-	return ChebyshevUpperBound(moments, depthCompare);
+float GetLightAmountValueVSM(float2 moments, float depth, float bias, float bleedReduction) {
+    return ChebyshevUpperBound(moments, depth, bias, bleedReduction);
 }
