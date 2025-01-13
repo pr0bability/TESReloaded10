@@ -668,6 +668,7 @@ RenderDistance = 12000               # Max distance at which to compute screen s
 
 [_Shaders.ShadowsExteriors.ShadowMaps]
 CascadeResolution = 2				 # Resolution used for shadow cascades. 0: 1024, 1: 1536, 2: 2048
+MSAA = true							 # Enable multisample antialiasing for shadow maps.
 Mipmaps = false						 # DISABLED. Enable mipmaps for the shadow maps.
 Anisotropy = 0						 # DISABLED. Anisotropic filteric for mipmaps, 0: disabled, 1: 8x, 2: 16x.
 

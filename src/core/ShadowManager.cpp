@@ -609,7 +609,11 @@ void ShadowManager::RenderShadowMaps() {
 			D3DXMATRIX View = GetViewMatrix(&At, SunDir);
 			auto shadowMapTimer = TimeLogger();
 
-			Device->SetRenderTarget(0, Shadows->ShadowAtlasSurface);
+			if (Shadows->ShadowAtlasSurfaceMSAA)
+				Device->SetRenderTarget(0, Shadows->ShadowAtlasSurfaceMSAA);
+			else
+				Device->SetRenderTarget(0, Shadows->ShadowAtlasSurface);
+
 			Device->SetDepthStencilSurface(Shadows->ShadowAtlasDepthSurface);
 			Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
@@ -625,6 +629,10 @@ void ShadowManager::RenderShadowMaps() {
 				shadowMapTimer.LogTime(message.c_str());
 			}
 		}
+
+		// Resolve MSAA.
+		if (Shadows->ShadowAtlasSurfaceMSAA)
+			Device->StretchRect(Shadows->ShadowAtlasSurfaceMSAA, NULL, Shadows->ShadowAtlasSurface, NULL, D3DTEXF_LINEAR);
 
 		if (Shadows->Settings.ShadowMaps.Mipmaps)
 			Shadows->ShadowAtlasTexture->GenerateMipSubLevels();
