@@ -80,6 +80,12 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
 		cascadeSettingsChanged = true;
 
+	bool oldMSAA = Settings.ShadowMaps.MSAA;
+	Settings.ShadowMaps.MSAA = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "MSAA");
+
+	if (oldMSAA != Settings.ShadowMaps.MSAA)
+		cascadeSettingsChanged = true;
+
 	// Mipmaps and anisotropy are disabled due to deferred shadows - derivatives are messed up and causing artifacts.
 	// https://aras-p.info/blog/2010/01/07/screenspace-vs-mip-mapping/
 	/*bool oldMips = Settings.ShadowMaps.Mipmaps;
@@ -198,7 +204,13 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
 	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
-	TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+
+	if (!Settings.ShadowMaps.MSAA)
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+	else {
+		TheRenderManager->device->CreateRenderTarget(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
+	}
 
 	for (int i = 0; i <= MapLod; i++) {
 		ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f};
@@ -251,6 +263,10 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 			ShadowAtlasSurface->Release();
 			ShadowAtlasSurface = nullptr;
 		}
+		if (ShadowAtlasSurfaceMSAA) {
+			ShadowAtlasSurfaceMSAA->Release();
+			ShadowAtlasSurfaceMSAA = nullptr;
+		}
 		if (ShadowAtlasTexture) {
 			ShadowAtlasTexture->Release();
 			ShadowAtlasTexture = nullptr;
@@ -263,7 +279,13 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 
 		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+
+		if (!Settings.ShadowMaps.MSAA)
+			TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+		else {
+			TheRenderManager->device->CreateRenderTarget(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
+			TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
+		}
 
 		for (int i = 0; i <= MapLod; i++) {
 			ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };

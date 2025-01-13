@@ -74,6 +74,7 @@ public:
 
 	struct ShadowMapStruct {
 		int					CascadeResolution;
+		bool				MSAA;
 		bool				Mipmaps;
 		int					Anisotropy;
 	};
@@ -140,6 +141,7 @@ public:
 	// Main shadow atlas, used for cascades.
 	IDirect3DTexture9* ShadowAtlasTexture;
 	IDirect3DSurface9* ShadowAtlasSurface;
+	IDirect3DSurface9* ShadowAtlasSurfaceMSAA;
 	IDirect3DSurface9* ShadowAtlasDepthSurface;
 
 	// Ortho shadows for various effects.
