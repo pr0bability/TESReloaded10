@@ -592,7 +592,19 @@ void ShadowManager::RenderShadowMaps() {
 	At.z = PlayerNode->m_worldTransform.pos.z - TheRenderManager->CameraPosition.z;
 
 	// Render all shadow maps
-	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
+
+	// Quantize sun direction angle to reduce shimmer by a large factor.
+	D3DXVECTOR3 SunDir(TheShaderManager->ShaderConst.SunDir);
+	float theta = atan2f(SunDir.y, SunDir.x);
+	float phi = acosf(SunDir.z);
+	theta = ceilf(theta * 7200.0f) / 7200.0f;
+	phi = ceilf(phi * 7200.0f) / 7200.0f;
+
+	SunDir.x = sinf(phi) * cosf(theta);
+	SunDir.y = sinf(phi) * sinf(theta);
+	SunDir.z = cosf(phi);
+	D3DXVec3Normalize(&SunDir, &SunDir);
+
 	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
 
 		geometryPass->VertexShader = ShadowMapVertex;
@@ -604,9 +616,8 @@ void ShadowManager::RenderShadowMaps() {
 		speedTreePass->VertexShader = ShadowMapVertex;
 		speedTreePass->PixelShader = ShadowMapPixel;
 
-		if (ExteriorEnabled && SunDir->z > 0.0f) {
+		if (ExteriorEnabled && SunDir.z > 0.0f) {
 			ShadowData->z = 0; // set shader constant to identify other shadow maps
-			D3DXMATRIX View = GetViewMatrix(&At, SunDir);
 			auto shadowMapTimer = TimeLogger();
 
 			if (Shadows->ShadowAtlasSurfaceMSAA)
@@ -619,7 +630,7 @@ void ShadowManager::RenderShadowMaps() {
 
 			for (int i = MapNear; i < MapOrtho; i++) {
 				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, SunDir);
+				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &SunDir);
 
 				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 

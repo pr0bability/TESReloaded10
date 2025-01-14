@@ -160,7 +160,7 @@ public:
 
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);
-	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR4* SunDir);
+	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir);
 
 private:
 	bool		texturesInitialized;
