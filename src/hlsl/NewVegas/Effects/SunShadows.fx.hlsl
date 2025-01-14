@@ -27,7 +27,7 @@ static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
 static const float4 Bias = float4(0.0001f, 0.00005f, 0.00001f, 0.000003f);
-static const float4 BleedReduction = float4(0.6f, 0.6f, 0.6f, 0.6f);
+static const float4 BleedReduction = float4(0.3f, 0.4f, 0.4f, 0.3f);
 
 
 struct VSOUT
