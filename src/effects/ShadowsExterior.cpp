@@ -399,7 +399,7 @@ void Vector4Round(D3DXVECTOR4* out, D3DXVECTOR4* in) {
 
 // Generate the ViewProj matrix for a particular shadow cascade.
 // Inspired by MJP's https://mynameismjp.wordpress.com/2013/09/10/shadow-maps/ article and code example.
-D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR4* SunDir) {
+D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir) {
 	// Get z-range for this cascade.
 	NiCamera* sceneCamera = WorldSceneGraph->camera;
 	float depthRange = (sceneCamera->Frustum.Far - sceneCamera->Frustum.Near);
