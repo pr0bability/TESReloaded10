@@ -65,7 +65,6 @@ public:
 		D3DXMATRIX				ShadowCameraToLight;
 		D3DVIEWPORT9			ShadowMapViewPort;
 		frustum					ShadowMapFrustum;
-		IDirect3DVertexBuffer9* BlurShadowVertexBuffer;
 		FormsStruct				Forms;
 		float					ShadowMapInverseResolution;
 		float					ShadowMapRadius;
@@ -74,6 +73,7 @@ public:
 
 	struct ShadowMapStruct {
 		int					CascadeResolution;
+		bool                Prefilter;
 		bool				MSAA;
 		bool				Mipmaps;
 		int					Anisotropy;
@@ -81,7 +81,6 @@ public:
 
 	struct ExteriorsStruct {
 		bool				Enabled;
-		bool                BlurShadowMaps;
 		int					Quality;
 		int					OrthoMapResolution;
 		float				OrthoRadius;
@@ -143,6 +142,9 @@ public:
 	IDirect3DSurface9* ShadowAtlasSurface;
 	IDirect3DSurface9* ShadowAtlasSurfaceMSAA;
 	IDirect3DSurface9* ShadowAtlasDepthSurface;
+
+	IDirect3DVertexBuffer9* ShadowAtlasVertexBuffer;
+	float					ShadowAtlasCascadeTexelSize;
 
 	// Ortho shadows for various effects.
 	IDirect3DTexture9* ShadowMapOrthoTexture;
