@@ -67,7 +67,6 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
 	Settings.Exteriors.ShadowMapFarPlane = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowMapFarPlane");
 	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
-	Settings.Exteriors.BlurShadowMaps = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "BlurShadowMaps");
 	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
 	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
@@ -95,6 +94,8 @@ void ShadowsExteriorEffect::UpdateSettings() {
 		cascadeSettingsChanged = true;
 
 	Settings.ShadowMaps.Anisotropy = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Anisotropy"), 0, 2)) * 8;*/
+
+	Settings.ShadowMaps.Prefilter = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Prefilter");
 
 	//Shadows Cascade settings
 	GetCascadeDepths();
@@ -202,20 +203,24 @@ void ShadowsExteriorEffect::RegisterConstants() {
 void ShadowsExteriorEffect::RegisterTextures() {
 	ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
+	ULONG ShadowAtlasSize = ShadowMapSize * 2;
 
-	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
+	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
 
 	if (!Settings.ShadowMaps.MSAA)
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
 	else {
-		TheRenderManager->device->CreateRenderTarget(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
+		TheRenderManager->device->CreateRenderTarget(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
 	}
 
 	for (int i = 0; i <= MapLod; i++) {
-		ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f};
+		ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
 		ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 	}
+
+	TheShaderManager->CreateFrameVertex(ShadowAtlasSize, ShadowAtlasSize, &ShadowAtlasVertexBuffer);
+	ShadowAtlasCascadeTexelSize = 1.0f / (float)ShadowAtlasSize;
 
 	// ortho texture
 	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
@@ -275,22 +280,30 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 			ShadowAtlasDepthSurface->Release();
 			ShadowAtlasDepthSurface = nullptr;
 		};
+		if (ShadowAtlasVertexBuffer) {
+			ShadowAtlasVertexBuffer->Release();
+			ShadowAtlasVertexBuffer = nullptr;
+		}
 
 		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
+		ULONG ShadowAtlasSize = ShadowMapSize * 2;
 
-		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
+		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
 
 		if (!Settings.ShadowMaps.MSAA)
-			TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
+			TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
 		else {
-			TheRenderManager->device->CreateRenderTarget(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
-			TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize * 2, ShadowMapSize * 2, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
+			TheRenderManager->device->CreateRenderTarget(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
+			TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
 		}
 
 		for (int i = 0; i <= MapLod; i++) {
 			ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
 			ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 		}
+
+		TheShaderManager->CreateFrameVertex(ShadowAtlasSize, ShadowAtlasSize, &ShadowAtlasVertexBuffer);
+		ShadowAtlasCascadeTexelSize = 1.0f / (float)ShadowAtlasSize;
 
 		SunShadowsEffect* sunShadows = TheShaderManager->Effects.SunShadows;
 		ShaderTextureValue* Sampler;

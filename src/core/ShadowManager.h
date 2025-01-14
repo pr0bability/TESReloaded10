@@ -24,7 +24,7 @@ public:
 	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex);
 	void					RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
-    void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
+    void                    BlurShadowAtlas();
 
 	ShadowRenderPass*				geometryPass;
 	AlphaShadowRenderPass*			alphaPass;
