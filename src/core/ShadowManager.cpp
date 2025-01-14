@@ -622,7 +622,6 @@ void ShadowManager::RenderShadowMaps() {
 				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, SunDir);
 
 				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
-				// if(ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
 
 				std::string message = "ShadowManager::RenderShadowMap ";
 				message += std::to_string(i);
@@ -633,6 +632,8 @@ void ShadowManager::RenderShadowMaps() {
 		// Resolve MSAA.
 		if (Shadows->ShadowAtlasSurfaceMSAA)
 			Device->StretchRect(Shadows->ShadowAtlasSurfaceMSAA, NULL, Shadows->ShadowAtlasSurface, NULL, D3DTEXF_LINEAR);
+
+		if (Shadows->Settings.ShadowMaps.Prefilter) BlurShadowAtlas();
 
 		if (Shadows->Settings.ShadowMaps.Mipmaps)
 			Shadows->ShadowAtlasTexture->GenerateMipSubLevels();
@@ -732,42 +733,44 @@ void ShadowManager::RenderShadowMaps() {
 /*
 * Filters the Shadow Map of given index using a 2 pass gaussian blur
 */
-//void ShadowManager::BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
-//    IDirect3DDevice9* Device = TheRenderManager->device;
-//    NiDX9RenderState* RenderState = TheRenderManager->renderState;
-//    IDirect3DTexture9* SourceShadowMap = ShadowMap->ShadowMapTexture;
-//    IDirect3DSurface9* TargetShadowMap = ShadowMap->ShadowMapSurface;
-//
-//    Device->SetDepthStencilSurface(NULL);
-//    RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
-//    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
-//    RenderState->SetVertexShader(ShadowMapBlurVertex->ShaderHandle, false);
-//    RenderState->SetPixelShader(ShadowMapBlurPixel->ShaderHandle, false);
-//	RenderState->SetFVF(FrameFVF, false);
-//	Device->SetStreamSource(0, ShadowMap->BlurShadowVertexBuffer, 0, sizeof(FrameVS));
-//	Device->SetRenderTarget(0, TargetShadowMap);
-//	
-//	// Pass map resolution to shader as a constant
-//	D3DXVECTOR4 inverseRes = { ShadowMap->ShadowMapInverseResolution, ShadowMap->ShadowMapInverseResolution, 0.0f, 0.0f };
-//	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
-//	RenderState->SetTexture(0, SourceShadowMap);
-//
-//	// blur in two passes, vertically and horizontally
-//	D3DXVECTOR4 Blur[2] = {
-//		D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.0f),
-//		D3DXVECTOR4(0.0f, 1.0f, 0.0f, 0.0f),
-//	};
-//
-//	for (int i = 0; i < 2; i++) {
-//		// set blur direction shader constants
-//		ShadowMapBlurPixel->SetShaderConstantF(1, &Blur[i], 1);
-//
-//		Device->BeginScene();
-//		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2); // draw call to execute the shader
-//		Device->EndScene();
-//	}
-//
-//	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
-//    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
-//}
+void ShadowManager::BlurShadowAtlas() {
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+	
+	IDirect3DDevice9* Device = TheRenderManager->device;
+    NiDX9RenderState* RenderState = TheRenderManager->renderState;
+    IDirect3DTexture9* SourceShadowMap = Shadows->ShadowAtlasTexture;
+    IDirect3DSurface9* TargetShadowMap = Shadows->ShadowAtlasSurface;
+
+    Device->SetDepthStencilSurface(NULL);
+    RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
+    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
+    RenderState->SetVertexShader(ShadowMapBlurVertex->ShaderHandle, false);
+    RenderState->SetPixelShader(ShadowMapBlurPixel->ShaderHandle, false);
+	RenderState->SetFVF(FrameFVF, false);
+	Device->SetStreamSource(0, Shadows->ShadowAtlasVertexBuffer, 0, sizeof(FrameVS));
+	Device->SetRenderTarget(0, TargetShadowMap);
+	
+	// Pass map resolution to shader as a constant
+	D3DXVECTOR4 inverseRes = { Shadows->ShadowAtlasCascadeTexelSize, Shadows->ShadowAtlasCascadeTexelSize, 0.0f, 0.0f };
+	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
+	RenderState->SetTexture(0, SourceShadowMap);
+
+	// blur in two passes, vertically and horizontally
+	D3DXVECTOR4 Blur[2] = {
+		D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.0f),
+		D3DXVECTOR4(0.0f, 1.0f, 0.0f, 0.0f),
+	};
+
+	for (int i = 0; i < 2; i++) {
+		// set blur direction shader constants
+		ShadowMapBlurPixel->SetShaderConstantF(1, &Blur[i], 1);
+
+		Device->BeginScene();
+		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2); // draw call to execute the shader
+		Device->EndScene();
+	}
+
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+    RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+}
 

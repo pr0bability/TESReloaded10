@@ -600,8 +600,7 @@ Trees = true                         # Wether to include Trees when rendering sh
 
 [_Shaders.ShadowsExteriors.Main]
 PostProcess = true                   # Wether to render shadows as a post process effect. Currently the only supported mode.
-BlurShadowMaps = true                # Blur shadow maps for soft shadows.
-Darkness = 0.65                      # Darkness of shadows.
+Darkness = 0.75                      # Darkness of shadows.
 Enabled = true                       # Enable sun shadows using rendered shadow maps.
 NightMinDarkness = 0.35              # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
 Quality = 2                          # Not used.
@@ -668,6 +667,7 @@ RenderDistance = 12000               # Max distance at which to compute screen s
 
 [_Shaders.ShadowsExteriors.ShadowMaps]
 CascadeResolution = 2				 # Resolution used for shadow cascades. 0: 1024, 1: 1536, 2: 2048
+Prefilter = true					 # Enable prefiltering the shadow maps. Prefiltering is a blur.
 MSAA = true							 # Enable multisample antialiasing for shadow maps.
 Mipmaps = false						 # DISABLED. Enable mipmaps for the shadow maps.
 Anisotropy = 0						 # DISABLED. Anisotropic filteric for mipmaps, 0: disabled, 1: 8x, 2: 16x.
