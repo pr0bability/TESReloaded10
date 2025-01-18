@@ -132,7 +132,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 
 // go through the Object children and sort the ones that will be rendered based on their properties
-void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand) {
+void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand, NiFrustumPlanes *arPlanes) {
 	if (!NiObject) return;
 
 	std::stack<NiAVObject*> containers;
@@ -140,10 +140,12 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 	NiAVObject* object;
 	NiNode* Node;
 
+	//list all objects contained, or sort the object if not a container
 	if (!NiObject->IsGeometry())
 		containers.push(NiObject);
 	else
-		AccumObject(&containers, NiObject, Forms); //list all objects contained, or sort the object if not a container
+		AccumObject(&containers, NiObject, Forms);
+		
 
 	// Gather geometry
 	while (!containers.empty()) {
@@ -174,6 +176,14 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 			child = Node->m_children.data[i];
 			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling children
 			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
+
+			// Frustum culling.
+			if (arPlanes && isLand) {
+				BSMultiBoundNode* multibound = child->IsMultiBoundNode();
+
+				if (multibound && !multibound->spMultiBound->spShape->WithinFrustum(*arPlanes)) continue;
+			}
+			else if (arPlanes && !child->WithinFrustum(arPlanes)) continue;
 
 			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
 			if (!child->IsGeometry())
@@ -236,15 +246,22 @@ void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect
 		return;
 	
 	if (ShadowMap->Forms.Terrain)
-		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true);
+		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true, &ShadowMap->ShadowMapFrustumPlanes);
+		
 
 	// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
 		NiNode* RefNode = GetRefNode(Entry->item, &ShadowMap->Forms);
-		if (RefNode && TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode, true)) 
-			AccumChildren(RefNode, &ShadowMap->Forms, false);
+
+		if (!RefNode) {
+			Entry = Entry->next;
+			continue;
+		}
+
+		if (RefNode && RefNode->WithinFrustum(&ShadowMap->ShadowMapFrustumPlanes))
+			AccumChildren(RefNode, &ShadowMap->Forms, false, &ShadowMap->ShadowMapFrustumPlanes);
 
 		Entry = Entry->next;
 	}
