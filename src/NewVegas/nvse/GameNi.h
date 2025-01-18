@@ -23,8 +23,13 @@ class NiAdditionalGeometryData;
 class NiGeometryData;
 class NiGeometryGroup;
 class NiRenderedCubeMap;
+class NiObject;
+class NiColor;
+class NiColorAlpha;
 class NiTexture;
 class NiGeometry;
+class NiFrustum;
+class NiFrustumPlanes;
 class NiTriBasedGeom;
 class NiTriShape;
 class NiTriStrips;
@@ -57,6 +62,8 @@ class NiDX92DBufferData;
 class BSShaderAccumulator;
 class BSShaderProperty;
 class BSFadeNode;
+class BSMultiBound;
+class BSMultiBoundShape;
 class BSMultiBoundNode;
 class BSSegmentedTriShape;
 class BSResizableTriShape;
@@ -214,7 +221,71 @@ assert(sizeof(NiPoint2) == 0x008);
 
 class NiPoint3 {
 public:
+	NiPoint3() : x(0.f), y(0.f), z(0.f) {};
+	NiPoint3(const float x, const float y, const float z) : x(x), y(y), z(z) {};
+
 	float operator * (const NiPoint3 pt) const { return x * pt.x + y * pt.y + z * pt.z; }
+
+	NiPoint3 operator- (const NiPoint3& pt) const { return NiPoint3(x - pt.x, y - pt.y, z - pt.z); };
+	NiPoint3 operator- () const { return NiPoint3(-x, -y, -z); };
+	NiPoint3& operator-= (const NiPoint3& pt) {
+		x -= pt.x;
+		y -= pt.y;
+		z -= pt.z;
+		return *this;
+	};
+
+	NiPoint3 operator/ (float fScalar) const {
+		float fInvScalar = 1.0f / fScalar;
+		return NiPoint3(fInvScalar * x, fInvScalar * y, fInvScalar * z);
+	};
+
+	NiPoint3& operator/= (float fScalar) {
+		x /= fScalar;
+		y /= fScalar;
+		z /= fScalar;
+		return *this;
+	};
+
+	__forceinline float Length() const {
+		return std::sqrt(x * x + y * y + z * z);
+	}
+
+	__forceinline float Dot(const NiPoint3& pt) const {
+		return x * pt.x + y * pt.y + z * pt.z;
+	}
+
+	__forceinline NiPoint3 Cross(const NiPoint3& pt) const {
+		return NiPoint3(y * pt.z - z * pt.y, z * pt.x - x * pt.z, x * pt.y - y * pt.x);
+	}
+
+	__forceinline float Unitize() {
+		float fLength = Length();
+
+		if (fLength > 1e-06f) {
+			float fRecip = 1.0f / fLength;
+			x *= fRecip;
+			y *= fRecip;
+			z *= fRecip;
+		}
+		else
+		{
+			x = 0.0f;
+			y = 0.0f;
+			z = 0.0f;
+			fLength = 0.0f;
+		}
+		return fLength;
+	}
+
+	inline NiPoint3 UnitCross(const NiPoint3& pt) const {
+		NiPoint3 cross(y * pt.z - z * pt.y, z * pt.x - x * pt.z, x * pt.y - y * pt.x);
+		float fLength = cross.Length();
+		if (fLength > 1e-06f)
+			return cross / fLength;
+		else
+			return NiPoint3(0.0f, 0.0f, 0.0f);
+	}
 
 	void GetLookAt(NiPoint3* LookAt, NiPoint3* Rotation);
 
@@ -254,6 +325,20 @@ assert(sizeof(NiVector4) == 0x010);
 
 class NiMatrix33 {
 public:
+	NiMatrix33() {}
+	NiMatrix33(float m00, float m10, float m20, float m01, float m11, float m21, float m02, float m12, float m22)
+	{
+		data[0][0] = m00;
+		data[0][1] = m10;
+		data[0][2] = m20;
+		data[1][0] = m01;
+		data[1][1] = m11;
+		data[1][2] = m21;
+		data[2][0] = m02;
+		data[2][1] = m12;
+		data[2][2] = m22;
+	}
+
 	NiPoint3 operator * (const NiPoint3 pt) const {
 		return {
 			data[0][0] * pt.x + data[0][1] * pt.y + data[0][2] * pt.z,
@@ -318,6 +403,10 @@ assert(sizeof(NiTransform) == 0x034);
 
 class NiPlane {
 public:
+	NiPlane() : Normal(0.0f, 0.0f, 0.0f), Constant(0.0f) {}
+	NiPlane(const NiPoint3& kNormal, float fConstant) : Normal(kNormal), Constant(fConstant) {}
+	NiPlane(const NiPoint3& kNormal, const NiPoint3& kPoint) : Normal(kNormal), Constant(kNormal.Dot(kPoint)) {}
+
 	enum {
 		NoSide = 0,
 		PositiveSide = 1,
@@ -326,20 +415,139 @@ public:
 
 	NiPoint3	Normal;
 	float		Constant;
+
+	float Distance(const NiPoint3& arPoint) const;
 };
 assert(sizeof(NiPlane) == 0x010);
 
 class NiBound {
 public:
-	UInt32 WhichSide(NiPlane* Plane);
+	static NiBound* GetGlobalWorldBound();
+
+	int WhichSide(const NiPlane& Plane) const;
+	bool WithinFrustum(NiFrustumPlanes* arPlanes);
 
 	NiPoint3	Center;
 	float		Radius;
 };
 assert(sizeof(NiBound) == 0x010);
 
+template <typename T>
+class NiTArray {
+public:
+	UInt16			Add(T* Item);
+
+	virtual ~NiTArray();	// 00
+	T* data;			// 04
+	UInt16	capacity;		// 08 - init'd to size of preallocation
+	UInt16	end;			// 0A - index of the first free entry in the block of free entries at the end of the array (or numObjs if full)
+	UInt16	numObjs;		// 0C - init'd to 0
+	UInt16	growSize;		// 0E - init'd to size of preallocation
+};
+assert(sizeof(NiTArray<void>) == 0x010);
+
+class NiMemObject {};
+
+class NiRefObject {
+public:
+	virtual void		Destructor(bool freeThis);	// 00
+	virtual void		Free(void);					// 01
+
+	UInt32				m_uiRefCount;	// 004
+};
+assert(sizeof(NiRefObject) == 0x008);
+
+class NiObject : public NiRefObject {
+public:
+	virtual const NiRTTI* GetRTTI() const;
+	virtual NiNode* IsNiNode();
+	virtual BSFadeNode* IsFadeNode();
+	virtual BSMultiBoundNode* IsMultiBoundNode() const;
+	virtual NiGeometryData* IsGeometry();
+	virtual NiTriBasedGeom* IsTriBasedGeometry();
+	virtual NiTriStrips* IsTriStrips();
+	virtual NiTriShape* IsTriShape();
+	virtual BSSegmentedTriShape* IsSegmentedTriShape();
+	virtual BSResizableTriShape* IsResizableTriShape();
+	virtual NiParticles* IsParticlesGeom();
+	virtual NiLines* IsLinesGeom();
+	virtual bhkCollisionObject* IsBhkNiCollisionObject();
+	virtual bhkBlendCollisionObject* IsBhkBlendCollisionObject();
+	virtual bhkRigidBody* IsBhkRigidBody();
+	virtual bhkLimitedHingeConstraint* IsBhkLimitedHingeConstraint();
+	virtual NiObject* Copy();			// 12
+	virtual void							Load(NiStream* stream);
+	virtual void							PostLoad(NiStream* stream);
+	virtual void							FindNodes(NiStream* stream);
+	virtual void							Save(NiStream* stream);
+	virtual bool							Compare(NiObject* obj);
+	virtual void							DumpAttributes(NiTArray <char*>* dst);
+	virtual void							DumpChildAttributes(NiTArray <char*>* dst);
+	virtual void							Unk_1A();
+	virtual void							Unk_1B(UInt32 arg);
+	virtual void							Unk_1C();
+	virtual void							GetType2();
+	virtual void							Unk_1E(UInt32 arg);
+	virtual void							Unk_1F();
+	virtual void							Unk_20();
+	virtual void							Unk_21();
+	virtual void							Unk_22();
+
+	NIRTTI_ADDRESS(0x11F4418);
+
+	template <class T_RTTI>
+	bool IsKindOf() const {
+		return IsKindOf(T_RTTI::ms_RTTI);
+	}
+
+	template <class T_RTTI>
+	bool IsExactKindOf() const {
+		return IsExactKindOf(T_RTTI::ms_RTTI);
+	}
+
+	bool IsKindOf(const NiRTTI& apRTTI) const;
+
+	bool IsKindOf(const NiRTTI* const apRTTI) const;
+
+	bool IsExactKindOf(const NiRTTI* const apRTTI) const;
+
+	bool IsExactKindOf(const NiRTTI& apRTTI) const;
+
+	static bool IsExactKindOf(const NiRTTI& apRTTI, NiObject* apObject);
+
+	static bool IsExactKindOf(const NiRTTI* const apRTTI, NiObject* apObject);
+
+	void LogObjectAttributes();
+};
+assert(sizeof(NiObject) == 0x008);
+
+class BSMultiBound : public NiObject {
+public:
+	virtual bool GetPointWithin(const NiPoint3& arPoint);
+	virtual void Nullsub024(void*);
+
+	UInt32 uiBoundFrameCount;
+	BSMultiBoundShape* spShape;
+
+	static bool bIgnoreMultiBounds;
+
+	CREATE_OBJECT(BSMultiBound, 0xC361A0);
+};
+assert(sizeof(BSMultiBound) == 0x10);
+
 class NiFrustum {
 public:
+	NiFrustum() : Left(0.0f), Right(0.0f), Top(0.0f), Bottom(0.0f), Near(0.0f), Far(0.0f), Ortho(false) {}
+	NiFrustum(float afLeft, float afRight, float afTop, float afBottom, float afNear, float afFar, bool abOrtho) {
+		Left = afLeft;
+		Right = afRight;
+		Top = afTop;
+		Bottom = afBottom;
+		Near = afNear;
+		Far = afFar;
+		Ortho = abOrtho;
+	}
+
 	float	Left;		// 00
 	float	Right;		// 04
 	float	Top;		// 08
@@ -347,13 +555,12 @@ public:
 	float	Near;		// 10
 	float	Far;		// 14
 	bool	Ortho;		// 18
-	UInt8	pad18[3];
 };
 assert(sizeof(NiFrustum) == 0x01C);
 
 class NiFrustumPlanes {
 public:
-	enum {
+	enum ActivePlanes {
 		NearPlane = 0,
 		FarPlane = 1,
 		LeftPlane = 2,
@@ -365,8 +572,66 @@ public:
 
 	NiPlane	CullingPlanes[MaxPlanes];	// 00
 	UInt32	ActivePlanes;				// 60
+
+	void Set(const NiFrustum& kFrust, const NiTransform& kXform);
+
+	const NiPlane& GetPlane(UInt32 ePlane) const;
+	bool IsPlaneActive(UInt32 ePlane) const;
+	bool IsAnyPlaneActive() const;
+	void EnablePlane(UInt32 ePlane);
+	void DisablePlane(UInt32 ePlane);
+	void SetActivePlaneState(UInt32 uiState);
 };
 assert(sizeof(NiFrustumPlanes) == 0x064);
+
+class BSMultiBoundShape : public NiObject {
+public:
+	enum CullResult {
+		BS_CULL_UNTESTED = 0,
+		BS_CULL_VISIBLE = 1,
+		BS_CULL_CULLED = 2,
+		BS_CULL_OCCLUDED = 3,
+	};
+
+	enum ShapeType {
+		BSMB_SHAPE_NONE = 0,
+		BSMB_SHAPE_AABB = 1,
+		BSMB_SHAPE_OBB = 2,
+		BSMB_SHAPE_SPHERE = 3,
+		BSMB_SHAPE_CAPSULE = 4,
+	};
+
+	enum IntersectResult
+	{
+		BS_INTERSECT_NONE = 0,
+		BS_INTERSECT_PARTIAL = 1,
+		BS_INTERSECT_CONTAINSTARGET = 2
+	};
+
+	virtual ShapeType		GetType() const;
+	virtual double			GetRadius() const;
+	virtual IntersectResult	CheckBSBound(BSMultiBound& arTargetBound) const;
+	virtual IntersectResult	CheckBound(NiBound& arTargetBound) const;
+	virtual bool			WithinFrustum(NiFrustumPlanes& arPlanes) const;
+	virtual bool			CompletelyWithinFrustum(NiFrustumPlanes& arPlanes) const;
+	virtual void			GetNiBound(NiBound& arBound) const;
+	virtual void			CreateDebugGeometry(NiLines* apLines, NiTriShape* apGeometry, NiColorAlpha akColor);
+	virtual UInt32			GetDebugGeomLineSize() const;
+	virtual UInt32			GetDebugGeomShapeSize() const;
+	virtual bool			GetPointWithin(NiPoint3& arPoint) const;
+	virtual void			SetCenter(NiPoint3& arCenter);
+
+	struct BoundVertices {
+		NiPoint3 point[8];
+	};
+
+	CullResult eCullResult;
+
+	inline void ResetCullResult() {
+		eCullResult = BS_CULL_UNTESTED;
+	};
+};
+assert(sizeof(BSMultiBoundShape) == 0xC);
 
 class NiViewport {
 public:
@@ -444,20 +709,6 @@ public:
 	UInt32			m_numItems;		// C
 };
 assert(sizeof(NiTMap<void, void>) == 0x010);
-
-template <typename T>
-class NiTArray {
-public:
-	UInt16			Add(T* Item);
-
-	virtual ~NiTArray();	// 00
-	T*		data;			// 04
-	UInt16	capacity;		// 08 - init'd to size of preallocation
-	UInt16	end;			// 0A - index of the first free entry in the block of free entries at the end of the array (or numObjs if full)
-	UInt16	numObjs;		// 0C - init'd to 0
-	UInt16	growSize;		// 0E - init'd to size of preallocation
-};
-assert(sizeof(NiTArray<void>) == 0x010);
 
 class NiPixelFormat {
 public:
@@ -541,81 +792,6 @@ public:
 	NiComponentSpec	Components[4];	// 14
 };
 assert(sizeof(NiPixelFormat) == 0x044);
-
-class NiMemObject {};
-
-class NiRefObject {
-public:
-	virtual void		Destructor(bool freeThis);	// 00
-	virtual void		Free(void);					// 01
-
-	UInt32				m_uiRefCount;	// 004
-};
-assert(sizeof(NiRefObject) == 0x008);
-
-class NiObject : public NiRefObject {
-public:
-	virtual const NiRTTI*					GetRTTI() const;
-	virtual NiNode*							IsNiNode();
-	virtual BSFadeNode*						IsFadeNode();
-	virtual BSMultiBoundNode*				IsMultiBoundNode();
-	virtual NiGeometryData*					IsGeometry();
-	virtual NiTriBasedGeom*					IsTriBasedGeometry();
-	virtual NiTriStrips*					IsTriStrips();
-	virtual NiTriShape*						IsTriShape();
-	virtual BSSegmentedTriShape*			IsSegmentedTriShape();
-	virtual BSResizableTriShape*			IsResizableTriShape();
-	virtual NiParticles*					IsParticlesGeom();
-	virtual NiLines*						IsLinesGeom();
-	virtual bhkCollisionObject*				IsBhkNiCollisionObject();
-	virtual bhkBlendCollisionObject*		IsBhkBlendCollisionObject();
-	virtual bhkRigidBody*					IsBhkRigidBody();
-	virtual bhkLimitedHingeConstraint*		IsBhkLimitedHingeConstraint();
-	virtual NiObject*						Copy();			// 12
-	virtual void							Load(NiStream* stream);
-	virtual void							PostLoad(NiStream* stream);
-	virtual void							FindNodes(NiStream* stream);
-	virtual void							Save(NiStream* stream);
-	virtual bool							Compare(NiObject* obj);
-	virtual void							DumpAttributes(NiTArray <char*>* dst);
-	virtual void							DumpChildAttributes(NiTArray <char*>* dst);
-	virtual void							Unk_1A();
-	virtual void							Unk_1B(UInt32 arg);
-	virtual void							Unk_1C();
-	virtual void							GetType2();	
-	virtual void							Unk_1E(UInt32 arg);
-	virtual void							Unk_1F();
-	virtual void							Unk_20();
-	virtual void							Unk_21();
-	virtual void							Unk_22();
-
-	NIRTTI_ADDRESS(0x11F4418);
-
-	template <class T_RTTI>
-	bool IsKindOf() const {
-		return IsKindOf(T_RTTI::ms_RTTI);
-	}
-
-	template <class T_RTTI>
-	bool IsExactKindOf() const {
-		return IsExactKindOf(T_RTTI::ms_RTTI);
-	}
-
-	bool IsKindOf(const NiRTTI& apRTTI) const;
-
-	bool IsKindOf(const NiRTTI* const apRTTI) const;
-
-	bool IsExactKindOf(const NiRTTI* const apRTTI) const;
-
-	bool IsExactKindOf(const NiRTTI& apRTTI) const;
-
-	static bool IsExactKindOf(const NiRTTI& apRTTI, NiObject* apObject);
-
-	static bool IsExactKindOf(const NiRTTI* const apRTTI, NiObject* apObject);
-	
-	void LogObjectAttributes();
-};
-assert(sizeof(NiObject) == 0x008);
 
 class NiExtraData : public NiObject {
 public:
@@ -715,7 +891,7 @@ public:
 	};
 
 	float GetDistance(NiPoint3* Point);
-	NiBound*	GetWorldBound();
+	NiBound*	GetWorldBound() const;
 	float		GetWorldBoundRadius();
 	
 	NiNode*					m_parent;				// 018
@@ -725,6 +901,8 @@ public:
 	UInt32					m_flags;				// 030
 	NiTransform				m_localTransform;		// 034
 	NiTransform				m_worldTransform;		// 068
+	
+	bool WithinFrustum(NiFrustumPlanes* arPlanes);
 };
 assert(sizeof(NiAVObject) == 0x9C);
 
@@ -748,6 +926,29 @@ public:
 	NiTArray<NiAVObject*>	m_children;	// 09C
 };
 assert(sizeof(NiNode) == 0xAC);
+
+class BSNiNode : public NiNode {
+public:
+	virtual void ReparentSkinInstances(NiNode* apNode, NiAVObject* apParent);
+
+	NIRTTI_ADDRESS(0x1204380);
+};
+assert(sizeof(BSNiNode) == sizeof(NiNode));
+
+class BSMultiBoundNode : public BSNiNode {
+public:
+	virtual UInt32				GetMultiBoundRoom();
+	virtual bool				GetPointWithin(NiPoint3& akPoint);
+	virtual UInt32				CheckBound(BSMultiBound*);
+	virtual UInt32				CheckBoundAlt(NiBound*);
+
+	BSMultiBound*   spMultiBound;
+	UInt32			uiCullingMode;
+
+	CREATE_OBJECT(BSMultiBoundNode, 0xC46DF0);
+	NIRTTI_ADDRESS(0x1202E74);
+};
+assert(sizeof(BSMultiBoundNode) == 0xB4);
 
 class NiBillboardNode : public NiNode {
 public:
@@ -794,6 +995,10 @@ public:
 	float			MaxFarNearRatio;	// FC
 	NiViewport		ViewPort;			// 100
 	float			LODAdjust;			// 110
+
+	CREATE_OBJECT(NiCamera, 0xA71430);
+
+	bool LookAtWorldPoint(const NiPoint3& kWorldPt, const NiPoint3& kWorldUp);
 };
 assert(sizeof(NiCamera) == 0x114);
 

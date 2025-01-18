@@ -184,12 +184,13 @@ void NiMatrix33::GenerateRotationMatrixZXY(NiPoint3* v, bool degrees) {
 	data[2][2] = cos(b) * cos(c);
 }
 
-UInt32 NiBound::WhichSide(NiPlane* Plane) {
-	float Distance = Plane->Normal * Center - Plane->Constant;
-	UInt32 Result = NiPlane::NoSide;
+float NiPlane::Distance(const NiPoint3& arPoint) const {
+	return Normal * arPoint - Constant;
+}
 
-	if (Distance <= -Radius) Result = NiPlane::NegativeSide; else if (Distance >= Radius) Result = NiPlane::PositiveSide;
-	return Result;
+int NiBound::WhichSide(const NiPlane& kPlane) const {
+	float fDistance = kPlane.Distance(Center);
+	return (fDistance > -Radius) ? (Radius <= fDistance) : 2;
 }
 
 template <typename T>
@@ -208,11 +209,15 @@ float NiAVObject::GetDistance(NiPoint3* Point) {
 	return sqrt((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 }
 
-NiBound* NiAVObject::GetWorldBound() { 
-	return m_kWorldBound;
+NiBound* NiBound::GetGlobalWorldBound() {
+	return (NiBound*)0x11F4288;
 }
 
-float	NiAVObject::GetWorldBoundRadius() {
+NiBound* NiAVObject::GetWorldBound() const { 
+	return m_kWorldBound ? m_kWorldBound : NiBound::GetGlobalWorldBound();
+}
+
+float NiAVObject::GetWorldBoundRadius() {
 	return (m_kWorldBound ? m_kWorldBound->Radius : 0.0f); 
 }
 
@@ -312,3 +317,53 @@ void NiDX9RenderState::SetCullMode(NiStencilProperty::DrawMode aeMode) {
 bool BSShaderProperty::IsLightingProperty() {
 	return (type == ShaderDefinitionEnum::kShaderDefinition_ShadowLightShader || type == ShaderDefinitionEnum::kShaderDefinition_Lighting30Shader || type == ShaderDefinitionEnum::kShaderDefinition_ParallaxShader );
 }	
+
+// GAME - 0xA74E10
+void NiFrustumPlanes::Set(const NiFrustum& kFrust, const NiTransform& kXform) {
+	ThisCall(0xA74E10, this, &kFrust, &kXform);
+}
+
+const NiPlane& NiFrustumPlanes::GetPlane(UInt32 ePlane) const {
+	return CullingPlanes[ePlane];
+}
+
+bool NiFrustumPlanes::IsPlaneActive(UInt32 ePlane) const {
+	return (ActivePlanes & (1 << ePlane)) ? true : false;
+}
+
+bool NiFrustumPlanes::IsAnyPlaneActive() const {
+	return ActivePlanes ? true : false;
+}
+
+void NiFrustumPlanes::EnablePlane(UInt32 ePlane) {
+	ActivePlanes = ActivePlanes | (1 << ePlane);
+}
+
+void NiFrustumPlanes::DisablePlane(UInt32 ePlane) {
+	ActivePlanes = ActivePlanes & ~(1 << ePlane);
+}
+
+void NiFrustumPlanes::SetActivePlaneState(UInt32 uiState) {
+	ActivePlanes = uiState;
+}
+
+bool NiAVObject::WithinFrustum(NiFrustumPlanes* arPlanes) {
+	return GetWorldBound()->WithinFrustum(arPlanes);
+}
+
+bool NiBound::WithinFrustum(NiFrustumPlanes* arPlanes) {
+	bool bInFrustum = true;
+	for (UInt32 uiFace = 0; uiFace < arPlanes->MaxPlanes; ++uiFace) {
+		if (arPlanes->IsPlaneActive(uiFace) && WhichSide(arPlanes->CullingPlanes[uiFace]) == NiPlane::NegativeSide) {
+			bInFrustum = false;
+			break;
+		}
+	}
+	return bInFrustum;
+}
+
+// GAME - 0xA701B0
+// GECK - 0x816B00
+bool NiCamera::LookAtWorldPoint(const NiPoint3& kWorldPt, const NiPoint3& kWorldUp) {
+	return ThisCall<bool>(0xA701B0, this, &kWorldPt, &kWorldUp);
+}
