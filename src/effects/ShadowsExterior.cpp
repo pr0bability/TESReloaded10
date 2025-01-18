@@ -487,6 +487,10 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 
 	shadowViewProj = shadowView * shadowProj;
 
+	NiFrustum frustum(minExtents.x, maxExtents.x, maxExtents.y, minExtents.y, nearPlane, farPlane, true);
+	TheCameraManager->SetFrustumPlanes(&ShadowMap->ShadowMapFrustumPlanes, &shadowViewProj, shadowCameraPos, frustum);
+	ShadowMap->ShadowMapFrustumPlanes.SetActivePlaneState(62);
+
 	return shadowViewProj;
 }
 

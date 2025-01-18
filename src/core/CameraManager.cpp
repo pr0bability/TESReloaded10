@@ -187,6 +187,32 @@ void CameraManager::SetFrustum(frustum* Frustum, D3DMATRIX* Matrix) {
 }
 
 
+/**
+* Generates the Frustrum planes from a matrix
+*/
+void CameraManager::SetFrustumPlanes(NiFrustumPlanes* FrustumPlanes, D3DMATRIX* Matrix, D3DXVECTOR3 CameraLocation, NiFrustum Frustum) {
+
+	CameraLocation += D3DXVECTOR3(TheRenderManager->CameraPosition);
+
+	NiPoint3 dirVector(Matrix->_13, Matrix->_23, Matrix->_33);
+	NiPoint3 upVector(Matrix->_14 + Matrix->_12, Matrix->_24 + Matrix->_22, Matrix->_34 + Matrix->_32);
+	NiPoint3 rightVector(Matrix->_14 + Matrix->_11, Matrix->_24 + Matrix->_21, Matrix->_34 + Matrix->_31);
+
+	dirVector.Unitize();
+	upVector.Unitize();
+	rightVector.Unitize();
+
+	NiMatrix33 rotate(dirVector.x, upVector.x, rightVector.x, dirVector.y, upVector.y, rightVector.y, dirVector.z, upVector.z, rightVector.z);
+
+	NiTransform transform;
+	transform.pos = NiPoint3(CameraLocation.x, CameraLocation.y, CameraLocation.z);
+	transform.rot = rotate;
+
+	FrustumPlanes->Set(Frustum, transform);
+	FrustumPlanes->SetActivePlaneState(63);
+}
+
+
 /*
 * Checks wether the given node is in the frustrum using its radius for the current type of Shadow map.
 */
