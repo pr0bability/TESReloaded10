@@ -42,12 +42,12 @@ void RenderPass::RenderGeometry(NiGeometry* Geo) {
 	}
 
 	TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(GeoData, GeoData->VertCount);
+	if (GeoData && GeoData->VertCount) DrawGeometryBuffer(Geo, GeoData);
 }
 
 
 // draws the geo data from the Geometry buffer
-void RenderPass::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount) {
+void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData) {
 	int StartIndex = 0;
 	int PrimitiveCount = 0;
 
@@ -55,18 +55,19 @@ void RenderPass::DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT vertices
 		TheRenderManager->device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
 	}
 
-	if (!GeoData->IB) return; // breaks on hand models for some reason? TODO: figure out what breaks for hands
-	TheRenderManager->device->SetIndices(GeoData->IB);
+	if (GeoData->IB)
+		TheRenderManager->device->SetIndices(GeoData->IB);
 	if (GeoData->FVF)
 		TheRenderManager->renderState->SetFVF(GeoData->FVF, false);
 	else
 		TheRenderManager->renderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
 
-	for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-		PrimitiveCount = GeoData->ArrayLengths?GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
-
-		TheRenderManager->device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, verticesCount, StartIndex, PrimitiveCount);
-		StartIndex += PrimitiveCount + 2;
+	NiTriStrips* pStrips = Geo->IsTriStrips();
+	if (pStrips) {
+		ThisStdCall(0xE74840, NiDX9Renderer::GetSingleton(), Geo);  // RenderTriStripsAlt
+	}
+	else {
+		ThisStdCall(0xE745A0, NiDX9Renderer::GetSingleton(), Geo);  // RenderTriShapeAlt
 	}
 }
 
@@ -234,7 +235,7 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 		}
 
 		TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
-		DrawGeometryBuffer(GeoData, Partition->Vertices);
+		DrawGeometryBuffer(Geo, GeoData);
 	}
 }
 
