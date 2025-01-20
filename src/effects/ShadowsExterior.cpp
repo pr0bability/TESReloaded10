@@ -191,9 +191,13 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowRadius", &Constants.ShadowMapRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&Constants.ShadowViewProj);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&Constants.ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowNearCenter", &ShadowMaps[MapNear].ShadowMapCascadeCenterRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&ShadowMaps[MapNear].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowMiddleCenter", &ShadowMaps[MapMiddle].ShadowMapCascadeCenterRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformMiddle", (D3DXVECTOR4*)&ShadowMaps[MapMiddle].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowFarCenter", &ShadowMaps[MapFar].ShadowMapCascadeCenterRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformFar", (D3DXVECTOR4*)&ShadowMaps[MapFar].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowLodCenter", &ShadowMaps[MapLod].ShadowMapCascadeCenterRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&ShadowMaps[MapLod].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[MapOrtho].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
@@ -402,6 +406,7 @@ void Vector4Round(D3DXVECTOR4* out, D3DXVECTOR4* in) {
 D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir) {
 	// Get z-range for this cascade.
 	NiCamera* sceneCamera = WorldSceneGraph->camera;
+	NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;
 	float depthRange = (sceneCamera->Frustum.Far - sceneCamera->Frustum.Near);
 	float zNear = ShadowMap->ShadowMapNear / depthRange;
 	float zFar = ShadowMap->ShadowMapRadius / depthRange;
@@ -460,20 +465,32 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	
 	D3DXVECTOR3 cascadeExtents = maxExtents - minExtents;
 
+	// Create a shadow frustum center by moving the view frustum slice center away from the camera.
+	// Should make it so we can more easily use the full resolution, which is mostly wasted due to
+	// stabilization.
+	D3DXVECTOR3 shadowFrustumCenter;
+	D3DXVec3Normalize(&shadowFrustumCenter, &frustumCenter);  // Get the direction from camera to the frustum center.
+	shadowFrustumCenter *= sphereRadius;  // Move the center so that the length is equal to the sphere radius.
+
+	ShadowMap->ShadowMapCascadeCenterRadius.x = shadowFrustumCenter.x;
+	ShadowMap->ShadowMapCascadeCenterRadius.y = shadowFrustumCenter.y;
+	ShadowMap->ShadowMapCascadeCenterRadius.z = shadowFrustumCenter.z;
+	ShadowMap->ShadowMapCascadeCenterRadius.w = sphereRadius;
+
 	float nearPlane = 0.0f;  // Shadow casters are pancaked to near plane in the vertex shader.
 	float farPlane = cascadeExtents.z;
-	D3DXVECTOR3 shadowCameraPos = frustumCenter + D3DXVECTOR3(*SunDir) * -minExtents.z;
+	D3DXVECTOR3 shadowCameraPos = shadowFrustumCenter + D3DXVECTOR3(*SunDir) * -minExtents.z;
 	
 	D3DXMATRIX shadowView, shadowProj, shadowViewProj;
 
-	D3DXMatrixLookAtRH(&shadowView, &shadowCameraPos, &frustumCenter, &upDir);
+	D3DXMatrixLookAtRH(&shadowView, &shadowCameraPos, &shadowFrustumCenter, &upDir);
 	D3DXMatrixOrthoOffCenterRH(&shadowProj, minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, nearPlane, farPlane);
 	shadowViewProj = shadowView * shadowProj;
 
 	// Create the rounding matrix, by projecting the world-space origin and determining
 	// the fractional offset in texel space.
 	float sMapSize = Settings.ShadowMaps.CascadeResolution;
-	NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;  // We are working in camera relative world space.
+	// We are working in camera relative world space - camera position is our fixed point for stabilization.
 	D3DXVECTOR4 shadowOrigin(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z, 1.0f);
 	D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
 	D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);

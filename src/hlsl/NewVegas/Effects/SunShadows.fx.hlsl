@@ -12,6 +12,10 @@ float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistan
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
+float4 TESR_ShadowNearCenter; // x,y,z: center (world space), w: radius
+float4 TESR_ShadowMiddleCenter; // x,y,z: center (world space), w: radius
+float4 TESR_ShadowFarCenter; // x,y,z: center (world space), w: radius
+float4 TESR_ShadowLodCenter; // x,y,z: center (world space), w: radius
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_ShadowAtlas : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -83,46 +87,21 @@ float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, 
 
 float GetLightAmount(float4 coord, float depth)
 {
-    float blendArea = 0.9f; // 20 % of each cascade to overlap
-	float shadow;
-
-	// getting all shadow values from cascades as negative (to be able to use the dot product to chose the correct one)
-	// shadows are inverted to mean 1 if in shadow to allow dot product filtering
-	float4 shadows = {
-        1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0f, 0.0f, Bias.x, BleedReduction.x),
-		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5f, 0.0f, Bias.y, BleedReduction.y),
-		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0f, 0.5f, Bias.z, BleedReduction.z),
-		1 - GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5f, 0.5f, Bias.w, BleedReduction.w),
-    };
-
-	float4 cascade = {
-		depth < TESR_ShadowRadius.x,
-		depth >= TESR_ShadowRadius.x * blendArea && depth < TESR_ShadowRadius.y,
-		depth >= TESR_ShadowRadius.y * blendArea && depth < TESR_ShadowRadius.z,
-		depth >= TESR_ShadowRadius.z * blendArea && depth < TESR_ShadowRadius.w,
-	};
-
-	// calculate blending areas coefficients between cascades
-	float4 fadeIn = {
-		1.0,
-		clamp(0.0, 1.0, invlerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
-		clamp(0.0, 1.0, invlerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
-		clamp(0.0, 1.0, invlerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
-	};
-
-	float4 fadeOut = {
-		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.x, TESR_ShadowRadius.x, depth)),
-		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.y, TESR_ShadowRadius.y, depth)),
-		clamp(0.0, 1.0, 1 - invlerp(blendArea * TESR_ShadowRadius.z, TESR_ShadowRadius.z, depth)),
-		// clamp(0.0, 1.0, 1 - smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)),
-		clamp(0.0, 1.0, 1), 
-	};
-
-	// apply blending to each cascade shadow
-	shadows *= fadeIn * fadeOut;
-
-	// filter the shadow based on the current valid cascades
-	return 1 - dot(shadows, cascade);
+    if (length(coord.xyz - TESR_ShadowNearCenter.xyz) < TESR_ShadowNearCenter.w) {
+        return GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0, 0.0, Bias.x, BleedReduction.x);
+    }
+    else if (length(coord.xyz - TESR_ShadowMiddleCenter.xyz) < TESR_ShadowMiddleCenter.w) {
+        return GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5, 0.0, Bias.y, BleedReduction.y);
+    }
+    else if (length(coord.xyz - TESR_ShadowFarCenter.xyz) < TESR_ShadowFarCenter.w) {
+        return GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0, 0.5, Bias.z, BleedReduction.z);
+    }
+    else if (length(coord.xyz - TESR_ShadowFarCenter.xyz) < TESR_ShadowFarCenter.w) {
+        return GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.5, 0.5, Bias.w, BleedReduction.w);
+    }
+    else {
+        return 1.0f;
+    }
 }
 
 // returns a semi random float3 between 0 and 1 based on the given seed. (blue noise)
