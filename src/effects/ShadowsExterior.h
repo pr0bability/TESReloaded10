@@ -66,6 +66,7 @@ public:
 		D3DVIEWPORT9			ShadowMapViewPort;
 		frustum					ShadowMapFrustum;
 		NiFrustumPlanes			ShadowMapFrustumPlanes;
+		D3DXVECTOR4				ShadowMapCascadeCenterRadius;
 		FormsStruct				Forms;
 		float					ShadowMapInverseResolution;
 		float					ShadowMapRadius;
