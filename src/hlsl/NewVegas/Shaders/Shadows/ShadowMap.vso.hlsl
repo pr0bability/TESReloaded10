@@ -11,9 +11,15 @@ float4 RustleParams : register(c66);
 float4 WindMatrices[16] : register(c67);
 float4 LeafBase[48] : register(c83);
 
+// Terrain LOD params for hiding it under normal terrain.
+row_major float4x4 WorldTranspose : register(c140);
+float4 HighDetailRange : register(c144);
+float4 LODLandParams : register(c145);
+
 struct VS_INPUT {
     float4 position : POSITION;
 	float4 texcoord_0 : TEXCOORD0;
+    float4 texcoord_1 : TEXCOORD1;  // Terrain LOD, no idea what it represents.
     float4 blendweight : BLENDWEIGHT;
     float4 blendindexes : BLENDINDICES;
 };
@@ -102,6 +108,15 @@ VS_OUTPUT main(VS_INPUT IN) {
 		q28.xyzw = mul(float4x4(WindMatrices[0 + offset.x].xyzw, WindMatrices[1 + offset.x].xyzw, WindMatrices[2 + offset.x].xyzw, WindMatrices[3 + offset.x].xyzw), q59.xyzw);
 		r0.xyzw = (IN.blendindexes.x * (q28.xyzw - q59.xyzw)) + q59.xyzw;
 	}
+    else if (TESR_ShadowData.x == 3.0f) { // Terrain LOD.
+        float4 r1 = IN.position;
+        r1.z = lerp(IN.texcoord_1.x, IN.position.z, LODLandParams.x);
+
+        float q0 = (abs(dot(WorldTranspose[1].xyzw, r1.xyzw) - HighDetailRange.y) < HighDetailRange.w ? 1.0 : 0.0);
+        float q1 = (abs(dot(WorldTranspose[0].xyzw, r1.xyzw) - HighDetailRange.x) < HighDetailRange.z ? 1.0 : 0.0);
+
+        r0.z = r1.z - ((q0.x * q1.x) * LODLandParams.y);
+    }
     if (TESR_ShadowData.x != 1.0f) r0 = mul(r0, TESR_ShadowWorldTransform);
 	r0 = mul(r0, TESR_ShadowViewProjTransform);
 	

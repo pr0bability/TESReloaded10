@@ -58,7 +58,9 @@ NiDX9ShaderDeclaration* NiDX9ShaderDeclaration::Create(NiDX9Renderer* apRenderer
 }
 
 float* const BSShaderManager::fDepthBias = (float*)0x1200458;
+float* const BSShaderManager::fLODLandDrop = (float*)0x11AD808;
 NiPoint3* const BSShaderManager::kCameraPos = (NiPoint3*)0x11F474C;
+NiPoint4* const BSShaderManager::kLoadedRange = (NiPoint4*)0x11F95F4;
 BSShader** BSShaderManager::pspShaders = (BSShader**)0x11F9548;
 
 ShadowSceneNode* BSShaderManager::GetShadowSceneNode(UInt32 aeType) {
@@ -367,3 +369,7 @@ bool NiBound::WithinFrustum(NiFrustumPlanes* arPlanes) {
 bool NiCamera::LookAtWorldPoint(const NiPoint3& kWorldPt, const NiPoint3& kWorldUp) {
 	return ThisCall<bool>(0xA701B0, this, &kWorldPt, &kWorldUp);
 }
+
+
+D3DXMATRIX* const ShadowLightShader::VertexConstants::WorldTranspose = (D3DXMATRIX*)0x11FECC8;
+NiPoint4* const ShadowLightShader::VertexConstants::LODLandParams = (NiPoint4*)0x11FA0B0;
