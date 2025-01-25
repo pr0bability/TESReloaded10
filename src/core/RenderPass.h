@@ -82,3 +82,19 @@ public:
 	void RegisterConstants(); 
 	void UpdateConstants(NiGeometry* Geo);
 };
+
+
+class TerrainLODPass : public RenderPass {
+public:
+	TerrainLODPass();
+
+	struct ConstantsStruct {
+		D3DXMATRIX	WorldTranspose;
+		D3DXVECTOR4 LODLandParams;
+		D3DXVECTOR4 HighDetailRange;
+	};
+	ConstantsStruct Constants;
+
+	bool AccumObject(NiGeometry* Geo);
+	void UpdateConstants(NiGeometry* Geo);
+};

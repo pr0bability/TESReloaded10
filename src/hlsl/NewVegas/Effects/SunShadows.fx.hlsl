@@ -96,8 +96,8 @@ float GetLightAmount(float4 coord, float depth)
     else if (length(coord.xyz - TESR_ShadowFarCenter.xyz) < TESR_ShadowFarCenter.w) {
         return GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0, 0.5, Bias.z, BleedReduction.z);
     }
-    else if (length(coord.xyz - TESR_ShadowFarCenter.xyz) < TESR_ShadowFarCenter.w) {
-        return GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.5, 0.5, Bias.w, BleedReduction.w);
+    else if (length(coord.xyz - TESR_ShadowLodCenter.xyz) < TESR_ShadowLodCenter.w) {
+        return GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5, 0.5, Bias.w, BleedReduction.w);
     }
     else {
         return 1.0f;
@@ -181,7 +181,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	// Sample shadows from shadowmaps
 	float sunShadows = GetLightAmount(worldPos, depth); 
-	sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)); //fade shadows along last cascade
+	//sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)); //fade shadows along last cascade
 
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 

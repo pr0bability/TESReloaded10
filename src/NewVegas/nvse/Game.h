@@ -5587,7 +5587,7 @@ public:
 	};
 
 	UInt32					unk07C;
-	UInt32					unk080;
+	float					fMorphDistance;
 	NiColorAlpha			kHairTint;
 	NiColorAlpha			kLandBlendParams;
 	BSShaderTextureSet*		spTextureSet;
@@ -5626,3 +5626,16 @@ public:
 	LeafData* leafData;	// 088
 };
 assert(sizeof(SpeedTreeLeafShaderProperty) == 0x8C);
+
+class BGSTerrainManager {
+public:
+	static NiNode* GetRootLandLODNode() {
+		return *(NiNode**)0x11D86A8;
+	}
+	static NiNode* GetRootObjectLODNode() {
+		return *(NiNode**)0x11D8690;
+	}
+	static NiNode* GetRootTreeLODNode() {
+		return *(NiNode**)0x11D8690;
+	}
+};

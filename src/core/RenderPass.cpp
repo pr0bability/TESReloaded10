@@ -307,3 +307,45 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
 	RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
 }
+
+
+TerrainLODPass::TerrainLODPass() {
+	PixelShader = TheShadowManager->ShadowMapPixel;
+	VertexShader = TheShadowManager->ShadowMapVertex;
+	RegisterConstants();
+}
+
+
+bool TerrainLODPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
+
+	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
+
+	GeometryList.push(Geo);
+	return true;
+}
+
+
+void TerrainLODPass::UpdateConstants(NiGeometry* Geo) {
+	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
+	ShadowConstants->Data.x = 3.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves, 3 terrain LOD)
+	ShadowConstants->Data.y = 0.0f; // Alpha Control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
+	D3DXMatrixTranspose(&Constants.WorldTranspose, &TheShaderManager->ShaderConst.ShadowWorld);
+
+	BSShaderPPLightingProperty* prop = (BSShaderPPLightingProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+
+	Constants.LODLandParams.x = prop->fMorphDistance;
+	Constants.LODLandParams.y = *BSShaderManager::fLODLandDrop;
+
+	Constants.HighDetailRange.x = BSShaderManager::kLoadedRange->x - BSShaderManager::kCameraPos->x;
+	Constants.HighDetailRange.y = BSShaderManager::kLoadedRange->y - BSShaderManager::kCameraPos->y;
+	Constants.HighDetailRange.z = BSShaderManager::kLoadedRange->z - 15;
+	Constants.HighDetailRange.w = BSShaderManager::kLoadedRange->w - 15;
+
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	Device->SetVertexShaderConstantF(140, (float*)&Constants.WorldTranspose, 4);
+	Device->SetVertexShaderConstantF(144, (float*)&Constants.HighDetailRange, 1);
+	Device->SetVertexShaderConstantF(145, (float*)&Constants.LODLandParams, 1);
+}

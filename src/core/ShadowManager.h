@@ -15,8 +15,8 @@ public:
 
 
 	NiNode*					GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
-	void					AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand, NiFrustumPlanes* arPlanes = nullptr);
-	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms);
+	void					AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand, bool isLOD, NiFrustumPlanes* arPlanes = nullptr);
+	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLODLand);
 	void					RenderAccums(D3DVIEWPORT9* Viewport);
 	D3DXMATRIX				GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir);
 	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DXMATRIX* ViewProj);
@@ -30,6 +30,7 @@ public:
 	AlphaShadowRenderPass*			alphaPass;
 	SkinnedGeoShadowRenderPass*		skinnedGeoPass;
 	SpeedTreeShadowRenderPass*		speedTreePass;
+	TerrainLODPass*					terrainLODPass;
 
 	NiVector4				BillboardRight;
 	NiVector4				BillboardUp;
