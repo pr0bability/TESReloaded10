@@ -13,6 +13,7 @@ void ShadowManager::Initialize() {
 	TheShadowManager->alphaPass = new AlphaShadowRenderPass();
 	TheShadowManager->skinnedGeoPass = new SkinnedGeoShadowRenderPass();
 	TheShadowManager->speedTreePass = new SpeedTreeShadowRenderPass();
+	TheShadowManager->terrainLODPass = new TerrainLODPass();
 
 	// load the shaders
 	TheShadowManager->ShadowMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowMap.vso", "Shadows\\");
@@ -112,7 +113,7 @@ NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::For
 
 
 // Detect which pass the object must be added to
-void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms) {
+void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLODLand) {
 	auto timelog = TimeLogger();
 
 	NiGeometry* geo = static_cast<NiGeometry*>(NiObject);
@@ -124,6 +125,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 	if (skinnedGeoPass->AccumObject(geo)) {}
 	else if (speedTreePass->AccumObject(geo)) {}
+	else if (Forms->Lod && isLODLand && terrainLODPass->AccumObject(geo)) {}
 	else if (Forms->AlphaEnabled && alphaPass->AccumObject(geo)) {}
 	else geometryPass->AccumObject(geo);
 
@@ -132,7 +134,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 
 // go through the Object children and sort the ones that will be rendered based on their properties
-void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand, NiFrustumPlanes *arPlanes) {
+void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand, bool isLOD, NiFrustumPlanes *arPlanes) {
 	if (!NiObject) return;
 
 	std::stack<NiAVObject*> containers;
@@ -144,7 +146,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 	if (!NiObject->IsGeometry())
 		containers.push(NiObject);
 	else
-		AccumObject(&containers, NiObject, Forms);
+		AccumObject(&containers, NiObject, Forms, isLand && isLOD);
 		
 
 	// Gather geometry
@@ -168,7 +170,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 			if (!child->IsGeometry())
 				containers.push(child);
 			else
-				AccumObject(&containers, child, Forms);
+				AccumObject(&containers, child, Forms, false);
 			continue;
 		}
 
@@ -178,7 +180,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 			// Frustum culling.
-			if (arPlanes && isLand) {
+			if (arPlanes && (isLand || isLOD)) {
 				BSMultiBoundNode* multibound = child->IsMultiBoundNode();
 
 				if (multibound && !multibound->spMultiBound->spShape->WithinFrustum(*arPlanes)) continue;
@@ -189,7 +191,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 			if (!child->IsGeometry())
 				containers.push(child);
 			else
-				AccumObject(&containers, child, Forms);
+				AccumObject(&containers, child, Forms, isLand && isLOD);
 		}
 	}
 }
@@ -203,6 +205,7 @@ void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort) {
 	Device->BeginScene();
 	
 	geometryPass->RenderAccum();
+	terrainLODPass->RenderAccum();
 	alphaPass->RenderAccum();
 	skinnedGeoPass->RenderAccum();
 	speedTreePass->RenderAccum();
@@ -225,6 +228,11 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	RenderState->SetRenderState(D3DRS_DEPTHBIAS, (DWORD)0.0f, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_SLOPESCALEDEPTHBIAS, (DWORD)0.0f, RenderStateArgs);
 
+	if (ShadowMap->Forms.Lod) {
+		AccumChildren(BGSTerrainManager::GetRootLandLODNode(), &ShadowMap->Forms, true, true, &ShadowMap->ShadowMapFrustumPlanes);
+		AccumChildren(BGSTerrainManager::GetRootObjectLODNode(), &ShadowMap->Forms, false, true, &ShadowMap->ShadowMapFrustumPlanes);
+	}
+
 	if (Player->GetWorldSpace()) {
 		GridCellArray* CellArray = Tes->gridCellArray;
 		UInt32 CellArraySize = CellArray->size * CellArray->size;
@@ -246,10 +254,7 @@ void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect
 		return;
 	
 	if (ShadowMap->Forms.Terrain)
-		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true, &ShadowMap->ShadowMapFrustumPlanes);
-		
-
-	// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true, false, &ShadowMap->ShadowMapFrustumPlanes);
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
@@ -261,7 +266,7 @@ void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect
 		}
 
 		if (RefNode && RefNode->WithinFrustum(&ShadowMap->ShadowMapFrustumPlanes))
-			AccumChildren(RefNode, &ShadowMap->Forms, false, &ShadowMap->ShadowMapFrustumPlanes);
+			AccumChildren(RefNode, &ShadowMap->Forms, false, false, &ShadowMap->ShadowMapFrustumPlanes);
 
 		Entry = Entry->next;
 	}
@@ -323,7 +328,7 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 		D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 		bool inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection) > 0;
 		if (inFront && RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) 
-			AccumChildren(RefNode, &Settings->Forms, false);
+			AccumChildren(RefNode, &Settings->Forms, false, false);
 
 		Entry = Entry->next;
 	}
@@ -454,7 +459,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 					D3DXVec3Normalize(&ObjectToLight, &ObjectToLight);
 					bool inFront = D3DXVec3Dot(&ObjectToLight, &CameraDirection) > 0;
-					if (RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false);
+					if (RefNode->GetDistance(LightPos) <= Radius + RefNode->GetWorldBoundRadius()) AccumChildren(RefNode, &Settings->Forms, false, false);
 				}
 				Entry = Entry->next;
 			}
@@ -632,6 +637,8 @@ void ShadowManager::RenderShadowMaps() {
 		skinnedGeoPass->PixelShader = ShadowMapPixel;
 		speedTreePass->VertexShader = ShadowMapVertex;
 		speedTreePass->PixelShader = ShadowMapPixel;
+		terrainLODPass->VertexShader = ShadowMapVertex;
+		terrainLODPass->PixelShader = ShadowMapPixel;
 
 		if (ExteriorEnabled && SunDir.z > 0.0f) {
 			ShadowData->z = 0; // set shader constant to identify other shadow maps

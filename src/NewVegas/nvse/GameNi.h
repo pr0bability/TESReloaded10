@@ -1948,6 +1948,23 @@ public:
 	NiD3DShaderConstantMap* spVertexConstantMap;
 	NiD3DShaderConstantMap* spPixelConstantMap2;
 	NiD3DShaderConstantMap* spVertexConstantMap2;
+
+	static __forceinline NiPoint4* GetConstant(int index) {
+		return &((NiPoint4*)0x11FA0C0)[index];
+	}
+
+	struct VertexConstants {
+		// 8
+		static D3DXMATRIX* const WorldTranspose;
+
+		// 12
+		static __forceinline NiPoint4* const GetHighDetailRange() {
+			return GetConstant(34);
+		}
+
+		// 19
+		static NiPoint4* const LODLandParams;
+	};
 };
 assert(sizeof(ShadowLightShader) == 0x8C);
 
@@ -2726,7 +2743,9 @@ public:
 	};
 
 	static float* const fDepthBias;
+	static float* const fLODLandDrop;
 	static NiPoint3* const kCameraPos;
+	static NiPoint4* const kLoadedRange;
 
 	static BSShader** pspShaders;
 
