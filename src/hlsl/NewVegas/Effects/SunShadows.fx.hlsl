@@ -87,17 +87,45 @@ float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, 
 
 float GetLightAmount(float4 coord, float depth)
 {
-    if (length(coord.xyz - TESR_ShadowNearCenter.xyz) < TESR_ShadowNearCenter.w) {
-        return GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0, 0.0, Bias.x, BleedReduction.x);
+    const float blend = 0.9f;
+	
+	float4 shadows = {
+        GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0, 0.0, Bias.x, BleedReduction.x),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5, 0.0, Bias.y, BleedReduction.y),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0, 0.5, Bias.z, BleedReduction.z),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5, 0.5, Bias.w, BleedReduction.w),
+    };
+	
+    float4 distances = {
+        length(coord.xyz - TESR_ShadowNearCenter.xyz),
+		length(coord.xyz - TESR_ShadowMiddleCenter.xyz),
+		length(coord.xyz - TESR_ShadowFarCenter.xyz),
+		length(coord.xyz - TESR_ShadowLodCenter.xyz),
+    };
+	
+    if (distances.x < TESR_ShadowNearCenter.w) {
+        if (distances.x < TESR_ShadowNearCenter.w * blend)
+            return shadows.x;
+		
+        return lerp(shadows.x, shadows.y, smoothstep(TESR_ShadowNearCenter.w * blend, TESR_ShadowNearCenter.w, distances.x));
     }
-    else if (length(coord.xyz - TESR_ShadowMiddleCenter.xyz) < TESR_ShadowMiddleCenter.w) {
-        return GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5, 0.0, Bias.y, BleedReduction.y);
+    else if (distances.y < TESR_ShadowMiddleCenter.w) {
+        if (distances.y < TESR_ShadowMiddleCenter.w * blend)
+            return shadows.y;
+		
+        return lerp(shadows.y, shadows.z, smoothstep(TESR_ShadowMiddleCenter.w * blend, TESR_ShadowMiddleCenter.w, distances.y));
     }
-    else if (length(coord.xyz - TESR_ShadowFarCenter.xyz) < TESR_ShadowFarCenter.w) {
-        return GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0, 0.5, Bias.z, BleedReduction.z);
+    else if (distances.z < TESR_ShadowFarCenter.w) {
+        if (distances.z < TESR_ShadowFarCenter.w * blend)
+            return shadows.z;
+		
+        return lerp(shadows.z, shadows.w, smoothstep(TESR_ShadowFarCenter.w * blend, TESR_ShadowFarCenter.w, distances.z));
     }
-    else if (length(coord.xyz - TESR_ShadowLodCenter.xyz) < TESR_ShadowLodCenter.w) {
-        return GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5, 0.5, Bias.w, BleedReduction.w);
+    else if (distances.w < TESR_ShadowLodCenter.w) {
+        if (distances.w < TESR_ShadowLodCenter.w * blend)
+            return shadows.w;
+		
+        return lerp(shadows.w, 1.0f, smoothstep(TESR_ShadowLodCenter.w * blend, TESR_ShadowLodCenter.w, distances.w));
     }
     else {
         return 1.0f;
