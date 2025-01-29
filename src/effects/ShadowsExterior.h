@@ -79,6 +79,8 @@ public:
 		bool				MSAA;
 		bool				Mipmaps;
 		int					Anisotropy;
+		float				Distance;
+		float				CascadeLambda;
 	};
 
 	struct ExteriorsStruct {
@@ -86,11 +88,9 @@ public:
 		int					Quality;
 		int					OrthoMapResolution;
 		float				OrthoRadius;
-		float				ShadowRadius;
 		float				Darkness;
 		float				NightMinDarkness;
 		UInt8               ShadowMode;
-		float				ShadowMapFarPlane;
 		bool				UsePointShadowsDay;
 		bool				UsePointShadowsNight;
 		ExcludedFormsList	ExcludedForms;

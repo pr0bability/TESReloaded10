@@ -604,9 +604,7 @@ Darkness = 0.75                      # Darkness of shadows.
 Enabled = true                       # Enable sun shadows using rendered shadow maps.
 NightMinDarkness = 0.35              # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
 Quality = 2                          # Not used.
-ShadowMapFarPlane = 32768            # Used for shadow frustum. Don't change this value.
 OrthoMapResolution = 1024            # Resolution of the texture used to store the ortho map.
-ShadowsRadius = 8000                 # Max distance for rendering of shadow from the camera.
 OrthoRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Wether to cast shadows from point lights. Requires a slight darkening of the entire screen.
 UsePointShadowsNight = true          # Wether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
@@ -671,6 +669,8 @@ Prefilter = true					 # Enable prefiltering the shadow maps. Prefiltering is a b
 MSAA = true							 # Enable multisample antialiasing for shadow maps.
 Mipmaps = false						 # DISABLED. Enable mipmaps for the shadow maps.
 Anisotropy = 0						 # DISABLED. Anisotropic filteric for mipmaps, 0: disabled, 1: 8x, 2: 16x.
+Distance = 0.02                      # [0.001-1.000] Distance to render shadows for, a fraction of the full depth range. Keep low.
+CascadeLambda = 0.9					 # [0.0-1.0] Controls how cascades are split, higher value means nearer cascades get higher resolution.
 
 [_Shaders.ShadowsExteriors.Status]
 Enabled = true                       # Post process sun and pointlights shadows in exteriors.

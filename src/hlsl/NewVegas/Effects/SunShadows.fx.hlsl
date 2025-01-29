@@ -9,7 +9,6 @@ float4 TESR_ReciprocalResolution;
 float4 TESR_ViewSpaceLightDir;
 float4 TESR_ShadowData; // x: quality, y: darkness, z: texel size
 float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
-float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 float4 TESR_ShadowNearCenter; // x,y,z: center (world space), w: radius
@@ -209,7 +208,6 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	// Sample shadows from shadowmaps
 	float sunShadows = GetLightAmount(worldPos, depth); 
-	//sunShadows = lerp(sunShadows, 1.0f, smoothstep(TESR_ShadowRadius.z, TESR_ShadowRadius.w, depth)); //fade shadows along last cascade
 
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
@@ -226,12 +224,12 @@ technique {
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
+	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskH, TESR_ShadowScreenSpaceData.y, 3500, SSS_MAXDEPTH);
 	}
 
 	pass {
 		VertexShader = compile vs_3_0 FrameVS();
-	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 3500, max(SSS_MAXDEPTH, TESR_ShadowRadius.w));
+	 	PixelShader = compile ps_3_0 DepthBlur(TESR_PointShadowBuffer, OffsetMaskV, TESR_ShadowScreenSpaceData.y, 3500, SSS_MAXDEPTH);
 	}
 
     pass {

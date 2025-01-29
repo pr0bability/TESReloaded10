@@ -629,6 +629,9 @@ void ShadowManager::RenderShadowMaps() {
 
 	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
 
+		// Update cascade depths based on current camera.
+		Shadows->GetCascadeDepths();
+
 		geometryPass->VertexShader = ShadowMapVertex;
 		geometryPass->PixelShader = ShadowMapPixel;
 		alphaPass->VertexShader = ShadowMapVertex;

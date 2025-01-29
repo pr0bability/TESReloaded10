@@ -5,7 +5,6 @@ float4 TESR_ReciprocalResolution;
 float4 TESR_WaterSettings; //x: water height in the cell, y: water depth darkness, z: is camera underwater
 float4 TESR_ShadowData; // x: quality, y: darkness, z: nearmap resolution, w: farmap resolution
 float4 TESR_ShadowFade; // x: fading at sunrise/sunset, y:disabled shadows, z: pointlights shadows
-float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SkyColor;
 float4 TESR_SunAmbient;
 float4 TESR_SunColor;
