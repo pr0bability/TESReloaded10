@@ -62,15 +62,16 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.Quality = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Quality");
 	Settings.Exteriors.Darkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "Darkness");
 	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-	Settings.Exteriors.ShadowRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowsRadius");
 	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
 	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
-	Settings.Exteriors.ShadowMapFarPlane = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "ShadowMapFarPlane");
 	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
 	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
 	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
 	// Shadow maps specific configuration.
+	Settings.ShadowMaps.Distance = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 0.001f, 1.0f);
+	Settings.ShadowMaps.CascadeLambda = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "CascadeLambda"), 0.0f, 1.0f);
+
 	bool cascadeSettingsChanged = false;
 
 	int oldCascadeResolution = Settings.ShadowMaps.CascadeResolution;
@@ -96,9 +97,6 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.ShadowMaps.Anisotropy = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Anisotropy"), 0, 2)) * 8;*/
 
 	Settings.ShadowMaps.Prefilter = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Prefilter");
-
-	//Shadows Cascade settings
-	GetCascadeDepths();
 
 	for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
 		char sectionName[256] = "Shaders.ShadowsExteriors.";
@@ -322,36 +320,39 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 
 
 void ShadowsExteriorEffect::GetCascadeDepths() {
-	float camFar = Settings.Exteriors.ShadowRadius;
-	float logFactor = 0.9f;
-	float camNear = 10.0f;
+	NiCamera* sceneCamera = WorldSceneGraph->camera;
+
+	float nearClip = sceneCamera->Frustum.Near;
+	float farClip = sceneCamera->Frustum.Far;
+	float clipRange = farClip - nearClip;
+
+	float minZ = nearClip + 10.0f;
+	float maxZ = nearClip + Settings.ShadowMaps.Distance * clipRange;
+
+	float range = maxZ - minZ;
+	float ratio = maxZ / minZ;
+
 	int cascadeCount = 4;
-	float cascadeNum = 0.0f;
 
-	for (int i = 0; i < cascadeCount; i++) {
-		// formula for cascade ratios adapted from https://www.asawicki.info/news_1283_cascaded_shadow_mapping
-		cascadeNum += 1.0f;
-
-		ShadowMaps[i].ShadowMapRadius = std::lerp(
-			camNear + (cascadeNum / cascadeCount) * (camFar - camNear),
-			camNear * powf(camFar / camNear, cascadeNum / cascadeCount),
-			logFactor);
-
-		// filtering objects occupying less than 10 pixels in the shadow map
-		ShadowMaps[i].Forms.MinRadius = 10.0f * ShadowMaps[i].ShadowMapRadius / Settings.ShadowMaps.CascadeResolution;
+	for (int i = 0; i < cascadeCount; ++i) {
+		float p = (i + 1) / static_cast<float>(cascadeCount);
+		float log = minZ * std::pow(ratio, p);
+		float uniform = minZ + range * p;
+		float d = Settings.ShadowMaps.CascadeLambda * (log - uniform) + uniform;
+		ShadowMaps[i].ShadowMapRadius = (d - nearClip) / clipRange;
 	}
 
 	// Get Near distance for each cascade
-	ShadowMaps[MapNear].ShadowMapNear = camNear;
-	ShadowMaps[MapMiddle].ShadowMapNear = ShadowMaps[MapNear].ShadowMapRadius * 0.9;
-	ShadowMaps[MapFar].ShadowMapNear = ShadowMaps[MapMiddle].ShadowMapRadius * 0.9;
-	ShadowMaps[MapLod].ShadowMapNear = ShadowMaps[MapFar].ShadowMapRadius * 0.9;
+	ShadowMaps[MapNear].ShadowMapNear = 10.0f / clipRange;
+	ShadowMaps[MapMiddle].ShadowMapNear = ShadowMaps[MapNear].ShadowMapRadius;
+	ShadowMaps[MapFar].ShadowMapNear = ShadowMaps[MapMiddle].ShadowMapRadius;
+	ShadowMaps[MapLod].ShadowMapNear = ShadowMaps[MapFar].ShadowMapRadius;
 
-	// Store Shadow map sizes in Constants to pass to the Shaders
-	Constants.ShadowMapRadius.x = ShadowMaps[MapNear].ShadowMapRadius;
-	Constants.ShadowMapRadius.y = ShadowMaps[MapMiddle].ShadowMapRadius;
-	Constants.ShadowMapRadius.z = ShadowMaps[MapFar].ShadowMapRadius;
-	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius;
+	// Store absolute Shadow map splits in Constants to pass to the Shaders
+	Constants.ShadowMapRadius.x = ShadowMaps[MapNear].ShadowMapRadius * clipRange;
+	Constants.ShadowMapRadius.y = ShadowMaps[MapMiddle].ShadowMapRadius * clipRange;
+	Constants.ShadowMapRadius.z = ShadowMaps[MapFar].ShadowMapRadius * clipRange;
+	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius * clipRange;
 
 	// ortho distance render
 	ShadowMaps[MapOrtho].ShadowMapRadius = Settings.Exteriors.OrthoRadius;
@@ -359,7 +360,7 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 
 
 D3DXMATRIX ShadowsExteriorEffect::GetOrthoViewProj(D3DXMATRIX View) {
-	float FarPlane = Settings.Exteriors.ShadowMapFarPlane;
+	float FarPlane = 32768.0f;  // Hardcoded for ortho maps.
 	float Radius = ShadowMaps[MapOrtho].ShadowMapRadius;
 
 	// shift the covered area in the direction of the camera vector
@@ -407,9 +408,8 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	// Get z-range for this cascade.
 	NiCamera* sceneCamera = WorldSceneGraph->camera;
 	NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;
-	float depthRange = (sceneCamera->Frustum.Far - sceneCamera->Frustum.Near);
-	float zNear = ShadowMap->ShadowMapNear / depthRange;
-	float zFar = ShadowMap->ShadowMapRadius / depthRange;
+	float zNear = ShadowMap->ShadowMapNear;
+	float zFar = ShadowMap->ShadowMapRadius;
 
 	// Calculate the frustum corners in world space (from a unit cube in projective space).
 	D3DXMATRIX invViewProj = TheRenderManager->InvViewProjMatrix;
