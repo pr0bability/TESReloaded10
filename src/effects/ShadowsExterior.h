@@ -57,6 +57,7 @@ public:
 		bool				Trees;
 		bool				Lod;
 		float				MinRadius;
+		float				OrigMinRadius;
 	};
 
 	struct ShadowMapSettings {
