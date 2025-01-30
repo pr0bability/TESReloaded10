@@ -202,6 +202,8 @@ void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort) {
 
 	Device->SetViewport(ViewPort);
 
+	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
 	Device->BeginScene();
 	
 	geometryPass->RenderAccum();
@@ -339,7 +341,6 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 
 	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
 	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
-	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
 	RenderAccums(&ShadowCubeMapViewPort);
 }
@@ -471,7 +472,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 		Device->SetRenderTarget(0, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]);
 		Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
-		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
 		RenderAccums(&ShadowCubeMapViewPort);
 	}
@@ -653,13 +653,14 @@ void ShadowManager::RenderShadowMaps() {
 				Device->SetRenderTarget(0, Shadows->ShadowAtlasSurface);
 
 			Device->SetDepthStencilSurface(Shadows->ShadowAtlasDepthSurface);
-			Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
 			for (int i = MapNear; i < MapOrtho; i++) {
 				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
 				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &SunDir);
 
-				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+				if (!Shadows->Settings.ShadowMaps.LimitFrequency || i != MapLod || !(FrameCounter % 2))
+					RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+					
 
 				std::string message = "ShadowManager::RenderShadowMap ";
 				message += std::to_string(i);
@@ -764,6 +765,7 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
+	FrameCounter = (FrameCounter + 1) % 2;
 	shadowMapsRenderTime = timer.LogTime("ShadowManager::RenderShadowMaps");
 }
 
