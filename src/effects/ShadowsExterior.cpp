@@ -71,6 +71,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	// Shadow maps specific configuration.
 	Settings.ShadowMaps.Distance = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 0.001f, 1.0f);
 	Settings.ShadowMaps.CascadeLambda = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "CascadeLambda"), 0.0f, 1.0f);
+	Settings.ShadowMaps.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "LimitFrequency");
 
 	bool cascadeSettingsChanged = false;
 

@@ -81,6 +81,7 @@ public:
 		int					Anisotropy;
 		float				Distance;
 		float				CascadeLambda;
+		bool				LimitFrequency;
 	};
 
 	struct ExteriorsStruct {

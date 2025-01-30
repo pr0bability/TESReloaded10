@@ -47,4 +47,5 @@ public:
 	int						PointLightsNum;
 	float					shadowMapsRenderTime;
 	bool					ShadowShadersLoaded;
+	int						FrameCounter;
 };
