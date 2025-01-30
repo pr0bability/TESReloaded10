@@ -41,8 +41,6 @@ public:
 		D3DXVECTOR4		ShadowMapRadius;
 	};
 
-	typedef std::vector<UInt32> ExcludedFormsList;
-
 	// Settings
 	struct FormsStruct {
 		bool				AlphaEnabled;
@@ -94,7 +92,6 @@ public:
 		UInt8               ShadowMode;
 		bool				UsePointShadowsDay;
 		bool				UsePointShadowsNight;
-		ExcludedFormsList	ExcludedForms;
 	};
 
 	struct InteriorsStruct {
@@ -108,7 +105,6 @@ public:
 		float				Darkness;
 		float				LightRadiusMult;
 		bool				UseCastShadowFlag;
-		ExcludedFormsList	ExcludedForms;
 		bool				PlayerShadowThirdPerson;
 		bool				PlayerShadowFirstPerson;
 	};
@@ -167,4 +163,6 @@ public:
 
 private:
 	bool		texturesInitialized;
+
+	bool		UpdateSettingsFromQuality(int quality);
 };

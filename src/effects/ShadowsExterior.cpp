@@ -50,57 +50,82 @@ void ShadowsExteriorEffect::UpdateConstants() {
 	}
 }
 
-void ShadowsExteriorEffect::UpdateSettings() {
-
-	Constants.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Enabled;
-	Constants.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
-	Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
-	Constants.ScreenSpaceData.w = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "Darkness");
-
-	// Generic exterior shadows settings
-	Settings.Exteriors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Enabled");
-	Settings.Exteriors.Quality = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Quality");
-	Settings.Exteriors.Darkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "Darkness");
-	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
-	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
-	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
-	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
-	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
-
-	// Shadow maps specific configuration.
-	Settings.ShadowMaps.Distance = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 0.001f, 1.0f);
-	Settings.ShadowMaps.CascadeLambda = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "CascadeLambda"), 0.0f, 1.0f);
-	Settings.ShadowMaps.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "LimitFrequency");
-
+bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 	bool cascadeSettingsChanged = false;
-
+	
 	int oldCascadeResolution = Settings.ShadowMaps.CascadeResolution;
-	Settings.ShadowMaps.CascadeResolution = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "CascadeResolution"), 0, 2) + 2) * 512;
-
-	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
-		cascadeSettingsChanged = true;
-
 	bool oldMSAA = Settings.ShadowMaps.MSAA;
-	Settings.ShadowMaps.MSAA = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "MSAA");
+	
+	// Custom settings.
+	if (quality < 0 || quality > 3) {
+		Settings.ShadowMaps.Distance = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 0.001f, 1.0f);
+		Settings.ShadowMaps.CascadeLambda = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "CascadeLambda"), 0.0f, 1.0f);
+		Settings.ShadowMaps.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "LimitFrequency");
 
-	if (oldMSAA != Settings.ShadowMaps.MSAA)
-		cascadeSettingsChanged = true;
+		Settings.ShadowMaps.CascadeResolution = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "CascadeResolution"), 0, 2) + 2) * 512;
 
-	// Mipmaps and anisotropy are disabled due to deferred shadows - derivatives are messed up and causing artifacts.
-	// https://aras-p.info/blog/2010/01/07/screenspace-vs-mip-mapping/
-	/*bool oldMips = Settings.ShadowMaps.Mipmaps;
-	Settings.ShadowMaps.Mipmaps = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Mipmaps");
+		if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
+			cascadeSettingsChanged = true;
 
-	if (oldMips != Settings.ShadowMaps.Mipmaps)
-		cascadeSettingsChanged = true;
+		Settings.ShadowMaps.MSAA = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "MSAA");
 
-	Settings.ShadowMaps.Anisotropy = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Anisotropy"), 0, 2)) * 8;*/
+		if (oldMSAA != Settings.ShadowMaps.MSAA)
+			cascadeSettingsChanged = true;
 
-	Settings.ShadowMaps.Prefilter = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Prefilter");
+		// Mipmaps and anisotropy are disabled due to deferred shadows - derivatives are messed up and causing artifacts.
+		// https://aras-p.info/blog/2010/01/07/screenspace-vs-mip-mapping/
+		/*bool oldMips = Settings.ShadowMaps.Mipmaps;
+		Settings.ShadowMaps.Mipmaps = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Mipmaps");
 
+		if (oldMips != Settings.ShadowMaps.Mipmaps)
+			cascadeSettingsChanged = true;
+
+		Settings.ShadowMaps.Anisotropy = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Anisotropy"), 0, 2)) * 8;*/
+
+		Settings.ShadowMaps.Prefilter = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Prefilter");
+
+		for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
+			char sectionName[256] = "Shaders.ShadowsExteriors.Forms";
+			switch (shadowType) {
+			case MapNear:
+				strcat(sectionName, "Near");
+				break;
+			case MapMiddle:
+				strcat(sectionName, "Middle");
+				break;
+			case MapFar:
+				strcat(sectionName, "Far");
+				break;
+			case MapLod:
+				strcat(sectionName, "Lod");
+				break;
+			case MapOrtho:
+				strcat(sectionName, "Ortho");
+				break;
+			}
+			ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
+
+			ShadowMap->Forms.AlphaEnabled = TheSettingManager->GetSettingI(sectionName, "AlphaEnabled");
+			ShadowMap->Forms.Activators = TheSettingManager->GetSettingI(sectionName, "Activators");
+			ShadowMap->Forms.Actors = TheSettingManager->GetSettingI(sectionName, "Actors");
+			ShadowMap->Forms.Apparatus = TheSettingManager->GetSettingI(sectionName, "Apparatus");
+			ShadowMap->Forms.Books = TheSettingManager->GetSettingI(sectionName, "Books");
+			ShadowMap->Forms.Containers = TheSettingManager->GetSettingI(sectionName, "Containers");
+			ShadowMap->Forms.Doors = TheSettingManager->GetSettingI(sectionName, "Doors");
+			ShadowMap->Forms.Furniture = TheSettingManager->GetSettingI(sectionName, "Furniture");
+			ShadowMap->Forms.Misc = TheSettingManager->GetSettingI(sectionName, "Misc");
+			ShadowMap->Forms.Statics = TheSettingManager->GetSettingI(sectionName, "Statics");
+			ShadowMap->Forms.Terrain = TheSettingManager->GetSettingI(sectionName, "Terrain");
+			ShadowMap->Forms.Trees = TheSettingManager->GetSettingI(sectionName, "Trees");
+			ShadowMap->Forms.Lod = TheSettingManager->GetSettingI(sectionName, "Lod");
+			ShadowMap->Forms.MinRadius = TheSettingManager->GetSettingI(sectionName, "MinRadius");
+		};
+
+		return cascadeSettingsChanged;
+	}
+	
 	for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
-		char sectionName[256] = "Shaders.ShadowsExteriors.";
+		char sectionName[256] = "Shaders.ShadowsExteriors.Forms";
 		switch (shadowType) {
 		case MapNear:
 			strcat(sectionName, "Near");
@@ -120,24 +145,76 @@ void ShadowsExteriorEffect::UpdateSettings() {
 		}
 		ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
 
-		ShadowMap->Forms.AlphaEnabled = TheSettingManager->GetSettingI(sectionName, "AlphaEnabled");
-		ShadowMap->Forms.Activators = TheSettingManager->GetSettingI(sectionName, "Activators");
-		ShadowMap->Forms.Actors = TheSettingManager->GetSettingI(sectionName, "Actors");
-		ShadowMap->Forms.Apparatus = TheSettingManager->GetSettingI(sectionName, "Apparatus");
-		ShadowMap->Forms.Books = TheSettingManager->GetSettingI(sectionName, "Books");
-		ShadowMap->Forms.Containers = TheSettingManager->GetSettingI(sectionName, "Containers");
-		ShadowMap->Forms.Doors = TheSettingManager->GetSettingI(sectionName, "Doors");
-		ShadowMap->Forms.Furniture = TheSettingManager->GetSettingI(sectionName, "Furniture");
-		ShadowMap->Forms.Misc = TheSettingManager->GetSettingI(sectionName, "Misc");
-		ShadowMap->Forms.Statics = TheSettingManager->GetSettingI(sectionName, "Statics");
-		ShadowMap->Forms.Terrain = TheSettingManager->GetSettingI(sectionName, "Terrain");
-		ShadowMap->Forms.Trees = TheSettingManager->GetSettingI(sectionName, "Trees");
-		ShadowMap->Forms.Lod = TheSettingManager->GetSettingI(sectionName, "Lod");
-		ShadowMap->Forms.MinRadius = TheSettingManager->GetSettingI(sectionName, "MinRadius");
+		ShadowMap->Forms.AlphaEnabled = shadowType == MapOrtho ? 0 : 1;
+		ShadowMap->Forms.Activators = shadowType < MapLod ? 1 : 0;
+		ShadowMap->Forms.Actors = shadowType < MapLod ? 1 : 0;
+		ShadowMap->Forms.Apparatus = 0;
+		ShadowMap->Forms.Books = shadowType < MapFar ? 1 : 0;
+		ShadowMap->Forms.Containers = shadowType < MapLod ? 1 : 0;
+		ShadowMap->Forms.Doors = shadowType == MapOrtho ? 0 : 1;
+		ShadowMap->Forms.Furniture = shadowType < MapLod ? 1 : 0;
+		ShadowMap->Forms.Misc = 1;
+		ShadowMap->Forms.Statics = 1;
+		ShadowMap->Forms.Terrain = 1;
+		ShadowMap->Forms.Trees = 1;
+		ShadowMap->Forms.Lod = shadowType < MapFar || quality < 2 ? 0 : 1;
+		ShadowMap->Forms.MinRadius = MapFar <= shadowType <= MapLod ? 10.0f : 1.0f;
 	};
 
-	// get the list of excluded formIDs
-	TheSettingManager->GetFormList("Shaders.ShadowsExteriors.ExcludedFormID", &Settings.Exteriors.ExcludedForms);
+	Settings.ShadowMaps.CascadeLambda = 0.9f;
+	Settings.ShadowMaps.LimitFrequency = 1;
+	Settings.ShadowMaps.MSAA = 1;
+	Settings.ShadowMaps.Prefilter = 1;
+
+	switch (quality) {
+	case 0:
+		Settings.ShadowMaps.Distance = 0.01f;
+		Settings.ShadowMaps.CascadeResolution = 1024;
+		Settings.ShadowMaps.MSAA = 0;
+		break;
+	case 1:
+		Settings.ShadowMaps.Distance = 0.01f;
+		Settings.ShadowMaps.CascadeResolution = 1024;
+		break;
+	case 2:
+		Settings.ShadowMaps.Distance = 0.015f;
+		Settings.ShadowMaps.CascadeResolution = 2048;
+		break;
+	case 3:
+		Settings.ShadowMaps.Distance = 0.02f;
+		Settings.ShadowMaps.CascadeResolution = 2048;
+		break;
+	}
+
+	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
+		cascadeSettingsChanged = true;
+
+	if (oldMSAA != Settings.ShadowMaps.MSAA)
+		cascadeSettingsChanged = true;
+
+	return cascadeSettingsChanged;
+}
+
+void ShadowsExteriorEffect::UpdateSettings() {
+
+	Constants.ScreenSpaceData.x = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ScreenSpace", "Enabled") && Enabled;
+	Constants.ScreenSpaceData.y = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "BlurRadius");
+	Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
+	Constants.ScreenSpaceData.w = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "Darkness");
+
+	// Generic exterior shadows settings
+	Settings.Exteriors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Enabled");
+	Settings.Exteriors.Quality = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Quality"), 0, 4);
+	Settings.Exteriors.Darkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "Darkness");
+	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
+	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
+	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
+	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
+	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
+	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
+
+	// Shadow maps specific configuration.
+	bool cascadeSettingsChanged = UpdateSettingsFromQuality(Settings.Exteriors.Quality);
 
 	Settings.Interiors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "Enabled");
 	Settings.Interiors.Forms.AlphaEnabled = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "AlphaEnabled");
@@ -161,8 +238,6 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Interiors.UseCastShadowFlag = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "UseCastShadowFlag");
 	Settings.Interiors.PlayerShadowFirstPerson = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "PlayerShadowFirstPerson");
 	Settings.Interiors.PlayerShadowThirdPerson = TheSettingManager->GetSettingF("Shaders.ShadowsInteriors.Main", "PlayerShadowThirdPerson");
-
-	TheSettingManager->GetFormList("Shaders.ShadowsInteriors.ExcludedFormID", &Settings.Interiors.ExcludedForms);
 
 	bool isExterior = TheShaderManager->GameState.isExterior;
 
