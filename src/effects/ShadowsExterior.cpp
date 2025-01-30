@@ -118,7 +118,8 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 			ShadowMap->Forms.Terrain = TheSettingManager->GetSettingI(sectionName, "Terrain");
 			ShadowMap->Forms.Trees = TheSettingManager->GetSettingI(sectionName, "Trees");
 			ShadowMap->Forms.Lod = TheSettingManager->GetSettingI(sectionName, "Lod");
-			ShadowMap->Forms.MinRadius = TheSettingManager->GetSettingI(sectionName, "MinRadius");
+			ShadowMap->Forms.MinRadius = TheSettingManager->GetSettingF(sectionName, "MinRadius");
+			ShadowMap->Forms.OrigMinRadius = TheSettingManager->GetSettingF(sectionName, "MinRadius");
 		};
 
 		return cascadeSettingsChanged;
@@ -145,20 +146,21 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 		}
 		ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
 
-		ShadowMap->Forms.AlphaEnabled = shadowType == MapOrtho ? 0 : 1;
-		ShadowMap->Forms.Activators = shadowType < MapLod ? 1 : 0;
-		ShadowMap->Forms.Actors = shadowType < MapLod ? 1 : 0;
+		ShadowMap->Forms.AlphaEnabled = (shadowType == MapOrtho) ? 0 : 1;
+		ShadowMap->Forms.Activators = (shadowType < MapLod) ? 1 : 0;
+		ShadowMap->Forms.Actors = (shadowType < MapLod) ? 1 : 0;
 		ShadowMap->Forms.Apparatus = 0;
-		ShadowMap->Forms.Books = shadowType < MapFar ? 1 : 0;
-		ShadowMap->Forms.Containers = shadowType < MapLod ? 1 : 0;
-		ShadowMap->Forms.Doors = shadowType == MapOrtho ? 0 : 1;
-		ShadowMap->Forms.Furniture = shadowType < MapLod ? 1 : 0;
+		ShadowMap->Forms.Books = (shadowType < MapFar) ? 1 : 0;
+		ShadowMap->Forms.Containers = (shadowType < MapLod) ? 1 : 0;
+		ShadowMap->Forms.Doors = (shadowType == MapOrtho) ? 0 : 1;
+		ShadowMap->Forms.Furniture = (shadowType < MapLod) ? 1 : 0;
 		ShadowMap->Forms.Misc = 1;
 		ShadowMap->Forms.Statics = 1;
 		ShadowMap->Forms.Terrain = 1;
 		ShadowMap->Forms.Trees = 1;
-		ShadowMap->Forms.Lod = shadowType < MapFar || quality < 2 ? 0 : 1;
-		ShadowMap->Forms.MinRadius = MapFar <= shadowType <= MapLod ? 10.0f : 1.0f;
+		ShadowMap->Forms.Lod = (shadowType < MapFar || quality < 2) ? 0 : 1;
+		ShadowMap->Forms.MinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
+		ShadowMap->Forms.OrigMinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
 	};
 
 	Settings.ShadowMaps.CascadeLambda = 0.9f;
@@ -555,6 +557,9 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	ShadowMap->ShadowMapCascadeCenterRadius.y = shadowFrustumCenter.y;
 	ShadowMap->ShadowMapCascadeCenterRadius.z = shadowFrustumCenter.z;
 	ShadowMap->ShadowMapCascadeCenterRadius.w = sphereRadius;
+
+	// Calculate correct bound size limit for current cascade.
+	ShadowMap->Forms.MinRadius = ShadowMap->Forms.OrigMinRadius * sphereRadius * ShadowMap->ShadowMapInverseResolution;
 
 	float nearPlane = 0.0f;  // Shadow casters are pancaked to near plane in the vertex shader.
 	float farPlane = cascadeExtents.z;
