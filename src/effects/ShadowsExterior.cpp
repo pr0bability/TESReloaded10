@@ -391,6 +391,9 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 				Sampler->Texture->Texture = nullptr;
 			}
 		}
+
+		// Reset shadow manager frame counter.
+		TheShadowManager->FrameCounter = 0;
 	}
 }
 
