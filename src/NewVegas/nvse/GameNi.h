@@ -1122,33 +1122,73 @@ assert(sizeof(NiGeometryBufferData) == 0x54);
 
 class NiGeometryData : public NiObject {
 public:
+	virtual void				SetActiveVertexCount(uint16_t usActive);
+	virtual uint16_t			GetActiveVertexCount() const;
+	virtual UInt32				IsStripsData() const;
+	virtual UInt32				IsShapeData() const;
+	virtual bool				ContainsVertexData(UInt32 eParameter) const;
+	virtual void				CalculateNormals();
+
 	enum Consistency {
-		MUTABLE			 = 0x0000,
-		STATIC			 = 0x4000,
-		VOLATILE		 = 0x8000,
-		CONSISTENCY_MASK = 0xF000,
+		MUTABLE = 0x0000,
+		STATIC = 0x4000,
+		CONSISTENCY_MASK = 0x7000,
 	};
 
-	UInt16						Vertices;			// 008
-	UInt16						Unk00A;				// 00A
-	UInt16						Unk00C;				// 00C
-	UInt16						Unk00E;				// 00E
-	UInt32						Unk010;				// 010
-	UInt32						Unk014;				// 014
-	UInt32						Unk018;				// 018
-	UInt32						Unk01C;				// 01C
-	NiPoint3*					Vertex;				// 020
-	NiPoint3*					Normal;				// 024
-	NiColorAlpha*				Color;				// 028
-	UInt32						Texture;			// 02C NiPoint2*
-	UInt32						Unk030;				// 030
-	NiGeometryBufferData*		BuffData;			// 034
-	UInt8						Unk038;				// 038
-	UInt8						Unk039;				// 039
-	UInt8						Unk03A;				// 03A
-	UInt8						Unk03B;				// 03B
-	UInt8						Unk03C;				// 03C
-	UInt8						pad03C[3];
+	enum KeepFlags {
+		KEEP_NONE = 0,
+		KEEP_XYZ = 1 << 0,
+		KEEP_NORM = 1 << 1,
+		KEEP_COLOR = 1 << 2,
+		KEEP_UV = 1 << 3,
+		KEEP_INDICES = 1 << 4,
+		KEEP_BONEDATA = 1 << 5,
+		KEEP_ALL = 0x3F,
+	};
+
+	enum DataFlags {
+		NBT_METHOD_NONE = 0x0000,
+		NBT_METHOD_NDL = 0x1000,
+		NBT_METHOD_DEPRECATED = 0x2000,
+		NBT_METHOD_ATI = 0x3000,
+		NBT_METHOD_MASK = 0xF000,
+		TEXTURE_SET_MASK = 0x3F
+	};
+
+	enum Compression {
+		COMPRESS_NORM = 1 << 0,
+		COMPRESS_COLOR = 1 << 1,
+		COMPRESS_UV = 1 << 2,
+		COMPRESS_WEIGHT = 1 << 3,
+		COMPRESS_POSITION = 1 << 4,
+		COMPRESS_ALL = 0x1F,
+	};
+
+	enum MarkAsChangedFlags {
+		VERTEX_MASK = 1 << 0,
+		NORMAL_MASK = 1 << 1,
+		COLOR_MASK = 1 << 2,
+		TEXTURE_MASK = 1 << 3,
+		ALL_MASK = VERTEX_MASK | NORMAL_MASK | COLOR_MASK | TEXTURE_MASK,
+		DIRTY_MASK = 0xFFF,
+	};
+
+	uint16_t					m_usVertices;
+	uint16_t					m_usID;
+	uint16_t					m_usDataFlags;
+	uint16_t					m_usDirtyFlags;
+	NiBound						m_kBound;
+	NiPoint3*					m_pkVertex;
+	NiPoint3*					m_pkNormal;
+	NiColorAlpha*				m_pkColor;
+	NiPoint2*					m_pkTexture;
+	NiAdditionalGeometryData*	m_spAdditionalGeomData;
+	NiGeometryBufferData*		m_pkBuffData;
+	uint8_t						m_ucKeepFlags;
+	uint8_t						m_ucCompressFlags;
+	bool						bIsReadingData;
+	bool						bUnk3B;
+	bool						bCanSave;
 };
 assert(sizeof(NiGeometryData) == 0x40);
 
