@@ -26,7 +26,7 @@ void RenderPass::RenderAccum() {
 
 void RenderPass::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryData* ModelData = Geo->geomData;
-	NiGeometryBufferData* GeoData = ModelData->BuffData;
+	NiGeometryBufferData* GeoData = ModelData->m_pkBuffData;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
 	// Set proper cull based on stencil property.
@@ -62,6 +62,7 @@ void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoDa
 	else
 		TheRenderManager->renderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
 
+	uint16_t dirtyFlags = Geo->geomData->m_usDirtyFlags;
 	NiTriStrips* pStrips = Geo->IsTriStrips();
 	if (pStrips) {
 		ThisStdCall(0xE74840, NiDX9Renderer::GetSingleton(), Geo);  // RenderTriStripsAlt
@@ -69,6 +70,8 @@ void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoDa
 	else {
 		ThisStdCall(0xE745A0, NiDX9Renderer::GetSingleton(), Geo);  // RenderTriShapeAlt
 	}
+	// Add back the dirty flag that are reset with vanilla render functions.
+	Geo->geomData->m_usDirtyFlags = dirtyFlags;
 }
 
 
@@ -80,7 +83,7 @@ ShadowRenderPass::ShadowRenderPass() {
 
 
 bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
-	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
+	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
@@ -113,7 +116,7 @@ AlphaShadowRenderPass::AlphaShadowRenderPass() {
 
 
 bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo) {
-	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
+	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
@@ -197,7 +200,7 @@ void SkinnedGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 
 void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryData* ModelData = Geo->geomData;
-	NiGeometryBufferData* GeoData = ModelData->BuffData;
+	NiGeometryBufferData* GeoData = ModelData->m_pkBuffData;
 	NiSkinInstance* SkinInstance = Geo->skinInstance;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
@@ -317,7 +320,7 @@ TerrainLODPass::TerrainLODPass() {
 
 
 bool TerrainLODPass::AccumObject(NiGeometry* Geo) {
-	if (!Geo->geomData || !Geo->geomData->BuffData) return false; // discard objects without buffer data
+	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
