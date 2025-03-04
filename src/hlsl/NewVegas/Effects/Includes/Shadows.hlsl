@@ -48,16 +48,20 @@ float4 GetPointLightDistance(float4 WorldPos, float4 LightPos){
 
 
 // returns a point light contribution with no shadow map sampling
-float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal){
-	float4 light = GetPointLightDistance(worldPos, LightPos);
-	return GetPointLightAtten(light.xyz, light.w, normal);
+float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal) {
+    float4 light = GetPointLightDistance(worldPos, LightPos);
+    return GetPointLightAtten(light.xyz, light.w, normal);
 }
 
 
+float Linstep(float a, float b, float v) {
+    return saturate((v - a) / (b - a));
+}
+
 // Reduces VSM light bleedning
 float ReduceLightBleeding(float pMax, float amount) {
-    // Remove the [0, amount] tail and linearly rescale (amount, 1].
-    return invlerps(amount, 1.0f, pMax);
+  // Remove the [0, amount] tail and linearly rescale (amount, 1].
+    return Linstep(amount, 1.0f, pMax);
 }
 
 
