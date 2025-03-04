@@ -60,6 +60,8 @@ bool ShaderProgram::ShouldCompileShader(const char* fileBin, const char* fileHls
 		Logger::Log("Binary older then source, compile %s", fileHlsl);
 		return true;
 	}
+
+	return false;
 }
 
 
