@@ -25,6 +25,7 @@ public:
 	void					RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
     void                    BlurShadowAtlas();
+	void					CalculateSmoothSun();
 
 	ShadowRenderPass*				geometryPass;
 	AlphaShadowRenderPass*			alphaPass;
@@ -48,4 +49,5 @@ public:
 	float					shadowMapsRenderTime;
 	bool					ShadowShadersLoaded;
 	int						FrameCounter;
+	D3DXVECTOR3				SmoothSun;
 };
