@@ -28,6 +28,7 @@ public:
 
 	//Constants
 	struct ShadowStruct {
+		D3DXVECTOR4		SmoothedSunDir;
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		ScreenSpaceData;
 		D3DXVECTOR4		OrthoData;
@@ -157,6 +158,8 @@ public:
 	void		RegisterConstants();
 	void		RegisterTextures();
 	void		RecreateTextures(bool cascades, bool ortho, bool cubemaps);
+
+	D3DXVECTOR3	CalculateSmoothedSunDir();
 
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);

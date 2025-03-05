@@ -538,43 +538,6 @@ D3DXMATRIX ShadowManager::GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir) {
 }
 
 /*
-* Produce a smooth sun direction.
-*/
-void ShadowManager::CalculateSmoothSun() {
-	const float yawStepSize = D3DXToRadian(1.0f);		// 1.0° step for yaw (horizontal rotation)
-	const float pitchStepSize = D3DXToRadian(0.25f);	// 0.25° step for pitch (vertical rotation)
-	const float smoothingFactor = 0.1f;					// Smoothing strength (0 = no smoothing, 1 = instant)
-	const float maxJumpAngle = D3DXToRadian(5.0f);		// If sun moves more than 5°, apply instantly
-
-	D3DXVECTOR3 SunDir(TheShaderManager->ShaderConst.SunDir);
-
-	float theta = atan2f(SunDir.y, SunDir.x);   // Yaw
-	float phi = acosf(SunDir.z);				// Pitch
-
-	theta = roundf(theta / yawStepSize) * yawStepSize;
-	phi = roundf(phi / pitchStepSize) * pitchStepSize;
-
-	D3DXVECTOR3 QuantizedSunDir;
-	QuantizedSunDir.x = sinf(phi) * cosf(theta);
-	QuantizedSunDir.y = sinf(phi) * sinf(theta);
-	QuantizedSunDir.z = cosf(phi);
-	D3DXVec3Normalize(&QuantizedSunDir, &QuantizedSunDir);
-
-	// Compute angle difference between smoothed and new direction
-	float dotProduct = D3DXVec3Dot(&QuantizedSunDir, &SmoothSun);
-	dotProduct = max(-1.0f, min(1.0f, dotProduct)); // Clamp to avoid NaN
-	float angleDifference = acosf(dotProduct); // Angle between old and new direction
-
-	// Apply smoothing only if the change is small
-	if (angleDifference < maxJumpAngle) {
-		D3DXVec3Lerp(&SmoothSun, &SmoothSun, &QuantizedSunDir, smoothingFactor);
-	}
-	else {
-		SmoothSun = QuantizedSunDir; // Instant update for large jumps
-	}
-}
-
-/*
 * Renders the different shadow maps: Near, Far, Ortho.
 */
 void ShadowManager::RenderShadowMaps() {
@@ -651,8 +614,7 @@ void ShadowManager::RenderShadowMaps() {
 	// Render all shadow maps
 
 	// Quantize sun direction angle to reduce shimmer by a large factor.
-	CalculateSmoothSun();
-	D3DXVECTOR3 SunDir = SmoothSun;
+	D3DXVECTOR3 SunDir = Shadows->CalculateSmoothedSunDir();
 
 	if (isExterior && (ExteriorEnabled || TheShaderManager->orthoRequired)) {
 
