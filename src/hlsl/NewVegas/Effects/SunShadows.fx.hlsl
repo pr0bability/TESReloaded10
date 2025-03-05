@@ -6,6 +6,7 @@ float4x4 TESR_ShadowCameraToLightTransformMiddle;
 float4x4 TESR_ShadowCameraToLightTransformFar;
 float4x4 TESR_ShadowCameraToLightTransformLod;
 float4 TESR_ReciprocalResolution;
+float4 TESR_SmoothedSunDir;
 float4 TESR_ViewSpaceLightDir;
 float4 TESR_ShadowData; // x: quality, y: darkness, z: texel size
 float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
@@ -15,6 +16,7 @@ float4 TESR_ShadowNearCenter; // x,y,z: center (world space), w: radius
 float4 TESR_ShadowMiddleCenter; // x,y,z: center (world space), w: radius
 float4 TESR_ShadowFarCenter; // x,y,z: center (world space), w: radius
 float4 TESR_ShadowLodCenter; // x,y,z: center (world space), w: radius
+float4 TESR_DebugVar;
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_ShadowAtlas : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -29,6 +31,7 @@ static const float SSS_DIST = 2000;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
+static const float NormalBias = TESR_DebugVar.x;
 static const float4 Bias = float4(0.0001f, 0.00005f, 0.00001f, 0.000003f);
 static const float4 BleedReduction = float4(0.3f, 0.4f, 0.4f, 0.3f);
 
@@ -79,27 +82,34 @@ float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, 
     LightSpaceCoord.y += offsetY;
 	
     float4 shadowBufferValue = tex2D(TESR_ShadowAtlas, LightSpaceCoord.xy);
-    float shadow = GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z, bias, bleedReduction);
+    float shadow = GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z, TESR_DebugVar.y * 0.01, TESR_DebugVar.z);
 	
 	return shadow;
 }
 
-float GetLightAmount(float4 coord, float depth)
+float GetLightAmount(float4 positionWS, float3 normal)
 {
+	// Normal offset.
+    float NdotL = dot(normal, TESR_SmoothedSunDir.xyz);
+    float offsetScale = saturate(1 - NdotL);
+    float3 normalOffset = offsetScale * NormalBias * normal;
+    
+    float4 samplePos = float4(positionWS.xyz + normalOffset.xyz, 1.0f);
+	
     const float blend = 0.9f;
 	
 	float4 shadows = {
-        GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, coord, 0.0, 0.0, Bias.x, BleedReduction.x),
-		GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, coord, 0.5, 0.0, Bias.y, BleedReduction.y),
-		GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, coord, 0.0, 0.5, Bias.z, BleedReduction.z),
-		GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, coord, 0.5, 0.5, Bias.w, BleedReduction.w),
+        GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, samplePos, 0.0, 0.0, Bias.x, BleedReduction.x),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, samplePos, 0.5, 0.0, Bias.y, BleedReduction.y),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, samplePos, 0.0, 0.5, Bias.z, BleedReduction.z),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, samplePos, 0.5, 0.5, Bias.w, BleedReduction.w),
     };
 	
     float4 distances = {
-        length(coord.xyz - TESR_ShadowNearCenter.xyz),
-		length(coord.xyz - TESR_ShadowMiddleCenter.xyz),
-		length(coord.xyz - TESR_ShadowFarCenter.xyz),
-		length(coord.xyz - TESR_ShadowLodCenter.xyz),
+        length(positionWS.xyz - TESR_ShadowNearCenter.xyz),
+		length(positionWS.xyz - TESR_ShadowMiddleCenter.xyz),
+		length(positionWS.xyz - TESR_ShadowFarCenter.xyz),
+		length(positionWS.xyz - TESR_ShadowLodCenter.xyz),
     };
 	
     if (distances.x < TESR_ShadowNearCenter.w) {
@@ -199,15 +209,16 @@ float4 Shadow(VSOUT IN) : COLOR0
 {
 	float2 uv = IN.UVCoord;
 
-    float depth;
-    float4 worldPos = reconstructWorldPosition(uv, depth);
+    float viewDepth;
+    float4 worldPos = reconstructWorldPosition(uv, viewDepth);
 
 	// Sample Screen Space shadows
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 	if (!TESR_ShadowFade.y) return Shadow; // disable shadow maps if ShadowFade.y == 0 (setting for shadow map disabled)
 
 	// Sample shadows from shadowmaps
-	float sunShadows = GetLightAmount(worldPos, depth); 
+    float3 normal = GetWorldNormal(uv);
+	float sunShadows = GetLightAmount(worldPos, normal); 
 
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
