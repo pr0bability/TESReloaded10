@@ -162,7 +162,7 @@ void EffectRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 			FloatShaderValues[FloatIndex].Name = ConstantDesc.Name;
 			FloatShaderValues[FloatIndex].Type = (D3DXPARAMETER_TYPE)D3DXPC_MATRIX_ROWS;
 			FloatShaderValues[FloatIndex].RegisterIndex = (UInt32)Handle;
-			FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Rows;
+			FloatShaderValues[FloatIndex].RegisterCount = ConstantDesc.Elements;
 			FloatIndex++;
 			break;
 		case D3DXPC_OBJECT:
@@ -223,7 +223,10 @@ void EffectRecord::SetCT() {
 				Effect->SetVector((D3DXHANDLE)Constant->RegisterIndex, Constant->Value);
 		}
 		else
-			Effect->SetMatrix((D3DXHANDLE)Constant->RegisterIndex, (D3DXMATRIX*)Constant->Value);
+			if (Constant->RegisterCount > 1)
+				Effect->SetMatrixArray((D3DXHANDLE)Constant->RegisterIndex, (D3DXMATRIX*)Constant->Value, Constant->RegisterCount);
+			else
+				Effect->SetMatrix((D3DXHANDLE)Constant->RegisterIndex, (D3DXMATRIX*)Constant->Value);
 	}
 }
 
