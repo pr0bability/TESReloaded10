@@ -82,7 +82,7 @@ float4 main(VSOUT IN) : COLOR0 {
     else if (uv.y < 0.5)
         return Blur5(uv, float2(0.5f, 0.0f), float2(1.0f, 0.5f)); // Second cascade.
     else if (uv.x < 0.5)
-        return Blur3(uv, float2(0.0f, 0.5f), float2(0.5f, 1.0f)); // Third cascade.
+        return Blur5(uv, float2(0.0f, 0.5f), float2(0.5f, 1.0f)); // Third cascade.
     else
-        return Blur3(uv, float2(0.5f, 0.5f), float2(1.0f, 1.0f)); // Furthest cascade.
+        return Blur5(uv, float2(0.5f, 0.5f), float2(1.0f, 1.0f)); // Furthest cascade.
 }
