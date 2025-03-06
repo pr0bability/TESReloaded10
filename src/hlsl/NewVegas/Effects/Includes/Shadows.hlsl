@@ -64,7 +64,6 @@ float ReduceLightBleeding(float pMax, float amount) {
     return Linstep(amount, 1.0f, pMax);
 }
 
-
 float ChebyshevUpperBound(float2 moments, float mean, float minVariance,
                           float lightBleedingReduction) {
     // Compute variance
@@ -81,7 +80,49 @@ float ChebyshevUpperBound(float2 moments, float mean, float minVariance,
     return (mean <= moments.x ? 1.0f : pMax);
 }
 
-
 float GetLightAmountValueVSM(float2 moments, float depth, float bias, float bleedReduction) {
     return ChebyshevUpperBound(moments, depth, bias, bleedReduction);
+}
+
+float2 GetEVSMExponents(in float positiveExponent, in float negativeExponent, in float formatBits) {
+    const float maxExponent = formatBits == 0.0 ? 5.54f : 42.0f;
+
+    float2 lightSpaceExponents = float2(positiveExponent, negativeExponent);
+
+    // Clamp to maximum range of fp32/fp16 to prevent overflow/underflow
+    return min(lightSpaceExponents, maxExponent);
+}
+
+// Applies exponential warp to shadow map depth, input depth should be in [0, 1]
+float2 WarpDepth(float depth, float2 exponents) {
+    // Rescale depth into [-1, 1]
+    depth = 2.0f * depth - 1.0f;
+    float pos = exp(exponents.x * depth);
+    float neg = -exp(-exponents.y * depth);
+    return float2(pos, neg);
+}
+
+float GetLightAmountValueEVSM2(float2 moments, float depth, float bias, float bleedReduction, float formatBits) {
+    float2 exponents = GetEVSMExponents(40.0f, 5.0f, formatBits);
+    float2 warpedDepth = WarpDepth(depth, exponents);
+
+    // Derivative of warping at depth
+    float2 depthScale = bias * exponents * warpedDepth;
+    float2 minVariance = depthScale * depthScale;
+
+    return ChebyshevUpperBound(moments, warpedDepth.x, minVariance.x, bleedReduction);
+}
+
+float GetLightAmountValueEVSM4(float4 moments, float depth, float bias, float bleedReduction, float formatBits) {
+    float2 exponents = GetEVSMExponents(40.0f, 5.0f, formatBits);
+    float2 warpedDepth = WarpDepth(depth, exponents);
+
+    // Derivative of warping at depth
+    float2 depthScale = bias * exponents * warpedDepth;
+    float2 minVariance = depthScale * depthScale;
+
+    float posContrib = ChebyshevUpperBound(moments.xz, warpedDepth.x, minVariance.x, bleedReduction);
+    float negContrib = ChebyshevUpperBound(moments.yw, warpedDepth.y, minVariance.y, bleedReduction);
+    
+    return min(posContrib, negContrib);
 }
