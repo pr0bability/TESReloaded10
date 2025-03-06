@@ -1,9 +1,29 @@
 
 float4 TESR_ShadowData : register(c0);
-float4 TESR_ShadowExtraData : register(c1);
+float4 TESR_ShadowFormatData : register(c1);
 
 sampler2D DiffuseMap : register(s0) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
 sampler2D LeafDiffuseMap : register(s1) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
+
+static const float FormatBits = TESR_ShadowFormatData.y;
+
+float2 GetEVSMExponents(in float positiveExponent, in float negativeExponent) {
+    const float maxExponent = FormatBits == 0.0 ? 5.54f : 42.0f;
+
+    float2 lightSpaceExponents = float2(positiveExponent, negativeExponent);
+
+    // Clamp to maximum range of fp32/fp16 to prevent overflow/underflow
+    return min(lightSpaceExponents, maxExponent);
+}
+
+// Applies exponential warp to shadow map depth, input depth should be in [0, 1]
+float2 WarpDepth(float depth, float2 exponents) {
+    // Rescale depth into [-1, 1]
+    depth = 2.0f * depth - 1.0f;
+    float pos = exp(exponents.x * depth);
+    float neg = -exp(-exponents.y * depth);
+    return float2(pos, neg);
+}
 
 struct VS_OUTPUT {
     float4 texcoord_0 : TEXCOORD0;
@@ -25,20 +45,33 @@ PS_OUTPUT main(VS_OUTPUT IN) {
 	
 	float depth = IN.texcoord_0.z / IN.texcoord_0.w;
 
-	// TESR_ShadowData.w : shadow technique
-	// 0: disabled
-	// 1: VSM
-	// 2: simple ESM
-	// 3: filtered ESM
-	// 4: PCF or Orthomap
-	if (!TESR_ShadowData.z){
+	// TESR_ShadowFormatData.x : shadow mode
+	// 0: VSM
+	// 1: EVSM2
+	// 2: EVSM4
+    if (TESR_ShadowFormatData.x == 0.0f && !TESR_ShadowData.z) {
 		// VSM
 		// Cheat to reduce shadow acne in variance maps.
-		float dx = ddx(depth);
-		float dy = ddy(depth);
-		float moment2 = depth * depth + 0.25 * (dx * dx + dy * dy);
+        float dx = ddx(depth);
+        float dy = ddy(depth);
+        float moment2 = depth * depth + 0.25 * (dx * dx + dy * dy);
         OUT.color_0 = float4(depth, moment2, 0.0f, 1.0f);
-    } else {
+    }
+    else if (TESR_ShadowFormatData.x == 1.0f && !TESR_ShadowData.z) {
+		// EVSM2
+		// Cheat to reduce shadow acne in variance maps.
+        float2 exponents = GetEVSMExponents(40.0f, 5.0f);
+        float2 evsm2 = WarpDepth(depth, exponents);
+        OUT.color_0 = float4(evsm2, 0.0f, 1.0f);
+    }
+    else if (TESR_ShadowFormatData.x == 2.0f && !TESR_ShadowData.z) {
+		// EVSM4
+		// Cheat to reduce shadow acne in variance maps.
+        float2 exponents = GetEVSMExponents(40.0f, 5.0f);
+        float2 evsm2 = WarpDepth(depth, exponents);
+        OUT.color_0 = float4(evsm2, evsm2 * evsm2);
+    }
+    else {
 		// Only depth.
 		OUT.color_0 = float4(depth, 0.0f, 0.0f, 1.0f);
 	}
