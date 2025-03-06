@@ -17,6 +17,15 @@ class ShadowsExteriorEffect : public EffectRecord
 {
 public:
 	ShadowsExteriorEffect() : EffectRecord("ShadowsExteriors") {};
+
+	static const int Modes = 3;
+	static const int FormatBits = 2;
+
+	D3DFORMAT Formats[Modes][FormatBits] = {
+		{D3DFMT_G16R16, D3DFMT_G32R32F},
+		{D3DFMT_G16R16F, D3DFMT_G32R32F},
+		{D3DFMT_A16B16G16R16F, D3DFMT_A32B32G32R32F},
+	};
 	
 	enum ShadowMapTypeEnum {
 		MapNear = 0,
@@ -30,6 +39,7 @@ public:
 	struct ShadowStruct {
 		D3DXVECTOR4		SmoothedSunDir;
 		D3DXVECTOR4		Data;
+		D3DXVECTOR4		FormatData;
 		D3DXVECTOR4		ScreenSpaceData;
 		D3DXVECTOR4		OrthoData;
 		D3DXVECTOR4		ShadowFade;
@@ -74,6 +84,9 @@ public:
 	};
 
 	struct ShadowMapStruct {
+		int					Mode;
+		int					FormatBits;
+		D3DFORMAT			Format;
 		int					CascadeResolution;
 		bool                Prefilter;
 		bool				MSAA;

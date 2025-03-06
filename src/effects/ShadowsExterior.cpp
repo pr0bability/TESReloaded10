@@ -35,6 +35,10 @@ void ShadowsExteriorEffect::UpdateConstants() {
 		Constants.Data.x = Settings.Exteriors.Quality;
 		//if (Enabled) Constants.ShadowData->x = -1; // Disable the forward shadowing
 		Constants.Data.y = Settings.Exteriors.Darkness;
+
+		// Mode and format data. x=mode, y=bits per pixel
+		Constants.FormatData.x = Settings.ShadowMaps.Mode;
+		Constants.FormatData.y = Settings.ShadowMaps.FormatBits;
 	}
 	else {
 		// pass the enabled/disabled property of the shadow maps to the shadowfade constant
@@ -53,24 +57,22 @@ void ShadowsExteriorEffect::UpdateConstants() {
 bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 	bool cascadeSettingsChanged = false;
 	
+	D3DFORMAT oldFormat = Settings.ShadowMaps.Format;
 	int oldCascadeResolution = Settings.ShadowMaps.CascadeResolution;
 	bool oldMSAA = Settings.ShadowMaps.MSAA;
 	
 	// Custom settings.
 	if (quality < 0 || quality > 3) {
+		Settings.ShadowMaps.Mode = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Mode"), 0, Modes-1);
+		Settings.ShadowMaps.FormatBits = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Format"), 0, FormatBits-1);
+
 		Settings.ShadowMaps.Distance = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 0.001f, 1.0f);
 		Settings.ShadowMaps.CascadeLambda = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "CascadeLambda"), 0.0f, 1.0f);
 		Settings.ShadowMaps.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "LimitFrequency");
 
 		Settings.ShadowMaps.CascadeResolution = (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "CascadeResolution"), 0, 2) + 2) * 512;
 
-		if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
-			cascadeSettingsChanged = true;
-
 		Settings.ShadowMaps.MSAA = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "MSAA");
-
-		if (oldMSAA != Settings.ShadowMaps.MSAA)
-			cascadeSettingsChanged = true;
 
 		// Mipmaps and anisotropy are disabled due to deferred shadows - derivatives are messed up and causing artifacts.
 		// https://aras-p.info/blog/2010/01/07/screenspace-vs-mip-mapping/
@@ -121,72 +123,84 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 			ShadowMap->Forms.MinRadius = TheSettingManager->GetSettingF(sectionName, "MinRadius");
 			ShadowMap->Forms.OrigMinRadius = TheSettingManager->GetSettingF(sectionName, "MinRadius");
 		};
-
-		return cascadeSettingsChanged;
 	}
-	
-	for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
-		char sectionName[256] = "Shaders.ShadowsExteriors.Forms";
-		switch (shadowType) {
-		case MapNear:
-			strcat(sectionName, "Near");
+	else {
+		for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
+			char sectionName[256] = "Shaders.ShadowsExteriors.Forms";
+			switch (shadowType) {
+			case MapNear:
+				strcat(sectionName, "Near");
+				break;
+			case MapMiddle:
+				strcat(sectionName, "Middle");
+				break;
+			case MapFar:
+				strcat(sectionName, "Far");
+				break;
+			case MapLod:
+				strcat(sectionName, "Lod");
+				break;
+			case MapOrtho:
+				strcat(sectionName, "Ortho");
+				break;
+			}
+			ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
+
+			ShadowMap->Forms.AlphaEnabled = (shadowType == MapOrtho) ? 0 : 1;
+			ShadowMap->Forms.Activators = (shadowType < MapLod) ? 1 : 0;
+			ShadowMap->Forms.Actors = (shadowType < MapLod) ? 1 : 0;
+			ShadowMap->Forms.Apparatus = 0;
+			ShadowMap->Forms.Books = (shadowType < MapFar) ? 1 : 0;
+			ShadowMap->Forms.Containers = (shadowType < MapLod) ? 1 : 0;
+			ShadowMap->Forms.Doors = (shadowType == MapOrtho) ? 0 : 1;
+			ShadowMap->Forms.Furniture = (shadowType < MapLod) ? 1 : 0;
+			ShadowMap->Forms.Misc = 1;
+			ShadowMap->Forms.Statics = 1;
+			ShadowMap->Forms.Terrain = 1;
+			ShadowMap->Forms.Trees = 1;
+			ShadowMap->Forms.Lod = (shadowType < MapFar || quality < 2) ? 0 : 1;
+			ShadowMap->Forms.MinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
+			ShadowMap->Forms.OrigMinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
+		};
+
+		Settings.ShadowMaps.CascadeLambda = 0.9f;
+		Settings.ShadowMaps.LimitFrequency = 1;
+		Settings.ShadowMaps.MSAA = 1;
+		Settings.ShadowMaps.Prefilter = 1;
+
+		switch (quality) {
+		case 0:
+			Settings.ShadowMaps.Mode = 0;
+			Settings.ShadowMaps.FormatBits = 0;
+			Settings.ShadowMaps.Distance = 0.01f;
+			Settings.ShadowMaps.CascadeResolution = 1024;
+			Settings.ShadowMaps.MSAA = 0;
 			break;
-		case MapMiddle:
-			strcat(sectionName, "Middle");
+		case 1:
+			Settings.ShadowMaps.Mode = 0;
+			Settings.ShadowMaps.FormatBits = 1;
+			Settings.ShadowMaps.Distance = 0.01f;
+			Settings.ShadowMaps.CascadeResolution = 1024;
 			break;
-		case MapFar:
-			strcat(sectionName, "Far");
+		case 2:
+			Settings.ShadowMaps.Mode = 2;
+			Settings.ShadowMaps.FormatBits = 1;
+			Settings.ShadowMaps.Distance = 0.015f;
+			Settings.ShadowMaps.CascadeResolution = 2048;
 			break;
-		case MapLod:
-			strcat(sectionName, "Lod");
-			break;
-		case MapOrtho:
-			strcat(sectionName, "Ortho");
+		case 3:
+			Settings.ShadowMaps.Mode = 2;
+			Settings.ShadowMaps.FormatBits = 0;
+			Settings.ShadowMaps.Distance = 0.02f;
+			Settings.ShadowMaps.CascadeResolution = 2048;
 			break;
 		}
-		ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
-
-		ShadowMap->Forms.AlphaEnabled = (shadowType == MapOrtho) ? 0 : 1;
-		ShadowMap->Forms.Activators = (shadowType < MapLod) ? 1 : 0;
-		ShadowMap->Forms.Actors = (shadowType < MapLod) ? 1 : 0;
-		ShadowMap->Forms.Apparatus = 0;
-		ShadowMap->Forms.Books = (shadowType < MapFar) ? 1 : 0;
-		ShadowMap->Forms.Containers = (shadowType < MapLod) ? 1 : 0;
-		ShadowMap->Forms.Doors = (shadowType == MapOrtho) ? 0 : 1;
-		ShadowMap->Forms.Furniture = (shadowType < MapLod) ? 1 : 0;
-		ShadowMap->Forms.Misc = 1;
-		ShadowMap->Forms.Statics = 1;
-		ShadowMap->Forms.Terrain = 1;
-		ShadowMap->Forms.Trees = 1;
-		ShadowMap->Forms.Lod = (shadowType < MapFar || quality < 2) ? 0 : 1;
-		ShadowMap->Forms.MinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
-		ShadowMap->Forms.OrigMinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
-	};
-
-	Settings.ShadowMaps.CascadeLambda = 0.9f;
-	Settings.ShadowMaps.LimitFrequency = 1;
-	Settings.ShadowMaps.MSAA = 1;
-	Settings.ShadowMaps.Prefilter = 1;
-
-	switch (quality) {
-	case 0:
-		Settings.ShadowMaps.Distance = 0.01f;
-		Settings.ShadowMaps.CascadeResolution = 1024;
-		Settings.ShadowMaps.MSAA = 0;
-		break;
-	case 1:
-		Settings.ShadowMaps.Distance = 0.01f;
-		Settings.ShadowMaps.CascadeResolution = 1024;
-		break;
-	case 2:
-		Settings.ShadowMaps.Distance = 0.015f;
-		Settings.ShadowMaps.CascadeResolution = 2048;
-		break;
-	case 3:
-		Settings.ShadowMaps.Distance = 0.02f;
-		Settings.ShadowMaps.CascadeResolution = 2048;
-		break;
 	}
+	
+	Settings.ShadowMaps.Format = Formats[Settings.ShadowMaps.Mode][Settings.ShadowMaps.FormatBits];
+
+	if (oldFormat != Settings.ShadowMaps.Format)
+		cascadeSettingsChanged = true;
 
 	if (oldCascadeResolution != 0 && oldCascadeResolution != Settings.ShadowMaps.CascadeResolution)
 		cascadeSettingsChanged = true;
@@ -262,6 +276,7 @@ void ShadowsExteriorEffect::clearShadowsBuffer() {
 void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_SmoothedSunDir", &Constants.SmoothedSunDir);
 	TheShaderManager->RegisterConstant("TESR_ShadowData", &Constants.Data);
+	TheShaderManager->RegisterConstant("TESR_ShadowFormatData", &Constants.FormatData);
 	TheShaderManager->RegisterConstant("TESR_ShadowScreenSpaceData", &Constants.ScreenSpaceData);
 	TheShaderManager->RegisterConstant("TESR_OrthoData", &Constants.OrthoData);
 	TheShaderManager->RegisterConstant("TESR_ShadowFade", &Constants.ShadowFade);
@@ -286,12 +301,12 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 	ULONG ShadowAtlasSize = ShadowMapSize * 2;
 
-	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
+	TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowAtlasSize, ShadowAtlasSize, Settings.ShadowMaps.Format, Settings.ShadowMaps.Mipmaps);
 
 	if (!Settings.ShadowMaps.MSAA)
 		TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
 	else {
-		TheRenderManager->device->CreateRenderTarget(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
+		TheRenderManager->device->CreateRenderTarget(ShadowAtlasSize, ShadowAtlasSize, Settings.ShadowMaps.Format, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
 		TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
 	}
 
@@ -369,12 +384,12 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 		ULONG ShadowMapSize = Settings.ShadowMaps.CascadeResolution;
 		ULONG ShadowAtlasSize = ShadowMapSize * 2;
 
-		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, Settings.ShadowMaps.Mipmaps);
+		TheTextureManager->InitTexture("TESR_ShadowAtlas", &ShadowAtlasTexture, &ShadowAtlasSurface, ShadowAtlasSize, ShadowAtlasSize, Settings.ShadowMaps.Format, Settings.ShadowMaps.Mipmaps);
 
 		if (!Settings.ShadowMaps.MSAA)
 			TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowAtlasDepthSurface, NULL);
 		else {
-			TheRenderManager->device->CreateRenderTarget(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_G32R32F, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
+			TheRenderManager->device->CreateRenderTarget(ShadowAtlasSize, ShadowAtlasSize, Settings.ShadowMaps.Format, D3DMULTISAMPLE_4_SAMPLES, 0, 0, &ShadowAtlasSurfaceMSAA, NULL);
 			TheRenderManager->device->CreateDepthStencilSurface(ShadowAtlasSize, ShadowAtlasSize, D3DFMT_D24S8, D3DMULTISAMPLE_4_SAMPLES, 0, true, &ShadowAtlasDepthSurface, NULL);
 		}
 
@@ -593,10 +608,10 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	// Create a shadow frustum center by moving the view frustum slice center away from the camera.
 	// Should make it so we can more easily use the full resolution, which is mostly wasted due to
 	// stabilization.
-	D3DXVECTOR3 shadowFrustumCenter;
-	D3DXVec3Normalize(&shadowFrustumCenter, &frustumCenter);  // Get the direction from camera to the frustum center.
-	shadowFrustumCenter *= sphereRadius;  // Move the center so that the length is equal to the sphere radius.
-
+	D3DXVECTOR3 shadowFrustumCenter = frustumCenter;
+	//D3DXVec3Normalize(&shadowFrustumCenter, &frustumCenter);  // Get the direction from camera to the frustum center.
+	//shadowFrustumCenter *= sphereRadius;  // Move the center so that the length is equal to the sphere radius.
+	
 	ShadowMap->ShadowMapCascadeCenterRadius.x = shadowFrustumCenter.x;
 	ShadowMap->ShadowMapCascadeCenterRadius.y = shadowFrustumCenter.y;
 	ShadowMap->ShadowMapCascadeCenterRadius.z = shadowFrustumCenter.z;

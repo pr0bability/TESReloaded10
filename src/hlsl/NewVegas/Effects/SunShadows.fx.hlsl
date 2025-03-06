@@ -9,6 +9,7 @@ float4 TESR_ReciprocalResolution;
 float4 TESR_SmoothedSunDir;
 float4 TESR_ViewSpaceLightDir;
 float4 TESR_ShadowData; // x: quality, y: darkness, z: texel size
+float4 TESR_ShadowFormatData; // x: mode, y: format bits per pixels
 float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
 float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
@@ -31,10 +32,10 @@ static const float SSS_DIST = 2000;
 static const float SSS_THICKNESS = 20;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
-static const float NormalBias = TESR_DebugVar.x;
-static const float4 Bias = float4(0.0001f, 0.00005f, 0.00001f, 0.000003f);
-static const float4 BleedReduction = float4(0.3f, 0.4f, 0.4f, 0.3f);
+static const float Mode = TESR_ShadowFormatData.x;
+static const float FormatBits = TESR_ShadowFormatData.y;
 
+static const float NormalBias = 1.0f;
 
 struct VSOUT
 {
@@ -82,9 +83,18 @@ float GetLightAmountValue(float4x4 lightTransform, float4 coord, float offsetX, 
     LightSpaceCoord.y += offsetY;
 	
     float4 shadowBufferValue = tex2D(TESR_ShadowAtlas, LightSpaceCoord.xy);
-    float shadow = GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z, TESR_DebugVar.y * 0.01, TESR_DebugVar.z);
 	
-	return shadow;
+    float shadow;
+	
+	[branch]
+    if (Mode == 0.0f)
+        shadow = GetLightAmountValueVSM(shadowBufferValue.xy, LightSpaceCoord.z, bias, bleedReduction);
+    else if (Mode == 1.0f)
+        shadow = GetLightAmountValueEVSM2(shadowBufferValue.xy, LightSpaceCoord.z, bias, bleedReduction, FormatBits);
+	else
+        shadow = GetLightAmountValueEVSM4(shadowBufferValue, LightSpaceCoord.z, bias, bleedReduction, FormatBits);
+	
+    return shadow;
 }
 
 float GetLightAmount(float4 positionWS, float3 normal)
@@ -96,13 +106,15 @@ float GetLightAmount(float4 positionWS, float3 normal)
     
     float4 samplePos = float4(positionWS.xyz + normalOffset.xyz, 1.0f);
 	
+    const float bias = Mode == 0.0f ? 0.00001f : 0.01f;
+	
     const float blend = 0.9f;
 	
 	float4 shadows = {
-        GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, samplePos, 0.0, 0.0, Bias.x, BleedReduction.x),
-		GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, samplePos, 0.5, 0.0, Bias.y, BleedReduction.y),
-		GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, samplePos, 0.0, 0.5, Bias.z, BleedReduction.z),
-		GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, samplePos, 0.5, 0.5, Bias.w, BleedReduction.w),
+        GetLightAmountValue(TESR_ShadowCameraToLightTransformNear, samplePos, 0.0, 0.0, bias, 0.1f),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformMiddle, samplePos, 0.5, 0.0, bias, 0.2f),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformFar, samplePos, 0.0, 0.5, bias, 0.6f),
+		GetLightAmountValue(TESR_ShadowCameraToLightTransformLod, samplePos, 0.5, 0.5, bias, 0.8f),
     };
 	
     float4 distances = {
