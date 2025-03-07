@@ -645,11 +645,20 @@ void ShadowManager::RenderShadowMaps() {
 
 			for (int i = MapNear; i < MapOrtho; i++) {
 				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &SunDir);
 
-				if (!Shadows->Settings.ShadowMaps.LimitFrequency || i != MapLod || !(FrameCounter % 2))
+				if (!Shadows->Settings.ShadowMaps.LimitFrequency || i != MapLod || !(FrameCounter % 4)) {
+					Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &SunDir);
 					RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
-					
+				}
+				else {
+					// We need to update the shadowprojmatrix of MapLod by the camera translation between frames to avoid jumps in the shadows.
+					D3DXVECTOR3 newCameraTranslation = WorldSceneGraph->camera->m_worldTransform.pos.toD3DXVEC3();
+					D3DXVECTOR3 difference = newCameraTranslation - ShadowMap->CameraTranslation;
+					D3DXMATRIX translationMatrix;
+					D3DXMatrixTranslation(&translationMatrix, difference.x, difference.y, difference.z);
+					ShadowMap->ShadowCameraToLight = translationMatrix * ShadowMap->ShadowCameraToLight;
+					ShadowMap->CameraTranslation = newCameraTranslation;
+				}
 
 				std::string message = "ShadowManager::RenderShadowMap ";
 				message += std::to_string(i);
@@ -754,7 +763,7 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
-	FrameCounter = (FrameCounter + 1) % 2;
+	FrameCounter = (FrameCounter + 1) % 4;
 	shadowMapsRenderTime = timer.LogTime("ShadowManager::RenderShadowMaps");
 }
 
