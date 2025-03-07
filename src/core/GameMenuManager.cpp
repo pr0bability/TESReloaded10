@@ -437,6 +437,32 @@ int GameMenuManager::DrawShadowedText(const char* text, int x, int y, int width,
 }
 
 
+void GameMenuManager::ValidateSelection() {
+	// Check each column to ensure selection is valid
+	for (int col = COLUMNS::HEADER; col <= COLUMNS::SETTINGS; col++) {
+		// Make sure selected row is within bounds for this column
+		if (SelectedRow[col] > Rows[col]) {
+			SelectedRow[col] = min(SelectedRow[col], Rows[col]);
+
+			// Make sure selected page is valid
+			int maxPage = (Rows[col] / pageSize);
+			SelectedPage[col] = min(SelectedPage[col], maxPage);
+
+			// If we're on the wrong page for this row, adjust
+			if (SelectedRow[col] < SelectedPage[col] * pageSize ||
+				SelectedRow[col] >= (SelectedPage[col] + 1) * pageSize) {
+				SelectedPage[col] = SelectedRow[col] / pageSize;
+			}
+		}
+	}
+
+	// If the selected column is beyond the maximum valid column, reset it
+	if (SelectedColumn > COLUMNS::SETTINGS || Rows[SelectedColumn] < 0) {
+		SelectedColumn = COLUMNS::HEADER;
+	}
+}
+
+
 void GameMenuManager::Render() {
 	
 	StringList Sections;
@@ -453,6 +479,8 @@ void GameMenuManager::Render() {
 
 	HandleInput();
 	if (!Enabled) return; // skip render if menu is disabled
+
+	ValidateSelection();
 
 	TheRenderManager->device->SetRenderState(D3DRS_ZENABLE, FALSE);
 

@@ -384,4 +384,7 @@ public:
 	SettingsWaterMap				SettingsWater;
 	SettingsColoringMap				SettingsColoring;
 	SettingsWeatherMap				SettingsWeather;
+
+private:
+	void					FilterMenuSections(StringList* Sections, const char* ParentSection);
 };
