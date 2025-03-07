@@ -665,6 +665,9 @@ void SettingManager::LoadSettings() {
 
 	SettingsChanged = true;
 	timer.LogTime("SettingsManager::LoadSettings");
+
+	if (TheGameMenuManager)
+		TheGameMenuManager->ValidateSelection();
 }
 
 
@@ -979,6 +982,8 @@ void SettingManager::FillMenuSections(StringList* Sections, const char* ParentSe
 
 	if (ParentSection == NULL || memcmp(ParentSection, "Weathers", 8)) {
 		Config.FillSections(Sections, ParentSection);
+
+		FilterMenuSections(Sections, ParentSection);
 	}
 	else {
 		if (strlen(ParentSection) == 8) {
@@ -1343,4 +1348,35 @@ void SettingManager::FillFromString(const char* String, const char* Delimiter, T
 
 bool SettingManager::IsShaderForced(const char* Name) {
 	return false;
+}
+
+void SettingManager::FilterMenuSections(StringList* Sections, const char* ParentSection) {
+	if (!ParentSection)
+		return;
+
+	if (!memcmp(ParentSection, "Shaders.ShadowsExteriors", 24)) {
+		// Filter sections based on quality level.
+		int quality = GetSettingI("Shaders.ShadowsExteriors.Main", "Quality");
+
+		// If Quality is not set to Custom (4), filter out advanced sections
+		if (quality >= 0 && quality < 4) {
+			// Create a new filtered list
+			StringList filteredSections;
+
+			// Only keep sections that aren't in our hide list
+			for (const auto& section : *Sections) {
+				if (strcmp(section.c_str(), "FormsNear") != 0 &&
+					strcmp(section.c_str(), "FormsMiddle") != 0 &&
+					strcmp(section.c_str(), "FormsFar") != 0 &&
+					strcmp(section.c_str(), "FormsLod") != 0 &&
+					strcmp(section.c_str(), "FormsOrtho") != 0 &&
+					strcmp(section.c_str(), "ShadowMaps") != 0) {
+					filteredSections.push_back(section);
+				}
+			}
+
+			// Replace the original sections with our filtered list
+			*Sections = filteredSections;
+		}
+	}
 }
