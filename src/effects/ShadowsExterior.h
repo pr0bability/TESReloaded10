@@ -130,11 +130,21 @@ public:
 		float				RenderDistance;
 	};
 
+	struct SunSmoothingStruct {
+		bool				SmoothSun;
+		bool				QuantizeSun;
+		float				SmoothingFactor;
+		float				YawStepSize;
+		float				PitchStepSize;
+		float				MaxJumpAngle;
+	};
+
 	struct SettingsShadowStruct {
 		ShadowMapStruct     ShadowMaps;
 		ScreenSpaceStruct	ScreenSpace;
 		ExteriorsStruct		Exteriors;
 		InteriorsStruct		Interiors;
+		SunSmoothingStruct  SunSmoothing;
 	};
 	SettingsShadowStruct	Settings;
 	ShadowStruct			Constants;
