@@ -218,6 +218,14 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Constants.ScreenSpaceData.z = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "RenderDistance");
 	Constants.ScreenSpaceData.w = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ScreenSpace", "Darkness");
 
+	// Sun smoothing settings.
+	Settings.SunSmoothing.SmoothSun = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.SunSmoothing", "SmoothSun");
+	Settings.SunSmoothing.QuantizeSun = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.SunSmoothing", "QuantizeSun");
+	Settings.SunSmoothing.SmoothingFactor = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.SunSmoothing", "SmoothingFactor"), 0.0f, 1.0f);
+	Settings.SunSmoothing.YawStepSize = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.SunSmoothing", "YawStepSize"), 0.0f, 15.0f);
+	Settings.SunSmoothing.PitchStepSize = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.SunSmoothing", "PitchStepSize"), 0.0f, 15.0f);
+	Settings.SunSmoothing.MaxJumpAngle = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.SunSmoothing", "MaxJumpAngle"), 5.0f, 30.0f);
+
 	// Generic exterior shadows settings
 	Settings.Exteriors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Enabled");
 	Settings.Exteriors.Quality = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Quality"), 0, 4);
@@ -420,40 +428,49 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 * Produce a smooth sun direction.
 */
 D3DXVECTOR3 ShadowsExteriorEffect::CalculateSmoothedSunDir() {
-	const float yawStepSize = D3DXToRadian(1.0f);		// 1.0° step for yaw (horizontal rotation)
-	const float pitchStepSize = D3DXToRadian(0.25f);	// 0.25° step for pitch (vertical rotation)
-	const float smoothingFactor = 0.1f;					// Smoothing strength (0 = no smoothing, 1 = instant)
-	const float maxJumpAngle = D3DXToRadian(5.0f);		// If sun moves more than 5°, apply instantly
+	const float yawStepSize = D3DXToRadian(Settings.SunSmoothing.YawStepSize);		// horizontal rotation
+	const float pitchStepSize = D3DXToRadian(Settings.SunSmoothing.PitchStepSize);	// vertical rotation
+	const float smoothingFactor = Settings.SunSmoothing.SmoothingFactor;			// smoothing strength (0 = no smoothing, 1 = instant)
+	const float maxJumpAngle = D3DXToRadian(Settings.SunSmoothing.MaxJumpAngle);	// if sun moves more than setting, apply instantly
+
+	const bool quantizeSun = Settings.SunSmoothing.QuantizeSun && yawStepSize > 0.0f && pitchStepSize > 0.0f;
+	const bool smoothSun = Settings.SunSmoothing.SmoothSun && smoothingFactor > 0.0f;
 
 	D3DXVECTOR3 SunDir(TheShaderManager->ShaderConst.SunDir);
 
-	float theta = atan2f(SunDir.y, SunDir.x);   // Yaw
-	float phi = acosf(SunDir.z);				// Pitch
+	if (quantizeSun) {
+		float theta = atan2f(SunDir.y, SunDir.x);   // Yaw
+		float phi = acosf(SunDir.z);				// Pitch
 
-	theta = roundf(theta / yawStepSize) * yawStepSize;
-	phi = roundf(phi / pitchStepSize) * pitchStepSize;
+		theta = roundf(theta / yawStepSize) * yawStepSize;
+		phi = roundf(phi / pitchStepSize) * pitchStepSize;
 
-	D3DXVECTOR3 QuantizedSunDir;
-	QuantizedSunDir.x = sinf(phi) * cosf(theta);
-	QuantizedSunDir.y = sinf(phi) * sinf(theta);
-	QuantizedSunDir.z = cosf(phi);
-	D3DXVec3Normalize(&QuantizedSunDir, &QuantizedSunDir);
+		SunDir.x = sinf(phi) * cosf(theta);
+		SunDir.y = sinf(phi) * sinf(theta);
+		SunDir.z = cosf(phi);
+		D3DXVec3Normalize(&SunDir, &SunDir);
+	}
 
 	D3DXVECTOR3 SmoothedSunDir(Constants.SmoothedSunDir);
 
-	// Compute angle difference between smoothed and new direction
-	float dotProduct = D3DXVec3Dot(&QuantizedSunDir, &SmoothedSunDir);
-	dotProduct = max(-1.0f, min(1.0f, dotProduct)); // Clamp to avoid NaN
-	float angleDifference = acosf(dotProduct); // Angle between old and new direction
+	if (smoothSun) {
+		// Compute angle difference between smoothed and new direction
+		float dotProduct = D3DXVec3Dot(&SunDir, &SmoothedSunDir);
+		dotProduct = max(-1.0f, min(1.0f, dotProduct)); // Clamp to avoid NaN
+		float angleDifference = acosf(dotProduct); // Angle between old and new direction
 
-	// Apply smoothing only if the change is small
-	if (angleDifference < maxJumpAngle) {
-		D3DXVec3Lerp(&SmoothedSunDir, &SmoothedSunDir, &QuantizedSunDir, smoothingFactor);
+		// Apply smoothing only if the change is small
+		if (angleDifference < maxJumpAngle) {
+			D3DXVec3Lerp(&SmoothedSunDir, &SmoothedSunDir, &SunDir, smoothingFactor);
+		}
+		else {
+			SmoothedSunDir = SunDir;
+		}
 	}
 	else {
-		SmoothedSunDir = QuantizedSunDir;
+		SmoothedSunDir = SunDir;
 	}
-
+	
 	Constants.SmoothedSunDir = D3DXVECTOR4(SmoothedSunDir, 0.0f);
 	return SmoothedSunDir;
 }
