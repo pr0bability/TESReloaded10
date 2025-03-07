@@ -576,6 +576,14 @@ OrthoRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Whether to cast shadows from point lights. Requires a slight darkening of the entire screen.
 UsePointShadowsNight = false         # Whether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
 
+[_Shaders.ShadowsExteriors.SunSmoothing]
+SmoothSun = 1						 # Smooth the sun rotation by interpolating between positions.
+QuantizeSun = 1						 # Quantize the sun rotation by making sure the sun moves in constant size increments, instead of constantly.
+SmoothingFactor = 0.1				 # [0.0-1.0] Lower number means slower smoothing between positions, higher means more instantenous.
+YawStepSize = 1.0					 # [0.0-15.0] Step size for changes in the horizontal rotation of the sun, angle in degrees.
+PitchStepSize = 0.25				 # [0.0-15.0] Step size for changes in the vertical rotation of the sun, angle in degrees.
+MaxJumpAngle = 5.0					 # [5.0-30.0] A maximum angle difference for which smoothing works, if higher the jump is instaneous. Required for time jumps / waiting.
+
 [_Shaders.ShadowsExteriors.FormsNear]
 Activators = true                    # Whether to include objects with "Activator" flag when rendering shadowmaps.
 Actors = true                        # Whether to include objects with "Actors" flag when rendering shadowmaps.
