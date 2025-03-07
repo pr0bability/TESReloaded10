@@ -668,6 +668,9 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	TheCameraManager->SetFrustumPlanes(&ShadowMap->ShadowMapFrustumPlanes, &shadowViewProj, shadowCameraPos, frustum);
 	ShadowMap->ShadowMapFrustumPlanes.SetActivePlaneState(62);
 
+	// Cache the current camera translation. Used to offset against camera movement when using a cached map.
+	ShadowMap->CameraTranslation = D3DXVECTOR3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
 	return shadowViewProj;
 }
 
