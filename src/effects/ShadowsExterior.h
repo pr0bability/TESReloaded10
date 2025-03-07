@@ -77,6 +77,7 @@ public:
 		frustum					ShadowMapFrustum;
 		NiFrustumPlanes			ShadowMapFrustumPlanes;
 		D3DXVECTOR4				ShadowMapCascadeCenterRadius;
+		D3DXVECTOR3				CameraTranslation;  // Camera translation at the moment the shadow matrix was calculated.
 		FormsStruct				Forms;
 		float					ShadowMapInverseResolution;
 		float					ShadowMapRadius;
