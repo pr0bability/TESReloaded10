@@ -13,6 +13,7 @@ public:
 		SETTINGS = 3,
 	};
 
+	void					ValidateSelection();
 	void					Render();
 	void					HandleInput();
 	void					MainMenuMessage();
