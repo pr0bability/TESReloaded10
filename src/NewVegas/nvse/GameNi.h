@@ -1251,6 +1251,8 @@ public:
 	void*				BoneMatrixes;			// 28 Matrixes array for the bones D3DMATRIX
 	void*				SkinToWorldWorldToSkin;	// 2C D3DMATRIX
 	UInt32				Unk30;					// 30
+
+	NIRTTI_ADDRESS(0x11F5B2C);
 	
 	bool IsPartitionEnabled(UInt32 partitionIndex);
 	
@@ -1271,6 +1273,8 @@ public:
 	DismemberPartition* partitions;
 	UInt8  IsRenderable;  //In Load this is made in OR with every partition->Enabled flag
 	UInt8  pad[3];
+
+	NIRTTI_ADDRESS(0x11F49D8);
 };
 assert(sizeof(BSDismemberSkinInstance) == 0x40);
 

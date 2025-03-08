@@ -18,6 +18,7 @@ public:
 	virtual void RegisterConstants() {};
 
 	void DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData);
+	void DrawSkinnedGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData, NiSkinPartition::Partition* Partition);
 	void RenderAccum();
 };
 
