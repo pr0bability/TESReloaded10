@@ -158,7 +158,7 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 			ShadowMap->Forms.Statics = 1;
 			ShadowMap->Forms.Terrain = 1;
 			ShadowMap->Forms.Trees = 1;
-			ShadowMap->Forms.Lod = (shadowType < MapFar || quality < 2) ? 0 : 1;
+			ShadowMap->Forms.Lod = quality < 2 ? 0 : 1;
 			ShadowMap->Forms.MinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
 			ShadowMap->Forms.OrigMinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
 		};
