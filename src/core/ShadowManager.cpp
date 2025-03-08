@@ -90,7 +90,7 @@ NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::For
 	case TESForm::FormType::kFormType_NPC:
 	case TESForm::FormType::kFormType_Creature:
 	case TESForm::FormType::kFormType_LeveledCreature:
-		if (!Forms->Actors) return NULL;
+		if (!TheRenderManager->DXVK || !Forms->Actors) return NULL;  // D3D9 breaks on actors for some unknown reason
 		break;
 	case TESForm::FormType::kFormType_Stat:
 	case TESForm::FormType::kFormType_StaticCollection:
