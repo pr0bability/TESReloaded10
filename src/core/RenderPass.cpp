@@ -74,6 +74,25 @@ void RenderPass::DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoDa
 	Geo->geomData->m_usDirtyFlags = dirtyFlags;
 }
 
+void RenderPass::DrawSkinnedGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData, NiSkinPartition::Partition* Partition) {
+	int StartIndex = 0;
+	int PrimitiveCount = 0;
+
+	for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
+		TheRenderManager->device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
+	}
+
+	if (GeoData->IB)
+		TheRenderManager->device->SetIndices(GeoData->IB);
+
+	if (GeoData->FVF)
+		TheRenderManager->renderState->SetFVF(GeoData->FVF, false);
+	else
+		TheRenderManager->renderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
+
+	ThisStdCall(0xE6D310, NiDX9Renderer::GetSingleton(), GeoData, Partition, nullptr);  // DrawSkinnedGeometry
+}
+
 
 ShadowRenderPass::ShadowRenderPass() {
 	PixelShader = TheShadowManager->ShadowMapPixel;
@@ -169,12 +188,18 @@ SkinnedGeoShadowRenderPass::SkinnedGeoShadowRenderPass() {
 
 bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo) {
 	// check data for rigged geometry
-	if (Geo->skinInstance &&
-		Geo->skinInstance->SkinPartition &&
-		Geo->skinInstance->SkinPartition->Partitions) {
+	if (!Geo->skinInstance)
+		return false;
+
+	NiSkinInstance* skinInstance = Geo->skinInstance;
+	if (skinInstance->IsKindOf<BSDismemberSkinInstance>() && !((BSDismemberSkinInstance*)skinInstance)->IsRenderable)
+		return true;
+
+	if (Geo->skinInstance->SkinPartition && Geo->skinInstance->SkinPartition->Partitions) {
 
 		// only accum if valid data preset
-		if (Geo->skinInstance->SkinPartition->Partitions[0].BuffData) GeometryList.push(Geo);
+		//if (Geo->skinInstance->SkinPartition->Partitions[0].BuffData)
+			GeometryList.push(Geo);
 	
 		// we return true in any case because we still found skinned geo either way
 		return true;
@@ -217,28 +242,62 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 	}
 
 	NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
-	D3DPRIMITIVETYPE PrimitiveType = (SkinPartition->Partitions[0].Strips == 0) ? D3DPT_TRIANGLELIST : D3DPT_TRIANGLESTRIP;
 	TheRenderManager->CalculateBoneMatrixes(SkinInstance, &Geo->m_worldTransform);
 	
 	if (SkinInstance->SkinToWorldWorldToSkin) 
 		memcpy(&TheShaderManager->Effects.ShadowsExteriors->Constants.ShadowWorld, SkinInstance->SkinToWorldWorldToSkin, 0x40);
 
+	DismemberPartition* pDismemberPartition = NULL;
+	if (SkinInstance->IsKindOf<BSDismemberSkinInstance>())
+		pDismemberPartition = ((BSDismemberSkinInstance*)SkinInstance)->partitions;
+
 	for (UInt32 p = 0; p < SkinPartition->PartitionsCount; p++) {
-		if (!SkinInstance->IsPartitionEnabled(p)) continue;
+		if (pDismemberPartition && !pDismemberPartition[p].Enabled)
+			continue;
 
 		NiSkinPartition::Partition* Partition = &SkinPartition->Partitions[p];
-		GeoData = Partition->BuffData;
+		if (!Partition)
+			continue;
 
-		//Constants.BoneMatrices = (D3DXVECTOR4*)SkinInstance->BoneMatrixes;
-		int StartRegister = 9;
-		for (int i = 0; i < Partition->Bones; i++) {
-			UInt16 NewIndex = (Partition->pBones == NULL) ? i : Partition->pBones[i];
-			TheRenderManager->device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
-			StartRegister += 3;
+		GeoData = Partition->BuffData;
+		if (GeoData) {
+			//Constants.BoneMatrices = (D3DXVECTOR4*)SkinInstance->BoneMatrixes;
+			int StartRegister = 9;
+			for (int i = 0; i < Partition->Bones; i++) {
+				UInt16 NewIndex = (Partition->pBones == NULL) ? i : Partition->pBones[i];
+				TheRenderManager->device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
+				StartRegister += 3;
+			}
+
+			//TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
+			DrawSkinnedGeometryBuffer(Geo, GeoData, Partition);
 		}
 
-		TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
-		DrawGeometryBuffer(Geo, GeoData);
+		if (!pDismemberPartition)
+			continue;
+
+		for (UInt32 d = p + 1; d < SkinPartition->PartitionsCount; d++) {
+			if (pDismemberPartition[d + 1].StartCap)
+				break;
+
+			++p;
+			++Partition;
+			if (pDismemberPartition[p].Enabled) {
+				int StartRegister = 9;
+				GeoData = Partition->BuffData;
+				if (GeoData) {
+					for (int i = 0; i < Partition->Bones; i++) {
+						UInt16 NewIndex = (Partition->pBones == NULL) ? i : Partition->pBones[i];
+						TheRenderManager->device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
+						StartRegister += 3;
+					}
+
+
+					DrawSkinnedGeometryBuffer(Geo, GeoData, Partition);
+				}
+			}
+
+		}
 	}
 }
 
