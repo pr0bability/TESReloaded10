@@ -537,6 +537,29 @@ D3DXMATRIX ShadowManager::GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir) {
 	return View;
 }
 
+void ShadowManager::RecalculateBillboardVectors(D3DXVECTOR3* SunDir) {
+	D3DXVECTOR3 WorldUp = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+
+	// Calculate BillboardRight as perpendicular to SunDir and WorldUp
+	D3DXVECTOR3 BillboardRightVec;
+	D3DXVec3Cross(&BillboardRightVec, &WorldUp, SunDir);
+
+	// Handle case where sun is directly above/below
+	if (D3DXVec3LengthSq(&BillboardRightVec) < 0.0001f) {
+		BillboardRightVec = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+	}
+	D3DXVec3Normalize(&BillboardRightVec, &BillboardRightVec);
+
+	// Calculate BillboardUp perpendicular to both SunDir and BillboardRightVec
+	D3DXVECTOR3 BillboardUpVec;
+	D3DXVec3Cross(&BillboardUpVec, SunDir, &BillboardRightVec);
+	D3DXVec3Normalize(&BillboardUpVec, &BillboardUpVec);
+
+	// Set shader constants
+	BillboardRight = NiVector4(BillboardRightVec.x, BillboardRightVec.y, BillboardRightVec.z, 0.0f);
+	BillboardUp = NiVector4(BillboardUpVec.x, BillboardUpVec.y, BillboardUpVec.z, 0.0f);
+}
+
 /*
 * Renders the different shadow maps: Near, Far, Ortho.
 */
@@ -633,6 +656,9 @@ void ShadowManager::RenderShadowMaps() {
 		terrainLODPass->PixelShader = ShadowMapPixel;
 
 		if (ExteriorEnabled && SunDir.z > 0.0f) {
+			// Recalculate billboard vectors for speedtree leaves shader.
+			RecalculateBillboardVectors(&SunDir);
+
 			ShadowData->z = 0; // set shader constant to identify other shadow maps
 			auto shadowMapTimer = TimeLogger();
 
