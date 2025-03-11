@@ -48,4 +48,7 @@ public:
 	float					shadowMapsRenderTime;
 	bool					ShadowShadersLoaded;
 	int						FrameCounter;
+
+private:
+	void					RecalculateBillboardVectors(D3DXVECTOR3* SunDir);
 };

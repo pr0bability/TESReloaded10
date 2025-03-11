@@ -340,10 +340,7 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowConstants->Data.y = 0.0f; // Alpha control
 	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 
-	//Constants.BillboardRight = (D3DXVECTOR4*)&TheShadowManager->BillboardRight;
-	//Constants.BillboardUp = (D3DXVECTOR4*)&TheShadowManager->BillboardUp;
-
-	//// Bind constant values for leaf transformation
+	// Bind constant values for leaf transformation
 	Device->SetVertexShaderConstantF(63, (float*)&TheShadowManager->BillboardRight, 1);
 	Device->SetVertexShaderConstantF(64, (float*)&TheShadowManager->BillboardUp, 1);
 	Device->SetVertexShaderConstantF(65, Pointers::ShaderParams::RockParams, 1);
@@ -354,9 +351,7 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	BSTreeNode* Node = (BSTreeNode*)Geo->m_parent->m_parent;
 	NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
 
-	//Constants.LeafBase = (D3DXVECTOR4*)STProp->leafData->leafBase;
 	if (Texture) ShadowConstants->Data.y = 1.0f;
-	//Constants.DiffuseMap = Texture->dTexture;
 
 	// Bind constant values for leaf transformation
 	Device->SetVertexShaderConstantF(83, STProp->leafData->leafBase, 48);
