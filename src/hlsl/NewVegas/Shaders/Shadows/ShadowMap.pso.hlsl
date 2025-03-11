@@ -3,7 +3,6 @@ float4 TESR_ShadowData : register(c0);
 float4 TESR_ShadowFormatData : register(c1);
 
 sampler2D DiffuseMap : register(s0) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
-sampler2D LeafDiffuseMap : register(s1) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
 
 static const float FormatBits = TESR_ShadowFormatData.y;
 
@@ -38,7 +37,7 @@ PS_OUTPUT main(VS_OUTPUT IN) {
     PS_OUTPUT OUT;
 
 	if (TESR_ShadowData.y == 1.0f) { // Leaves (Speedtrees) or alpha is required
-		float4 diffuse = (TESR_ShadowData.x == 2.0f) ? tex2D(LeafDiffuseMap, IN.texcoord_1.xy) : tex2D(DiffuseMap, IN.texcoord_1.xy);
+		float4 diffuse = tex2D(DiffuseMap, IN.texcoord_1.xy);
         if (diffuse.a < 0.5f)
             discard;
     }
