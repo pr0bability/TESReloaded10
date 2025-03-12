@@ -50,6 +50,7 @@ public:
 		D3DXVECTOR4		ShadowCubeMapLightPosition;
 		D3DXVECTOR4		ShadowLightPosition[ShadowCubeMapsMax];
 		D3DXVECTOR4		ShadowMapRadius;
+		D3DXVECTOR4		ShadowBlur;
 	};
 
 	// Settings
@@ -169,7 +170,6 @@ public:
 	IDirect3DSurface9* ShadowAtlasDepthSurface;
 
 	IDirect3DVertexBuffer9* ShadowAtlasVertexBuffer;
-	float					ShadowAtlasCascadeTexelSize;
 
 	// Ortho shadows for various effects.
 	IDirect3DTexture9* ShadowMapOrthoTexture;
