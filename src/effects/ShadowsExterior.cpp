@@ -66,7 +66,7 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 		Settings.ShadowMaps.Mode = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Mode"), 0, Modes-1);
 		Settings.ShadowMaps.FormatBits = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Format"), 0, FormatBits-1);
 
-		Settings.ShadowMaps.Distance = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 0.001f, 1.0f);
+		Settings.ShadowMaps.Distance = max(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "Distance"), 100.0f);
 		Settings.ShadowMaps.CascadeLambda = std::clamp(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.ShadowMaps", "CascadeLambda"), 0.0f, 1.0f);
 		Settings.ShadowMaps.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "LimitFrequency");
 
@@ -172,26 +172,26 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 		case 0:
 			Settings.ShadowMaps.Mode = 0;
 			Settings.ShadowMaps.FormatBits = 0;
-			Settings.ShadowMaps.Distance = 0.01f;
+			Settings.ShadowMaps.Distance = 3000.0f;
 			Settings.ShadowMaps.CascadeResolution = 1024;
 			Settings.ShadowMaps.MSAA = 0;
 			break;
 		case 1:
 			Settings.ShadowMaps.Mode = 0;
 			Settings.ShadowMaps.FormatBits = 1;
-			Settings.ShadowMaps.Distance = 0.01f;
+			Settings.ShadowMaps.Distance = 3000.0f;
 			Settings.ShadowMaps.CascadeResolution = 1024;
 			break;
 		case 2:
 			Settings.ShadowMaps.Mode = 2;
 			Settings.ShadowMaps.FormatBits = 1;
-			Settings.ShadowMaps.Distance = 0.015f;
+			Settings.ShadowMaps.Distance = 4500.0f;
 			Settings.ShadowMaps.CascadeResolution = 2048;
 			break;
 		case 3:
 			Settings.ShadowMaps.Mode = 2;
 			Settings.ShadowMaps.FormatBits = 0;
-			Settings.ShadowMaps.Distance = 0.02f;
+			Settings.ShadowMaps.Distance = 6000.0f;
 			Settings.ShadowMaps.CascadeResolution = 2048;
 			break;
 		}
@@ -485,7 +485,7 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	float clipRange = farClip - nearClip;
 
 	float minZ = nearClip + 10.0f;
-	float maxZ = nearClip + Settings.ShadowMaps.Distance * clipRange;
+	float maxZ = min(nearClip + Settings.ShadowMaps.Distance, farClip);
 
 	float range = maxZ - minZ;
 	float ratio = maxZ / minZ;
