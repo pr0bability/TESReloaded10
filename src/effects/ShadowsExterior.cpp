@@ -285,6 +285,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_SmoothedSunDir", &Constants.SmoothedSunDir);
 	TheShaderManager->RegisterConstant("TESR_ShadowData", &Constants.Data);
 	TheShaderManager->RegisterConstant("TESR_ShadowFormatData", &Constants.FormatData);
+	TheShaderManager->RegisterConstant("TESR_ShadowBlur", &Constants.ShadowBlur);
 	TheShaderManager->RegisterConstant("TESR_ShadowScreenSpaceData", &Constants.ScreenSpaceData);
 	TheShaderManager->RegisterConstant("TESR_OrthoData", &Constants.OrthoData);
 	TheShaderManager->RegisterConstant("TESR_ShadowFade", &Constants.ShadowFade);
@@ -324,7 +325,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	}
 
 	TheShaderManager->CreateFrameVertex(ShadowAtlasSize, ShadowAtlasSize, &ShadowAtlasVertexBuffer);
-	ShadowAtlasCascadeTexelSize = 1.0f / (float)ShadowAtlasSize;
+	Constants.ShadowBlur.x = 1.0f / (float)ShadowAtlasSize;
 
 	// ortho texture
 	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
@@ -407,7 +408,7 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 		}
 
 		TheShaderManager->CreateFrameVertex(ShadowAtlasSize, ShadowAtlasSize, &ShadowAtlasVertexBuffer);
-		ShadowAtlasCascadeTexelSize = 1.0f / (float)ShadowAtlasSize;
+		Constants.ShadowBlur.x = 1.0f / (float)ShadowAtlasSize;
 
 		SunShadowsEffect* sunShadows = TheShaderManager->Effects.SunShadows;
 		ShaderTextureValue* Sampler;
@@ -513,6 +514,9 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 
 	// ortho distance render
 	ShadowMaps[MapOrtho].ShadowMapRadius = Settings.Exteriors.OrthoRadius;
+
+	// Reset blur constant for handling limited refresh rate.
+	Constants.ShadowBlur.y = 1.0f;
 }
 
 
