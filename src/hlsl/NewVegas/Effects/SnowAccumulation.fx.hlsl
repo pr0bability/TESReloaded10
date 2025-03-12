@@ -67,8 +67,7 @@ float GetOrtho(float4 worldPos){
 	float thickness = 0.002f; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
 	// get puddle mask from ortho map
-	float4 pos = mul(worldPos, TESR_WorldViewProjectionTransform);
-	float4 ortho_pos = mul(pos, TESR_ShadowCameraToLightTransformOrtho);
+	float4 ortho_pos = mul(worldPos, TESR_ShadowCameraToLightTransformOrtho);
 
 	// apply perspective (perspective division) and convert from -1/1 to range to 0/1 (shadowMap range);
 	ortho_pos.xyz /= ortho_pos.w;
@@ -142,29 +141,28 @@ float4 SnowCoverage( VSOUT IN ) : COLOR0
 	// compute at quarter scale
 	float2 uv = IN.UVCoord * 4;
 	if (uv.x > 1 || uv.y > 1) return white;
-
-	float3 world = toWorld(uv);
-	float depth = readDepth(uv);
+	
+    float depth;
+    float4 world = reconstructWorldPosition(uv, depth);
 
 	if (depth > TESR_OrthoData.x) return white; // early out for the sky pixels
 
 	float3 camera_vector = world * depth;
-	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
 
 	// sample an average ortho
-	float ortho = GetOrtho(worldPos);
-	ortho += GetOrtho(worldPos + float4(-1, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(1, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, -1, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, 1, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(-0.7, -0.7, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(-0.7, 0.7, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0.7, -0.7, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0.7, 0.7, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(-0.3, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0.3, 0, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, -0.3, 0, 0) * orthoRadius);
-	ortho += GetOrtho(worldPos + float4(0, 0.3, 0, 0) * orthoRadius);
+    float ortho = GetOrtho(world);
+    ortho += GetOrtho(world + float4(-1, 0, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(1, 0, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0, -1, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0, 1, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(-0.7, -0.7, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(-0.7, 0.7, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0.7, -0.7, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0.7, 0.7, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(-0.3, 0, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0.3, 0, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0, -0.3, 0, 0) * orthoRadius);
+    ortho += GetOrtho(world + float4(0, 0.3, 0, 0) * orthoRadius);
 	ortho /= 13;
 
 	ortho = smoothstep(0.1, 0.9, ortho); // reduce glitches by removing outlier values 
