@@ -677,7 +677,7 @@ Prefilter = true					 # Enable prefiltering the shadow maps. Prefiltering is a b
 MSAA = true							 # Enable multisample antialiasing for shadow maps.
 Mipmaps = false						 # DISABLED. Enable mipmaps for the shadow maps.
 Anisotropy = 0						 # DISABLED. Anisotropic filteric for mipmaps, 0: disabled, 1: 8x, 2: 16x.
-Distance = 0.02                      # [0.001-1.000] Distance to render shadows for, a fraction of the full depth range. Keep low.
+Distance = 6000                      # Distance to render shadows for. The unit is the same as the game uses for i.e. fog values. 
 CascadeLambda = 0.9					 # [0.0-1.0] Controls how cascades are split, higher value means nearer cascades get higher resolution.
 LimitFrequency = false				 # Limit the update frequency of the furthest cascade (once per two frames).
 
