@@ -684,6 +684,8 @@ void ShadowManager::RenderShadowMaps() {
 					D3DXMatrixTranslation(&translationMatrix, difference.x, difference.y, difference.z);
 					ShadowMap->ShadowCameraToLight = translationMatrix * ShadowMap->ShadowCameraToLight;
 					ShadowMap->CameraTranslation = newCameraTranslation;
+					
+					Shadows->Constants.ShadowBlur.y = Shadows->ShadowAtlasSurfaceMSAA ? 1.0f : 0.0f; // Disable blur for last cascade if MSAA is off.
 				}
 
 				std::string message = "ShadowManager::RenderShadowMap ";
@@ -815,8 +817,7 @@ void ShadowManager::BlurShadowAtlas() {
 	Device->SetRenderTarget(0, TargetShadowMap);
 	
 	// Pass map resolution to shader as a constant
-	D3DXVECTOR4 inverseRes = { Shadows->ShadowAtlasCascadeTexelSize, Shadows->ShadowAtlasCascadeTexelSize, 0.0f, 0.0f };
-	ShadowMapBlurPixel->SetShaderConstantF(0, &inverseRes, 1);
+	ShadowMapBlurPixel->SetShaderConstantF(0, &Shadows->Constants.ShadowBlur, 1);
 	RenderState->SetTexture(0, SourceShadowMap);
 
 	// blur in two passes, vertically and horizontally

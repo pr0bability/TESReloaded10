@@ -1,5 +1,6 @@
-float4 TESR_ReciprocalResolution  : register(c0);
+float4 TESR_ShadowBlur : register(c0);  // .x reciprocal resolution of shadow atlas, .y whether last cascade was updated
 float4 BlurDirection  : register(c1);
+
 sampler2D SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 struct VSOUT
@@ -12,7 +13,7 @@ float4 Blur3(float2 uv, float2 upperLeft, float2 lowerRight) {
     float weights[1] = { 0.5f };
     float offsets[1] = { 0.6f };
     
-    float2 offset = BlurDirection * offsets[0] * TESR_ReciprocalResolution.x;
+    float2 offset = BlurDirection * offsets[0] * TESR_ShadowBlur.x;
 
     float2 offsetUV = clamp(uv.xy + offset, upperLeft, lowerRight);
     float4 color = tex2Dlod(SourceBuffer, float4(offsetUV, 0.0f, 0.0f)) * weights[0];
@@ -31,7 +32,7 @@ float4 Blur5(float2 uv, float2 upperLeft, float2 lowerRight) {
     
     float2 offset, offsetUV;
     for (int i = 1; i < 2; i++) {
-        offset = BlurDirection * offsets[i] * TESR_ReciprocalResolution.x;
+        offset = BlurDirection * offsets[i] * TESR_ShadowBlur.x;
         
         offsetUV = clamp(uv.xy + offset, upperLeft, lowerRight);
         color += tex2Dlod(SourceBuffer, float4(offsetUV, 0.0f, 0.0f)) * weights[i];
@@ -52,7 +53,7 @@ float4 Blur9(float2 uv, float2 upperLeft, float2 lowerRight) {
     
     float2 offset, offsetUV;
     for (int i = 1; i < 3; i++) {
-        offset = BlurDirection * offsets[i] * TESR_ReciprocalResolution.x;
+        offset = BlurDirection * offsets[i] * TESR_ShadowBlur.x;
         
         offsetUV = clamp(uv.xy + offset, upperLeft, lowerRight);
         color += tex2Dlod(SourceBuffer, float4(offsetUV, 0.0f, 0.0f)) * weights[i];
@@ -83,6 +84,9 @@ float4 main(VSOUT IN) : COLOR0 {
         return Blur5(uv, float2(0.5f, 0.0f), float2(1.0f, 0.5f)); // Second cascade.
     else if (uv.x < 0.5)
         return Blur5(uv, float2(0.0f, 0.5f), float2(0.5f, 1.0f)); // Third cascade.
-    else
+    else if (TESR_ShadowBlur.y)
         return Blur5(uv, float2(0.5f, 0.5f), float2(1.0f, 1.0f)); // Furthest cascade.
+    else
+        return tex2Dlod(SourceBuffer, float4(uv.xy, 0.0f, 0.0f)); // Furthest cascade was not updated, leave it be.
+
 }
