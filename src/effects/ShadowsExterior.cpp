@@ -259,7 +259,6 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
 	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
 	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
-	Settings.Exteriors.ShadowMode = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowMode");
 	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
 	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
@@ -598,7 +597,7 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	float zFar = ShadowMap->ShadowMapRadius;
 
 	// Calculate the frustum corners in world space (from a unit cube in projective space).
-	D3DXMATRIX invViewProj = TheRenderManager->InvViewProjMatrix;
+	D3DXMATRIX* invViewProj = &TheRenderManager->InvViewProjMatrix;
 
 	float ndcNear = 1.0f ? TheRenderManager->IsReversedDepth() : 0.0f;
 	float ndcFar = 1.0f - ndcNear;
@@ -613,7 +612,7 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 		D3DXVECTOR3(-1.0f, -1.0f, ndcFar),
 	};
 	for (auto i = 0; i < 8; ++i) {
-		D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], &invViewProj);
+		D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], invViewProj);
 	}
 
 	// Get the corners of the current cascade slice of the view frustum.
@@ -646,6 +645,13 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 		sphereRadius = max(sphereRadius, dist);
 	}
 	sphereRadius = std::ceil(sphereRadius * 16.0f) / 16.0f;
+
+	// Modify sphere radius to compensate for lower than default FOV (aiming, zooming, ...).
+	float defaultWorldFOV = *(float*)(0x120315C + 4);
+	float currentWorldFOV = WorldSceneGraph->cameraFOV;
+	float radiusFOVCompensation = tan(defaultWorldFOV * 0.5f * (3.1416f / 180.0f)) / tan(currentWorldFOV * 0.5f * (3.1416f / 180.0f));
+	sphereRadius *= radiusFOVCompensation;
+
 	maxExtents = D3DXVECTOR3(sphereRadius, sphereRadius, sphereRadius);
 	minExtents = -maxExtents;
 	
