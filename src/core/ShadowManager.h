@@ -4,7 +4,7 @@
 class ShadowManager { // Never disposed
 public:
 	static void Initialize();
-    
+	
 	enum ShadowMapTypeEnum {
 		MapNear = 0,
 		MapMiddle = 1,
@@ -17,14 +17,15 @@ public:
 	NiNode*					GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
 	void					AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand, bool isLOD, NiFrustumPlanes* arPlanes = nullptr);
 	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLODLand);
-	void					RenderAccums(D3DVIEWPORT9* Viewport);
+	void					RenderAccums();
 	D3DXMATRIX				GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir);
 	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DXMATRIX* ViewProj);
 	void					AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex);
 	void					RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
-    void                    BlurShadowAtlas();
+	void					ClearShadowCascade(D3DVIEWPORT9* ViewPort, D3DXVECTOR4* ClearColor);
+	void                    BlurShadowAtlas();
 
 	ShadowRenderPass*				geometryPass;
 	AlphaShadowRenderPass*			alphaPass;
@@ -38,8 +39,9 @@ public:
 	ShaderRecordPixel*		ShadowMapPixel;
 	ShaderRecordVertex*		ShadowCubeMapVertex;
 	ShaderRecordPixel*		ShadowCubeMapPixel;
-    ShaderRecordVertex*		ShadowMapBlurVertex;
+	ShaderRecordVertex*		ShadowMapBlurVertex;
 	ShaderRecordPixel*		ShadowMapBlurPixel;
+	ShaderRecordPixel*		ShadowMapClearPixel;
 	D3DVIEWPORT9			ShadowCubeMapViewPort;
 	ShaderRecordVertex*		CurrentVertex;
 	ShaderRecordPixel*		CurrentPixel;

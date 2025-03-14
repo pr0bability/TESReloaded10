@@ -24,6 +24,8 @@ void ShadowManager::Initialize() {
     TheShadowManager->ShadowMapBlurVertex = (ShaderRecordVertex*) ShaderRecord::LoadShader("ShadowMapBlur.vso", "Shadows\\");
     TheShadowManager->ShadowMapBlurPixel = (ShaderRecordPixel*) ShaderRecord::LoadShader("ShadowMapBlur.pso", "Shadows\\");
 
+	TheShadowManager->ShadowMapClearPixel = (ShaderRecordPixel*) ShaderRecord::LoadShader("ShadowMapClear.pso", "Shadows\\");
+
 	// Make sure samplers are not reset on SetCT as that causes errors.
 	TheShadowManager->ShadowMapVertex->ClearSamplers = false;
 	TheShadowManager->ShadowMapPixel->ClearSamplers = false;
@@ -31,6 +33,7 @@ void ShadowManager::Initialize() {
 	TheShadowManager->ShadowCubeMapPixel->ClearSamplers = false;
 	TheShadowManager->ShadowMapBlurVertex->ClearSamplers = false;
 	TheShadowManager->ShadowMapBlurPixel->ClearSamplers = false;
+	TheShadowManager->ShadowMapClearPixel->ClearSamplers = false;
 
 	TheShadowManager->ShadowShadersLoaded = true;
     if (TheShadowManager->ShadowMapVertex == nullptr || TheShadowManager->ShadowMapPixel == nullptr  || TheShadowManager->ShadowMapBlurVertex  == nullptr
@@ -195,27 +198,19 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 }
 
 // Go through accumulations and render found objects
-void ShadowManager::RenderAccums(D3DVIEWPORT9* ViewPort) {
-	IDirect3DDevice9* Device = TheRenderManager->device;
-
-	Device->SetViewport(ViewPort);
-
-	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
-
-	Device->BeginScene();
-	
+void ShadowManager::RenderAccums() {
 	geometryPass->RenderAccum();
 	terrainLODPass->RenderAccum();
 	alphaPass->RenderAccum();
 	skinnedGeoPass->RenderAccum();
 	speedTreePass->RenderAccum();
-
-	Device->EndScene();
 }
 
 
 void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DXMATRIX* ViewProj) {
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+
+	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 
 	ShadowMap->ShadowCameraToLight = (*ViewProj);
@@ -245,7 +240,13 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 		AccumExteriorCell(Player->parentCell, ShadowMap);
 	}
 
-	RenderAccums(&ShadowMap->ShadowMapViewPort);
+	Device->SetViewport(&ShadowMap->ShadowMapViewPort);
+	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
+	if (ShadowMap->CustomClearRequired)
+		ClearShadowCascade(&ShadowMap->ShadowMapViewPort, &ShadowMap->ClearColor);
+
+	RenderAccums();
 }
 
 
@@ -340,7 +341,10 @@ void ShadowManager::RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightInde
 	Device->SetRenderTarget(0, Shadows->Textures.ShadowSpotlightSurface[LightIndex]);
 	Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
-	RenderAccums(&ShadowCubeMapViewPort);
+	Device->SetViewport(&ShadowCubeMapViewPort);
+	Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
+	RenderAccums();
 }
 
 
@@ -471,7 +475,10 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		Device->SetRenderTarget(0, Shadows->Textures.ShadowCubeMapSurface[LightIndex][Face]);
 		Device->SetDepthStencilSurface(Shadows->Textures.ShadowCubeMapDepthSurface);
 
-		RenderAccums(&ShadowCubeMapViewPort);
+		Device->SetViewport(&ShadowCubeMapViewPort);
+		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
+
+		RenderAccums();
 	}
 }
 
@@ -635,6 +642,7 @@ void ShadowManager::RenderShadowMaps() {
 	At.z = PlayerNode->m_worldTransform.pos.z - TheRenderManager->CameraPosition.z;
 
 	// Render all shadow maps
+	Device->BeginScene();
 
 	// Quantize sun direction angle to reduce shimmer by a large factor.
 	D3DXVECTOR3 SunDir = Shadows->CalculateSmoothedSunDir();
@@ -692,16 +700,16 @@ void ShadowManager::RenderShadowMaps() {
 				message += std::to_string(i);
 				shadowMapTimer.LogTime(message.c_str());
 			}
+
+			// Resolve MSAA.
+			if (Shadows->ShadowAtlasSurfaceMSAA)
+				Device->StretchRect(Shadows->ShadowAtlasSurfaceMSAA, NULL, Shadows->ShadowAtlasSurface, NULL, D3DTEXF_LINEAR);
+
+			if (Shadows->Settings.ShadowMaps.Prefilter) BlurShadowAtlas();
+
+			if (Shadows->Settings.ShadowMaps.Mipmaps)
+				Shadows->ShadowAtlasTexture->GenerateMipSubLevels();
 		}
-
-		// Resolve MSAA.
-		if (Shadows->ShadowAtlasSurfaceMSAA)
-			Device->StretchRect(Shadows->ShadowAtlasSurfaceMSAA, NULL, Shadows->ShadowAtlasSurface, NULL, D3DTEXF_LINEAR);
-
-		if (Shadows->Settings.ShadowMaps.Prefilter) BlurShadowAtlas();
-
-		if (Shadows->Settings.ShadowMaps.Mipmaps)
-			Shadows->ShadowAtlasTexture->GenerateMipSubLevels();
 
 		// render ortho map if one of the effects using ortho is active
 		if (TheShaderManager->orthoRequired) {
@@ -709,7 +717,6 @@ void ShadowManager::RenderShadowMaps() {
 
 			Device->SetRenderTarget(0, Shadows->ShadowMapOrthoSurface);
 			Device->SetDepthStencilSurface(Shadows->ShadowMapOrthoDepthSurface);
-			Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
 			ShadowData->z = 1; // identify ortho map in shader constant
 			D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
@@ -721,7 +728,6 @@ void ShadowManager::RenderShadowMaps() {
 	
 			shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
 		}
-
 	}
 
 	// Render shadow maps for point lights
@@ -791,8 +797,48 @@ void ShadowManager::RenderShadowMaps() {
 		}
 	}
 
+	Device->EndScene();
+
 	FrameCounter = (FrameCounter + 1) % 4;
 	shadowMapsRenderTime = timer.LogTime("ShadowManager::RenderShadowMaps");
+}
+
+
+/*
+ * Clear a part of the shadow map atlas based on the shadow mapping mode.
+ * 
+ * Note: Render target, view port should be set beforehand. Scene has to be already being rendered.
+ */
+void ShadowManager::ClearShadowCascade(D3DVIEWPORT9* ViewPort, D3DXVECTOR4* ClearColor) {
+	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+
+	IDirect3DDevice9* Device = TheRenderManager->device;
+	NiDX9RenderState* RenderState = TheRenderManager->renderState;
+	IDirect3DSurface9* TargetShadowMap = Shadows->ShadowAtlasSurface;
+
+	Device->SetDepthStencilSurface(NULL);
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_FALSE, RenderStateArgs);
+	RenderState->SetPixelShader(ShadowMapClearPixel->ShaderHandle, false);
+
+	Device->SetPixelShaderConstantF(0, (const float*) ClearColor, 1);
+
+	// Draw a full-screen quad (inside the viewport)
+	struct VERTEX { float x, y, z, rhw; };
+	VERTEX vertices[] = {
+		{ (float)ViewPort->X - 0.5f, (float)ViewPort->Y - 0.5f, 0.5f, 1.0f },
+		{ (float)(ViewPort->X + ViewPort->Width) - 0.5f, (float)ViewPort->Y - 0.5f, 0.5f, 1.0f },
+		{ (float)ViewPort->X - 0.5f, (float)(ViewPort->Y + ViewPort->Height) - 0.5f, 0.5f, 1.0f },
+		{ (float)(ViewPort->X + ViewPort->Width) - 0.5f, (float)(ViewPort->Y + ViewPort->Height) - 0.5f, 0.5f, 1.0f }
+	};
+
+	RenderState->SetFVF(D3DFVF_XYZRHW, false);
+
+	Device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(VERTEX));
+
+	Device->SetDepthStencilSurface(Shadows->ShadowAtlasDepthSurface);
+	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
 }
 
 
@@ -830,9 +876,7 @@ void ShadowManager::BlurShadowAtlas() {
 		// set blur direction shader constants
 		ShadowMapBlurPixel->SetShaderConstantF(1, &Blur[i], 1);
 
-		Device->BeginScene();
 		Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2); // draw call to execute the shader
-		Device->EndScene();
 	}
 
 	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);

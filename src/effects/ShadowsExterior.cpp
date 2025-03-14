@@ -199,6 +199,32 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 	
 	Settings.ShadowMaps.Format = Formats[Settings.ShadowMaps.Mode][Settings.ShadowMaps.FormatBits];
 
+	// Set clear color for clearing the cascades.
+	float pos = exp(Settings.ShadowMaps.FormatBits ? 40.0f : 5.54f);
+	float neg = -exp(-5.0f);
+
+	for (int shadowType = 0; shadowType <= MapLod; shadowType++) {
+		ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
+		ShadowMap->CustomClearRequired = false;
+
+		switch (Settings.ShadowMaps.Mode) {
+		case 0:
+			ShadowMap->ClearColor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
+			break;
+		case 1:
+			ShadowMap->ClearColor = D3DXVECTOR4(pos, neg, 0.0f, 1.0f);
+			ShadowMap->CustomClearRequired = true;
+			break;
+		case 2:
+			ShadowMap->ClearColor = D3DXVECTOR4(pos, neg, pos * pos, neg * neg);
+			ShadowMap->CustomClearRequired = true;
+			break;
+		default:
+			ShadowMap->ClearColor = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+		}
+	}
+	ShadowMaps[MapOrtho].CustomClearRequired = false;
+
 	if (oldFormat != Settings.ShadowMaps.Format)
 		cascadeSettingsChanged = true;
 
@@ -291,7 +317,6 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowFade", &Constants.ShadowFade);
 	TheShaderManager->RegisterConstant("TESR_ShadowRadius", &Constants.ShadowMapRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&Constants.ShadowViewProj);
-	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransform", (D3DXVECTOR4*)&Constants.ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowNearCenter", &ShadowMaps[MapNear].ShadowMapCascadeCenterRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformNear", (D3DXVECTOR4*)&ShadowMaps[MapNear].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowMiddleCenter", &ShadowMaps[MapMiddle].ShadowMapCascadeCenterRadius);
