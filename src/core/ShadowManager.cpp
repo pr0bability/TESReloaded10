@@ -634,7 +634,6 @@ void ShadowManager::RenderShadowMaps() {
 	FlagPlayerGeometry();
 
 	// Render directional shadows for Sun/Moon
-	ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
 	NiNode* PlayerNode = Player->GetNode();
 	D3DXVECTOR3 At;
 	At.x = PlayerNode->m_worldTransform.pos.x - TheRenderManager->CameraPosition.x;

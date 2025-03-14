@@ -94,22 +94,21 @@ public:
 		bool                Prefilter;
 		bool				MSAA;
 		bool				Mipmaps;
+		bool				LimitFrequency;
 		int					Anisotropy;
 		float				Distance;
 		float				CascadeLambda;
-		bool				LimitFrequency;
 	};
 
 	struct ExteriorsStruct {
 		bool				Enabled;
+		bool				UsePointShadowsDay;
+		bool				UsePointShadowsNight;
 		int					Quality;
 		int					OrthoMapResolution;
 		float				OrthoRadius;
 		float				Darkness;
 		float				NightMinDarkness;
-		UInt8               ShadowMode;
-		bool				UsePointShadowsDay;
-		bool				UsePointShadowsNight;
 	};
 
 	struct InteriorsStruct {
@@ -176,7 +175,7 @@ public:
 	IDirect3DTexture9* ShadowMapOrthoTexture;
 	IDirect3DSurface9* ShadowMapOrthoSurface;
 	IDirect3DSurface9* ShadowMapOrthoDepthSurface;
-	
+
 	void		clearShadowsBuffer();
 	void		UpdateConstants();
 	void		UpdateSettings();
