@@ -45,7 +45,6 @@ public:
 		D3DXVECTOR4		ShadowFade;
 		D3DXMATRIXA16	ShadowWorld;
 		D3DXMATRIX		ShadowViewProj;
-		D3DXMATRIX		ShadowCameraToLight[4];
 		D3DXMATRIX		ShadowSpotlightCameraToLight[SpotLightsMax];
 		D3DXVECTOR4		ShadowCubeMapLightPosition;
 		D3DXVECTOR4		ShadowLightPosition[ShadowCubeMapsMax];
@@ -79,10 +78,12 @@ public:
 		NiFrustumPlanes			ShadowMapFrustumPlanes;
 		D3DXVECTOR4				ShadowMapCascadeCenterRadius;
 		D3DXVECTOR3				CameraTranslation;  // Camera translation at the moment the shadow matrix was calculated.
+		D3DXVECTOR4				ClearColor;
 		FormsStruct				Forms;
 		float					ShadowMapInverseResolution;
 		float					ShadowMapRadius;
 		float					ShadowMapNear;
+		bool					CustomClearRequired;
 	};
 
 	struct ShadowMapStruct {
