@@ -28,6 +28,20 @@ EffectRecord::~EffectRecord() {
 }
 
 /*
+ * Unbinds all textures for samplers.
+ * Useful when recreating textures on the fly.
+ */
+void EffectRecord::ClearSampler(const char* TextureName, size_t Length) {
+	ShaderTextureValue* Sampler;
+	for (UInt32 c = 0; c < TextureShaderValuesCount; c++) {
+		Sampler = &TextureShaderValues[c];
+		if (!memcmp(Sampler->Name, TextureName, Length) && Sampler->Texture->Texture) {
+			Sampler->Texture->Texture = nullptr;
+		}
+	}
+}
+
+/*
  * Unload effects, allowing it to be reloaded from  a blank state.
  */
 void EffectRecord::DisposeEffect() {

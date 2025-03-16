@@ -80,6 +80,7 @@ public:
 		D3DXVECTOR3				CameraTranslation;  // Camera translation at the moment the shadow matrix was calculated.
 		D3DXVECTOR4				ClearColor;
 		FormsStruct				Forms;
+		float					ShadowMapResolution;
 		float					ShadowMapInverseResolution;
 		float					ShadowMapRadius;
 		float					ShadowMapNear;
@@ -100,13 +101,16 @@ public:
 		float				CascadeLambda;
 	};
 
+	struct OrthoStruct {
+		int					Resolution;
+		float				Distance;
+	};
+
 	struct ExteriorsStruct {
 		bool				Enabled;
 		bool				UsePointShadowsDay;
 		bool				UsePointShadowsNight;
 		int					Quality;
-		int					OrthoMapResolution;
-		float				OrthoRadius;
 		float				Darkness;
 		float				NightMinDarkness;
 	};
@@ -143,6 +147,7 @@ public:
 
 	struct SettingsShadowStruct {
 		ShadowMapStruct     ShadowMaps;
+		OrthoStruct			OrthoMap;
 		ScreenSpaceStruct	ScreenSpace;
 		ExteriorsStruct		Exteriors;
 		InteriorsStruct		Interiors;
@@ -186,7 +191,6 @@ public:
 	D3DXVECTOR3	CalculateSmoothedSunDir();
 
 	void		GetCascadeDepths();
-	D3DXMATRIX	GetOrthoViewProj(D3DXMATRIX View);
 	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir);
 
 private:
