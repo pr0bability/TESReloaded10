@@ -74,19 +74,17 @@ float4 Rain( VSOUT IN ) : COLOR0
 	int iterations = RainLayers;
 
 	// calculating the ray along which the  volumetric rain will be calculated
-	float3 world = toWorld(IN.UVCoord);
-	float4 rayStart = float4(TESR_CameraPosition.xyz + world, 1.0f);
-	float4 rayStartPos = mul(rayStart, TESR_WorldViewProjectionTransform);
-	float4 orthoStart = mul(rayStartPos, TESR_ShadowCameraToLightTransformOrtho);	
-	float3 camera_vectorS = world * (DEPTH * iterations);
-	float4 rayEnd = float4(TESR_CameraPosition.xyz + camera_vectorS, 1.0f);
-	float4 rayEndPos = mul(rayEnd, TESR_WorldViewProjectionTransform);
-	float4 orthoEnd = mul(rayEndPos, TESR_ShadowCameraToLightTransformOrtho);
-	float4 step = (orthoEnd - orthoStart) / iterations;
+	
+    float depth;
+    float4 rayStart = reconstructWorldPosition(IN.UVCoord, depth);
+    float4 rayEnd = rayStart * DEPTH * iterations;
+    float4 orthoStart = mul(rayStart, TESR_ShadowCameraToLightTransformOrtho);
+    float4 orthoEnd = mul(rayEnd, TESR_ShadowCameraToLightTransformOrtho);
+    float4 step = (orthoEnd - orthoStart) / iterations;
 	
 	// each iteration adds a cylindrical layer of drops 
-	float2 uv = cylindrical(world); // converts world coordinates to cylinder coordinates around the player
-	float depth = readDepth(IN.UVCoord);
+	float2 uv = cylindrical(rayStart.xyz); // converts world coordinates to cylinder coordinates around the player
+
 	float totalRain = 0.0f;
 
 	[unroll]
@@ -113,7 +111,7 @@ float4 Rain( VSOUT IN ) : COLOR0
 
 	// a rain tint color that scales with the sun direction
 	float4 sunColor = linearize(TESR_SunColor);
-	float4 rainColor = lerp(float(0.5).xxxx, sunColor * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
+	float4 rainColor = lerp(float(0.5).xxxx, sunColor * 2, pow(shades(normalize(rayStart.xyz), TESR_SunDirection.xyz), 2));
 
 	// sample the bloom buffer and the source buffer with refracted UV to shade the rain with
 	float2 refractedUV = IN.UVCoord + float2(totalRain * TESR_RainAspect.x, -totalRain * TESR_RainAspect.x);
