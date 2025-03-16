@@ -72,19 +72,16 @@ float4 Snow( VSOUT IN ) : COLOR0
     color.rgb = pows(color.rgb, 2.2); // linearise
 
 	// calculating the ray along which the volumetric snow will be calculated
-	float3 world = toWorld(IN.UVCoord);
-	float4 rayStart = float4(TESR_CameraPosition.xyz + world, 1.0f);
-	float4 rayStartPos = mul(rayStart, TESR_WorldViewProjectionTransform);
-	float4 orthoStart = mul(rayStartPos, TESR_ShadowCameraToLightTransformOrtho);	
-	float3 camera_vectorS = world * (DEPTH * SnowLayers);
-	float4 rayEnd = float4(TESR_CameraPosition.xyz + camera_vectorS, 1.0f);
-	float4 rayEndPos = mul(rayEnd, TESR_WorldViewProjectionTransform);
-	float4 orthoEnd = mul(rayEndPos, TESR_ShadowCameraToLightTransformOrtho);
+    float depth;
+	float4 rayStart = reconstructWorldPosition(IN.UVCoord, depth);
+    float4 rayEnd = rayStart * DEPTH * SnowLayers;
+	float4 orthoStart = mul(rayStart, TESR_ShadowCameraToLightTransformOrtho);	
+	float4 orthoEnd = mul(rayEnd, TESR_ShadowCameraToLightTransformOrtho);
 	float4 step = (orthoEnd - orthoStart) / SnowLayers;
 	
 	// each iteration adds a cylindrical layer of drops 
-	float2 uv = cylindrical(world); // converts world coordinates to cylinder coordinates around the player
-	float depth = readDepth(IN.UVCoord);
+	float2 uv = cylindrical(rayStart.xyz); // converts world coordinates to cylinder coordinates around the player
+
 	float totalSnow = 0.0f;
 
 	[unroll]
