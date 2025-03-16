@@ -142,15 +142,24 @@ float4 WetMap (VSOUT IN ) : COLOR0
 {
 	// sample the ortho map and detect pockets by sampling around the center and comparing depth
 	float2 uv = IN.UVCoord;
+	
+    float depth;
+    float4 world = reconstructWorldPosition(uv, depth);
+	
+    if (depth > TESR_OrthoData.x)
+        return float4(0.0f, 0.0f, 0.0f, 1.0f);
+	
+    float4 ortho_pos = ScreenCoordToTexCoord(mul(world, TESR_ShadowCameraToLightTransformOrtho), 1.0f);
+	
 	//float4 color = tex2D(TESR_SourceBuffer, uv);
 	float bias = 0.000001;
 
 	float radius = 50 * TESR_WetWorldData.z;// radius will increase with rain status
-	float center = tex2D(TESR_OrthoMapBuffer, IN.UVCoord).r - bias;
-	float left = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(0, -1) * TESR_ReciprocalResolution.xy * radius).r;
-	float right = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(0, 1) * TESR_ReciprocalResolution.xy * radius).r;
-	float top = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(-1, 0) * TESR_ReciprocalResolution.xy * radius).r;
-	float bottom = tex2D(TESR_OrthoMapBuffer, IN.UVCoord + float2(1, 0) * TESR_ReciprocalResolution.xy * radius).r;
+	float center = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r - bias;
+    float left = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy + float2(0, -1) * TESR_OrthoData.y * radius).r;
+    float right = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy + float2(0, 1) * TESR_OrthoData.y * radius).r;
+    float top = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy + float2(-1, 0) * TESR_OrthoData.y * radius).r;
+    float bottom = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy + float2(1, 0) * TESR_OrthoData.y * radius).r;
 
 	float crease = (center > left && center > right && center > top && center > bottom);
 
@@ -200,8 +209,7 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
 	// get puddle mask from ortho map
-	float4 pos = mul(worldPos, TESR_WorldViewProjectionTransform);
-	float4 ortho_pos = mul(pos, TESR_ShadowCameraToLightTransformOrtho);
+	float4 ortho_pos = mul(worldPos, TESR_ShadowCameraToLightTransformOrtho);
 	ortho_pos.xy = ScreenCoordToTexCoord(ortho_pos, 1).xy;
 	float puddles = tex2D(TESR_RenderedBuffer, ortho_pos.xy).r; // puddles, ortho height
 	float ortho = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r; // puddles, ortho height
