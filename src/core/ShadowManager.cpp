@@ -523,27 +523,6 @@ static void FlagPlayerGeometry() {
 	}
 }
 
-
-D3DXMATRIX ShadowManager::GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir) {
-	D3DXVECTOR3 Up = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	float FarPlane = ShadowMapFarPlane;
-
-	// calculating the projection matrix for point of view of the light
-	D3DXVECTOR3 Eye;
-	Eye.x = At->x - FarPlane * Dir->x * -1;
-	Eye.y = At->y - FarPlane * Dir->y * -1;
-	Eye.z = At->z - FarPlane * Dir->z * -1;
-
-	D3DXMATRIX View;
-	D3DXMatrixLookAtRH(&View, &Eye, At, &Up);
-
-	// save Billboard values for speedtree leafs rendering
-	BillboardRight = { View._11, View._21, View._31, 0.0f };
-	BillboardUp = { View._12, View._22, View._32, 0.0f };
-
-	return View;
-}
-
 void ShadowManager::RecalculateBillboardVectors(D3DXVECTOR3* SunDir) {
 	D3DXVECTOR3 WorldUp = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
 
@@ -714,16 +693,17 @@ void ShadowManager::RenderShadowMaps() {
 		if (TheShaderManager->orthoRequired) {
 			auto shadowMapTimer = TimeLogger();
 
+			ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[MapOrtho];
+
 			Device->SetRenderTarget(0, Shadows->ShadowMapOrthoSurface);
 			Device->SetDepthStencilSurface(Shadows->ShadowMapOrthoDepthSurface);
 
 			ShadowData->z = 1; // identify ortho map in shader constant
-			D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 1.0f);
-			D3DMATRIX View = GetViewMatrix(&At, &OrthoDir);
-			Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(View);
+			D3DXVECTOR3 OrthoDir = D3DXVECTOR3(0.05f, 0.05f, 1.0f);
+			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &OrthoDir);
 
-			RenderShadowMap(&Shadows->ShadowMaps[MapOrtho], &Shadows->Constants.ShadowViewProj);
-			OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
+			RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+			OrthoData->x = Shadows->Settings.OrthoMap.Distance * 2;
 	
 			shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
 		}

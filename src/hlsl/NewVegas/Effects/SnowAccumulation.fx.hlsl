@@ -64,7 +64,7 @@ VSOUT FrameVS(VSIN IN)
 
 
 float GetOrtho(float4 worldPos){
-	float thickness = 0.002f; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
+    float thickness = 0.002f; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
 	// get puddle mask from ortho map
 	float4 ortho_pos = mul(worldPos, TESR_ShadowCameraToLightTransformOrtho);
@@ -139,15 +139,13 @@ float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal)
 float4 SnowCoverage( VSOUT IN ) : COLOR0
 {
 	// compute at quarter scale
-	float2 uv = IN.UVCoord * 4;
+    float2 uv = IN.UVCoord * 4;
 	if (uv.x > 1 || uv.y > 1) return white;
 	
     float depth;
     float4 world = reconstructWorldPosition(uv, depth);
 
 	if (depth > TESR_OrthoData.x) return white; // early out for the sky pixels
-
-	float3 camera_vector = world * depth;
 
 	// sample an average ortho
     float ortho = GetOrtho(world);
@@ -166,7 +164,7 @@ float4 SnowCoverage( VSOUT IN ) : COLOR0
 	ortho /= 13;
 
 	ortho = smoothstep(0.1, 0.9, ortho); // reduce glitches by removing outlier values 
-	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
+    ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, depth)); // fade out ortho with distance
 
 
 	return float4(ortho.xxx, 1);

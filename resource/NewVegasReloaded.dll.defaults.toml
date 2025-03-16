@@ -571,7 +571,7 @@ Quality = 4                          # Quality preset - 0: Low, 1: Medium, 2: Hi
 Enabled = true                       # Enable sun shadows using rendered shadow maps.
 Darkness = 0.75                      # Darkness of shadows.
 NightMinDarkness = 0.35              # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
-OrthoMapResolution = 1024            # Resolution of the texture used to store the ortho map.
+OrthoMapResolution = 256             # Resolution of the texture used to store the ortho map.
 OrthoRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Whether to cast shadows from point lights. Requires a slight darkening of the entire screen.
 UsePointShadowsNight = false         # Whether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
@@ -676,10 +676,14 @@ CascadeResolution = 2				 # Resolution used for shadow cascades. 0: 1024, 1: 153
 Prefilter = true					 # Enable prefiltering the shadow maps. Prefiltering is a blur.
 MSAA = true							 # Enable multisample antialiasing for shadow maps.
 Mipmaps = false						 # DISABLED. Enable mipmaps for the shadow maps.
-Anisotropy = 0						 # DISABLED. Anisotropic filteric for mipmaps, 0: disabled, 1: 8x, 2: 16x.
+Anisotropy = 0						 # DISABLED. Anisotropic filteric for mipmaps, 0: disabled, 1: 8x, 2: 16x
 Distance = 6000                      # Distance to render shadows for. The unit is the same as the game uses for i.e. fog values. 
 CascadeLambda = 0.9					 # [0.0-1.0] Controls how cascades are split, higher value means nearer cascades get higher resolution.
 LimitFrequency = false				 # Limit the update frequency of the furthest cascade (once per two frames).
+
+[_Shaders.ShadowsExteriors.Ortho]
+Resolution = 2						 # Resolution of the texture used to store the ortho map. 0: 128, 1: 256, 2: 512, 3: 1024, 4: 2048
+Distance = 6000                      # Distance to render ortho for. The unit is the same as the game uses for i.e. fog values.
 
 [_Shaders.ShadowsExteriors.Status]
 Enabled = true                       # Post process sun and pointlights shadows in exteriors.

@@ -86,7 +86,7 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 
 		Settings.ShadowMaps.Prefilter = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.ShadowMaps", "Prefilter");
 
-		for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
+		for (int shadowType = 0; shadowType <= MapLod; shadowType++) {
 			char sectionName[256] = "Shaders.ShadowsExteriors.Forms";
 			switch (shadowType) {
 			case MapNear:
@@ -125,7 +125,7 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 		};
 	}
 	else {
-		for (int shadowType = 0; shadowType <= MapOrtho; shadowType++) {
+		for (int shadowType = 0; shadowType <= MapLod; shadowType++) {
 			char sectionName[256] = "Shaders.ShadowsExteriors.Forms";
 			switch (shadowType) {
 			case MapNear:
@@ -257,14 +257,40 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.Exteriors.Quality = std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "Quality"), 0, 4);
 	Settings.Exteriors.Darkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "Darkness");
 	Settings.Exteriors.NightMinDarkness = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "NightMinDarkness");
-	Settings.Exteriors.OrthoRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Main", "OrthoRadius");
-	Settings.Exteriors.OrthoMapResolution = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "OrthoMapResolution");
 	Settings.Exteriors.UsePointShadowsDay = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsDay");
 	Settings.Exteriors.UsePointShadowsNight = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "UsePointShadowsNight");
 
 	// Shadow maps specific configuration.
 	bool cascadeSettingsChanged = UpdateSettingsFromQuality(Settings.Exteriors.Quality);
 
+	// Ortho map.
+	bool orthoSettingsChanged = false;
+
+	int oldOrthoResolution = Settings.OrthoMap.Resolution;
+
+	Settings.OrthoMap.Resolution = 128 * pow(2, (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Ortho", "Resolution"), 0, 4)));
+	Settings.OrthoMap.Distance = max(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Ortho", "Distance"), 100.0f);
+
+	if (oldOrthoResolution != 0 && oldOrthoResolution != Settings.OrthoMap.Resolution)
+		orthoSettingsChanged = true;
+
+	ShadowMaps[MapOrtho].Forms.AlphaEnabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "AlphaEnabled");
+	ShadowMaps[MapOrtho].Forms.Activators = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Activators");
+	ShadowMaps[MapOrtho].Forms.Actors = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Actors");
+	ShadowMaps[MapOrtho].Forms.Apparatus = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Apparatus");
+	ShadowMaps[MapOrtho].Forms.Books = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Books");
+	ShadowMaps[MapOrtho].Forms.Containers = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Containers");
+	ShadowMaps[MapOrtho].Forms.Doors = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Doors");
+	ShadowMaps[MapOrtho].Forms.Furniture = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Furniture");
+	ShadowMaps[MapOrtho].Forms.Misc = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Misc");
+	ShadowMaps[MapOrtho].Forms.Statics = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Statics");
+	ShadowMaps[MapOrtho].Forms.Terrain = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Terrain");
+	ShadowMaps[MapOrtho].Forms.Trees = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Trees");
+	ShadowMaps[MapOrtho].Forms.Lod = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Lod");
+	ShadowMaps[MapOrtho].Forms.MinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsOrtho", "MinRadius");
+	ShadowMaps[MapOrtho].Forms.OrigMinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsOrtho", "MinRadius");
+
+	// Interiors.
 	Settings.Interiors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "Enabled");
 	Settings.Interiors.Forms.AlphaEnabled = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "AlphaEnabled");
 	Settings.Interiors.Forms.Activators = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "Activators");
@@ -295,7 +321,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 
 	// If certain shadow map settings were changed, recreate the textures and surfaces.
 	if (texturesInitialized)
-		RecreateTextures(cascadeSettingsChanged, false, false);
+		RecreateTextures(cascadeSettingsChanged, orthoSettingsChanged, false);
 }
 
 
@@ -345,6 +371,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 
 	for (int i = 0; i <= MapLod; i++) {
 		ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+		ShadowMaps[i].ShadowMapResolution = (float)ShadowMapSize;
 		ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 	}
 
@@ -352,10 +379,11 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	Constants.ShadowBlur.x = 1.0f / (float)ShadowAtlasSize;
 
 	// ortho texture
-	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
-	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMapOrthoTexture, &ShadowMapOrthoSurface, orthoMapRes, orthoMapRes, D3DFMT_G32R32F);
+	ULONG orthoMapRes = Settings.OrthoMap.Resolution;
+	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMapOrthoTexture, &ShadowMapOrthoSurface, orthoMapRes, orthoMapRes, D3DFMT_R32F);
 	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMapOrthoDepthSurface, NULL);
 	ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
+	ShadowMaps[MapOrtho].ShadowMapResolution = (float)orthoMapRes;
 	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
 
 
@@ -428,24 +456,41 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 
 		for (int i = 0; i <= MapLod; i++) {
 			ShadowMaps[i].ShadowMapViewPort = { i % 2 == 0 ? 0 : ShadowMapSize, i < 2 ? 0 : ShadowMapSize, ShadowMapSize, ShadowMapSize, 0.0f, 1.0f };
+			ShadowMaps[i].ShadowMapResolution = (float)ShadowMapSize;
 			ShadowMaps[i].ShadowMapInverseResolution = 1.0f / (float)ShadowMapSize;
 		}
 
 		TheShaderManager->CreateFrameVertex(ShadowAtlasSize, ShadowAtlasSize, &ShadowAtlasVertexBuffer);
 		Constants.ShadowBlur.x = 1.0f / (float)ShadowAtlasSize;
 
-		SunShadowsEffect* sunShadows = TheShaderManager->Effects.SunShadows;
-		ShaderTextureValue* Sampler;
-		for (UInt32 c = 0; c < sunShadows->TextureShaderValuesCount; c++) {
-			Sampler = &sunShadows->TextureShaderValues[c];
-			if (!memcmp(Sampler->Name, "TESR_ShadowAtlas", 15) && Sampler->Texture->Texture) {
-				Sampler->Texture->Texture = nullptr;
-			}
+		TheShaderManager->Effects.SunShadows->ClearSampler("TESR_ShadowAtlas", 16);
+	}
+
+	if (ortho) {
+		if (ShadowMapOrthoSurface) {
+			ShadowMapOrthoSurface->Release();
+			ShadowMapOrthoSurface = nullptr;
+		}
+		if (ShadowMapOrthoTexture) {
+			ShadowMapOrthoTexture->Release();
+			ShadowMapOrthoTexture = nullptr;
 		}
 
-		// Reset shadow manager frame counter.
-		TheShadowManager->FrameCounter = 0;
+		ULONG orthoMapRes = Settings.OrthoMap.Resolution;
+		TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMapOrthoTexture, &ShadowMapOrthoSurface, orthoMapRes, orthoMapRes, D3DFMT_R32F);
+		TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMapOrthoDepthSurface, NULL);
+		ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
+		ShadowMaps[MapOrtho].ShadowMapResolution = (float)orthoMapRes;
+		ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
+
+		TheShaderManager->Effects.Rain->ClearSampler("TESR_OrthoMapBuffer", 19);
+		TheShaderManager->Effects.Snow->ClearSampler("TESR_OrthoMapBuffer", 19);
+		TheShaderManager->Effects.SnowAccumulation->ClearSampler("TESR_OrthoMapBuffer", 19);
+		TheShaderManager->Effects.WetWorld->ClearSampler("TESR_OrthoMapBuffer", 19);
 	}
+
+	// Reset shadow manager frame counter.
+	TheShadowManager->FrameCounter = 0;
 }
 
 
@@ -530,37 +575,19 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	ShadowMaps[MapFar].ShadowMapNear = ShadowMaps[MapMiddle].ShadowMapRadius;
 	ShadowMaps[MapLod].ShadowMapNear = ShadowMaps[MapFar].ShadowMapRadius;
 
+	// Ortho.
+	ShadowMaps[MapOrtho].ShadowMapNear = 10.0f / clipRange;
+	ShadowMaps[MapOrtho].ShadowMapRadius = Settings.OrthoMap.Distance / clipRange;
+
 	// Store absolute Shadow map splits in Constants to pass to the Shaders
 	Constants.ShadowMapRadius.x = ShadowMaps[MapNear].ShadowMapRadius * clipRange;
 	Constants.ShadowMapRadius.y = ShadowMaps[MapMiddle].ShadowMapRadius * clipRange;
 	Constants.ShadowMapRadius.z = ShadowMaps[MapFar].ShadowMapRadius * clipRange;
 	Constants.ShadowMapRadius.w = ShadowMaps[MapLod].ShadowMapRadius * clipRange;
 
-	// ortho distance render
-	ShadowMaps[MapOrtho].ShadowMapRadius = Settings.Exteriors.OrthoRadius;
-
 	// Reset blur constant for handling limited refresh rate.
 	Constants.ShadowBlur.y = 1.0f;
 }
-
-
-D3DXMATRIX ShadowsExteriorEffect::GetOrthoViewProj(D3DXMATRIX View) {
-	float FarPlane = 32768.0f;  // Hardcoded for ortho maps.
-	float Radius = ShadowMaps[MapOrtho].ShadowMapRadius;
-
-	// shift the covered area in the direction of the camera vector
-	D3DXVECTOR4 Center = D3DXVECTOR4(TheRenderManager->CameraForward.x, TheRenderManager->CameraForward.y, 0.0, 1.0);
-	D3DXVec4Normalize(&Center, &Center);
-	Radius *= 2;
-	Center.x *= Radius;
-	Center.y *= Radius;
-	D3DXVec4Transform(&Center, &Center, &View);
-
-	D3DXMATRIX Proj;
-	D3DXMatrixOrthoOffCenterRH(&Proj, Center.x - Radius, Center.x + Radius, Center.y - Radius, Center.y + Radius, FarPlane * 0.8f, 1.2f * FarPlane);
-	return View * Proj;
-}
-
 
 // Banker round helper.
 float BankerRound(float num) {
@@ -684,7 +711,7 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 
 	// Create the rounding matrix, by projecting the world-space origin and determining
 	// the fractional offset in texel space.
-	float sMapSize = Settings.ShadowMaps.CascadeResolution;
+	float sMapSize = ShadowMap->ShadowMapResolution;
 	// We are working in camera relative world space - camera position is our fixed point for stabilization.
 	D3DXVECTOR4 shadowOrigin(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z, 1.0f);
 	D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
