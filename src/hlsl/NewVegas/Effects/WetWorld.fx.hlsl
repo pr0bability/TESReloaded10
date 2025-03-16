@@ -209,14 +209,16 @@ float4 Wet( VSOUT IN ) : COLOR0
 	float thickness = 0.003; // thickness of the valid areas around the ortho map depth that will receive the effect (cancels out too far above or below ortho value)
 
 	// get puddle mask from ortho map
-	float4 ortho_pos = mul(worldPos, TESR_ShadowCameraToLightTransformOrtho);
+    float temp;
+    float4 worldPosRel = reconstructWorldPosition(IN.UVCoord, temp);
+    float4 ortho_pos = mul(worldPosRel, TESR_ShadowCameraToLightTransformOrtho);
 	ortho_pos.xy = ScreenCoordToTexCoord(ortho_pos, 1).xy;
-	float puddles = tex2D(TESR_RenderedBuffer, ortho_pos.xy).r; // puddles, ortho height
-	float ortho = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r; // puddles, ortho height
+	float ortho = tex2D(TESR_OrthoMapBuffer, ortho_pos.xy).r; // ripples, ortho height
 
 	float aboveGround = ortho_pos.z < ortho + thickness;
 	float belowGround = ortho_pos.z > ortho - thickness;
 
+    float puddles = tex2D(TESR_RenderedBuffer, IN.UVCoord).r; // puddles, ortho height
 	puddles = puddles * 2 * belowGround;
 	float puddlemask = pow(puddles, 3);  // sharpen puddle mask to get the deeper part of the puddle
 	puddlemask = saturate(puddlemask); 
