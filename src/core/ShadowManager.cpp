@@ -704,6 +704,7 @@ void ShadowManager::RenderShadowMaps() {
 
 			RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 			OrthoData->x = Shadows->Settings.OrthoMap.Distance * 2;
+			OrthoData->y = ShadowMap->ShadowMapInverseResolution;
 	
 			shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
 		}
