@@ -1369,7 +1369,6 @@ void SettingManager::FilterMenuSections(StringList* Sections, const char* Parent
 					strcmp(section.c_str(), "FormsMiddle") != 0 &&
 					strcmp(section.c_str(), "FormsFar") != 0 &&
 					strcmp(section.c_str(), "FormsLod") != 0 &&
-					strcmp(section.c_str(), "FormsOrtho") != 0 &&
 					strcmp(section.c_str(), "ShadowMaps") != 0) {
 					filteredSections.push_back(section);
 				}
