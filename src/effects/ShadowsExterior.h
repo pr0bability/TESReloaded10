@@ -104,6 +104,7 @@ public:
 	struct OrthoStruct {
 		int					Resolution;
 		float				Distance;
+		bool				LimitFrequency;
 	};
 
 	struct ExteriorsStruct {

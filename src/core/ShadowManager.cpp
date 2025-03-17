@@ -695,14 +695,25 @@ void ShadowManager::RenderShadowMaps() {
 
 			ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[MapOrtho];
 
-			Device->SetRenderTarget(0, Shadows->ShadowMapOrthoSurface);
-			Device->SetDepthStencilSurface(Shadows->ShadowMapOrthoDepthSurface);
+			if (!Shadows->Settings.OrthoMap.LimitFrequency || !((FrameCounter + 2) % 4)) {
+				Device->SetRenderTarget(0, Shadows->ShadowMapOrthoSurface);
+				Device->SetDepthStencilSurface(Shadows->ShadowMapOrthoDepthSurface);
 
-			ShadowData->z = 1; // identify ortho map in shader constant
-			D3DXVECTOR3 OrthoDir = D3DXVECTOR3(0.05f, 0.05f, 1.0f);
-			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &OrthoDir);
+				ShadowData->z = 1; // identify ortho map in shader constant
+				D3DXVECTOR3 OrthoDir = D3DXVECTOR3(0.05f, 0.05f, 1.0f);
+				Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &OrthoDir);
 
-			RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+				RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+			}
+			else {
+				D3DXVECTOR3 newCameraTranslation = WorldSceneGraph->camera->m_worldTransform.pos.toD3DXVEC3();
+				D3DXVECTOR3 difference = newCameraTranslation - ShadowMap->CameraTranslation;
+				D3DXMATRIX translationMatrix;
+				D3DXMatrixTranslation(&translationMatrix, difference.x, difference.y, difference.z);
+				ShadowMap->ShadowCameraToLight = translationMatrix * ShadowMap->ShadowCameraToLight;
+				ShadowMap->CameraTranslation = newCameraTranslation;
+			}
+
 			OrthoData->x = Shadows->Settings.OrthoMap.Distance * 2;
 			OrthoData->y = ShadowMap->ShadowMapInverseResolution;
 	
