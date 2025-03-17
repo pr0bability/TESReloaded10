@@ -270,6 +270,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 
 	Settings.OrthoMap.Resolution = 128 * pow(2, (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Ortho", "Resolution"), 0, 4)));
 	Settings.OrthoMap.Distance = max(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Ortho", "Distance"), 100.0f);
+	Settings.OrthoMap.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Ortho", "LimitFrequency");
 
 	if (oldOrthoResolution != 0 && oldOrthoResolution != Settings.OrthoMap.Resolution)
 		orthoSettingsChanged = true;
