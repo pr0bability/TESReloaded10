@@ -5406,98 +5406,164 @@ namespace Pointers {
 	}
 }
 
-
+enum Flags {
+	BSSP_SPECULAR = 0,
+	BSSP_SKINNED = 1,
+	BSSP_LOW_DETAIL = 2,
+	BSSP_VERTEX_ALPHA = 3,
+	BSSP_MOTION_BLUR = 4,
+	BSSP_SINGLE_PASS = 5,
+	BSSP_EMPTY = 6,
+	BSSP_ENVIRONMENT_MAPPING = 7,
+	BSSP_ALPHA_TEXTURE = 8,
+	BSSP_ZPREPASS = 9,
+	BSSP_FACEGEN = 10,
+	BSSP_PARALLAX = 11,
+	BSSP_MODEL_SPACE_NORMALS = 12,
+	BSSP_NON_PROJECTIVE_SHADOWS = 13,
+	BSSP_LANDSCAPE = 14,
+	BSSP_REFRACTION = 15,
+	BSSP_FIRE_REFRACTION = 16,
+	BSSP_EYE_ENVIRONMENT_MAPPING = 17,
+	BSSP_HAIR = 18,
+	BSSP_DYNAMIC_ALPHA = 19,
+	BSSP_LOCAL_MAP_HIDE_SECRET = 20,
+	BSSP_WINDOW_ENVIRONMENT_MAPPING = 21,
+	BSSP_TREE_BILLBOARD = 22,
+	BSSP_SHADOW_FRUSTUM = 23,
+	BSSP_MULTIPLE_TEXTURES = 24,
+	BSSP_REMAPPABLE_TEXTURES = 25,
+	BSSP_DECAL = 26,
+	BSSP_DYNAMIC_DECAL = 27,
+	BSSP_PARALLAX_OCCLUSION = 28,
+	BSSP_EXTERNAL_EMITTANCE = 29,
+	BSSP_SHADOW_MAP = 30,
+	BSSP_ZBUFFER_TEST = 31,
+	BSSP_ZBUFFER_WRITE = 32,
+	BSSP_LOD_LANDSCAPE = 33,
+	BSSP_LOD_BUILDING = 34,
+	BSSP_NO_FADE = 35,
+	BSSP_REFRACTION_TINT = 36,
+	BSSP_VERTEX_COLORS = 37,
+	BSSP_1ST_PERSON = 38,
+	BSSP_1ST_LIGHT_IS_POINTLIGHT = 39,
+	BSSP_2ND_LIGHT = 40,
+	BSSP_3RD_LIGHT = 41,
+	BSSP_VERTEX_LIGHTING = 42,
+	BSSP_UNIFORM_SCALE = 43,
+	BSSP_FIT_SLOPE = 44,
+	BSSP_BILLBOARD_ENV_FADE = 45,
+	BSSP_NO_LOD_LAND_BLEND = 46,
+	BSSP_ENVMAP_LIGHT_FADE = 47,
+	BSSP_WIRE_FRAME = 48,
+	BSSP_VATS_SELECTION = 49,
+	BSSP_SHOW_IN_LOCAL_MAP = 50,
+	BSSP_PREMULT_ALPHA = 51,
+	BSSP_SKIP_NORMAL_MAPS = 52,
+	BSSP_ALPHA_DECAL = 53,
+	BSSP_NO_TRANSPARENCY_MULTISAMPLING = 54,
+	BSSP_STINGER_PROP = 55,
+	BSSP_UNK3 = 56,
+	BSSP_UNK4 = 57,
+	BSSP_UNK5 = 58,
+	BSSP_UNK6 = 59,
+	BSSP_UNK7 = 60,
+	BSSP_UNK8 = 61,
+	BSSP_UNK9 = 62,
+	BSSP_REALTIME_CUBEMAP = 63,
+	BSSP_MAX_FLAGS = 64
+};
 
 class BSShaderProperty : public NiShadeProperty {
 public:
 	enum BSShaderFlags {
-		kFlags_Specular = 0x00000001,
-		kFlags_Skinned = 0x00000002,
-		kFlags_LowDetail = 0x00000004,
-		kFlags_VertexAlpha = 0x00000008,
-		kFlags_Motion_Blur = 0x00000010,
-		kFlags_SinglePass = 0x00000020,
-		kFlags_Empty = 0x00000040,
-		kFlags_EnvMapping = 0x00000080,
-		kFlags_AlphaTexture = 0x00000100,
-		kFlags_Z_Prepass = 0x00000200,
-		kFlags_Facegen = 0x00000400,
-		kFlags_ParallaxShader = 0x00000800,
-		kFlags_Model_Space_Normals = 0x00001000,
-		kFlags_NoProjShadow = 0x00002000,
-		kFlags_LandscapeTexturing = 0x00004000,
-		kFlags_SimpleRefraction = 0x00008000,
-		kFlags_ComplexRefraction = 0x00010000,
-		kFlags_EyeEnvMapping = 0x00020000,
-		kFlags_Hair = 0x00040000,
-		kFlags_DynamicAlpha = 0x00080000,
-		kFlags_LocalMapHideSecret = 0x00100000,
-		kFlags_WindowsEnvMapping = 0x00200000,
-		kFlags_TreeBillboard = 0x00400000,
-		kFlags_ShadowFrustum = 0x00800000,
-		kFlags_MultipleTexture = 0x01000000,
-		kFlags_RemappableTexture = 0x02000000,
-		kFlags_DecalSinglePass = 0x04000000,
-		kFlags_DynDecalSinglePass = 0x08000000,
-		kFlags_ParallaxOcclusion = 0x10000000,
-		kFlags_ExternalEmittance = 0x20000000,
-		kFlags_ShadowMap = 0x40000000,
-		kFlags_ZBufferTest = 0x80000000,
+		Specular = 0x1,
+		Skinned = 0x2,
+		LowDetail = 0x4,
+		Vertex_Alpha = 0x8,
+		Motion_Blur = 0x10,
+		Single_Pass = 0x20,
+		Empty = 0x40,
+		Environment_Mapping = 0x80,
+		Alpha_Texture = 0x100,
+		Z_Prepass = 0x200,
+		FaceGen = 0x400,
+		Parallax_Shader = 0x800,
+		Model_Space_Normals = 0x1000,
+		Non_Projective_Shadows = 0x2000,
+		Landscape = 0x4000,
+		Refraction = 0x8000,
+		Fire_Refraction = 0x10000,
+		Eye_Environment_Mapping = 0x20000,
+		Hair = 0x40000,
+		Dynamic_Alpha = 0x80000,
+		Localmap_Hide_Secret = 0x100000,
+		Window_Environment_Mapping = 0x200000,
+		Tree_Billboard = 0x400000,
+		Shadow_Frustum = 0x800000,
+		Multiple_Textures = 0x1000000,
+		Remappable_Textures = 0x2000000,
+		Decal_Single_Pass = 0x4000000,
+		Dynamic_Decal_Single_Pass = 0x8000000,
+		Parallax_Occlusion = 0x10000000,
+		External_Emittance = 0x20000000,
+		Shadow_Map = 0x40000000,
+		ZBuffer_Test = 0x80000000,
 	};
 
 	enum BSShaderFlags2 {
-		kFlags2_ZBuffer_Write = 0x1,
-		kFlags2_LOD_Landscape = 0x2,
-		kFlags2_LOD_Building = 0x4,
-		kFlags2_No_Fade = 0x8,
-		kFlags2_Refraction_Tint = 0x10,
-		kFlags2_Vertex_Colors = 0x20,
-		kFlags2__1st_person = 0x40,
-		kFlags2__1st_Light_is_Point_Light = 0x80,
-		kFlags2__2nd_Light = 0x100,
-		kFlags2__3rd_Light = 0x200,
-		kFlags2_Vertex_Lighting = 0x400,
-		kFlags2_Uniform_Scale = 0x800,
-		kFlags2_Fit_Slope = 0x1000,
-		kFlags2_Billboard_and_Envmap_Light_Fade = 0x2000,
-		kFlags2_No_LOD_Land_Blend = 0x4000,
-		kFlags2_Envmap_Light_Fade = 0x8000,
-		kFlags2_Wireframe = 0x10000,
-		kFlags2_VATS_Selection = 0x20000,
-		kFlags2_Show_in_Local_Map = 0x40000,
-		kFlags2_Premult_Alpha = 0x80000,
-		kFlags2_Skip_Normal_Maps = 0x100000,
-		kFlags2_Alpha_Decal = 0x200000,
-		kFlags2_No_Transparency_Multisampling = 0x400000,
-		kFlags2_stinger_prop = 0x800000,
-		kFlags2_Unknown3 = 0x1000000,
-		kFlags2_Unknown4 = 0x2000000,
-		kFlags2_Unknown5 = 0x4000000,
-		kFlags2_Unknown6 = 0x8000000,
-		kFlags2_Unknown7 = 0x10000000,
-		kFlags2_Unknown8 = 0x20000000,
-		kFlags2_Unknown9 = 0x40000000,
-		kFlags2_Wall_RealTimeEnv = 0x80000000,
+		ZBuffer_Write = 0x1,
+		LOD_Landscape = 0x2,
+		LOD_Building = 0x4,
+		No_Fade = 0x8,
+		Refraction_Tint = 0x10,
+		Vertex_Colors = 0x20,
+		_1st_person = 0x40,
+		_1st_Light_is_Point_Light = 0x80,
+		_2nd_Light = 0x100,
+		_3rd_Light = 0x200,
+		Vertex_Lighting = 0x400,
+		Uniform_Scale = 0x800,
+		Fit_Slope = 0x1000,
+		Billboard_and_Envmap_Light_Fade = 0x2000,
+		No_LOD_Land_Blend = 0x4000,
+		Envmap_Light_Fade = 0x8000,
+		Wireframe = 0x10000,
+		VATS_Selection = 0x20000,
+		Show_in_Local_Map = 0x40000,
+		Premult_Alpha = 0x80000,
+		Skip_Normal_Maps = 0x100000,
+		Alpha_Decal = 0x200000,
+		No_Transparency_Multisampling = 0x400000,
+		stinger_prop = 0x800000,
+		Unknown3 = 0x1000000,
+		Unknown4 = 0x2000000,
+		Unknown5 = 0x4000000,
+		Unknown6 = 0x8000000,
+		Unknown7 = 0x10000000,
+		Unknown8 = 0x20000000,
+		Unknown9 = 0x40000000,
+		Wall_RealTimeEnv = 0x80000000,
 	};
 
 	bool	IsLightingProperty();
+	bool	GetFlag(uint32_t auiFlag) const;
 
-	UInt32	Unk020;		// 020
-	UInt32	Unk024;		// 024
-	float	Unk028;		// 028
-	float	Unk02C;		// 02C
-	float	Unk030;		// 030
-	float	Unk034;		// 034
-	UInt32	Unk038;		// 038
-	UInt32	Unk03C;		// 03C
-	UInt32	Unk040;		// 040
-	UInt32	Unk044;		// 044
-	UInt32	Unk048;		// 048
-	UInt32	Unk04C;		// 04C
-	UInt32	Unk050;		// 050
-	UInt32	Unk054;		// 054
-	UInt32	type;		// 058
-	float	Unk05C;		// 05C
+	UInt32	ulFlags[2];
+	float	fAlpha;		// 028
+	float	fFadeAlpha;		// 02C
+	float	fEnvMapScale;		// 030
+	float	fLODFade;		// 034
+	UInt32	iLastRenderPassState;		// 038
+	UInt32	pRenderPassArray;		// 03C
+	UInt32	pRenderPassArray_depthMap;		// 040
+	UInt32	pRenderPassArray_constAlpha;		// 044
+	UInt32	pRenderPassArray_localMap;		// 048
+	UInt32	pRenderPassArray_unk4C;		// 04C
+	UInt32	pRenderPassArray_waterDepth;		// 050
+	UInt32	pRenderPassArray_silhouette;		// 054
+	UInt32	uiShaderIndex;		// 058
+	float	fDepthBias;		// 05C
 };
 assert(sizeof(BSShaderProperty) == 0x60);
 

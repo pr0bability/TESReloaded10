@@ -317,8 +317,12 @@ void NiDX9RenderState::SetCullMode(NiStencilProperty::DrawMode aeMode) {
 }
 
 bool BSShaderProperty::IsLightingProperty() {
-	return (type == ShaderDefinitionEnum::kShaderDefinition_ShadowLightShader || type == ShaderDefinitionEnum::kShaderDefinition_Lighting30Shader || type == ShaderDefinitionEnum::kShaderDefinition_ParallaxShader );
-}	
+	return (uiShaderIndex == ShaderDefinitionEnum::kShaderDefinition_ShadowLightShader || uiShaderIndex == ShaderDefinitionEnum::kShaderDefinition_Lighting30Shader || uiShaderIndex == ShaderDefinitionEnum::kShaderDefinition_ParallaxShader);
+}
+
+bool BSShaderProperty::GetFlag(uint32_t auiFlag) const {
+	return ((1 << (auiFlag % 0x20u)) & ulFlags[auiFlag >> 5]) != 0;
+}
 
 // GAME - 0xA74E10
 void NiFrustumPlanes::Set(const NiFrustum& kFrust, const NiTransform& kXform) {
