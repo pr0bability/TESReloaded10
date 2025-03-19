@@ -323,7 +323,7 @@ void SpeedTreeShadowRenderPass::RegisterConstants() {
 bool SpeedTreeShadowRenderPass::AccumObject(NiGeometry* Geo) {
 
 	NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(Geo->GetProperty(NiProperty::kType_Shade));
-	if (shaderProp->type != NiShadeProperty::kProp_SpeedTreeLeaf) return false;
+	if (shaderProp->m_eShaderType != NiShadeProperty::kProp_SpeedTreeLeaf) return false;
 
 	GeometryList.push(Geo);
 	return true;
