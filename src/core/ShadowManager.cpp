@@ -427,10 +427,14 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 				if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
 					continue;
 
-				NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+				BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(geo->GetProperty(NiProperty::kType_Shade));
 				NiMaterialProperty* matProp = static_cast<NiMaterialProperty*>(geo->GetProperty(NiProperty::kType_Material));
 
 				if (!shaderProp)
+					continue;
+
+				// Skip refraction and fire refraction.
+				if (shaderProp->GetFlag(Flags::BSSP_REFRACTION) || shaderProp->GetFlag(Flags::BSSP_FIRE_REFRACTION))
 					continue;
 
 				bool isFirstPerson = shaderProp->m_usFlags.GetBit(NiShadeProperty::kFirstPerson);
