@@ -811,6 +811,8 @@ public:
 	NiExtraData**		m_extraDataList;				// 010
 	UInt16				m_extraDataListLen;				// 014
 	UInt16				m_extraDataListCapacity;		// 016
+
+	NIRTTI_ADDRESS(0x11F4304);
 };
 assert(sizeof(NiObjectNET) == 0x018);
 
@@ -1289,6 +1291,9 @@ public:
 		kType_Texturing,
 	};
 	virtual PropertyType GetPropertyType();
+	virtual void		 Update(UInt16 apUpdateData);
+
+	NIRTTI_ADDRESS(0x11F4420);
 };
 assert(sizeof(NiProperty) == 0x18);
 
@@ -2866,9 +2871,10 @@ public:
 		kThirdPerson = 1 << 2, // marks player's world model geometry
 	};
 
-	UInt16			flags;		// 018
-	UInt8			pad01A[2];	// 01A
-	ShaderPropType	type;		// 01C
+	Bitfield16		m_usFlags;
+	ShaderPropType	m_eShaderType;
+
+	NIRTTI_ADDRESS(0x11F5AE0);
 };
 assert(sizeof(NiShadeProperty) == 0x20);
 

@@ -120,6 +120,11 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 	NiGeometry* geo = static_cast<NiGeometry*>(NiObject);
 	if (!geo->shader) return; // skip Geometry without a shader
 
+	// Skip geometry with refraction or fire refractions flags.
+	BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(geo->GetProperty(NiProperty::kType_Shade));
+	if (shaderProp->GetFlag(BSSP_REFRACTION) || shaderProp->GetFlag(BSSP_FIRE_REFRACTION))
+		return;
+
 #if defined(OBLIVION)
 	if (geo->m_pcName && !memcmp(geo->m_pcName, "Torch", 5)) return; // No torch geo, it is too near the light and a bad square is rendered.
 #endif
@@ -428,8 +433,8 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 				if (!shaderProp)
 					continue;
 
-				bool isFirstPerson = (shaderProp->flags & NiShadeProperty::kFirstPerson) != 0;
-				bool isThirdPerson = (shaderProp->flags & NiShadeProperty::kThirdPerson) != 0;
+				bool isFirstPerson = shaderProp->m_usFlags.GetBit(NiShadeProperty::kFirstPerson);
+				bool isThirdPerson = shaderProp->m_usFlags.GetBit(NiShadeProperty::kThirdPerson);
 
 				// Skip objects if they are barely visible. 
 				if ((matProp && matProp->fAlpha < 0.05f))
@@ -492,9 +497,9 @@ static void FlagShaderPropertyRecurse(NiAVObject* apObject, UInt32 auiFlags, boo
 		NiShadeProperty* shaderProperty = static_cast<NiShadeProperty*>(pGeometry->GetProperty(NiProperty::kType_Shade));
 		if (shaderProperty) {
 			if (abSet)
-				shaderProperty->flags |= auiFlags;
+				shaderProperty->m_usFlags.Set(auiFlags);
 			else
-				shaderProperty->flags &= ~auiFlags;
+				shaderProperty->m_usFlags.Clear(auiFlags);
 		}
 
 	}
