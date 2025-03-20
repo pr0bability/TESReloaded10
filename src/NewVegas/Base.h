@@ -4,7 +4,6 @@ class Hooks {
 public:
 	static const UInt32 ReadSetting					= 0x00C44280;
 	static const UInt32 WriteSetting				= 0x00C43E90;
-	static const UInt32 LoadGame					= 0x00847DF0;
 	static const UInt32 NewMain						= 0x0086C160;
 	static const UInt32 InitializeRenderer			= 0x0086D500;
 	static const UInt32 NewTES						= 0x0044FB20;
