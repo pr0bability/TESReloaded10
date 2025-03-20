@@ -8,7 +8,6 @@ void AttachHooks() {
 	DetourUpdateThread(GetCurrentThread());
 	DetourAttach(&(PVOID&)ReadSetting, &ReadSettingHook);
 	DetourAttach(&(PVOID&)WriteSetting, &WriteSettingHook);
-	DetourAttach(&(PVOID&)LoadGame, &LoadGameHook);
 	DetourAttach(&(PVOID&)NewMain, &NewMainHook);
 	DetourAttach(&(PVOID&)InitializeRenderer, &InitializeRendererHook);
 	DetourAttach(&(PVOID&)NewTES, &NewTESHook);

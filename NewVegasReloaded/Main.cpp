@@ -8,6 +8,13 @@ extern "C" {
 
 	static void MessageHandler(NVSEMessagingInterface::Message* msg) {
 		switch (msg->type) {
+		case NVSEMessagingInterface::kMessage_PreLoadGame:
+			TheSettingManager->GameLoading = true;
+			break;
+		case NVSEMessagingInterface::kMessage_PostLoadGame:
+			TheSettingManager->GameLoading = false;
+			TheShaderManager->InitializeConstants();
+			break;
 		case NVSEMessagingInterface::kMessage_DeferredInit:
 			CombineDepthEffect* depthEffect = TheShaderManager->Effects.CombineDepth;
 
