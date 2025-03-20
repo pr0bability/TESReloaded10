@@ -51,5 +51,6 @@ public:
 	int						FrameCounter;
 
 private:
+	bool					CheckShaderFlags(NiGeometry* Geometry);
 	void					RecalculateBillboardVectors(D3DXVECTOR3* SunDir);
 };
