@@ -113,6 +113,20 @@ NiNode* ShadowManager::GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::For
 }
 
 
+// Detech shader flags that we do not want.
+bool ShadowManager::CheckShaderFlags(NiGeometry* Geometry) {
+	BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(Geometry->GetProperty(NiProperty::kType_Shade));
+
+	if (!shaderProp)
+		return false;
+
+	return !(shaderProp->GetFlag(BSSP_REFRACTION) ||
+		shaderProp->GetFlag(BSSP_FIRE_REFRACTION) ||
+		shaderProp->GetFlag(BSSP_DECAL) ||
+		shaderProp->GetFlag(BSSP_DYNAMIC_DECAL));
+}
+
+
 // Detect which pass the object must be added to
 void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLODLand) {
 	auto timelog = TimeLogger();
@@ -120,9 +134,7 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 	NiGeometry* geo = static_cast<NiGeometry*>(NiObject);
 	if (!geo->shader) return; // skip Geometry without a shader
 
-	// Skip geometry with refraction or fire refractions flags.
-	BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(geo->GetProperty(NiProperty::kType_Shade));
-	if (shaderProp->GetFlag(BSSP_REFRACTION) || shaderProp->GetFlag(BSSP_FIRE_REFRACTION))
+	if (!CheckShaderFlags(geo))
 		return;
 
 #if defined(OBLIVION)
@@ -434,7 +446,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 					continue;
 
 				// Skip refraction and fire refraction.
-				if (shaderProp->GetFlag(Flags::BSSP_REFRACTION) || shaderProp->GetFlag(Flags::BSSP_FIRE_REFRACTION))
+				if (CheckShaderFlags(geo))
 					continue;
 
 				bool isFirstPerson = shaderProp->m_usFlags.GetBit(NiShadeProperty::kFirstPerson);
