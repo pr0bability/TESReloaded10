@@ -277,7 +277,7 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 			continue;
 
 		for (UInt32 d = p + 1; d < SkinPartition->PartitionsCount; d++) {
-			if (pDismemberPartition[d + 1].StartCap)
+			if (pDismemberPartition[p + 1].StartCap)
 				break;
 
 			++p;
