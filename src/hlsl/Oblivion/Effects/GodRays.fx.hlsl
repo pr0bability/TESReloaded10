@@ -96,7 +96,7 @@ float3 BlendSoftLight(float3 a, float3 b)
 float4 SunCombine(VSOUT IN) : COLOR0
 {
 	float Amount = 1.0f;
-	if (TESR_GodRaysData.w) Amount = (TESR_GameTime.y < 12.00f) ? TESR_SunAmount.x : TESR_SunAmount.z;
+	if (TESR_GodRaysData.w) Amount = (TESR_GameTime.y < 12.00f) ? TESR_SunAmount.x : TESR_SunAmount.y;
 	float4 ori = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float4 shaft = tex2D(TESR_RenderedBuffer, IN.UVCoord) * TESR_GodRaysData.z * Amount;
 	float3 ray = TESR_SunColor.rgb * TESR_GodRaysRayColor.rgb;
