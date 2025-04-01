@@ -37,6 +37,9 @@ void AttachHooks() {
 	if (SettingsMain->FlyCam.Enabled) DetourAttach(&(PVOID&)UpdateFlyCam, &UpdateFlyCamHook);
 	DetourTransactionCommit();
 
+	// Vanilla shader specific hooks.
+	SafeWrite32(0x10AFE94, (UInt32)SkyShader__UpdateConstants);
+
 	SafeWriteCall(0xBE0B73, (UInt32)NiD3DVertexShaderEx::Free);
 	SafeWriteCall(0xBE0AF3, (UInt32)NiD3DPixelShaderEx::Free);
 	SafeWrite32(0x00E7624D, sizeof(RenderManager));

@@ -3947,7 +3947,7 @@ public:
 	virtual SkyObject*	Destroy(bool doFree);
 	virtual void	    GetNiNode(void);
 	virtual void	    InitNiNode(NiNode* niNode);
-    virtual void	    Update(void* sky, float value);
+	virtual void	    Update(void* sky, float value);
 
 	NiNode*				RootNode;	// 04
 };
@@ -3973,7 +3973,7 @@ assert(sizeof(Sun) == 0x2C);
 class Atmosphere : public SkyObject {
 public:
 	virtual void		Init(NiNode* niNode, BSFogProperty* _fogProp);
-    
+	
 	NiNode*		    Mesh;			// 08
 	BSFogProperty*	fogProperty;	// 0C Same as *0x11DEB00
 	NiRefObject*	object10;		// 10
@@ -4042,7 +4042,7 @@ assert(sizeof(Precipitation) == 0x018);
 class Moon : public SkyObject {
 public:
 	virtual void	Refresh(NiNode* niNode, const char* moonStr);
-    
+	
 	NiNode*			MoonNode;			// 08
 	NiNode*			ShadowNode;			// 0C
 	NiTriShape*		MoonMesh;			// 10
@@ -4086,8 +4086,8 @@ public:
 				return result > 1.0f ? 1.0f : result;
 			}
 		}
-        return 0;
-    }
+		return 0;
+	}
 };
 assert(sizeof(Moon) == 0x07C);
 
@@ -4167,7 +4167,7 @@ public:
 	UInt32			unk0F8;				// 0F8
 	TList<void*>*	skySounds;			// 0FC   TList<SkySound>*
 	float			lightningFxPerc;	// 100 // DONE
-    UInt32			unk104;				// 104
+	UInt32			unk104;				// 104
 	float			flt108;				// 108
 	float			flt10C;				// 10C
 	float			flt110;				// 110
@@ -4226,40 +4226,40 @@ public:
 };
 template <typename Data> class DList{
 public:
-    DNode<Data>* first;
-    DNode<Data>* last;
-    UInt32 count;  
+	DNode<Data>* first;
+	DNode<Data>* last;
+	UInt32 count;  
 };
 assert(sizeof(DList<void>) == 0xC);
 
 struct WaterGroup
 {
-    TESWaterForm			*waterForm;		// 00
-    NiVector4				vector04;		// 04
-    NiVector4				vector14;		// 14
-    DList<TESObjectREFR>	waterPlanes;	// 24
-    DList<void>				list30;			// 30
-    DList<void>				list3C;			// 3C
-    DList<void>				list48;			// 48
-    NiAVObject				*object54;		// 54
-    NiAVObject				*object58;		// 58
-    UInt8					byte5C;			// 5C
-    UInt8					byte5D;			// 5D
-    UInt8					byte5E;			// 5E
-    UInt8					byte5F;			// 5F
-    UInt8					byte60;			// 60
-    UInt8					pad61[3];		// 61
-    DList<void>				list64;			// 64
-    DList<void>				list70;			// 70
-    DList<void>				list7C;			// 7C
-    DList<void>				list88;			// 88
-    NiObject				*object94;		// 94
-    NiObject				*object98;		// 98
-    UInt32					unk9C;			// 9C
-    UInt32					unkA0;			// A0
-    NiObject				*objectA4;		// A4
-    NiObject				*objectA8;		// A8
-    UInt32					unkAC;			// AC
+	TESWaterForm			*waterForm;		// 00
+	NiVector4				vector04;		// 04
+	NiVector4				vector14;		// 14
+	DList<TESObjectREFR>	waterPlanes;	// 24
+	DList<void>				list30;			// 30
+	DList<void>				list3C;			// 3C
+	DList<void>				list48;			// 48
+	NiAVObject				*object54;		// 54
+	NiAVObject				*object58;		// 58
+	UInt8					byte5C;			// 5C
+	UInt8					byte5D;			// 5D
+	UInt8					byte5E;			// 5E
+	UInt8					byte5F;			// 5F
+	UInt8					byte60;			// 60
+	UInt8					pad61[3];		// 61
+	DList<void>				list64;			// 64
+	DList<void>				list70;			// 70
+	DList<void>				list7C;			// 7C
+	DList<void>				list88;			// 88
+	NiObject				*object94;		// 94
+	NiObject				*object98;		// 98
+	UInt32					unk9C;			// 9C
+	UInt32					unkA0;			// A0
+	NiObject				*objectA4;		// A4
+	NiObject				*objectA8;		// A8
+	UInt32					unkAC;			// AC
 };
 
 class WaterManager {
@@ -5362,15 +5362,15 @@ namespace Pointers {
 		static float*			  MPF					= (float*)0x00000000;
 		static BSRenderedTexture* MenuRenderedTexture	= *(BSRenderedTexture**)0x011DED3C;
 		static BSRenderedTexture* BlurredReflection	= *(BSRenderedTexture**)0x011C7AD4;
-        
+		
 		static NiPoint3*		  CameraWorldTranslate	= (NiPoint3*)0x011F474C;
 		static NiPoint3*		  CameraLocation		= (NiPoint3*)0x011F426C;
 		static NiNode**			  DetectorWindowNode	= (NiNode**)0x011FA008;
 	}
 	namespace Functions {
 		static void* (__cdecl* MemoryAlloc)(size_t) = (void* (__cdecl*)(size_t))0x00AA13E0;
-        static void* (__cdecl* FormMemoryAlloc)(size_t) = (void* (__cdecl*)(size_t))0x00401000;
-        static void* (__cdecl* FormMemoryDeAlloc)(void*) = (void* (__cdecl*)(void*))0x00401030;
+		static void* (__cdecl* FormMemoryAlloc)(size_t) = (void* (__cdecl*)(size_t))0x00401000;
+		static void* (__cdecl* FormMemoryDeAlloc)(void*) = (void* (__cdecl*)(void*))0x00401030;
 
 		static bool  (__cdecl* ExtractArgs)(CommandParam*, void*, UInt32*, TESObjectREFR*, TESObjectREFR*, Script*, ScriptEventList*, ...) = (bool (__cdecl*)(CommandParam*, void*, UInt32*, TESObjectREFR*, TESObjectREFR*, Script*, ScriptEventList*, ...))0x005ACCB0;
 		static void  (* PrintToConsole)(const char*, ...) = (void (*)(const char*, ...))0x00703C00;
@@ -5383,7 +5383,7 @@ namespace Pointers {
 		static const void* BSTreeNode		= (void*)0x010668E4;
 		static const void* NiTriShape		= (void*)0x0109D454;
 		static const void* NiTriStrips		= (void*)0x0109CD44;
-        static const void* BSDismemberSkinInstance = (void*) 0x01069A84;
+		static const void* BSDismemberSkinInstance = (void*) 0x01069A84;
 		static const void* BSMultiBoundNode   = (void*)0x010C1D14;
 		static const void* NiParticleNode     = (void*)0x010BD44C;
 
@@ -5692,6 +5692,32 @@ public:
 	LeafData* leafData;	// 088
 };
 assert(sizeof(SpeedTreeLeafShaderProperty) == 0x8C);
+
+class SkyShaderProperty : public BSShaderProperty {
+public:
+	enum SkyObject : uint32_t {
+		SO_SUN = 0,
+		SO_SUN_GLARE = 1,
+		SO_ATMOSPHERE = 2,
+		SO_CLOUDS = 3,
+		SO_SKYQUAD = 4,
+		SO_STARS = 5,
+		SO_MOON = 6,
+		SO_MOON_SHADOW = 7,
+		SO_OTHER = 8,
+		SO_COUNT = 9,
+	};
+
+	NiColorAlpha					kVertexColor;
+	NiTexture*						spBaseTexture;
+	BSString						strTextureName;
+	UInt32							eClampMode;
+	NiTexture*						spBlendTexture;
+	float							fBlendValue;
+	uint16_t						usCloudLayer;
+	SkyObject						eSkyObjectType;
+};
+assert(sizeof(SkyShaderProperty) == 0x90);
 
 class BGSTerrainManager {
 public:

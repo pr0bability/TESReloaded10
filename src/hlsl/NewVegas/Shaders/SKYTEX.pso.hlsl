@@ -3,10 +3,10 @@
 // Parameters:
 
 float2 Params : register(c4);
+float ObjectID : register(c20);  // Set by hook. 0 == sun, 6 == moon.
 sampler2D TexMap : register(s0);
 sampler2D TexMapBlend : register(s1);
 
-float4 TESR_DebugVar : register(c5);
 float4 TESR_SunColor : register(c6);
 float4 TESR_SkyColor : register(c7);
 float4 TESR_SkyLowColor : register(c8);
@@ -102,18 +102,16 @@ float3 getNormal(float2 partial, float3 eyeDir){
 float4 ShadeSun(SunValues Sun, float4 texColor, float4 vertexColor){
     Sun.isDayTime = smoothstep(0.498, 0.502, TESR_SunAmount.x); // very short transition time to get mostly a value about wether the sun is up or not
 
-    float sunTexLuma = luma(texColor.rgb); 
-    // detect sundisk texture using full alpha and brightness, as well as daytime (to differentiate with the moon)
-    float isSunOrMoon = saturate(smoothstep(0.9, 1.0, texColor.w)) * smoothstep(0.9, 1, sunTexLuma) * Sun.isDayTime;
-    float isSun = isSunOrMoon * Sun.isDayTime;
+    bool isSun = ObjectID == 0.0f;
+    bool isMoon = ObjectID == 6.0f;
 
     if (isSun){
         float isSunset = smoothstep(0.3, 0.0, Sun.sunHeight);
         texColor.rgb += isSunset * Sun.sunColor;
         texColor.rgb += Sun.sunColor * TESR_SunAmount.w;
-        texColor.a = Sun.isDayTime; // force alpha 1 for sun disk in the daytime
+        texColor.a *= Sun.isDayTime; // force alpha 1 for sun disk in the daytime
     }else{
-        texColor.rgb *= vertexColor.rgb * Params.y * lerp(TESR_SunAmount.w, 1, isSunOrMoon); // vertex color (animated by the engine)
+        texColor.rgb *= vertexColor.rgb * Params.y * lerp(TESR_SunAmount.w, 1, isMoon); // vertex color (animated by the engine)
         texColor.a *= vertexColor.a;
     }
 
@@ -188,7 +186,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float4 finalColor = (weight(cloudsWeather1.xyz) == 0.0 ? cloudsWeather2 : (weight(cloudsWeather2.xyz) == 0.0 ? cloudsWeather1 : cloudsWeatherBlend)); // select either weather or blend
     finalColor.a = cloudsWeatherBlend.a;
-
+    
     if (IN.color_1.r){ // early out if this texture is sun/moon*
         OUT.color_0 = ShadeSun(Sun, finalColor, color);
         return OUT;

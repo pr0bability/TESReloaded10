@@ -742,7 +742,6 @@ SunInfluence = 1.0                  # How wide a side of the athmosphere will th
 SunStrength = 1.0                   # How strong is the sun brighness when reflected by athmosphere
 GlareStrength = 1.0                 # How much influence does the Sun have over Glare, inversed
 StarStrength = 1.0                  # Multiplier for stars brightness
-ReplaceSun = false                  # Replaces vanilla sun by a procedural sun for whatever reason
 UseSunDiskColor = false             # Uses the color from the sun disk from the game weather to calculate the sky tint. Otherwise uses the sun lighting
 SunsetR = 0.5                       # Color boost for sunset/sunrise sun color (Red)
 SunsetG = 0.0                       # Color boost for sunset/sunrise sun color (Green)
