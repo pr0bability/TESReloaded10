@@ -37,12 +37,6 @@ void SkyShaders::UpdateSettings() {
 		Constants.SunsetColor.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetR");
 		Constants.SunsetColor.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetG");
 		Constants.SunsetColor.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunsetB");
-
-		// TODO : fix sun culling for sun replacing?
-		//if (TheSettingManager->GetMenuShaderEnabled("Sky")) {
-		//	if (ShaderConst.SunAmount.z) WorldSky->sun->RootNode->m_flags |= ~NiAVObject::NiFlags::DISPLAY_OBJECT; // cull Sun node
-		//	else WorldSky->sun->RootNode->m_flags &= NiAVObject::NiFlags::DISPLAY_OBJECT; // disable Sun node
-		//}
 	}
 	else {
 		Constants.SunsetColor.x = 0;

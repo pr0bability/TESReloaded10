@@ -359,7 +359,6 @@ void ShaderManager::UpdateConstants() {
 		}
 
 		// sky settings are used in several shaders whether the shader is active or not
-		ShaderConst.SunAmount.z = TheSettingManager->GetSettingI("Shaders.Sky.Main", "ReplaceSun");
 		ShaderConst.SunAmount.w = TheSettingManager->GetSettingF("Shaders.Sky.Main", "GlareStrength");
 		timer.LogTime("ShaderManager::UpdateSettings for shaders & effects");
 	}
