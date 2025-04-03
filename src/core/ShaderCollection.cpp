@@ -27,7 +27,7 @@ void ShaderCollection::DisposeShaders() {
 }
 
 ShaderTemplate ShaderCollection::GetTemplate(const char* Name) {
-	std::map<std::string, ShaderTemplate> templates = Templates();
+	std::map<std::string_view, ShaderTemplate> templates = Templates();
 	if (auto temp = templates.find(Name); temp != templates.end()) {
 		return temp->second;
 	}

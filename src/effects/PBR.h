@@ -5,8 +5,8 @@ class PBRShaders : public ShaderCollection
 public:
 	PBRShaders() : ShaderCollection("PBR") {};
 
-	std::map<std::string, ShaderTemplate> Templates() {
-		return std::map<std::string, ShaderTemplate>{
+	std::map<std::string_view, ShaderTemplate> Templates() {
+		return std::map<std::string_view, ShaderTemplate>{
 			{ "SLS2000.vso", ShaderTemplate{ "ObjectTemplate", {{"VS", ""}} } },
 			{ "SLS2001.vso", ShaderTemplate{ "ObjectTemplate", {{"VS", ""}} } },
 			{ "SLS2003.vso", ShaderTemplate{ "ObjectTemplate", {{"VS", ""}, {"SKIN", ""}} } },

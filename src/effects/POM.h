@@ -5,8 +5,8 @@ class POMShaders : public ShaderCollection
 public:
 	POMShaders() : ShaderCollection("POM") {};
 
-	std::map<std::string, ShaderTemplate> Templates() {
-		return std::map<std::string, ShaderTemplate>{
+	std::map<std::string_view, ShaderTemplate> Templates() {
+		return std::map<std::string_view, ShaderTemplate>{
 			{ "PAR2000.vso", ShaderTemplate{ "ParallaxTemplate", {{"VS", ""}} } },
 			{ "PAR2001.vso", ShaderTemplate{ "ParallaxTemplate", {{"VS", ""}, {"PROJ_SHADOW", ""}} } },
 			{ "PAR2002.vso", ShaderTemplate{ "ParallaxTemplate", {{"VS", ""}, {"LIGHTS", "2"}} } },

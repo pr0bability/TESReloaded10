@@ -29,8 +29,8 @@ public:
 	std::vector<NiD3DPixelShaderEx*>	PixelShaderList;
 	std::vector<NiD3DVertexShaderEx*>	VertexShaderList;
 
-	virtual std::map<std::string, ShaderTemplate> Templates() {
-		return std::map<std::string, ShaderTemplate>();
+	virtual std::map<std::string_view, ShaderTemplate> Templates() {
+		return std::map<std::string_view, ShaderTemplate>();
 	};
 	ShaderTemplate GetTemplate(const char*);
 };

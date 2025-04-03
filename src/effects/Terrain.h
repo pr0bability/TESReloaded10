@@ -5,8 +5,8 @@ class TerrainShaders : public ShaderCollection
 public:
 	TerrainShaders() : ShaderCollection("Terrain") {};
 
-	std::map<std::string, ShaderTemplate> Templates() {
-		return std::map<std::string, ShaderTemplate>{
+	std::map<std::string_view, ShaderTemplate> Templates() {
+		return std::map<std::string_view, ShaderTemplate>{
 			{ "SLS2100.vso", ShaderTemplate{ "TerrainTemplate", {{"VS", ""}} } },
 			{ "SLS2092.pso", ShaderTemplate{"TerrainTemplate", {{"PS", ""}, {"TEX_COUNT", "1"}}} },
 			{ "SLS2096.pso", ShaderTemplate{"TerrainTemplate", {{"PS", ""}, {"TEX_COUNT", "1"}, {"POINTLIGHT", ""}}} },
