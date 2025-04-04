@@ -6,7 +6,6 @@ float4 BlendColor[3] : register(c4);
 float3 EyePosition : register(c7);
 row_major float4x4 Model : register(c8);
 row_major float4x4 ModelViewProj : register(c0);
-float4 TESR_DepthConstants : register(c13);
 
 
 // Registers:
@@ -53,11 +52,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
 
-    if (TESR_DepthConstants.z)
-        OUT.position.z = 0.0; // invert depth
-    else {
-        OUT.position.z *= 0.99998; // scale to appear in front of the moon mask
-    }
+    #ifdef REVERSED_DEPTH
+        OUT.position.z = 0.0;
+    #endif
 
     OUT.location = IN.position.xyz;
 

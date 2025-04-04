@@ -128,9 +128,10 @@
 // SLS2056 - NUM_PT_LIGHTS = 3, POINT, HAIR (ONLY_SPECULAR)
 
 #if defined(__INTELLISENSE__)
-    #define PS
-    #define LIGHTS 2
+    #define VS
+    #define LIGHTS 5
     #define SPECULAR
+    #define REVERSED_DEPTH
 #endif
 
 #if defined(DIFFUSE)
@@ -287,7 +288,13 @@ VS_OUTPUT main(VS_INPUT IN) {
     #endif
 
     #ifndef NO_FOG
-        float fogStrength = 1 - saturate((FogParam.x - length(OUT.sPosition.xyz)) / FogParam.y);
+        float3 fogPos = OUT.sPosition.xyz;
+    
+        #ifdef REVERSED_DEPTH
+            fogPos.z = OUT.sPosition.w - fogPos.z;
+        #endif
+    
+        float fogStrength = 1 - saturate((FogParam.x - length(fogPos)) / FogParam.y);
         fogStrength = log2(fogStrength);
         OUT.fogColor.a = exp2(fogStrength * FogParam.z);
         OUT.fogColor.rgb = FogColor.rgb;
@@ -432,7 +439,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     OUT.vertexColor = IN.vertexColor;
 
-    float fogStrength = 1 - saturate((FogParam.x - length(OUT.sPosition.xyz)) / FogParam.y);
+    float3 fogPos = OUT.sPosition.xyz;
+    #ifdef REVERSED_DEPTH
+        fogPos.z = OUT.sPosition.w - fogPos.z;
+    #endif
+    float fogStrength = 1 - saturate((FogParam.x - length(fogPos)) / FogParam.y);
     fogStrength = log2(fogStrength);
     OUT.fogColor.a = exp2(fogStrength * FogParam.z);
     OUT.fogColor.rgb = FogColor.rgb;

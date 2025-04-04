@@ -15,8 +15,6 @@ float4 TESR_SunPosition: register(c13);
 float4 TESR_SunsetColor: register(c14); // sunsetColor.w is sky strength multiplier
 float4 TESR_HDRBloomData: register(c15);
 float4 TESR_SunDiskColor: register(c16);
-float4 TESR_DepthConstants: register(c17);
-
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
 									{0.7647, 0.2941, 0.8824, 0.4118},
@@ -78,8 +76,6 @@ VS_OUTPUT main(VS_INPUT IN) {
 	OUT.color_0.rgb += ditherMat[ (IN.screen.x)%4 ][ (IN.screen.y)%4 ] / 255;
 
     // OUT.color_0.rgb = lerp(green, red, sunDir);
-
-    // OUT.color_0.rgb = TESR_DepthConstants.zzz;
 
     return OUT;
 };

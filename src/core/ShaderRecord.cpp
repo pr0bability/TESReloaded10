@@ -137,10 +137,24 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 
 		if (Compile || !Function) {
 			// compile if option was enabled or compiled version not found
-
 			D3DXMACRO* defines = NULL;
-			if (Template.Name != NULL)
+			if (Template.Name != NULL && TheRenderManager->IsReversedDepth()) {
+				int i = 0;
+				bool nullFound = false;
+				while (!nullFound) {
+					nullFound = Template.Defines[i].Name == NULL;
+					if (!nullFound) i++;
+				}
+				Template.Defines[i] = {"REVERSED_DEPTH", ""};
 				defines = &(Template.Defines[0]);
+			}
+			else if (Template.Name != NULL) {
+				defines = &(Template.Defines[0]);
+			}
+			else if (TheRenderManager->IsReversedDepth()) {
+				D3DXMACRO reversed_depth[2] = { {"REVERSED_DEPTH", ""} };
+				defines = &(reversed_depth[0]);
+			}
 
 			D3DXCompileShaderFromFileA(FileName, defines, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
 			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());

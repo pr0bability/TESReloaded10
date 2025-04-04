@@ -55,6 +55,10 @@ float RenderManager::GetObjectDistance(NiBound* Bound){
     return sqrt(BoundPos * BoundPos);
 }
 
+bool RenderManager::IsReversedDepth() {
+	return NiDX9Renderer::GetSingleton()->m_fZClear < 1.0f;
+}
+
 void RenderManager::UpdateSceneCameraData() {
 
 	NiCamera* Camera = WorldSceneGraph->camera;
@@ -91,7 +95,7 @@ void RenderManager::SetupSceneCamera() {
 		float aspectRatio = FrustumWidth / FrustumHeight;
 		float nearZ = Frustum->Near;
 		float farZ = Frustum->Far;
-		float Q = farZ / (farZ - nearZ);
+		float fInvFmN = 1.0f / (farZ - nearZ);
 
 		float RpL = Frustum->Right + Frustum->Left; // always 0 for a viewport centered on 0 ?
 		float TpB = Frustum->Top + Frustum->Bottom; // always 0 for a viewport centered on 0 ?
@@ -179,12 +183,18 @@ void RenderManager::SetupSceneCamera() {
 		projMatrix._24 = 0.0f;
 		projMatrix._31 = -RpL / FrustumWidth;
 		projMatrix._32 = -TpB / FrustumHeight;
-		projMatrix._33 = Q;
 		projMatrix._34 = 1.0f;
 		projMatrix._41 = 0.0f;
 		projMatrix._42 = 0.0f;
-		projMatrix._43 = -Q * nearZ;
 		projMatrix._44 = 0.0f;
+		if (IsReversedDepth()) {
+			projMatrix._33 = -(nearZ * fInvFmN);
+			projMatrix._43 = nearZ * farZ * fInvFmN;
+		}
+		else {
+			projMatrix._33 = farZ * fInvFmN;
+			projMatrix._43 = -(nearZ * farZ * fInvFmN);
+		}
 
 		WorldViewProjMatrix = worldMatrix * viewMatrix * projMatrix;
 		ViewProjMatrix = viewMatrix * projMatrix;
@@ -197,9 +207,9 @@ void RenderManager::SetupSceneCamera() {
 		// depth reconstruction constants
 		//DepthConstants.x = - nearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
 		DepthConstants.x = TheShaderManager->Effects.CombineDepth->Constants.viewNearZ; //NearZ: TESR_ProjectionTransform._43 / TESR_ProjectionTransform._33
-		DepthConstants.y = (-farZ * Q) / (Q - 1.0f); // FarZ: (TESR_ProjectionTransform._33 * nearZ) / (TESR_ProjectionTransform._33 - 1.0f);
-		DepthConstants.z = 1 - NiDX9Renderer::GetSingleton()->m_fZClear; // detect inverted depth buffer
-		DepthConstants.w = 1.0;
+		DepthConstants.y = 0.0f;
+		DepthConstants.z = IsReversedDepth() ? 1.0f : 0.0f; // detect inverted depth buffer
+		DepthConstants.w = 1.0f;
 
 		CameraData.x = nearZ;
 		CameraData.y = farZ;
@@ -207,45 +217,6 @@ void RenderManager::SetupSceneCamera() {
 		CameraData.w = FOVData.x;
 	}
 
-}
-
-/*
-* Toggle depth direction between normal and inverse.
-*/
-void RenderManager::ToggleDepthDirection(bool inverted) {
-	if (inverted) {
-		*BSShaderManager::fDepthBias = 0.00002;
-		NiDX9Renderer::GetSingleton()->SetDepthClear(0.f);
-	}
-	else {
-		*BSShaderManager::fDepthBias = -0.00002;
-		NiDX9Renderer::GetSingleton()->SetDepthClear(1.f);
-	}
-
-	GeometryDecalShader* pGeomDecalShader = GeometryDecalShader::GetShader();
-	for (UInt32 i = 0; i < 2; i++) {
-		bool bSaved = false;
-		NiD3DRSEntry* pEntry = pGeomDecalShader->spPasses[i]->RenderStateGroup->FindRenderStateEntry(D3DRS_DEPTHBIAS, bSaved);
-		if (pEntry)
-			pEntry->m_uiValue = *BSShaderManager::fDepthBias;
-	}
-
-	for (UInt32 i = 0; i < 112; i++) {
-		bool bSaved = false;
-		NiD3DRSEntry* pEntry = Lighting30Shader::GetAllPasses()[i]->RenderStateGroup->FindRenderStateEntry(D3DRS_DEPTHBIAS, bSaved);
-		if (pEntry)
-			pEntry->m_uiValue = *BSShaderManager::fDepthBias;
-	}
-
-	TallGrassShader* pGrassShader = TallGrassShader::GetShader();
-	for (UInt32 i = 0; i < 44; i++) {
-		bool bSaved = false;
-		NiD3DRSEntry* pEntry = pGrassShader->GetPass(i)->RenderStateGroup->FindRenderStateEntry(D3DRS_DEPTHBIAS, bSaved);
-		if (pEntry)
-			pEntry->m_uiValue = *BSShaderManager::fDepthBias;
-	}
-
-	Logger::Log("Depth inversion status: %d, %f", TheSettingManager->SettingsMain.Main.InvertedDepth, NiDX9Renderer::GetSingleton()->m_fZClear);
 }
 
 // detect if dxvk is present

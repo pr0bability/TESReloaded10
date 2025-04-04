@@ -62,15 +62,20 @@ VS_OUTPUT main(VS_INPUT IN) {
     r0.z = r1.z - ((q0.x * q1.x) * GeomorphParams.y);
     float3 mdl11 = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), r0.xyzw);
 
-    // fog
-    float fogStrength = log2(1 - saturate((FogParam.x - length(mdl11)) / FogParam.y));
-    OUT.color_1.a = exp2(fogStrength * FogParam.z);
-    OUT.color_1.rgb = FogColor.rgb;
-
     OUT.position.w = dot(ModelViewProj[3].xyzw, r0.xyzw);
     OUT.position.xyz = mdl11.xyz;
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1 = LightData[0].xyz; // sun direction
+    
+    // Fog.
+    float3 fogPos = OUT.position.xyz;
+    #ifdef REVERSED_DEPTH
+        fogPos.z = OUT.position.w - fogPos.z;
+    #endif
+    float fogStrength = 1 - saturate((FogParam.x - length(fogPos)) / FogParam.y);
+    fogStrength = log2(fogStrength);
+    OUT.color_1.a = exp2(fogStrength * FogParam.z);
+    OUT.color_1.rgb = FogColor.rgb;
 
     OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
     OUT.worldpos = OUT.location.xyz + TESR_CameraPosition.xyz;

@@ -1,8 +1,7 @@
 //  Template for terrain shaders for blending up to 7 textures and using up to 8 pointlights.
 
 #if defined(__INTELLISENSE__)
-    #define PS
-    #define POINTLIGHT
+    #define VS
 #endif
 
 #define TERRAIN
@@ -63,13 +62,13 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.normal.xyz = IN.normal.xyz;
     
     // Fog.
-    float4 fog;
-    fog.zw = FogParam.z;
-    fog.xy = 1 - saturate((FogParam.x - length(mdl0.xyz)) / FogParam.y);
-    
-    fog = lit(fog.x, fog.y, fog.w);
-    
-    OUT.fog.a = fog.z;
+    float3 fogPos = OUT.sPosition.xyz;
+    #ifdef REVERSED_DEPTH
+        fogPos.z = OUT.sPosition.w - fogPos.z;
+    #endif
+    float fogStrength = 1 - saturate((FogParam.x - length(fogPos)) / FogParam.y);
+    fogStrength = log2(fogStrength);
+    OUT.fog.a = exp2(fogStrength * FogParam.z);
     OUT.fog.rgb = FogColor.rgb;
     
     OUT.viewPosition.xyz = mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz;

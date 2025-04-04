@@ -65,14 +65,14 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_4.x = 1 - saturate((9625.59961 - sqrt(r0.y + r0.x)) * 0.000375600968);
     
     // Fog.
-    r0.xy = sqr(LandBlendParams.zw - IN.position.xy);
-    r0.zw = FogParam.z;
-    r0.xy = 1 - saturate((FogParam.x - length(mdl4.xyz)) / FogParam.y);
-    
-    r0 = lit(r0.x, r0.y, r0.w);
-
-    OUT.texcoord_5.w = r0.z;
-    OUT.texcoord_5.xyz = FogColor.rgb;
+    float3 fogPos = OUT.position.xyz;
+    #ifdef REVERSED_DEPTH
+        fogPos.z = OUT.position.w - fogPos.z;
+    #endif
+    float fogStrength = 1 - saturate((FogParam.x - length(fogPos)) / FogParam.y);
+    fogStrength = log2(fogStrength);
+    OUT.texcoord_5.a = exp2(fogStrength * FogParam.z);
+    OUT.texcoord_5.rgb = FogColor.rgb;
 
     OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
     OUT.worldpos = OUT.location + TESR_CameraPosition.xyz;

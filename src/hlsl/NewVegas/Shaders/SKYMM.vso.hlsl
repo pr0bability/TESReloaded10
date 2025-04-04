@@ -4,7 +4,6 @@
 
 float4 BlendColor[3] : register(c4);
 row_major float4x4 ModelViewProj : register(c0);
-float4 TESR_DepthConstants : register(c13);
 
 
 // Registers:
@@ -48,11 +47,11 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
     
-    if (TESR_DepthConstants.z)
-        OUT.position.z = 0.0; // invert depth
-    else {
-        OUT.position.z *= 0.99999; // place in front of the sky to avoid Z fighting
-    }
+    #ifdef REVERSED_DEPTH
+        OUT.position.z *= 0.000050008f; // invert depth
+    #else
+        OUT.position.z *= 0.999949992f; // place in front of the sky to avoid Z fighting
+    #endif
 
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1.xy = IN.texcoord_0.xy;

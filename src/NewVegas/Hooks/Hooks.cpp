@@ -38,13 +38,6 @@ void AttachHooks() {
 	if (SettingsMain->FlyCam.Enabled) DetourAttach(&(PVOID&)UpdateFlyCam, &UpdateFlyCamHook);
 	DetourTransactionCommit();
 
-	// SetSamplerState hook.
-	SafeWrite32(0x10EF674, (UInt32)NiDX9RenderState__SetRenderStateEx);
-	SafeWrite32(0x10F08F4, (UInt32)NiDX9RenderState__SetRenderStateEx);
-
-	// SetCameraData hook.
-	SafeWrite32(0x10EE648, (UInt32)NiDX9Renderer__SetCameraDataEx);
-
 	SafeWriteCall(0xBE0B73, (UInt32)NiD3DVertexShaderEx::Free);
 	SafeWriteCall(0xBE0AF3, (UInt32)NiD3DPixelShaderEx::Free);
 	SafeWrite32(0x00E7624D, sizeof(RenderManager));

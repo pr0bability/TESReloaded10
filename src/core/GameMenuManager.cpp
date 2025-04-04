@@ -378,20 +378,6 @@ void GameMenuManager::HandleInput() {
 				TESWeather* Weather = (TESWeather*)DataHandler->GetFormByName(SelectedNode.MidSection, TESForm::FormType::kFormType_Weather);
 				Tes->sky->ForceWeather(Weather);
 			}
-			else if (isMainMiscSection && !memcmp(SelectedNode.Key, "InvertedDepth", 13)) {
-				bool InversionEnabled = TheSettingManager->SettingsMain.Main.InvertedDepth;
-				if (!InversionEnabled) {
-					TheRenderManager->ToggleDepthDirection(true);
-					TheSettingManager->SetMenuMiscEnabled("InvertedDepth", true);
-
-					// Force Sky shaders to avoid DI issues with vanilla shaders.
-					for (const char * ShaderName : { "Sky" }) {
-						bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(ShaderName);
-						if (!ShaderEnabled)
-							TheShaderManager->SwitchShaderStatus(ShaderName);
-					}
-				}
-			}
 			else if (SelectedColumn == COLUMNS::SETTINGS) {
 				TheSettingManager->Increment(SelectedNode.Section, SelectedNode.Key);
 			}
@@ -405,13 +391,6 @@ void GameMenuManager::HandleInput() {
 				// disable shaders and effects
 				bool ShaderEnabled = TheSettingManager->GetMenuShaderEnabled(SelectedNode.MidSection);
 				if (ShaderEnabled && !TheSettingManager->IsShaderForced(SelectedNode.MidSection)) TheShaderManager->SwitchShaderStatus(SelectedNode.MidSection);
-			}
-			else if (isMainMiscSection && !memcmp(SelectedNode.Key, "InvertedDepth", 13)) {
-				bool InversionEnabled = TheSettingManager->SettingsMain.Main.InvertedDepth;
-				if (InversionEnabled) {
-					TheRenderManager->ToggleDepthDirection(false);
-					TheSettingManager->SetMenuMiscEnabled("InvertedDepth", false);
-				}
 			}
 			else if (SelectedColumn == COLUMNS::SETTINGS) {
 				TheSettingManager->Decrement(SelectedNode.Section, SelectedNode.Key);

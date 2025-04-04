@@ -14,7 +14,6 @@ struct SettingsMainStruct {
 		bool	MemoryHeapManagement;
 		bool	MemoryTextureManagement;
 		bool	ReplaceIntro;
-		bool    InvertedDepth;
         bool    SkipFog;
         bool    RenderEffects;
         bool    RenderPreTonemapping;

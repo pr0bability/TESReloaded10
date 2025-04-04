@@ -376,7 +376,6 @@ void SettingManager::LoadSettings() {
 	SettingsMain.Main.HDRScreenshot = GetSettingI("Main.Main.Misc", "HDRScreenshot");
 	SettingsMain.Main.ReplaceIntro = GetSettingI("Main.Main.Misc", "ReplaceIntro");
 	SettingsMain.Main.ForceMSAA = GetSettingI("Main.Main.Misc", "ForceMSAA");
-	SettingsMain.Main.InvertedDepth = GetSettingI("Main.Main.Misc", "InvertedDepth");
 	SettingsMain.Main.SkipFog = GetSettingI("Main.Main.Misc", "SkipFog");
 	SettingsMain.Main.RenderEffects = GetSettingI("Main.Main.Misc", "RenderEffects");
 	SettingsMain.Main.RenderPreTonemapping = GetSettingI("Main.Main.Misc", "RenderPreTonemapping");
@@ -794,10 +793,6 @@ void SettingManager::SetSettingF(const char* Section, const char* Key, float Val
 	switch (Node.Type) {
 	case SettingManager::Configuration::NodeType::Boolean:
 		
-		// Handle depth inversion switching (Main.Main.Misc.InvertedDepth)
-		if (!memcmp(Section, "Main.Main.Misc", 14) && !memcmp(Key, "InvertedDepth", 13)) {
-			if ((bool)atof(Node.Value) != (bool)Value) TheRenderManager->ToggleDepthDirection((bool)Value);
-		}
 		// Handle switching shaders if the setting is Shader.<ShaderName>.Status.Enabled
 		if (!memcmp(Section, "Shaders", 7) && !memcmp(Section + strlen(Section) - 6, "Status", 6) && !memcmp(Key, "Enabled", 7)) {
 			if (((bool)atof(Node.Value) != (bool)Value) && ((bool)Value || !IsShaderForced(Node.MidSection))) TheShaderManager->SwitchShaderStatus(Node.MidSection);
@@ -1347,10 +1342,5 @@ void SettingManager::FillFromString(const char* String, const char* Delimiter, T
 }
 
 bool SettingManager::IsShaderForced(const char* Name) {
-	// Forced due to depth inversion.
-	if (SettingsMain.Main.InvertedDepth) {
-		if (!strcmp(Name, "Sky"))
-			return true;
-	}
 	return false;
 }

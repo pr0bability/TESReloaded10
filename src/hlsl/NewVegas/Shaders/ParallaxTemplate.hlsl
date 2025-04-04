@@ -78,10 +78,8 @@
 // PAR2023 - PARALLAX (NO_LIGHT)
 
 #if defined(__INTELLISENSE__)
-    #define PS
-    #define ONLY_SPECULAR
-    #define POINT
-    #define NUM_PT_LIGHTS 3
+    #define VS
+    #define REVERSED_DEPTH
 #endif
 
 #if defined(AD)
@@ -233,7 +231,11 @@ VS_OUTPUT main(VS_INPUT IN)
     #endif
     
     #ifndef NO_FOG
-        float fogStrength = 1 - saturate((FogParam.x - length(OUT.sPosition.xyz)) / FogParam.y);
+        float3 fogPos = OUT.sPosition.xyz;
+        #ifdef REVERSED_DEPTH
+            fogPos.z = OUT.sPosition.w - fogPos.z;
+        #endif
+        float fogStrength = 1 - saturate((FogParam.x - length(fogPos)) / FogParam.y);
         fogStrength = log2(fogStrength);  // Unclear.
         OUT.fogColor.a = exp2(fogStrength * FogParam.z);
         OUT.fogColor.rgb = FogColor.rgb;
