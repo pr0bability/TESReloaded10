@@ -320,7 +320,7 @@ void __fastcall MuzzleLightCullingFix(MuzzleFlash* This) {
 }
 
 BSFogProperty* __cdecl ShadowSceneNode__GetFogPropertyEx(UInt32 aeType) {
-	if (TheSettingManager->SettingsMain.Main.SkipFog && !TheShaderManager->GameState.isUnderwater) {
+	if (TheShaderManager->Effects.VolumetricFog->Enabled && !TheShaderManager->GameState.isUnderwater) {
 		aeType = 1;  // Use UI scene node and thus render no fog.
 	}
 
