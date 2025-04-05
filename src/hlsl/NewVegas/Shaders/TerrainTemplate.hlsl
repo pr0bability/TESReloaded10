@@ -55,7 +55,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.sPosition.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
     OUT.sPosition.xyz = mdl0.xyz;
     OUT.uv.xy = IN.uv.xy;
-    OUT.vertex_color.xyz = IN.vertex_color.rgb;
+    OUT.vertex_color.xyz = clamp(IN.vertex_color.rgb, 0.0f, 1.0f);
     OUT.lPosition.xyz = IN.position.xyz;
     OUT.tangent.xyz = IN.tangent.xyz;
     OUT.binormal.xyz = IN.binormal.xyz;

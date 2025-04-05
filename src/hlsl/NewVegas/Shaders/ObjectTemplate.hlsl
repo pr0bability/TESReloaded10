@@ -129,9 +129,6 @@
 
 #if defined(__INTELLISENSE__)
     #define VS
-    #define LIGHTS 5
-    #define SPECULAR
-    #define REVERSED_DEPTH
 #endif
 
 #if defined(DIFFUSE)
@@ -284,7 +281,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     #endif
     
     #ifndef NO_VERTEX_COLOR
-        OUT.vertexColor = IN.vertexColor;
+        OUT.vertexColor = clamp(IN.vertexColor, 0.0f, 1.0f);
     #endif
 
     #ifndef NO_FOG
@@ -437,7 +434,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         OUT.light6.w = lightUsed * LightData[lightOffset + 5].w;
     #endif
     
-    OUT.vertexColor = IN.vertexColor;
+    OUT.vertexColor = clamp(IN.vertexColor, 0.0f, 1.0f);
 
     float3 fogPos = OUT.sPosition.xyz;
     #ifdef REVERSED_DEPTH

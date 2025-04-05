@@ -188,7 +188,7 @@ VS_OUTPUT main(VS_INPUT IN)
     OUT.viewDir.w = length(eye);
     
     #ifndef NO_VERTEX_COLOR
-        OUT.vertexColor = IN.vertex_color;
+        OUT.vertexColor = clamp(IN.vertex_color, 0.0f, 1.0f);
     #endif
     
     #ifndef NO_LIGHT
