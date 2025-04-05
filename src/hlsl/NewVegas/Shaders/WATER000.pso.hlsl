@@ -60,8 +60,6 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float depthFog = saturate(invlerp(DepthFalloff.x, DepthFalloff.y, waterDepth.y));
     
     float2 fadedDepth = saturate(lerp(waterDepth, 1, invlerp(0, 4096, distance)));
-    float2 depths = float2(fadedDepth.y + depth, depth); // deepfog
-    depths = saturate((FogParam.x - depths) / FogParam.y); 
 
     float LODfade = saturate(smoothstep(4096,4096 * 2, distance));
     float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
@@ -92,6 +90,12 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     color = lerp(getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color), color, LODfade);
 
     color = delinearize(color);
-    OUT.color_0 = color;
+    
+    // Standard fog.
+    float fogStrength = pow(1 - saturate((FogParam.x - depth) / FogParam.y), FresnelRI.y);
+    
+    OUT.color_0.rgb = fogStrength * (FogColor.rgb - color.rgb) + color.rgb;
+    OUT.color_0.a = color.a;
+    
     return OUT;
 };

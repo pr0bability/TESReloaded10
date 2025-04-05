@@ -82,7 +82,13 @@ PS_OUTPUT main(PS_INPUT IN) {
     color +=  2 * pow(dot(surfaceNormal, eyeDirection), 2) * (refractions); // highlight
 
     color = delinearize(color); //delinearise
-    OUT.color_0 = float4(color.rgb, 1);
+    
+    // Standard fog.
+    float fogStrength = pow(1 - saturate((FogParam.x - depth) / FogParam.y), FresnelRI.y);
+    
+    OUT.color_0.rgb = fogStrength * (FogColor.rgb - color.rgb) + color.rgb;
+    OUT.color_0.a = 1;
+    
     return OUT;
 };
 

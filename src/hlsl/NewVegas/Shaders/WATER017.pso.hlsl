@@ -56,8 +56,6 @@ PS_OUTPUT main(PS_INPUT IN) {
     float depthFog = saturate(invlerp(DepthFalloff.x, DepthFalloff.y, waterDepth.y));
     
     float2 fadedDepth = saturate(lerp(waterDepth, 1, invlerp(0, 4096, distance)));
-    float2 depths = float2(fadedDepth.y + depth, depth); // deepfog
-    depths = saturate((FogParam.x - depths) / FogParam.y); 
 
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     surfaceNormal = getRipples(IN, TESR_RippleSampler, surfaceNormal, distance, TESR_WetWorldData.x);
@@ -86,7 +84,11 @@ PS_OUTPUT main(PS_INPUT IN) {
     color = lerp(getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color), color, LODfade);
 
     color = delinearize(color); //delinearise
-    OUT.color_0 = color;
+    
+    // Standard fog.
+    float fogStrength = pow(1 - saturate((FogParam.x - depth) / FogParam.y), FresnelRI.y);
+    
+    OUT.color_0.rgb = fogStrength * (FogColor.rgb - color.rgb) + color.rgb;
     OUT.color_0.a = lerp(color.a, 1, LODfade); // fade to full opacity to hide LOD seam
     return OUT;
 };

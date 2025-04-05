@@ -80,7 +80,12 @@ PS_OUTPUT main(PS_INPUT IN) {
     color.a = 1;
 
     color = delinearize(color); //delinearise
-    OUT.color_0 = color;
+    
+    // Standard fog.
+    float fogStrength = pow(1 - saturate((FogParam.x - depth) / FogParam.y), FresnelRI.y);
+    
+    OUT.color_0.rgb = fogStrength * (FogColor.rgb - color.rgb) + color.rgb;
+    OUT.color_0.a = color.a;
 
     return OUT;	
 };
