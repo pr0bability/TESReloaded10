@@ -374,6 +374,15 @@ bool NiCamera::LookAtWorldPoint(const NiPoint3& kWorldPt, const NiPoint3& kWorld
 	return ThisCall<bool>(0xA701B0, this, &kWorldPt, &kWorldUp);
 }
 
+// ShadowLightShader
+uint32_t* const ShadowLightShader::uiVertexConstantFlags = (uint32_t*)0x11FCC80;
+uint32_t* const ShadowLightShader::uiPixelConstantFlags = (uint32_t*)0x11FC0A0;
 
 D3DXMATRIX* const ShadowLightShader::VertexConstants::WorldTranspose = (D3DXMATRIX*)0x11FECC8;
 NiPoint4* const ShadowLightShader::VertexConstants::LODLandParams = (NiPoint4*)0x11FA0B0;
+
+void ShadowLightShader::EnableEyePositionForAllPasses() {
+	for (uint32_t i = 88; i < 561; i++) {
+		uiVertexConstantFlags[i] |= 0b10000000000;
+	}
+}
