@@ -7,10 +7,9 @@ row_major float4x4 ObjToCubeSpace : register(c8);
 float4 HighDetailRange : register(c12);
 float4 FogParam : register(c14);
 float3 FogColor : register(c15);
+float4 EyePosition : register(c16);
 float4 GeomorphParams : register(c19);
 float4 LightData[10] : register(c25);
-float4 TESR_CameraPosition : register(c36);
-float4x4 TESR_InvViewProjectionTransform : register(c37);
 
 // Registers:
 //
@@ -43,8 +42,8 @@ struct VS_OUTPUT {
     float4 position : POSITION;
     float2 texcoord_0 : TEXCOORD0;
     float3 texcoord_1 : TEXCOORD1;
-    float3 location : TEXCOORD2;
-    float3 worldpos : TEXCOORD3;
+    float3 lPosition : TEXCOORD2;
+    float3 eyePosition : TEXCOORD3;
 };
 
 // Code:
@@ -77,8 +76,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_1.a = exp2(fogStrength * FogParam.z);
     OUT.color_1.rgb = FogColor.rgb;
 
-    OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
-    OUT.worldpos = OUT.location.xyz + TESR_CameraPosition.xyz;
+    OUT.lPosition.xyz = r0.xyz;
+    OUT.eyePosition.xyz = EyePosition.xyz;
 
     return OUT;
 };

@@ -2105,6 +2105,40 @@ public:
 	NiD3DShaderConstantMap* spPixelConstantMap2;
 	NiD3DShaderConstantMap* spVertexConstantMap2;
 
+	enum VertexEntries {
+		kVX_WorldViewProjTranspose = 0,
+		kVX_WorldTranspose = 1,
+		kVX_SkinWorldViewProjTranspose = 2,
+		kVX_ShadowProj = 3,
+		kVX_ShadowProjData = 4,
+		kVX_ShadowProjTransform = 5,
+		kVX_LightData = 6,
+		kVX_FogParam_ShadowVolumeFatness = 7,
+		kVX_FogColor_ShadowVolumeExtrudeDistance = 8,
+		kVX_EyePosition = 9,
+		kVX_BoneMatrix3 = 10,
+		kVX_PrevBoneMatrix3 = 11,
+		kVX_SkinWorldTranspose = 12,
+		kVX_WorldViewTranspose = 13,
+		kVX_SkinWorldViewTranspose = 14,
+		kVX_Time = 15,
+		kVX_HighDetailRange = 16,
+		kVX_BoundCenter = 17,
+		kVX_DepthData = 18,
+		kVX_PrevWorldViewPT = 19,
+		kVX_PrevWorldViewT = 20,
+		kVX_LODLandParams = 21,
+	};
+
+	static uint32_t* const uiVertexConstantFlags;
+	static uint32_t* const uiPixelConstantFlags;
+
+	static void EnableEyePositionForAllPasses();
+
+	static __forceinline NiShaderConstantMapEntry* GetVertexConstantMapEntry(ShadowLightShader::VertexEntries index) {
+		return ((NiShaderConstantMapEntry**)0x11FEBD8)[index];
+	}
+
 	static __forceinline NiPoint4* GetConstant(int index) {
 		return &((NiPoint4*)0x11FA0C0)[index];
 	}

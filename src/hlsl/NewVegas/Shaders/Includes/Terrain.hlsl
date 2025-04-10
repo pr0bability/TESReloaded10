@@ -9,7 +9,6 @@
 
 float4 TESR_TerrainData : register(c32);
 float4 TESR_TerrainExtraData : register(c33);
-float4 TESR_DebugVar : register(c34);
 
 float3 blendDiffuseMaps(float3 vertexColor, float2 uv, int texCount, sampler2D tex[7], float blends[7]) {
     float3 color = tex2D(tex[0], uv).xyz * blends[0];
