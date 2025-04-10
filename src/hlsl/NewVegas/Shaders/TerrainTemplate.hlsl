@@ -1,7 +1,7 @@
 //  Template for terrain shaders for blending up to 7 textures and using up to 8 pointlights.
 
 #if defined(__INTELLISENSE__)
-    #define VS
+    #define PS
 #endif
 
 #define TERRAIN
@@ -37,10 +37,11 @@ struct VS_OUTPUT {
 
 #ifdef VS
 
-float3 FogColor : register(c15);
-float4 FogParam : register(c14);
 row_major float4x4 ModelViewProj : register(c0);
-float4x4 TESR_InvViewProjectionTransform : register(c36);
+
+float4 FogParam : register(c14);
+float3 FogColor : register(c15);
+float4 EyePosition : register(c16);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -71,7 +72,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.fog.a = exp2(fogStrength * FogParam.z);
     OUT.fog.rgb = FogColor.rgb;
     
-    OUT.viewPosition.xyz = mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz;
+    OUT.viewPosition.xyz = EyePosition.xyz;
 
     return OUT;
 };
@@ -115,9 +116,8 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 binormal = normalize(IN.binormal.xyz);
     float3 normal = normalize(IN.normal.xyz);
     float3x3 tbn = float3x3(tangent, binormal, normal);
-    float3 eyeDir = -mul(tbn, normalize(IN.viewPosition.xyz));
-
-    float dist = length(IN.viewPosition.xyz);
+    float3 eyeDir = normalize(mul(tbn, IN.viewPosition.xyz - IN.lPosition.xyz));
+    float dist = length(IN.viewPosition.xyz - IN.lPosition.xyz);
 
     float2 dx, dy;
     dx = ddx(IN.uv.xy);

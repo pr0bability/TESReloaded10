@@ -129,6 +129,8 @@
 
 #if defined(__INTELLISENSE__)
     #define VS
+    #define DIFFUSE
+    #define LIGHTS 2
 #endif
 
 #if defined(DIFFUSE)
@@ -216,11 +218,7 @@ float4 LightData[10] : register(c25);
     float4 Bones[54] : register(c44);
 #endif
 
-#ifdef SPECULAR
-    float4 EyePosition : register(c16);
-#else
-    float4x4 TESR_InvViewProjectionTransform : register(c36);
-#endif
+float4 EyePosition : register(c16);
 
 #ifdef PROJ_SHADOW
     row_major float4x4 ShadowProj : register(c18);
@@ -262,11 +260,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.lightDir.w = LightData[0].w;
     OUT.lightDir.xyz = mul(tbn, light);
     
-    #if defined(SPECULAR)
-        OUT.viewDir.xyz = mul(tbn, normalize(EyePosition.xyz - position.xyz));
-    #else
-        OUT.viewDir.xyz = -mul(tbn, mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz);
-    #endif
+    OUT.viewDir.xyz = mul(tbn, EyePosition.xyz - position.xyz);
     
     #if LIGHTS > 1 || NUM_PT_LIGHTS > 1
         light = LightData[1].xyz - position.xyz;
@@ -346,11 +340,7 @@ row_major float4x4 ModelViewProj : register(c0);
     row_major float4x4 SkinModelViewProj : register(c1);
     float4 Bones[54] : register(c44);
 #endif
-#ifdef SPECULAR
-    float4 EyePosition : register(c16);
-#else
-    float4x4 TESR_InvViewProjectionTransform : register(c36);
-#endif
+float4 EyePosition : register(c16);
 #ifndef OPT
     float4 fvars0 : register(c17);
 
@@ -381,11 +371,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         OUT.sPosition.xyzw = mul(SkinModelViewProj, position.xyzw);
     #endif
     
-    #if defined(SPECULAR)
-        float3 viewDir = mul(tbn, normalize(EyePosition.xyz - position.xyz));
-    #else
-        float3 viewDir = -mul(tbn, mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz);
-    #endif
+    float3 viewDir = mul(tbn, EyePosition.xyz - position.xyz);
     
     OUT.lPosition.xyz = position.xyz;
     OUT.lPosition.w = LightData[0].w;

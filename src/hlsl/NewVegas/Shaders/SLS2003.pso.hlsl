@@ -35,8 +35,8 @@ struct VS_INPUT {
     float2 NormalUV : TEXCOORD0;
     float4 color_1 : COLOR1;
     float3 texcoord_1 : TEXCOORD1_centroid;
-    float3 location : TEXCOORD2;
-    float3 worldpos : TEXCOORD3;
+    float3 lPosition : TEXCOORD2_centroid;
+    float3 eyePosition : TEXCOORD3_centroid;
 };
 
 struct VS_OUTPUT {
@@ -65,7 +65,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
     float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
     float3 baseColor = tex2D(BaseMap, uv).rgb;
-    float3 eyeDir = -normalize(IN.location.xyz);
+    float3 eyeDir = normalize(IN.eyePosition.xyz - IN.lPosition.xyz);
 
     // blending between parent tex and basemap + apply noise
     baseColor = r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w);

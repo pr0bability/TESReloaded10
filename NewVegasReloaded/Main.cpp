@@ -31,7 +31,17 @@ extern "C" {
 				Logger::Log("JG not found");
 			}
 
+			// Make sure all SLS vertex shaders pass and update EyePosition.
+			ShadowLightShader::EnableEyePositionForAllPasses();
+
 			break;
+		}
+	}
+
+	static void ShaderLoaderHandler(NVSEMessagingInterface::Message* msg) {
+		if (msg->type == 0) {
+			// Make sure all SLS vertex shaders pass and update EyePosition.
+			ShadowLightShader::EnableEyePositionForAllPasses();
 		}
 	}
 
@@ -60,6 +70,7 @@ extern "C" {
 
 		if (!Interface->IsEditor) {
 			((NVSEMessagingInterface*)Interface->QueryInterface(kInterface_Messaging))->RegisterListener(Interface->GetPluginHandle(), "NVSE", MessageHandler);
+			((NVSEMessagingInterface*)Interface->QueryInterface(kInterface_Messaging))->RegisterListener(Interface->GetPluginHandle(), "Shader Loader", ShaderLoaderHandler);
 
 			PluginVersion::CreateVersionString();
 			SettingManager::Initialize();

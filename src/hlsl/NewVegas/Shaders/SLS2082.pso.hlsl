@@ -30,8 +30,8 @@ struct VS_INPUT {
     float3 texcoord_3 : TEXCOORD3_centroid;
     float texcoord_4 : TEXCOORD4_centroid;
     float4 texcoord_5 : TEXCOORD5_centroid;
-    float4 location : TEXCOORD6;
-    float4 worldpos : TEXCOORD7;
+    float3 lPosition : TEXCOORD6_centroid;
+    float3 eyePosition : TEXCOORD7_centroid;
 };
 
 struct VS_OUTPUT {
@@ -46,7 +46,7 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 eyeDir = -normalize(IN.location.xyz);
+    float3 eyeDir = normalize(IN.eyePosition.xyz - IN.lPosition.xyz);
 
     float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_TerrainExtraData.w).r;
     noise = lerp(0, noise, IN.texcoord_4.x);
