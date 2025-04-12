@@ -702,7 +702,7 @@ void ShadowManager::RenderShadowMaps() {
 
 			// Resolve MSAA.
 			if (Shadows->ShadowAtlasSurfaceMSAA)
-				Device->StretchRect(Shadows->ShadowAtlasSurfaceMSAA, NULL, Shadows->ShadowAtlasSurface, NULL, D3DTEXF_LINEAR);
+				Device->StretchRect(Shadows->ShadowAtlasSurfaceMSAA, NULL, Shadows->ShadowAtlasSurface, NULL, D3DTEXF_NONE);
 
 			if (Shadows->Settings.ShadowMaps.Prefilter) BlurShadowAtlas();
 

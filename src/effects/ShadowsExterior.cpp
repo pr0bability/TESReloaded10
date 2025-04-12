@@ -178,8 +178,8 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 			break;
 		case 1:
 			Settings.ShadowMaps.Mode = 0;
-			Settings.ShadowMaps.FormatBits = 1;
-			Settings.ShadowMaps.Distance = 3000.0f;
+			Settings.ShadowMaps.FormatBits = 0;
+			Settings.ShadowMaps.Distance = 4000.0f;
 			Settings.ShadowMaps.CascadeResolution = 1024;
 			break;
 		case 2:
