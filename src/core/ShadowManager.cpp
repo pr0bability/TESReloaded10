@@ -455,7 +455,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 					continue;
 
 				// Skip refraction and fire refraction.
-				if (CheckShaderFlags(geo))
+				if (!CheckShaderFlags(geo))
 					continue;
 
 				bool isFirstPerson = shaderProp->m_usFlags.GetBit(NiShadeProperty::kFirstPerson);
