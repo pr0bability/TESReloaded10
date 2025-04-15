@@ -62,7 +62,9 @@ public:
 	virtual void			SetCT() = 0;
 	virtual void			CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) = 0;
 
-	static bool				ShouldCompileShader(const char* fileBin, const char* fileHlsl, ShaderCompileType CompileStatus);
+	static void				ReportError(HRESULT result);
+	static bool				FileExists(const char* path);
+	static bool				CheckPreprocessResult(const char* CachedPreprocessPath, ID3DXBuffer* ShaderSource);
 
 
 	ShaderFloatValue*		FloatShaderValues;

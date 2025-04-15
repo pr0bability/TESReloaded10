@@ -44,6 +44,8 @@ void __fastcall MuzzleLightCullingFix(MuzzleFlash* This);
 BSFogProperty* __cdecl ShadowSceneNode__GetFogPropertyEx(UInt32 aeType);
 NiPoint2* __fastcall WaterFogRemover(NiPoint2* point, void*, float x, float y);
 
+bool __fastcall NiDX9Renderer__Do_EndFrame(NiDX9Renderer* apThis, void*);
+
 void DetectorWindowDumpAttributes(HWND TreeView, UInt32 Msg, WPARAM wParam, LPTVINSERTSTRUCTA lParam);
 
 void DetectorWindowSetNodeName(char* Buffer, int Size, char* Format, char* ClassName, char* Name, float LPosX, float LPosY, float LPosZ);

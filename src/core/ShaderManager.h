@@ -66,6 +66,7 @@ public:
 	void					GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[], NiSpotLight* SpotLightList[]);
 	bool					LoadShader(NiD3DVertexShader* VertexShader);
 	bool					LoadShader(NiD3DPixelShader* PixelShader);
+	void					ReloadEffects();
 	ShaderCollection*		GetShaderCollection(const char* Name);
 	float					GetTransitionValue(float Day, float Night, float Interior);
 	bool					ShouldRenderShadowMaps();
@@ -74,7 +75,6 @@ public:
 	void					RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectRecord* Effect, bool clearRenderTarget);
 	void					SwitchShaderStatus(const char* Name);
 	void					SetCustomConstant(const char* Name, D3DXVECTOR4 Value);
-	void					SetExtraEffectEnabled(const char* Name, bool Value);
 		
 	struct	EffectsStruct {
 		AmbientOcclusionEffect*	AmbientOcclusion;
@@ -110,7 +110,6 @@ public:
 		WaterLensEffect*		WaterLens;
 		WetWorldEffect*			WetWorld;
 		SMAAEffect*				SMAA;
-		EffectsList				ExtraEffects;
 	};
 
 	struct ShadersStruct{
@@ -123,7 +122,6 @@ public:
 		SkinShaders*			Skin;
 		GrassShaders*			Grass;
 		TerrainShaders*			Terrain;
-		ExtraShaders*			ExtraShaders;
 	};
 
 	struct GameStateStruct {
@@ -158,6 +156,7 @@ public:
     bool                    IsMenuSwitch;
     bool                    orthoRequired;
     bool                    avglumaRequired;
+	bool					EffectReloadQueued;
 	D3DXVECTOR4				SpotLightPosition[SpotLightsMax];
 	D3DXVECTOR4				SpotLightColor[SpotLightsMax];
 	D3DXVECTOR4				SpotLightDirection[SpotLightsMax];

@@ -5,15 +5,6 @@ EffectRecord::EffectRecord(const char* effectName) {
 
 	Name = effectName;
 
-	char FileName[MAX_PATH];
-	strcpy(FileName, EffectsPath);
-	strcat(FileName, Name);
-	strcat(FileName, ".fx");
-	Path = new std::string(FileName);
-
-	strcat(FileName, ".hlsl");
-	SourcePath = new std::string(FileName);
-
 	Effect = NULL;
 	Enabled = false;
 	renderTime = 0;
@@ -23,8 +14,6 @@ EffectRecord::EffectRecord(const char* effectName) {
 /*Shader Values arrays are freed in the superclass Destructor*/
 EffectRecord::~EffectRecord() {
 	if (Effect) Effect->Release();
-	delete Path;
-	delete SourcePath;
 }
 
 /*
@@ -47,77 +36,162 @@ void EffectRecord::ClearSampler(const char* TextureName, size_t Length) {
 void EffectRecord::DisposeEffect() {
 	if (Effect) Effect->Release();
 	Effect = nullptr;
+
 	delete[] FloatShaderValues;
+	FloatShaderValues = nullptr;
+	FloatShaderValuesCount = 0;
+
 	delete[] TextureShaderValues;
+	TextureShaderValues = nullptr;
+	TextureShaderValuesCount = 0;
+
 	Enabled = false;
 }
 
 /*
  * Compile and Load the Effect shader
  */
-bool EffectRecord::LoadEffect(bool alwaysCompile) {
+bool EffectRecord::LoadEffect() {
 	auto timer = TimeLogger();
-
-	ID3DXBuffer* ShaderSource = NULL;
-	ID3DXBuffer* Errors = NULL;
-	ID3DXEffect* Effect = NULL;
 	bool success = false;
-	HRESULT prepass = D3DXPreprocessShaderFromFileA(SourcePath->data(), NULL, NULL, &ShaderSource, &Errors);
+
+	ID3DXEffect* Effect = NULL;
 	ID3DXEffectCompiler* Compiler = NULL;
+	ID3DXBuffer* EffectSource = NULL;
+	ID3DXBuffer* Errors = NULL;
 	ID3DXBuffer* EffectBuffer = NULL;
-	HRESULT load = NULL;
 
-	if (alwaysCompile || ShouldCompileShader(Path->data(), SourcePath->data(), (ShaderCompileType)TheSettingManager->SettingsMain.Develop.CompileEffects)) {
-		HRESULT comp = D3DXCreateEffectCompilerFromFileA(SourcePath->data(), NULL, NULL, NULL, &Compiler, &Errors);
-		if (FAILED(comp)) goto cleanup;
-		if (Errors) {
-			Logger::Log((char*)Errors->GetBufferPointer());
-			Errors->Release();
-			Errors = nullptr;
-		}
+	char BaseDirectory[MAX_PATH];
+	char CacheDirectory[MAX_PATH];
+	char EffectSourcePath[MAX_PATH];
+	char EffectPreprocessedPath[MAX_PATH];
+	char EffectCompiledPath[MAX_PATH];
 
-		HRESULT compiled = Compiler->CompileEffect(NULL, &EffectBuffer, &Errors);
-		if (FAILED(compiled)) goto cleanup;
-		if (Errors) {
-			Logger::Log((char*)Errors->GetBufferPointer());
-			Errors->Release();
-			Errors = nullptr;
-		}
+	// Build filenames.
+	strcpy(BaseDirectory, EffectsPath);
+	strcpy(CacheDirectory, BaseDirectory);
+	strcat(CacheDirectory, "Cache\\");
 
-		if (EffectBuffer) {
-			std::ofstream FileBinary(Path->data(), std::ios::out | std::ios::binary);
-			FileBinary.write((char*)EffectBuffer->GetBufferPointer(), EffectBuffer->GetBufferSize());
-			FileBinary.flush();
-			FileBinary.close();
-			Logger::Log("Effect compiled: %s", SourcePath->data());
-		}
+	strcpy(EffectSourcePath, BaseDirectory);
+	strcat(EffectSourcePath, Name);
+	strcat(EffectSourcePath, ".fx.hlsl");
+
+	if (!FileExists(EffectSourcePath)) {
+		return success;
 	}
 
-	load = D3DXCreateEffectFromFileA(TheRenderManager->device, Path->data(), NULL, NULL, NULL, NULL, &Effect, &Errors);
-	if (FAILED(load)) goto cleanup;
+	strcpy(EffectPreprocessedPath, CacheDirectory);
+	strcat(EffectPreprocessedPath, Name);
+	strcat(EffectPreprocessedPath, ".fx.hlsl");
 
-	if (Errors) Logger::Log((char*)Errors->GetBufferPointer()); // LAst can be cleaned in the cleanup section
+	strcpy(EffectCompiledPath, CacheDirectory);
+	strcat(EffectCompiledPath, Name);
+	strcat(EffectCompiledPath, ".fx");
+
+	HRESULT prepass = D3DXPreprocessShaderFromFileA(EffectSourcePath, NULL, NULL, &EffectSource, &Errors);
+	if (prepass == D3D_OK) {
+		bool Compile = !CheckPreprocessResult(EffectPreprocessedPath, EffectSource);
+		bool CompiledExists = FileExists(EffectCompiledPath);
+
+		if (!Compile && CompiledExists) {
+			HRESULT loaded = D3DXCreateEffectFromFileA(TheRenderManager->device, EffectCompiledPath, NULL, NULL, D3DXFX_LARGEADDRESSAWARE, NULL, &Effect, &Errors);
+			if (FAILED(loaded)) {
+				ReportError(loaded);
+				if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+
+				if (Effect) { Effect->Release(); Effect = NULL; }
+				if (Errors) { Errors->Release(); Errors = NULL; }
+			}
+
+			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+			
+			success = true;
+		}
+
+		if (Compile || !CompiledExists || !Effect) {
+			// compile if option was enabled or compiled version not found
+			HRESULT compiled = D3DXCreateEffectCompiler(
+				(const char*)EffectSource->GetBufferPointer(), 
+				EffectSource->GetBufferSize(), 
+				NULL, 
+				NULL, 
+				NULL, 
+				&Compiler, 
+				&Errors
+			);
+			if (FAILED(compiled)) {
+				ReportError(compiled);
+				if (Compiler) Compiler->Release();
+				if (EffectSource) EffectSource->Release();
+				if (Effect) Effect->Release();
+				if (Errors) Errors->Release();
+				Enabled = false;
+				return success;
+			}
+			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+
+			compiled = Compiler->CompileEffect(NULL, &EffectBuffer, &Errors);
+			if (FAILED(compiled)) {
+				ReportError(compiled);
+				if (Compiler) Compiler->Release();
+				if (EffectSource) EffectSource->Release();
+				if (Effect) Effect->Release();
+				if (Errors) Errors->Release();
+				Enabled = false;
+				return success;
+			}
+			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+
+			if (EffectBuffer) {
+				std::ofstream FileBinary(EffectCompiledPath, std::ios::out | std::ios::binary);
+				FileBinary.write((const char*)EffectBuffer->GetBufferPointer(), EffectBuffer->GetBufferSize());
+				FileBinary.flush();
+				FileBinary.close();
+
+				std::ofstream FilePreprocess(EffectPreprocessedPath, std::ios::out | std::ios::binary);
+				FilePreprocess.write((const char*)EffectSource->GetBufferPointer(), EffectSource->GetBufferSize());
+				FilePreprocess.flush();
+				FilePreprocess.close();
+
+				Logger::Log("Effect compiled: %s", EffectSourcePath);
+			}
+
+			HRESULT loaded = D3DXCreateEffectFromFileA(TheRenderManager->device, EffectCompiledPath, NULL, NULL, D3DXFX_LARGEADDRESSAWARE, NULL, &Effect, &Errors);
+			if (FAILED(loaded)) {
+				ReportError(loaded);
+				if (Compiler) Compiler->Release();
+				if (EffectSource) EffectSource->Release();
+				if (Effect) Effect->Release();
+				if (Errors) Errors->Release();
+				if (EffectBuffer) EffectBuffer->Release();
+				Enabled = false;
+				return success;
+			}
+			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+
+			success = true;
+		}
+	}
+	else {
+		ReportError(prepass);
+		if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
+	}
+
 	if (Effect) {
 		this->Effect = Effect;
-		CreateCT(ShaderSource, NULL); //Create the object which will associate a register index to a float pointer for constants updates;
-		Logger::Log("Effect loaded: %s", Path->data());
-	}
-
-	success = true;
-cleanup:
-	if (EffectBuffer) EffectBuffer->Release();
-	if (Compiler) Compiler->Release();
-
-	if (ShaderSource) ShaderSource->Release();
-	if (Errors) {
-		Logger::Log((char*)Errors->GetBufferPointer());
-		Errors->Release();
+		CreateCT(EffectSource, NULL); //Create the object which will associate a register index to a float pointer for constants updates;
+		Logger::Log("Effect loaded: %s.fx", Name);
 	}
 
 	// set enabled status of effect based on success and setting
 	Enabled = Effect != nullptr && TheSettingManager->GetMenuShaderEnabled(Name);
 
-	timer.LogTime("EffectRecord::LoadSEffect");
+	if (Compiler) Compiler->Release();
+	if (Errors) Errors->Release();
+	if (EffectBuffer) EffectBuffer->Release();
+	if (EffectSource) EffectSource->Release();
+
+	timer.LogTime("EffectRecord::LoadEffect");
 
 	return success;
 }
@@ -245,21 +319,21 @@ void EffectRecord::SetCT() {
 }
 
 /*
- * Enable or Disable Effect, with reloading it if it's changed on disk
+ * Enable or Disable Effect, with loading if not loaded
  */
 bool EffectRecord::SwitchEffect() {
 	bool change = true;
-	if (!IsLoaded() || (!Enabled && ShouldCompileShader(Path->data(), SourcePath->data(), ShaderCompileType::RecompileChanged))) {
-		Logger::Log("Effect %s is not loaded", Path->data());
+	if (!IsLoaded() && !Enabled) {
+		Logger::Log("Effect %s is not loaded", Name);
 		DisposeEffect();
-		change = LoadEffect(true);
+		change = LoadEffect();
 	}
 	if (change) {
 		Enabled = !Enabled;
 	}
 	else {
 		char Message[256] = "Error: Couldn't enable effect ";
-		strcat(Message, Path->data());
+		strcat(Message, Name);
 
 		InterfaceManager->ShowMessage(Message);
 		Logger::Log(Message);
@@ -300,6 +374,6 @@ void EffectRecord::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTar
 		Logger::Log("Error during rendering of effect %s: %s", Name, e.what());
 	}
 
-	std::string name = "EffectRecord::Render " + *Path;
+	std::string name = "EffectRecord::Render " + std::string(Name);
 	renderTime = timer.LogTime(name.c_str());
 }

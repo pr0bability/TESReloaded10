@@ -16,7 +16,7 @@ public:
 	virtual void			Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, UINT techniqueIndex, bool ClearRenderTarget, IDirect3DSurface9* SourceBuffer);
 	void					ClearSampler(const char* TextureName, size_t Length);
 	void					DisposeEffect();
-	bool					LoadEffect(bool alwaysCompile = false);
+	bool					LoadEffect();
 
 	bool 					IsLoaded();
 	bool					Enabled;
@@ -24,7 +24,5 @@ public:
 	float					constantUpdateTime;
 
 	ID3DXEffect* Effect;
-	std::string* Path;
-	std::string* SourcePath;
 	const char* Name;
 };

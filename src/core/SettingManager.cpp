@@ -564,8 +564,6 @@ void SettingManager::LoadSettings() {
 	SettingsMain.FlyCam.KeySubtract = GetSettingI("Main.FlyCam.Main", "KeySubtract");
 	SettingsMain.FlyCam.StepValue = GetSettingF("Main.FlyCam.Main", "StepValue");
 
-	SettingsMain.Develop.CompileShaders = GetSettingI("Main.Develop.Main", "CompileShaders");
-	SettingsMain.Develop.CompileEffects = GetSettingI("Main.Develop.Main", "CompileEffects");
 	SettingsMain.Develop.DebugMode = GetSettingI("Main.Develop.Main", "DebugMode");
 	SettingsMain.Develop.TraceShaders = GetSettingI("Main.Develop.Main", "TraceShaders");
 

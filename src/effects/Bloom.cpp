@@ -141,6 +141,5 @@ void BloomEffect::RenderBloomBuffer(IDirect3DSurface9* RenderTarget) {
 	Device->SetStreamSource(0, TheShaderManager->FrameVertex, 0, sizeof(FrameVS)); // Reset vertex buffer for other effects.
 	Device->SetRenderTarget(0, RenderTarget);  // Reset render target for other effects.
 
-	std::string name = "EffectRecord::Render " + *Path;
-	renderTime = timer.LogTime(name.c_str());
+	renderTime = timer.LogTime("EffectRecord::Render Bloom");
 }

@@ -268,8 +268,7 @@ void CommandManager::PluginCommands::GetLocationName(double* result) {
 
 void CommandManager::PluginCommands::SetExtraEffectEnabled(double* result, const char* Name, bool Value) {
 
-	TheShaderManager->SetExtraEffectEnabled(Name, Value);
-	*result = 1;
+	*result = 0;
 
 }
 

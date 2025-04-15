@@ -200,8 +200,6 @@ struct SettingsMainStruct {
 	};
 
 	struct DevelopStruct {
-		UInt8	CompileShaders;  // 1 Compile All, 2 Compile modified or missing only, 3 Compile only in menu
-		UInt8	CompileEffects;
 		bool    DebugMode;       // enables hotkeys to print textures
 		UInt8	TraceShaders;
 	};

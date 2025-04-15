@@ -47,8 +47,7 @@ void SMAAEffect::Render(IDirect3DDevice9* Device, IDirect3DSurface9* RenderTarge
 
 	if (RenderedSurface) Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_LINEAR);
 
-	std::string name = "EffectRecord::Render " + *Path;
-	renderTime = timer.LogTime(name.c_str());
+	renderTime = timer.LogTime("EffectRecord::Render SMAA");
 }
 
 void SMAAEffect::EdgesDetectionPass(Input input) {
