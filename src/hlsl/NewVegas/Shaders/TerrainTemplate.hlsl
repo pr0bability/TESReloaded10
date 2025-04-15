@@ -2,9 +2,16 @@
 
 #if defined(__INTELLISENSE__)
     #define PS
+    #define POINTLIGHT
 #endif
 
 #define TERRAIN
+
+#ifndef ILS
+    #define NUM_PT_LIGHTS 3
+#else
+    #define NUM_PT_LIGHTS 12
+#endif
 
 #include "includes/Helpers.hlsl"
 #include "includes/Terrain.hlsl"
@@ -137,9 +144,8 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
 
     #if defined(POINTLIGHT)
-        int lightCount = 12;
         float3 pointlightDir;
-        [unroll] for (int i = 0; i < lightCount; i++) {
+        [unroll] for (int i = 0; i < NUM_PT_LIGHTS; i++) {
             pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
             lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb, eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
