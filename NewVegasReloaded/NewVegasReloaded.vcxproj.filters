@@ -88,9 +88,6 @@
     <ClInclude Include="..\src\effects\Exposure.h">
       <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\effects\ExtraShaders.h">
-      <Filter>Effects</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\effects\GodRays.h">
       <Filter>Effects</Filter>
     </ClInclude>

@@ -83,6 +83,9 @@ void AttachHooks() {
 		SafeWriteCall(uiAddress, (UInt32)ShadowSceneNode__GetFogPropertyEx);
 	}
 
+	// End frame hook for effect reload.
+	SafeWrite32(0x10EE63C, (UInt32)NiDX9Renderer__Do_EndFrame);
+
 	if (TheSettingManager->SettingsMain.Main.RemoveUnderwater)
 		SafeWriteCall(0x4EC8EE, UInt32(WaterFogRemover));
 

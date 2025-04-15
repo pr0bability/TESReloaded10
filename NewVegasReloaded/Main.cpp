@@ -42,6 +42,9 @@ extern "C" {
 		if (msg->type == 0) {
 			// Make sure all SLS vertex shaders pass and update EyePosition.
 			ShadowLightShader::EnableEyePositionForAllPasses();
+
+			// Reload all effects.
+			TheShaderManager->EffectReloadQueued = true;
 		}
 	}
 
@@ -66,13 +69,16 @@ extern "C" {
 #endif
 
 		Logger::Initialize("NewVegasReloaded.log");
+
+		PluginVersion::CreateVersionString();
+		Logger::Log(PluginVersion::VersionString);
+
 		CommandManager::Initialize(Interface);
 
 		if (!Interface->IsEditor) {
 			((NVSEMessagingInterface*)Interface->QueryInterface(kInterface_Messaging))->RegisterListener(Interface->GetPluginHandle(), "NVSE", MessageHandler);
 			((NVSEMessagingInterface*)Interface->QueryInterface(kInterface_Messaging))->RegisterListener(Interface->GetPluginHandle(), "Shader Loader", ShaderLoaderHandler);
-
-			PluginVersion::CreateVersionString();
+			
 			SettingManager::Initialize();
 			TheSettingManager->LoadSettings();
 			AttachHooks();

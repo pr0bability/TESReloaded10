@@ -24,48 +24,7 @@ ShaderRecord::ShaderRecord() {
 }
 ShaderRecord::~ShaderRecord() {}
 
-
-/**
-* @param fileBin the name of the compiled shader file
-* @param fileHlsl the name of the hlsl source file for this shader
-* @param CompileStatus an integer for the status of the compilation. If set to 2, will compare file dates to return status.
-* @returns wether the shader should be compiled, from a given binary shader and corresponding hlsl.
-*/
-bool ShaderProgram::ShouldCompileShader(const char* fileBin, const char* fileHlsl, ShaderCompileType CompileStatus) {
-	if (CompileStatus == ShaderCompileType::AlwaysOn) return  true;
-	if (CompileStatus == ShaderCompileType::AlwaysOff) return  false;
-	if (CompileStatus == ShaderCompileType::RecompileInMenu) return TheShaderManager->IsMenuSwitch ? true : false;
-
-	if (CompileStatus != ShaderCompileType::RecompileChanged) return false;
-
-	WIN32_FILE_ATTRIBUTE_DATA attributesBin = { 0 };
-	WIN32_FILE_ATTRIBUTE_DATA attributesSource = { 0 };
-	BOOL hr = GetFileAttributesExA(fileBin, GetFileExInfoStandard, &attributesBin); // from winbase.h
-	if (!hr) 
-		return true; //File not present, compile
-
-	hr = GetFileAttributesExA(fileHlsl, GetFileExInfoStandard, &attributesSource); // from winbase.h
-	if (!hr) {
-		Logger::Log("[ERROR] Can't Compile %s, source cannot be read", fileHlsl);
-		return false;
-	}
-
-	ULARGE_INTEGER timeBin, timeSource;
-	timeBin.LowPart = attributesBin.ftLastWriteTime.dwLowDateTime;
-	timeBin.HighPart = attributesBin.ftLastWriteTime.dwHighDateTime;
-	timeSource.LowPart = attributesSource.ftLastWriteTime.dwLowDateTime;
-	timeSource.HighPart = attributesSource.ftLastWriteTime.dwHighDateTime;
-
-	if (timeBin.QuadPart < timeSource.QuadPart) {
-		Logger::Log("Binary older then source, compile %s", fileHlsl);
-		return true;
-	}
-
-	return false;
-}
-
-
-void reportError(HRESULT result) {
+void ShaderProgram::ReportError(HRESULT result) {
 	if (result == E_ABORT) Logger::Log("Operation aborted");
 	if (result == E_ACCESSDENIED) Logger::Log("Access Denied");
 	if (result == E_FAIL) Logger::Log("Operation Failed");
@@ -76,6 +35,52 @@ void reportError(HRESULT result) {
 	if (result == E_OUTOFMEMORY) Logger::Log("Out of memory");
 	if (result == E_POINTER) Logger::Log("Invalid pointer");
 	if (result == E_UNEXPECTED) Logger::Log("Unexpected fail");
+}
+
+/*
+* Check for file existence.
+*/
+bool ShaderProgram::FileExists(const char* path) {
+	WIN32_FILE_ATTRIBUTE_DATA attributes = { 0 };
+	return GetFileAttributesExA(path, GetFileExInfoStandard, &attributes);
+}
+
+/*
+* Check if cached preprocessed source exists and matches the current result.
+*/
+bool ShaderProgram::CheckPreprocessResult(const char* CachedPreprocessPath, ID3DXBuffer* ShaderSource) {
+	void* CurrentContent = ShaderSource->GetBufferPointer();
+	
+	ID3DXBuffer* CachedSource;
+	void* CachedContent;
+	
+	std::ifstream File(CachedPreprocessPath, std::ios::in | std::ios::ate);
+	if (File.is_open()) {
+		std::streamoff Size = File.tellg();
+		D3DXCreateBuffer(Size, &CachedSource);
+		File.seekg(0, std::ios::beg);
+		CachedContent = CachedSource->GetBufferPointer();
+		File.read((char*)CachedContent, Size);
+		File.close();
+	}
+	else {
+		return false;
+	}
+
+	bool match;
+
+	if (!CachedContent) {
+		match = false;
+	}
+	else if (ShaderSource->GetBufferSize() != CachedSource->GetBufferSize()) {
+		match = false;
+	}
+	else {
+		match = !memcmp(CurrentContent, CachedContent, ShaderSource->GetBufferSize());
+	}
+
+	if (CachedSource) CachedSource->Release();
+	return match;
 }
 
 /*
@@ -91,30 +96,63 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 	ID3DXBuffer* Errors = NULL;
 	ID3DXConstantTable* ConstantTable = NULL;
 	void* Function = NULL;
-	UInt32 SourceSize = 0;
 	char ShaderProfile[7];
-	char FileName[MAX_PATH];
-	char FileNameBinary[MAX_PATH];
+	
+	char BaseDirectory[MAX_PATH];
+	char CacheDirectory[MAX_PATH];
+	char ShaderSourcePath[MAX_PATH];
+	char ShaderPreprocessedPath[MAX_PATH];
+	char ShaderCompiledPath[MAX_PATH];
 	
 	// Build filenames.
-	strcpy(FileName, ShadersPath);
-	if (SubPath) strcat(FileName, SubPath);
-	strcat(FileName, Name);
-	strcpy(FileNameBinary, FileName);
+	strcpy(BaseDirectory, ShadersPath);
+	strcpy(CacheDirectory, BaseDirectory);
+	strcat(CacheDirectory, "Cache\\");
+	if (SubPath) strcat(BaseDirectory, SubPath);
+	if (SubPath) strcat(CacheDirectory, SubPath);
 
-	// If we have a template, we want to use the corresponding input file.
+	strcpy(ShaderSourcePath, BaseDirectory);
 	if (Template.Name != NULL) {
-		memset(FileName, 0, MAX_PATH);
-		strcpy(FileName, ShadersPath);
-		if (SubPath) strcat(FileName, SubPath);
-		strcat(FileName, Template.Name);
+		strcat(ShaderSourcePath, Template.Name);
 	}
-	
-	strcat(FileName, ".hlsl");
+	else {
+		strcat(ShaderSourcePath, Name);
+	}
+	strcat(ShaderSourcePath, ".hlsl");
 
-	HRESULT prepass = D3DXPreprocessShaderFromFileA(FileName, NULL, NULL, &ShaderSource, &Errors);
-	bool Compile = ShouldCompileShader(FileNameBinary, FileName, (ShaderCompileType)TheSettingManager->SettingsMain.Develop.CompileShaders);
+	if (!FileExists(ShaderSourcePath)) {
+		return ShaderProg;
+	}
+
+	strcpy(ShaderPreprocessedPath, CacheDirectory);
+	strcat(ShaderPreprocessedPath, Name);
+	strcat(ShaderPreprocessedPath, ".hlsl");
+
+	strcpy(ShaderCompiledPath, CacheDirectory);
+	strcat(ShaderCompiledPath, Name);
+
+	D3DXMACRO* Macros = NULL;
+	if (Template.Name != NULL && TheRenderManager->IsReversedDepth()) {
+		int i = 0;
+		bool nullFound = false;
+		while (!nullFound) {
+			nullFound = Template.Defines[i].Name == NULL;
+			if (!nullFound) i++;
+		}
+		Template.Defines[i] = { "REVERSED_DEPTH", "" };
+		Macros = &(Template.Defines[0]);
+	}
+	else if (Template.Name != NULL) {
+		Macros = &(Template.Defines[0]);
+	}
+	else if (TheRenderManager->IsReversedDepth()) {
+		D3DXMACRO reversed_depth[2] = { {"REVERSED_DEPTH", ""} };
+		Macros = &(reversed_depth[0]);
+	}
+
+	HRESULT prepass = D3DXPreprocessShaderFromFileA(ShaderSourcePath, Macros, NULL, &ShaderSource, &Errors);
 	if (prepass == D3D_OK) {
+		bool Compile = !CheckPreprocessResult(ShaderPreprocessedPath, ShaderSource);
 
 		if (strstr(Name, ".vso"))
 			strcpy(ShaderProfile, "vs_3_0");
@@ -122,7 +160,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 			strcpy(ShaderProfile, "ps_3_0");
 
 		if (!Compile){
-			std::ifstream FileBinary(FileNameBinary, std::ios::in | std::ios::binary | std::ios::ate);
+			std::ifstream FileBinary(ShaderCompiledPath, std::ios::in | std::ios::binary | std::ios::ate);
 			if (FileBinary.is_open()) {
 				std::streamoff Size = FileBinary.tellg();
 				D3DXCreateBuffer(Size, &Shader);
@@ -130,46 +168,43 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 				Function = Shader->GetBufferPointer();
 				FileBinary.read((char*)Function, Size);
 				FileBinary.close();
-				//D3DXGetShaderConstantTable((const DWORD*)Function, &ConstantTable);
 			}
 			else {
-				Logger::Log("ERROR: Shader binary %s not found.", FileNameBinary);
+				Logger::Log("ERROR: Shader binary %s not found.", ShaderCompiledPath);
 			}
 		}
 
 		if (Compile || !Function) {
 			// compile if option was enabled or compiled version not found
-			D3DXMACRO* defines = NULL;
-			if (Template.Name != NULL && TheRenderManager->IsReversedDepth()) {
-				int i = 0;
-				bool nullFound = false;
-				while (!nullFound) {
-					nullFound = Template.Defines[i].Name == NULL;
-					if (!nullFound) i++;
-				}
-				Template.Defines[i] = {"REVERSED_DEPTH", ""};
-				defines = &(Template.Defines[0]);
-			}
-			else if (Template.Name != NULL) {
-				defines = &(Template.Defines[0]);
-			}
-			else if (TheRenderManager->IsReversedDepth()) {
-				D3DXMACRO reversed_depth[2] = { {"REVERSED_DEPTH", ""} };
-				defines = &(reversed_depth[0]);
-			}
-
-			D3DXCompileShaderFromFileA(FileName, defines, NULL, "main", ShaderProfile, NULL, &Shader, &Errors, &ConstantTable);
+			D3DXCompileShader(
+				(const char*)ShaderSource->GetBufferPointer(),
+				ShaderSource->GetBufferSize(),
+				NULL,
+				NULL,
+				"main",
+				ShaderProfile,
+				NULL,
+				&Shader,
+				&Errors,
+				&ConstantTable
+			);
 			if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 			if (Shader) {
 				Function = Shader->GetBufferPointer();
-				std::ofstream FileBinary(FileNameBinary, std::ios::out | std::ios::binary);
+				std::ofstream FileBinary(ShaderCompiledPath, std::ios::out | std::ios::binary);
 				FileBinary.write((const char*)Function, Shader->GetBufferSize());
 				FileBinary.flush();
 				FileBinary.close();
+
+				std::ofstream FilePreprocess(ShaderPreprocessedPath, std::ios::out | std::ios::binary);
+				FilePreprocess.write((const char*)ShaderSource->GetBufferPointer(), ShaderSource->GetBufferSize());
+				FilePreprocess.flush();
+				FilePreprocess.close();
+
 				if (Template.Name == NULL)
-					Logger::Log("Shader compiled: %s", FileName);
+					Logger::Log("Shader compiled: %s", ShaderCompiledPath);
 				else
-					Logger::Log("Shader compiled: %s using template: %s", FileNameBinary, FileName);
+					Logger::Log("Shader compiled: %s using template: %s", ShaderCompiledPath, ShaderSourcePath);
 			}
 		}
 
@@ -177,31 +212,27 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 
 		if (FAILED(get)) {
 			Logger::Log("Encountered an issue getting constant table for %s", Name);
-			reportError(get);
+			ReportError(get);
 		}
 		else {
 			D3DXCONSTANTTABLE_DESC ConstantTableDesc;
 			get = ConstantTable->GetDesc(&ConstantTableDesc);
-			reportError(get);
+			ReportError(get);
 
 			if (FAILED(get)) {
 				Logger::Log("Issues getting constants descriptions for %s", Name);
 			}
-			else {
-				//Logger::Log("Compile time: Shader %s - %s has %i constants", Name, ConstantTableDesc.Creator, ConstantTableDesc.Constants);
-
-				if (Shader) {
-					if (ShaderProfile[0] == 'v') {
-						ShaderProg = new ShaderRecordVertex(Name);
-						TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
-					}
-					else {
-						ShaderProg = new ShaderRecordPixel(Name);
-						TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
-					}
-					ShaderProg->CreateCT(ShaderSource, ConstantTable);
-					Logger::Log("Shader loaded: %s", FileNameBinary);
+			else if (Shader) {
+				if (ShaderProfile[0] == 'v') {
+					ShaderProg = new ShaderRecordVertex(Name);
+					TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
 				}
+				else {
+					ShaderProg = new ShaderRecordPixel(Name);
+					TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
+				}
+				ShaderProg->CreateCT(ShaderSource, ConstantTable);
+				Logger::Log("Shader loaded: %s", ShaderCompiledPath);
 			}
 		}
 	}
@@ -233,7 +264,7 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 
 	HRESULT get = ConstantTable->GetDesc(&ConstantTableDesc);
 	if (FAILED(get)) Logger::Log("CreateCT : failed to get constants desc");
-	reportError(get);
+	ReportError(get);
 
 	//Logger::Log("CreateCT: Shader %s has %i constants", Name, ConstantTableDesc.Constants);
 	//Logger::Log("%s", (const char*)ShaderSource->GetBufferPointer());
@@ -478,8 +509,10 @@ ShaderRecordVertex* NiD3DVertexShaderEx::GetShaderRecord(ShaderRecordType Type) 
 void __fastcall NiD3DVertexShaderEx::Free(NiD3DVertexShaderEx* shader) {
 	shader->DisposeShader();
 	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
-	std::vector<NiD3DVertexShaderEx*>* pList = &Collection->VertexShaderList;
-	pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
+	if (Collection) {
+		std::vector<NiD3DVertexShaderEx*>* pList = &Collection->VertexShaderList;
+		pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
+	}
 	ThisCall(0xE89B70, shader);
 }
 
@@ -528,8 +561,10 @@ ShaderRecordPixel* NiD3DPixelShaderEx::GetShaderRecord(ShaderRecordType Type) {
 void __fastcall NiD3DPixelShaderEx::Free(NiD3DPixelShaderEx* shader) {
 	shader->DisposeShader();
 	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
-	std::vector<NiD3DPixelShaderEx*>* pList = &Collection->PixelShaderList;
-	pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
+	if (Collection) {
+		std::vector<NiD3DPixelShaderEx*>* pList = &Collection->PixelShaderList;
+		pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
+	}
 	ThisCall(0xE89970, shader);
 }
 

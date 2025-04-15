@@ -12,6 +12,8 @@ void ShaderManager::Initialize() {
 	TheShaderManager = new ShaderManager();
 	TheShaderManager->FrameVertex = NULL;
 
+	TheShaderManager->EffectReloadQueued = false;
+
 	memset(TheShaderManager->WaterVertexShaders, NULL, sizeof(WaterVertexShaders));
 	memset(TheShaderManager->WaterPixelShaders, NULL, sizeof(WaterPixelShaders));
 
@@ -63,7 +65,6 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterShaderCollection<SkinShaders>(&TheShaderManager->Shaders.Skin);
 	TheShaderManager->RegisterShaderCollection<GrassShaders>(&TheShaderManager->Shaders.Grass);
 	TheShaderManager->RegisterShaderCollection<TerrainShaders>(&TheShaderManager->Shaders.Terrain);
-	TheShaderManager->RegisterShaderCollection<ExtraShaders>(&TheShaderManager->Shaders.ExtraShaders);
 	
 	//setup map of constant names
 	TheShaderManager->RegisterConstant("TESR_WorldTransform", (D3DXVECTOR4*)&TheRenderManager->worldMatrix);
@@ -404,16 +405,25 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 	if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
 	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
-	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;
+	//if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin; // temporarily disabled, the shaders are half broken
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
 	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
 
 	if (Shaders.PBR->GetTemplate(Name).Name != NULL) return Shaders.PBR;
 
-	return Shaders.ExtraShaders;
+	return NULL;
 }
 
+/*
+* Reload all effects.
+*/
+void ShaderManager::ReloadEffects() {
+	for (const auto [Name, effect] : EffectsNames) {
+		(*effect)->DisposeEffect();
+		(*effect)->LoadEffect();
+	}
+}
 
 /*
 * Load generic Vertex Shaders as well as the ones for interiors and exteriors if the exist. 
@@ -423,6 +433,14 @@ bool ShaderManager::LoadShader(NiD3DVertexShader* Shader) {
 	
 	NiD3DVertexShaderEx* VertexShader = (NiD3DVertexShaderEx*)Shader;
 	ShaderCollection* Collection = GetShaderCollection(VertexShader->Name);
+
+	if (!Collection) {
+		VertexShader->ShaderProg[ShaderRecordType::Default] = NULL;
+		VertexShader->ShaderProg[ShaderRecordType::Exterior] = NULL;
+		VertexShader->ShaderProg[ShaderRecordType::Interior] = NULL;
+		VertexShader->Enabled = false;
+		return false;
+	}
 	
 	bool enabled = Collection->Enabled;
 
@@ -451,6 +469,14 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
 	NiD3DPixelShaderEx* PixelShader = (NiD3DPixelShaderEx*)Shader;
 	ShaderCollection* Collection = GetShaderCollection(PixelShader->Name);
+
+	if (!Collection) {
+		PixelShader->ShaderProg[ShaderRecordType::Default] = NULL;
+		PixelShader->ShaderProg[ShaderRecordType::Exterior] = NULL;
+		PixelShader->ShaderProg[ShaderRecordType::Interior] = NULL;
+		PixelShader->Enabled = false;
+		return false;
+	}
 
 	bool enabled = Collection->Enabled;
 
@@ -760,14 +786,6 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	// debug shader allows to display some of the buffers
 	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
-	//if (EffectsSettings->Extra) {
-	//	for (EffectsList::iterator iter = Effects.ExtraEffects.begin(); iter != Effects.ExtraEffects.end(); ++iter) {
-	//		if (iter->second->Enabled) {
-	//			iter->second->Render(Device, RenderTarget, RenderedSurface, false, true);
-	//		}
-	//	}
-	//}
-
 	timer.LogTime("ShaderManager::RenderEffects");
 }
 
@@ -812,20 +830,9 @@ void ShaderManager::SwitchShaderStatus(const char* Name) {
 		IsMenuSwitch = false;
 		return;
 	}
-
-	//else if (!strcmp(Name, "ExtraEffectsSettings")) { //TODO change to new effect switch
-	//	EffectsSettings->Extra = !EffectsSettings->Extra;
-	//	DisposeEffect(EffectRecord::EffectRecordType::Extra);
-	//	if (EffectsSettings->Extra) CreateEffect(EffectRecord::EffectRecordType::Extra);
-	//}
 }
 
 void ShaderManager::SetCustomConstant(const char* Name, D3DXVECTOR4 Value) {
 	CustomConstants::iterator v = CustomConst.find(std::string(Name));
 	if (v != CustomConst.end()) v->second = Value;
-}
-
-void ShaderManager::SetExtraEffectEnabled(const char* Name, bool Value) {
-	//EffectsList::iterator v = Effects.ExtraEffects.find(std::string(Name));
-	//if (v != Effects.ExtraEffects.end()) v->second->Enabled = Value;
 }

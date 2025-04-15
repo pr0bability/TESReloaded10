@@ -19,13 +19,11 @@ OffsetY = 15.0
 OffsetZ = 5.0
 
 [_Main.Develop.Main]
-CompileEffects = 1      # 1 to always recompile, 2 to recompile newer versions.
-CompileShaders = 1      # 1 to always recompile, 2 to recompile newer versions.
 DebugMode = false       # Enables debug features like capture shaders and print shadowmaps.
 DebugVar1 = 0.0         # Custom variable used when developing shaders.
 DebugVar2 = 0.0         # Custom variable used when developing shaders.
 DebugVar3 = 0.0         # Custom variable used when developing shaders.
-DebugVar4 = 0.0        # Custom variable used when developing shaders.
+DebugVar4 = 0.0         # Custom variable used when developing shaders.
 TraceShaders = 25       # Keyboard shortcut to print used shaders list to the log.
 
 [_Main.FlyCam.Main]
@@ -297,13 +295,6 @@ MinBrightness = 0.3                    # Brightness treshold below which the scr
 
 [_Shaders.Exposure.Status]
 Enabled = true                         # Modulates screen gamma to correct exposure based on average brightness. Avoids screens that are too bright/dark.
-
-[_Shaders.ExtraEffects.Status]
-Enabled = false                        # Not currently used. Enables loading of Effects in ExtraEffects folder that are not natively handled.
-
-[_Shaders.ExtraShaders.Status]
-Enabled = true                         # Enables loading of Shaders in ExtraShaders folder that are not natively handled. Use for compatibility with Realtime Reflections
-
 
 [_Shaders.Flashlight.Main]
 ColorR = 2.0                           # R Channel of the color of the flashlight
