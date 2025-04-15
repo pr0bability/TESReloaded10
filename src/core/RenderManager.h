@@ -27,6 +27,7 @@ public:
 	bool				IsSaveGameScreenShot;
 	bool				RESZ;
 	bool				DXVK;
+	bool				ILS;
 };
 
 class DWNode : public NiNode {
