@@ -656,9 +656,10 @@ Terrain = true                       # Whether to include Terrain when rendering
 Trees = true                         # Whether to include Trees when rendering ortho map.
 
 [_Shaders.ShadowsExteriors.ScreenSpace]
-BlurRadius = 5.0                     # Blur strength for denoising screenspace shadows
+BlurRadius = 1.0                     # Blur strength for denoising screenspace shadows. Keep low, otherwise a lot of pixelation will occur.
 Enabled = true                       # Wether to render screen space contact/detail shadows
-RenderDistance = 12000               # Max distance at which to compute screen space shadows
+RenderDistance = 180000              # Max distance at which to compute screen space shadows
+Intensity = 2.0                      # Rescale the intensity of screenspace shadows, to combat jitter and blur making them very faint even at maximum brightness. 
 
 [_Shaders.ShadowsExteriors.ShadowMaps]
 Mode = 2							 # Shadow mode, higher means higher quality, but higher computational cost. 0: VSM, 1: EVSM2, 2: EVSM4

@@ -10,14 +10,13 @@ float4 TESR_SmoothedSunDir;
 float4 TESR_ViewSpaceLightDir;
 float4 TESR_ShadowData; // x: quality, y: darkness, z: texel size
 float4 TESR_ShadowFormatData; // x: mode, y: format bits per pixels
-float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance
+float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistance, w: intensity
 float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 float4 TESR_ShadowNearCenter; // x,y,z: center (world space), w: radius
 float4 TESR_ShadowMiddleCenter; // x,y,z: center (world space), w: radius
 float4 TESR_ShadowFarCenter; // x,y,z: center (world space), w: radius
 float4 TESR_ShadowLodCenter; // x,y,z: center (world space), w: radius
-float4 TESR_DebugVar;
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_ShadowAtlas : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -170,12 +169,13 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
     float4 color = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
 	if (!TESR_ShadowScreenSpaceData.x) return float4(1.0, color.g, 0, 1); // skip is screenspace shadows are disabled
 
-	float3 random3 = random(uv);
-	float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
 	float3 pos = reconstructPosition(uv);// + expand(random3); 
 
 	float bias = 0.01;
 	if (pos.z > SSS_MAXDEPTH) return float4(1.0, color.g, 0, 1); // early out for pixels further away than the max render distance
+	
+    float3 random3 = random(uv);
+    float rand = lerp(min(0.8f, pos.z / SSS_MAXDEPTH), 1.0f, random3.r); // some noise to vary the ray length
 
 	// scale the step with distance, and randomize length
 	float depth = getHomogenousDepth(uv) / farZ;
@@ -209,10 +209,11 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 		total += 1/step1 + 1/step2; // weight samples inversely with distance
 	}
 
-	occlusion = pows(occlusion/total, 0.3); // get an average shading based on total weights
+    occlusion = pows(occlusion / total, 0.3); // get an average shading based on total weights
+	
 
     // save result of SSS in red channel, and fade contribution with distance
-	color.r = lerp(1.0f - occlusion, 1.0, smoothstep(SSS_MAXDEPTH * 0.8, SSS_MAXDEPTH, pos.z));
+    color.r = lerp(1.0f - occlusion, 1.0, smoothstep(SSS_MAXDEPTH * 0.8, SSS_MAXDEPTH, pos.z));
     return color;
 }
 
@@ -226,6 +227,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	// Sample Screen Space shadows
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+    Shadow = pow(Shadow, TESR_ShadowScreenSpaceData.w);
 	if (!TESR_ShadowFade.y) return Shadow; // disable shadow maps if ShadowFade.y == 0 (setting for shadow map disabled)
 
 	// Sample shadows from shadowmaps
