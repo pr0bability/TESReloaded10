@@ -5,27 +5,8 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Framework">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Main">
       <UniqueIdentifier>{d824b335-cb77-4743-b092-330dbd2a3180}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common">
-      <UniqueIdentifier>{b12fe12a-43aa-4eb0-ae4d-27d4a2b2768b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\NewVegas">
-      <UniqueIdentifier>{d62a1138-01f2-48bf-9b21-3e5b5d8d0f2c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common\Lib">
-      <UniqueIdentifier>{ac4eed94-81b1-45db-bb31-15c7f2f3666d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common\Base">
-      <UniqueIdentifier>{527f02d4-970c-41c5-bdbf-9bedafa9b95e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Framework\Common\Lib\Detours">
-      <UniqueIdentifier>{e6f95313-1631-432b-a52f-9c1173c9ddc7}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Device">
       <UniqueIdentifier>{1075d60f-cbc0-4adc-8a42-769f6929cc77}</UniqueIdentifier>
@@ -33,234 +14,525 @@
     <Filter Include="Core\Hooks">
       <UniqueIdentifier>{e2b555f5-e8d6-4c6e-9e2c-98ef530c5c66}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Core\Hooks\NewVegas">
-      <UniqueIdentifier>{f0b99bc3-6555-4572-9d48-37b20ad75ba8}</UniqueIdentifier>
+    <Filter Include="Effects">
+      <UniqueIdentifier>{c1c74077-ae3e-4e49-b757-e845451aef70}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Framework\Common\Lib\Bink">
-      <UniqueIdentifier>{89141f2f-9c62-4d4b-9231-accb6c391c28}</UniqueIdentifier>
+    <Filter Include="Base">
+      <UniqueIdentifier>{97f0e5a0-c848-4e31-944c-827f8046955c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Framework\Common\Lib\Nvidia">
-      <UniqueIdentifier>{48d1ee45-61fd-44e9-bef9-192b8772c194}</UniqueIdentifier>
+    <Filter Include="lib">
+      <UniqueIdentifier>{5f692edc-3152-4c6e-ba6d-50ad460a6ab0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Bink">
+      <UniqueIdentifier>{23694beb-87a5-4fdd-8b70-4ca3604be78d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\Detour">
+      <UniqueIdentifier>{daa2307d-fc16-462a-ae25-c51daa405054}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\NVidia">
+      <UniqueIdentifier>{62394996-52ca-4462-b0a4-f55b8d12e7ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewVegas">
+      <UniqueIdentifier>{9960cd04-9b60-46d6-8d06-669763f5622a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewVegas\Hooks">
+      <UniqueIdentifier>{418ee47b-d90b-4cd4-9657-884806ab9df2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewVegas\nvse">
+      <UniqueIdentifier>{3aba0770-a14b-4c4a-96eb-8afda7d52f08}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
       <Filter>Main</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\Logger.h">
-      <Filter>Framework\Common\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\SafeWrite.h">
-      <Filter>Framework\Common\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\Types.h">
-      <Filter>Framework\Common\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.h">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\Base.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\Defines.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\Framework.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Base\PluginVersion.h">
-      <Filter>Framework\Common\Base</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\Game.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\GameHavok.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\GameNi.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\Managers.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\NewVegas\Plugin.h">
-      <Filter>Framework\NewVegas</Filter>
-    </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Device\Device.h">
+    <ClInclude Include="..\src\core\Device\Device.h">
       <Filter>Core\Device</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Device\Hook.h">
+    <ClInclude Include="..\src\core\Device\Hook.h">
       <Filter>Core\Device</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\CameraManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\AmbientOcclusion.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\CommandManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\Animator.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\FrameRateManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\AvgLuma.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\GameEventManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\BloodLens.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\GameMenuManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\BloomLegacy.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\RenderManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\Cinema.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\SettingManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\Coloring.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\ShaderManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\CombineDepth.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\ShadowManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\Debug.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\TextureManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\DepthOfField.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\BinkManager.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="..\src\effects\Effects.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Nvidia\nvapi.h">
-      <Filter>Framework\Common\Lib\Nvidia</Filter>
+    <ClInclude Include="..\src\effects\Exposure.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Bink\bink.h">
-      <Filter>Framework\Common\Lib\Bink</Filter>
+    <ClInclude Include="..\src\effects\ExtraShaders.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Framework\Common\Lib\Bink\radbase.h">
-      <Filter>Framework\Common\Lib\Bink</Filter>
+    <ClInclude Include="..\src\effects\GodRays.h">
+      <Filter>Effects</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\FormsCommon.h">
+    <ClInclude Include="..\src\effects\Grass.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ImageAdjust.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Lens.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\LowHF.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\MotionBlur.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Normals.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\PointShadows.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\PointShadows2.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\POM.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Rain.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ShadowsInteriors.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\ShadowsExterior.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Sharpening.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Skin.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Sky.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Snow.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SnowAccumulation.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Specular.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SunShadows.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Terrain.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Tonemapping.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Underwater.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\VolumetricFog.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Water.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\WaterLens.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\WetWorld.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\Logger.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\PluginVersion.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\SafeWrite.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\Types.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\base\Utils.h">
+      <Filter>Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\Hooks\FormsCommon.h">
       <Filter>Core\Hooks</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\GameCommon.h">
+    <ClInclude Include="..\src\core\Hooks\GameCommon.h">
       <Filter>Core\Hooks</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Forms.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\lib\Bink\bink.h">
+      <Filter>lib\Bink</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\FlyCam.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\lib\Bink\radbase.h">
+      <Filter>lib\Bink</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Game.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\lib\Detours\detours.h">
+      <Filter>lib\Detour</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Hooks.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\lib\Nvidia\nvapi.h">
+      <Filter>lib\NVidia</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Shadows.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\src\NewVegas\Base.h">
+      <Filter>NewVegas</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\ShaderIO.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\src\NewVegas\Defines.h">
+      <Filter>NewVegas</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Settings.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\src\NewVegas\Framework.h">
+      <Filter>NewVegas</Filter>
     </ClInclude>
-    <ClInclude Include="..\TESReloaded\Core\Hooks\NewVegas\Render.h">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClInclude Include="..\src\NewVegas\Managers.h">
+      <Filter>NewVegas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Plugin.h">
+      <Filter>NewVegas</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\FlyCam.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Game.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Hooks.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Render.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Settings.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\ShaderIO.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Shadows.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\BinkManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\CameraManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\CommandManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\EffectRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\FrameRateManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\GameEventManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\GameMenuManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\RenderManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\RenderPass.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\SettingManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\ShaderCollection.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\ShaderManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\ShaderRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\ShadowManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\TextureManager.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\core\TextureRecord.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\class_vtbls.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\Game.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameHavok.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameNi.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Bloom.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\Flashlight.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\PBR.h">
+      <Filter>Effects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
       <Filter>Main</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Base\Logger.cpp">
-      <Filter>Framework\Common\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Base\SafeWrite.cpp">
-      <Filter>Framework\Common\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\detours.cpp">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\disasm.cpp">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Lib\Detours\modules.cpp">
-      <Filter>Framework\Common\Lib\Detours</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\Common\Base\PluginVersion.cpp">
-      <Filter>Framework\Common\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\NewVegas\Managers.cpp">
-      <Filter>Framework\NewVegas</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Framework\NewVegas\GameNi.cpp">
-      <Filter>Framework\NewVegas</Filter>
-    </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Device\Device.cpp">
+    <ClCompile Include="..\src\core\Device\Device.cpp">
       <Filter>Core\Device</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Device\Hook.cpp">
+    <ClCompile Include="..\src\core\Device\Hook.cpp">
       <Filter>Core\Device</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\CameraManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\AmbientOcclusion.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\CommandManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\Animator.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\FrameRateManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\AvgLuma.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\GameEventManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\BloodLens.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\GameMenuManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\BloomLegacy.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\RenderManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\Cinema.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\SettingManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\Coloring.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\ShaderManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\CombineDepth.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\ShadowManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\Debug.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\TextureManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\DepthOfField.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\BinkManager.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="..\src\effects\Exposure.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\GameCommon.cpp">
+    <ClCompile Include="..\src\effects\GodRays.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\ImageAdjust.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Lens.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\LowHF.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\MotionBlur.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Normals.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\POM.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Rain.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\ShadowsExterior.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\ShadowsInteriors.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Sharpening.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Skin.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Sky.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Snow.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\SnowAccumulation.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Specular.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Terrain.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Tonemapping.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\VolumetricFog.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Water.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\WaterLens.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\WetWorld.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\Logger.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\PluginVersion.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\base\SafeWrite.cpp">
+      <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\Hooks\FormsCommon.cpp">
       <Filter>Core\Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\FormsCommon.cpp">
+    <ClCompile Include="..\src\core\Hooks\GameCommon.cpp">
       <Filter>Core\Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Forms.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\lib\Detours\detours.cpp">
+      <Filter>lib\Detour</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\FlyCam.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\lib\Detours\disasm.cpp">
+      <Filter>lib\Detour</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Game.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\lib\Detours\modules.cpp">
+      <Filter>lib\Detour</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Hooks.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\src\NewVegas\Managers.cpp">
+      <Filter>NewVegas</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Shadows.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\src\NewVegas\Hooks\FlyCam.cpp">
+      <Filter>NewVegas\Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\ShaderIO.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\src\NewVegas\Hooks\Game.cpp">
+      <Filter>NewVegas\Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Settings.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\src\NewVegas\Hooks\Hooks.cpp">
+      <Filter>NewVegas\Hooks</Filter>
     </ClCompile>
-    <ClCompile Include="..\TESReloaded\Core\Hooks\NewVegas\Render.cpp">
-      <Filter>Core\Hooks\NewVegas</Filter>
+    <ClCompile Include="..\src\NewVegas\Hooks\Render.cpp">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\Hooks\Settings.cpp">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\Hooks\ShaderIO.cpp">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\Hooks\Shadows.cpp">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\BinkManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\CameraManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\CommandManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\EffectRecord.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\FrameRateManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\GameEventManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\GameMenuManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\RenderManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\RenderPass.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\SettingManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShaderCollection.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShaderManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShaderRecord.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\ShadowManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\TextureManager.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\TextureRecord.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Grass.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Underwater.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameNi.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Bloom.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\Flashlight.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\PBR.cpp">
+      <Filter>Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
