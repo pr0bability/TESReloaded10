@@ -37,7 +37,7 @@ jobs:
           files: build/NewVegasReloaded
           dest: ${{env.ARTEFACT_NAME}}.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: NewVegasReloaded-latest-build
+          name: NewVegasReloaded-latest-build--${{ github.workflow_sha }}
           path: ${{env.ARTEFACT_NAME}}.zip
