@@ -121,6 +121,7 @@ bool EffectRecord::LoadEffect() {
 			);
 			if (FAILED(compiled)) {
 				ReportError(compiled);
+				if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 				if (Compiler) Compiler->Release();
 				if (EffectSource) EffectSource->Release();
 				if (Effect) Effect->Release();
@@ -133,6 +134,7 @@ bool EffectRecord::LoadEffect() {
 			compiled = Compiler->CompileEffect(NULL, &EffectBuffer, &Errors);
 			if (FAILED(compiled)) {
 				ReportError(compiled);
+				if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 				if (Compiler) Compiler->Release();
 				if (EffectSource) EffectSource->Release();
 				if (Effect) Effect->Release();
@@ -159,6 +161,7 @@ bool EffectRecord::LoadEffect() {
 			HRESULT loaded = D3DXCreateEffectFromFileA(TheRenderManager->device, EffectCompiledPath, NULL, NULL, D3DXFX_LARGEADDRESSAWARE, NULL, &Effect, &Errors);
 			if (FAILED(loaded)) {
 				ReportError(loaded);
+				if (Errors) Logger::Log((char*)Errors->GetBufferPointer());
 				if (Compiler) Compiler->Release();
 				if (EffectSource) EffectSource->Release();
 				if (Effect) Effect->Release();
