@@ -22,6 +22,22 @@ void ShaderManager::Initialize() {
 	TheShaderManager->PreviousCell = nullptr;
 	TheShaderManager->IsMenuSwitch = false;
 
+	// Make sure the shader/effect cache directories exist.
+	std::error_code ec;
+
+	std::filesystem::create_directories("data/Shaders/NewVegasReloaded/Shaders/Cache/Bink", ec);
+	if (ec) {
+		Logger::Log("Failed to create shader cache directory: %s", ec.message());
+	}
+	std::filesystem::create_directories("data/Shaders/NewVegasReloaded/Shaders/Cache/Shadows", ec);
+	if (ec) {
+		Logger::Log("Failed to create shader cache directory: %s", ec.message());
+	}
+	std::filesystem::create_directories("data/Shaders/NewVegasReloaded/Effects/Cache", ec);
+	if (ec) {
+		Logger::Log("Failed to create effect cache directory: %s", ec.message());
+	}
+
 	// initializing the list of effect names
 	TheShaderManager->RegisterEffect<AvgLumaEffect>(&TheShaderManager->Effects.AvgLuma);
 	TheShaderManager->RegisterEffect<AmbientOcclusionEffect>(&TheShaderManager->Effects.AmbientOcclusion);

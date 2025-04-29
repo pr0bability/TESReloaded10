@@ -155,7 +155,7 @@ bool EffectRecord::LoadEffect() {
 				FilePreprocess.flush();
 				FilePreprocess.close();
 
-				Logger::Log("Effect compiled: %s", EffectSourcePath);
+				Logger::Log("Effect compiled: %s", EffectPreprocessedPath);
 			}
 
 			HRESULT loaded = D3DXCreateEffectFromFileA(TheRenderManager->device, EffectCompiledPath, NULL, NULL, D3DXFX_LARGEADDRESSAWARE, NULL, &Effect, &Errors);
@@ -183,7 +183,7 @@ bool EffectRecord::LoadEffect() {
 	if (Effect) {
 		this->Effect = Effect;
 		CreateCT(EffectSource, NULL); //Create the object which will associate a register index to a float pointer for constants updates;
-		Logger::Log("Effect loaded: %s.fx", Name);
+		Logger::Log("Effect loaded: %s", EffectCompiledPath);
 	}
 
 	// set enabled status of effect based on success and setting
