@@ -296,10 +296,6 @@ void RenderManager::Initialize() {
 		Logger::Log("ERROR: Cannot initialize the render manager. Graphics device not supported.");
 	if (TheSettingManager->SettingsMain.Main.AnisotropicFilter >= 2) device->SetSamplerState(0, D3DSAMP_MAXANISOTROPY, TheSettingManager->SettingsMain.Main.AnisotropicFilter);
 	BackBuffer = CreateHDRRenderTarget();
-
-	ILS = GetModuleHandle(L"ImprovedLightingShaders.dll");
-	if (ILS)
-		Logger::Log("ILS detected.");
 }
 
 void RenderManager::ResolveDepthBuffer(IDirect3DTexture9* Buffer) {

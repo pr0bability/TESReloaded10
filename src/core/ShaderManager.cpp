@@ -423,10 +423,10 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
 	//if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin; // temporarily disabled, the shaders are half broken
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
-	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
 
 	if (Shaders.PBR->GetTemplate(Name).Name != NULL) return Shaders.PBR;
+	if (Shaders.Terrain->GetTemplate(Name).Name != NULL) return Shaders.Terrain;
 
 	return NULL;
 }
