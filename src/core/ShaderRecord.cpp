@@ -132,16 +132,12 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 	strcat(ShaderCompiledPath, Name);
 
 	D3DXMACRO* Macros = &(Template.Defines[0]);
-	if (TheRenderManager->ILS || TheRenderManager->IsReversedDepth()) {
+	if (TheRenderManager->IsReversedDepth()) {
 		int i = 0;
 		bool nullFound = false;
 		while (!nullFound && i < 28) {
 			nullFound = Template.Defines[i].Name == NULL;
 			if (!nullFound) i++;
-		}
-		if (TheRenderManager->ILS) {
-			Template.Defines[i] = { "ILS", "" };
-			i++;
 		}
 		if (TheRenderManager->IsReversedDepth()) {
 			Template.Defines[i] = { "REVERSED_DEPTH", "" };
