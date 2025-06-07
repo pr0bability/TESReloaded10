@@ -567,6 +567,7 @@ ShaderRecordVertex::ShaderRecordVertex(const char* shaderName) {
 
 	Name = shaderName;
 	ShaderHandle = NULL;
+	ClearSamplers = false;
 
 }
 
@@ -579,6 +580,7 @@ ShaderRecordVertex::~ShaderRecordVertex() {
 ShaderRecordPixel::ShaderRecordPixel(const char* shaderName) {
 	Name = shaderName;
 	ShaderHandle = NULL;
+	ClearSamplers = true;
 
 }
 
