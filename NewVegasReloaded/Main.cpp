@@ -8,6 +8,18 @@ extern "C" {
 
 	static void MessageHandler(NVSEMessagingInterface::Message* msg) {
 		switch (msg->type) {
+		case NVSEMessagingInterface::kMessage_PostLoad:
+			if (!GetModuleHandle(L"LODFlickerFix.dll")) {
+				MessageBox(NULL, L"LOD Flicker Fix not found.\nNew Vegas Reloaded cannot be used without it, please install it.", L"New Vegas Reloaded", MB_OK | MB_ICONERROR);
+				ExitProcess(0);
+			}
+
+			if (!GetModuleHandle(L"VanillaPlusTerrain.dll")) {
+				MessageBox(NULL, L"Vanilla Plus Terrain not found.\nNew Vegas Reloaded cannot be used without it, please install it.", L"New Vegas Reloaded", MB_OK | MB_ICONERROR);
+				ExitProcess(0);
+			}
+
+			break;
 		case NVSEMessagingInterface::kMessage_PreLoadGame:
 			TheSettingManager->GameLoading = true;
 			break;
