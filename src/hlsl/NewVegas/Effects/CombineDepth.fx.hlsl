@@ -3,9 +3,10 @@ float4 TESR_CameraData;
 
 float4x4 TESR_InvProjectionTransform;
 
-sampler2D TESR_DepthBufferWorld : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBufferViewModel : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBufferWorld : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = NONE; };
+sampler2D TESR_DepthBufferViewModel : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = NONE; };
 
+static const float viewModelNearZ = TESR_DepthConstants.x;
 static const float invertedDepth = TESR_DepthConstants.z;
 static const float nearZ = TESR_CameraData.x;
 static const float farZ = TESR_CameraData.y;
@@ -30,41 +31,29 @@ VSOUT FrameVS(VSIN IN)
 	return OUT;
 }
 
-// linearize depth
-float readDepth(float depth, float nearZ, float farZ)
-{
-	float Q = farZ/(farZ - nearZ);
-    float ViewZ = (-nearZ *Q) / (depth - Q);
-	return ViewZ;
+// Convert depth to view space Z.
+float ToVS(float depth, float nearZ, float farZ) {
+    return nearZ * farZ / (nearZ + depth * (farZ - nearZ));
 }
 
-// convert back to usual depth buffer format for easier reconstruction
-float packDepth(float viewZ, float nearZ, float farZ){
-	float Q = farZ/(farZ - nearZ);
-	return (Q* (viewZ - nearZ ))/ viewZ;
+// Convert view space Z to depth.
+float ToPS(float viewZ, float nearZ, float farZ){
+    return nearZ * (farZ - viewZ) / (viewZ * (farZ - nearZ));
 }
 
 
-float4 CombineDepth(VSOUT IN) : COLOR0
-{	
-
+float4 CombineDepth(VSOUT IN) : COLOR0 {	
 	float worldDepth = tex2D(TESR_DepthBufferWorld, IN.UVCoord).x;
 	float viewModelDepth = tex2D(TESR_DepthBufferViewModel, IN.UVCoord).x;
 	
-    float combinedDepth = min(worldDepth, viewModelDepth);
-	if (invertedDepth){
-        combinedDepth = max(worldDepth, viewModelDepth);
-    }
-
-    float x = IN.UVCoord.x * 2 - 1;
-    float y = (1 - IN.UVCoord.y) * 2 - 1;
-    float4 clipSpace = float4(x, y, combinedDepth, 1.0f);
-
-    float4 viewSpace = mul(clipSpace, TESR_InvProjectionTransform);
+    float worldViewZ = ToVS(worldDepth, nearZ, farZ);
+    float viewModelViewZ = ToVS(viewModelDepth, viewModelNearZ, farZ);
 	
-    viewSpace /= viewSpace.w;
+    float combinedViewZ = worldViewZ;
+    if (viewModelDepth > 0.0)
+        combinedViewZ = viewModelViewZ;
 
-	return float4(viewSpace.z / farZ, combinedDepth, 1.0, 1.0); // scale values back to 0 - 1 to avoid overflow
+    return float4(combinedViewZ / farZ, ToPS(combinedViewZ, nearZ, farZ), 1.0, 1.0);
 }
  
 technique
