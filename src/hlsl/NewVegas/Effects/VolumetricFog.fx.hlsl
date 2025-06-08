@@ -235,7 +235,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 	float3 heightFog = mixHeightFog(finalColor.rgb, heightFogColor.rgb, extinction, inScattering, fogDepth, strength * HeightFogDensity, 1.5 / (fogPower * HeightFogFalloff), worldPos, HeightFogHeight);
 	finalColor = lerp(finalColor, float4(heightFog, 1), saturate(HeightFogBlend));
 
-	finalColor = lerp(color, finalColor, FogAmount);
+    finalColor = max(lerp(color, finalColor, FogAmount), 0.0f);
 
 	return delinearize(finalColor);
 }
