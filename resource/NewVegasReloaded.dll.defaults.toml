@@ -887,13 +887,13 @@ Enabled = true                      # Volumetric fog shader tinted by the sun. R
 
 [_Shaders.Water.Default]
 causticsStrength = 3.0              # Caustic strength underwater. Caustics seen from above water not currently supported
-causticsStrengthS = 0.2             # Not used.
+causticsStrengthS = 0.2             # Godrays intensity underwater.
 choppiness = 0.7                    # Exponent for the waves normals. A higher value will create more defined wave crests.
 depthDarkness = 1.0                 # How much light reaches the bottom of the water.
-inExtCoeff_B = 1.0                  # Not used.
-inExtCoeff_G = 1.0                  # Not used.
-inExtCoeff_R = 1.0                  # Not used.
-inScattCoeff = 1.0                  # Not used.
+inExtCoeff_B = 1.0                  # Underwater fog color tint (blue component).
+inExtCoeff_G = 1.0                  # Underwater fog color tint (green component).
+inExtCoeff_R = 1.0                  # Underwater fog color tint (red component).
+inScattCoeff = 1.0                  # Underwater scattering modifier, higher values lead to less brightness.
 reflectivity = 1.0                  # Multiplier for the strength of reflections on the surface.
 shoreFactor = 6.0                   # Size of the shore fading area on shallow slope areas.
 shoreMovement = 0.3                 # Speed of wave movement in the shore.
