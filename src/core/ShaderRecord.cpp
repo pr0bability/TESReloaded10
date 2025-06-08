@@ -1,4 +1,6 @@
 #include "ShaderRecord.h"
+
+#include <tracy/Tracy.hpp>
 ShaderProgram::ShaderProgram() {
 
 	FloatShaderValues = NULL;
@@ -49,6 +51,8 @@ bool ShaderProgram::FileExists(const char* path) {
 * Check if cached preprocessed source exists and matches the current result.
 */
 bool ShaderProgram::CheckPreprocessResult(const char* CachedPreprocessPath, ID3DXBuffer* ShaderSource) {
+	ZoneScoped;
+
 	void* CurrentContent = ShaderSource->GetBufferPointer();
 	
 	ID3DXBuffer* CachedSource;
@@ -88,6 +92,8 @@ Loads the shader by name from a given subfolder (optionally). Shader will be com
 @returns the ShaderRecord for this shader.
 */
 ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, ShaderTemplate Template) {
+	ZoneScoped;
+
 	auto timer = TimeLogger();
 
 	ShaderRecord* ShaderProg = NULL;
@@ -253,6 +259,7 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 * @param ConstantTable
 */
 void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* ConstantTable) {
+	ZoneScoped;
 
 	D3DXCONSTANTTABLE_DESC ConstantTableDesc;
 	D3DXCONSTANT_DESC ConstantDesc;
@@ -325,6 +332,8 @@ void ShaderRecord::CreateCT(ID3DXBuffer* ShaderSource, ID3DXConstantTable* Const
 
 // extract info about texture from the shader source code
 void ShaderTextureValue::GetSamplerStateString(ID3DXBuffer* ShaderSource, UINT32 Index) {
+	ZoneScoped;
+
 	std::string Source = std::string((const char*)ShaderSource->GetBufferPointer());
 
 	size_t SamplerPos = Source.find(("register ( s" + std::to_string(Index) + " )"));
@@ -392,6 +401,8 @@ void ShaderTextureValue::GetTextureRecord() {
 * Associates a found shader constant name to a D3DXVECTOR4 pointer from the ConstantsTable.
 */
 void ShaderFloatValue::GetValueFromConstantTable() {
+	ZoneScoped;
+
 	std::string constantName = Name;
 	std::map<std::string, D3DXVECTOR4*>::iterator iter = TheShaderManager->ConstantsTable.find(constantName);
 
@@ -411,7 +422,6 @@ void ShaderFloatValue::GetValueFromConstantTable() {
 * Sets the Constant Table for the shader
 */
 void ShaderRecord::SetCT() {
-
 	if (HasRenderedBuffer) TheRenderManager->device->StretchRect(TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface, NULL, TheTextureManager->RenderedSurface, NULL, D3DTEXF_NONE);
 	if (HasDepthBuffer) {
 		//Logger::Log("Resolving depth buffer for shader %s", Name);
@@ -468,6 +478,7 @@ void ShaderRecord::SetCT() {
 * Hook - Function to replace shader handles during pass initialisation. 
 */
 void NiD3DVertexShaderEx::SetupShader(IDirect3DVertexShader9* CurrentVertexHandle) {
+	ZoneScoped;
 
 	if ((!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) && ShaderHandleBackup) {
 		ShaderHandle = (IDirect3DVertexShader9*)ShaderHandleBackup;
@@ -506,6 +517,8 @@ ShaderRecordVertex* NiD3DVertexShaderEx::GetShaderRecord(ShaderRecordType Type) 
 }
 
 void __fastcall NiD3DVertexShaderEx::Free(NiD3DVertexShaderEx* shader) {
+	ZoneScoped;
+
 	shader->DisposeShader();
 	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
 	if (Collection) {
@@ -520,6 +533,7 @@ void __fastcall NiD3DVertexShaderEx::Free(NiD3DVertexShaderEx* shader) {
 * Hook - Function to replace shader handles during pass initialisation.
 */
 void NiD3DPixelShaderEx::SetupShader(IDirect3DPixelShader9* CurrentPixelHandle) {
+	ZoneScoped;
 
 	if (!Enabled || !TheSettingManager->SettingsMain.Main.RenderEffects) {
 		ShaderHandle = (IDirect3DPixelShader9*)ShaderHandleBackup;
@@ -558,6 +572,8 @@ ShaderRecordPixel* NiD3DPixelShaderEx::GetShaderRecord(ShaderRecordType Type) {
 }
 
 void __fastcall NiD3DPixelShaderEx::Free(NiD3DPixelShaderEx* shader) {
+	ZoneScoped;
+
 	shader->DisposeShader();
 	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
 	if (Collection) {
@@ -568,10 +584,8 @@ void __fastcall NiD3DPixelShaderEx::Free(NiD3DPixelShaderEx* shader) {
 }
 
 ShaderRecordVertex::ShaderRecordVertex(const char* shaderName) {
-
 	Name = shaderName;
 	ShaderHandle = NULL;
-
 }
 
 ShaderRecordVertex::~ShaderRecordVertex() {
@@ -587,20 +601,16 @@ ShaderRecordPixel::ShaderRecordPixel(const char* shaderName) {
 }
 
 ShaderRecordPixel::~ShaderRecordPixel() {
-
 	ShaderHandle->Release();
-
 }
 
 
 void ShaderRecordVertex::SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount) {
-
 	TheRenderManager->device->SetVertexShaderConstantF(RegisterIndex, (const float*)Value, RegisterCount);
 
 }
 
 void ShaderRecordPixel::SetShaderConstantF(UInt32 RegisterIndex, D3DXVECTOR4* Value, UInt32 RegisterCount) {
-
 	TheRenderManager->device->SetPixelShaderConstantF(RegisterIndex, (const float*)Value, RegisterCount);
 
 }

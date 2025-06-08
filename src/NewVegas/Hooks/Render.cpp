@@ -357,7 +357,10 @@ BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 
 }
 
 // 0xE69660
+#include "tracy/Tracy.hpp"
 bool __fastcall NiDX9Renderer__Do_EndFrame(NiDX9Renderer* apThis, void*) {
+	ZoneScoped;
+
 	ThisCall(0xE69660, apThis);
 
 	// Reload effects if queued.
@@ -365,6 +368,8 @@ bool __fastcall NiDX9Renderer__Do_EndFrame(NiDX9Renderer* apThis, void*) {
 		TheShaderManager->ReloadEffects();
 		TheShaderManager->EffectReloadQueued = false;
 	}
+
+	return true;
 }
 
 

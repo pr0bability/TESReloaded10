@@ -1,5 +1,6 @@
 #pragma once
 
+class bhkNiCollisionObject;
 class NiNode;
 class NiPick;
 class NiTextKeyExtraData;
@@ -464,7 +465,7 @@ public:
 	virtual NiNode* IsNiNode();
 	virtual BSFadeNode* IsFadeNode();
 	virtual BSMultiBoundNode* IsMultiBoundNode() const;
-	virtual NiGeometryData* IsGeometry();
+	virtual NiGeometry* IsGeometry();
 	virtual NiTriBasedGeom* IsTriBasedGeometry();
 	virtual NiTriStrips* IsTriStrips();
 	virtual NiTriShape* IsTriShape();
@@ -495,6 +496,11 @@ public:
 	virtual void							Unk_22();
 
 	NIRTTI_ADDRESS(0x11F4418);
+
+	template <class T_RTTI>
+	T_RTTI* NiDynamicCast() const {
+		return IsKindOf(T_RTTI::ms_RTTI) ? (T_RTTI*)this : nullptr;
+	}
 
 	template <class T_RTTI>
 	bool IsKindOf() const {

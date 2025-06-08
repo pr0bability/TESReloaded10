@@ -41,6 +41,9 @@
     <Filter Include="NewVegas\nvse">
       <UniqueIdentifier>{3aba0770-a14b-4c4a-96eb-8afda7d52f08}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tracy">
+      <UniqueIdentifier>{369fe6c4-651c-4dc9-bf4b-892482d3c29e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -307,6 +310,15 @@
     <ClInclude Include="..\src\effects\PBR.h">
       <Filter>Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\effects\ExtraShaders.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SMAA.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Shaders.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -530,6 +542,12 @@
     </ClCompile>
     <ClCompile Include="..\src\effects\PBR.cpp">
       <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\SMAA.cpp" />
+    <ClCompile Include="..\src\effects\SunShadows.cpp" />
+    <ClCompile Include="..\src\NewVegas\Hooks\Shaders.cpp" />
+    <ClCompile Include="tracy\public\TracyClient.cpp">
+      <Filter>tracy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

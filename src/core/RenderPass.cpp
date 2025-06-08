@@ -1,8 +1,25 @@
 #include "RenderPass.h"
 
+#include <tracy/Tracy.hpp>
 
-void RenderPass::RenderAccum() {
-	if (GeometryList.empty()) return;
+bool CheckShaderFlags(NiGeometry* Geometry) {
+	BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(Geometry->GetProperty(NiProperty::kType_Shade));
+
+	if (!shaderProp)
+		return false;
+
+	return !(shaderProp->GetFlag(BSSP_REFRACTION) ||
+		shaderProp->GetFlag(BSSP_FIRE_REFRACTION) ||
+		shaderProp->GetFlag(BSSP_DECAL) ||
+		shaderProp->GetFlag(BSSP_DYNAMIC_DECAL));
+}
+
+void RenderPass::RenderAccum(const std::vector<NiGeometry*>& geometry) {
+	ZoneScoped;
+
+	if (geometry.empty()) {
+		return;
+	}
 
 	// Could add setup of device/renderstate/current shaders here
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
@@ -10,21 +27,23 @@ void RenderPass::RenderAccum() {
 	RenderState->SetVertexShader(VertexShader->ShaderHandle, false);
 
 	// Render normal geometry
-	while (!GeometryList.empty()) {
-		NiGeometry* Geo = GeometryList.top();
-		if (!Geo) continue;
+	for (const auto& Geo : geometry) {
+		if (!Geo) {
+			continue;
+		}
 
 		UpdateConstants(Geo);
 		PixelShader->SetCT();
 		VertexShader->SetCT();
 
 		RenderGeometry(Geo);
-		GeometryList.pop();
 	}
 }
 
 
 void RenderPass::RenderGeometry(NiGeometry* Geo) {
+	ZoneScoped;
+
 	NiGeometryData* ModelData = Geo->geomData;
 	NiGeometryBufferData* GeoData = ModelData->m_pkBuffData;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
@@ -101,13 +120,13 @@ ShadowRenderPass::ShadowRenderPass() {
 }
 
 
-bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
+bool ShadowRenderPass::AccumObject(NiGeometry* Geo, bool* append) {
 	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
 
-	GeometryList.push(Geo);
+	*append = true;
 	return true;
 }
 
@@ -134,7 +153,7 @@ AlphaShadowRenderPass::AlphaShadowRenderPass() {
 }
 
 
-bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo) {
+bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo, bool* append) {
 	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
@@ -144,7 +163,7 @@ bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo) {
 	if (!AProp) return false;
 	if (!(AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK) && !(AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK)) return false;
 
-	GeometryList.push(Geo);
+	*append = true;
 	return true;
 }
 
@@ -159,22 +178,27 @@ void AlphaShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowConstants->Data.y = 0.0f; // Alpha Control
 	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 
-	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
+	if (const auto ShaderProperty = static_cast<BSShaderProperty*>(Geo->GetProperty(NiProperty::PropertyType::kType_Shade))) {
+		const auto ppl = static_cast<BSShaderPPLightingProperty*>(ShaderProperty);
+		if (!ppl->ppTextures || !ppl->ppTextures[0]) {
+			return;
+		}
 
-	if (Texture && Texture->rendererData->dTexture) {
+		const auto Texture = *ppl->ppTextures[0];
+		if (Texture && Texture->rendererData->dTexture) {
 
-		ShadowConstants->Data.y = 1.0f; // Alpha Control
-//			Constants.DiffuseMap = Texture->rendererData->dTexture;
+			ShadowConstants->Data.y = 1.0f; // Alpha Control
+			//			Constants.DiffuseMap = Texture->rendererData->dTexture;
 
-		//// Set diffuse texture at register 0
-		NiDX9RenderState* RenderState = TheRenderManager->renderState;
-		RenderState->SetTexture(0, Texture->rendererData->dTexture);
-		RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
-		RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
-		RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
-		RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
-		RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+					//// Set diffuse texture at register 0
+			NiDX9RenderState* RenderState = TheRenderManager->renderState;
+			RenderState->SetTexture(0, Texture->rendererData->dTexture);
+			RenderState->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP, false);
+			RenderState->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP, false);
+			RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
+			RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
+			RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+		}
 	}
 }
 
@@ -186,7 +210,7 @@ SkinnedGeoShadowRenderPass::SkinnedGeoShadowRenderPass() {
 }
 
 
-bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo) {
+bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo, bool* append) {
 	// check data for rigged geometry
 	if (!Geo->skinInstance)
 		return false;
@@ -199,7 +223,7 @@ bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo) {
 
 		// only accum if valid data preset
 		//if (Geo->skinInstance->SkinPartition->Partitions[0].BuffData)
-			GeometryList.push(Geo);
+			*append = true;
 	
 		// we return true in any case because we still found skinned geo either way
 		return true;
@@ -320,18 +344,16 @@ void SpeedTreeShadowRenderPass::RegisterConstants() {
 }
 
 
-bool SpeedTreeShadowRenderPass::AccumObject(NiGeometry* Geo) {
-
+bool SpeedTreeShadowRenderPass::AccumObject(NiGeometry* Geo, bool* append) {
 	NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(Geo->GetProperty(NiProperty::kType_Shade));
 	if (shaderProp->m_eShaderType != NiShadeProperty::kProp_SpeedTreeLeaf) return false;
 
-	GeometryList.push(Geo);
+	*append = true;
 	return true;
 }
 
 
 void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
-
 	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
@@ -373,13 +395,13 @@ TerrainLODPass::TerrainLODPass() {
 }
 
 
-bool TerrainLODPass::AccumObject(NiGeometry* Geo) {
+bool TerrainLODPass::AccumObject(NiGeometry* Geo, bool* append) {
 	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
 
-	GeometryList.push(Geo);
+	*append = true;
 	return true;
 }
 

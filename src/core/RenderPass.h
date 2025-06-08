@@ -1,4 +1,7 @@
 #pragma once
+#include <unordered_set>
+
+struct ShadowAccumulator;
 
 class RenderPass {
 public:
@@ -11,7 +14,7 @@ public:
 	ShaderRecordVertex* VertexShader;
 	ShaderRecordPixel* PixelShader;
 
-	std::stack<NiGeometry*>	GeometryList;
+	std::unordered_set<NiGeometry*>	GeometryList;
 	virtual bool AccumObject(NiGeometry* Geo) { return true; };
 	virtual void UpdateConstants(NiGeometry* Geo) {};
 	virtual void RenderGeometry(NiGeometry* Geo);
@@ -19,7 +22,7 @@ public:
 
 	void DrawGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData);
 	void DrawSkinnedGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData* GeoData, NiSkinPartition::Partition* Partition);
-	void RenderAccum();
+	void RenderAccum(const std::vector<NiGeometry*>& geometry);
 };
 
 
@@ -31,7 +34,7 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
+	bool AccumObject(NiGeometry* Geo, bool* append);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 };
@@ -45,7 +48,7 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
+	bool AccumObject(NiGeometry* Geo, bool* append);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 };
@@ -60,7 +63,7 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
+	bool AccumObject(NiGeometry* Geo, bool* append);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 	void RenderGeometry(NiGeometry* Geo);
@@ -79,7 +82,7 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
+	bool AccumObject(NiGeometry* Geo, bool* append);
 	void RegisterConstants(); 
 	void UpdateConstants(NiGeometry* Geo);
 };
@@ -96,6 +99,6 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
+	bool AccumObject(NiGeometry* Geo, bool* append);
 	void UpdateConstants(NiGeometry* Geo);
 };

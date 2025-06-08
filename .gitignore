@@ -8,3 +8,5 @@ packages
 Configurator/target
 *.pso
 *.vso
+/NewVegasReloaded/Release - Tracy
+/NewVegasReloaded/NewVegasReloaded.vcxproj.user

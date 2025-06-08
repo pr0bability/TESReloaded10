@@ -1,5 +1,20 @@
 #include "Hooks.h"
 
+#include <tracy/Tracy.hpp>
+
+const char* frameMark_ShadowShaderRender;
+void __fastcall hkShadowShader_PreRenderSetup(NiD3DShader *thisPtr, void*, void* apGeometryProperties, const bool abAlpha) {
+	ZoneScopedN("ShadowShader::PreRenderSetup");
+	FrameMarkStart(frameMark_ShadowShaderRender);
+	ThisCall(0xBE20E0, thisPtr, apGeometryProperties, abAlpha);
+}
+
+void __fastcall hkShadowShader_PostRenderSetup(NiD3DShader* thisPtr, void*, void* apGeometryProperties) {
+	ZoneScopedN("ShadowShader::PostRenderSetup");
+	FrameMarkEnd(frameMark_ShadowShaderRender);
+	ThisCall(0xB7C320, thisPtr, apGeometryProperties);
+}
+
 void AttachHooks() {
 
 	SettingsMainStruct* SettingsMain = &TheSettingManager->SettingsMain;
@@ -99,4 +114,6 @@ void AttachHooks() {
 		SafeWriteJump(Jumpers::FlyCam::UpdateLeftFlyCamHook, (UInt32)UpdateLeftFlyCamHook);
 	}
 
+	SafeWrite32(0x10AF380, (UInt32)hkShadowShader_PreRenderSetup);
+	SafeWrite32(0x10AF384, (UInt32)hkShadowShader_PostRenderSetup);
 }

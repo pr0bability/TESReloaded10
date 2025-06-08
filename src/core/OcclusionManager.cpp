@@ -33,7 +33,7 @@ void OcclusionManager::Initialize() {
 bool OcclusionManager::InFrustum(NiNode* Node) {
 	
 	NiCullingProcess* Process = WorldSceneGraph->cullingProcess;
-	UInt32 ActivePlanes = Process->Planes.ActivePlanes;
+	UInt32 ActivePlanes = Process->m_kPlanes.ActivePlanes;
 	NiBound* Bound = Node->GetWorldBound();
 	UInt32 Side = 0;
 	UInt32 i = 0;
@@ -42,13 +42,13 @@ bool OcclusionManager::InFrustum(NiNode* Node) {
 	if (ActivePlanes > 0) {
 		for (i = 0; i < NiFrustumPlanes::MaxPlanes; i++) {
 			if (ActivePlanes & (1 << i)) {
-				Side = Bound->WhichSide(&Process->Planes.CullingPlanes[i]);
+				Side = Bound->WhichSide(&Process->m_kPlanes.CullingPlanes[i]);
 				if (Side == NiPlane::NegativeSide) break;
-				if (Side == NiPlane::PositiveSide) Process->Planes.ActivePlanes &= ~(1 << i);
+				if (Side == NiPlane::PositiveSide) Process->m_kPlanes.ActivePlanes &= ~(1 << i);
 			}
 		}
 		if (i == NiFrustumPlanes::MaxPlanes) Result = true;
-		Process->Planes.ActivePlanes = ActivePlanes;
+		Process->m_kPlanes.ActivePlanes = ActivePlanes;
 	}
 	return Result;
 
