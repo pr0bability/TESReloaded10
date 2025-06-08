@@ -51,32 +51,33 @@ bool ShaderProgram::FileExists(const char* path) {
 bool ShaderProgram::CheckPreprocessResult(const char* CachedPreprocessPath, ID3DXBuffer* ShaderSource) {
 	void* CurrentContent = ShaderSource->GetBufferPointer();
 	
-	ID3DXBuffer* CachedSource;
-	void* CachedContent;
+	ID3DXBuffer* CachedSource = nullptr;
+	void* CachedContent = nullptr;
 	
 	std::ifstream File(CachedPreprocessPath, std::ios::in | std::ios::ate);
 	if (File.is_open()) {
 		std::streamoff Size = File.tellg();
-		D3DXCreateBuffer(Size, &CachedSource);
-		File.seekg(0, std::ios::beg);
-		CachedContent = CachedSource->GetBufferPointer();
-		File.read((char*)CachedContent, Size);
-		File.close();
+		if (Size > 0 && SUCCEEDED(D3DXCreateBuffer(Size, &CachedSource))) {
+			File.seekg(0, std::ios::beg);
+			CachedContent = CachedSource->GetBufferPointer();
+			File.read((char*)CachedContent, Size);
+			File.close();
+		}
+		else {
+			File.close();
+			return false;
+		}
 	}
 	else {
 		return false;
 	}
 
-	bool match;
+	bool match = false;
 
-	if (!CachedContent) {
-		match = false;
-	}
-	else if (ShaderSource->GetBufferSize() != CachedSource->GetBufferSize()) {
-		match = false;
-	}
-	else {
-		match = !memcmp(CurrentContent, CachedContent, ShaderSource->GetBufferSize());
+	if (CachedContent && CachedSource) {
+		if (ShaderSource->GetBufferSize() == CachedSource->GetBufferSize()) {
+			match = !memcmp(CurrentContent, CachedContent, ShaderSource->GetBufferSize());
+		}
 	}
 
 	if (CachedSource) CachedSource->Release();
@@ -139,10 +140,8 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 			nullFound = Template.Defines[i].Name == NULL;
 			if (!nullFound) i++;
 		}
-		if (TheRenderManager->IsReversedDepth()) {
-			Template.Defines[i] = { "REVERSED_DEPTH", "" };
-			i++;
-		}
+		Template.Defines[i] = { "REVERSED_DEPTH", "" };
+		Template.Defines[i + 1] = { NULL, NULL }; // Ensure null termination
 	}
 
 	HRESULT prepass = D3DXPreprocessShaderFromFileA(ShaderSourcePath, Macros, NULL, &ShaderSource, &Errors);
@@ -158,11 +157,16 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 			std::ifstream FileBinary(ShaderCompiledPath, std::ios::in | std::ios::binary | std::ios::ate);
 			if (FileBinary.is_open()) {
 				std::streamoff Size = FileBinary.tellg();
-				D3DXCreateBuffer(Size, &Shader);
-				FileBinary.seekg(0, std::ios::beg);
-				Function = Shader->GetBufferPointer();
-				FileBinary.read((char*)Function, Size);
-				FileBinary.close();
+				if (Size > 0 && SUCCEEDED(D3DXCreateBuffer(Size, &Shader))) {
+					FileBinary.seekg(0, std::ios::beg);
+					Function = Shader->GetBufferPointer();
+					FileBinary.read((char*)Function, Size);
+					FileBinary.close();
+				}
+				else {
+					FileBinary.close();
+					Logger::Log("ERROR: Failed to create buffer for shader binary %s", ShaderCompiledPath);
+				}
 			}
 			else {
 				Logger::Log("ERROR: Shader binary %s not found.", ShaderCompiledPath);
@@ -218,16 +222,26 @@ ShaderRecord* ShaderRecord::LoadShader(const char* Name, const char* SubPath, Sh
 				Logger::Log("Issues getting constants descriptions for %s", Name);
 			}
 			else if (Shader) {
+				HRESULT createResult = E_FAIL;
 				if (ShaderProfile[0] == 'v') {
 					ShaderProg = new ShaderRecordVertex(Name);
-					TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
+					createResult = TheRenderManager->device->CreateVertexShader((const DWORD*)Function, &((ShaderRecordVertex*)ShaderProg)->ShaderHandle);
 				}
 				else {
 					ShaderProg = new ShaderRecordPixel(Name);
-					TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
+					createResult = TheRenderManager->device->CreatePixelShader((const DWORD*)Function, &((ShaderRecordPixel*)ShaderProg)->ShaderHandle);
 				}
-				ShaderProg->CreateCT(ShaderSource, ConstantTable);
-				Logger::Log("Shader loaded: %s", ShaderCompiledPath);
+				
+				if (SUCCEEDED(createResult)) {
+					ShaderProg->CreateCT(ShaderSource, ConstantTable);
+					Logger::Log("Shader loaded: %s", ShaderCompiledPath);
+				}
+				else {
+					Logger::Log("ERROR: Failed to create DirectX shader for %s", Name);
+					ReportError(createResult);
+					delete ShaderProg;
+					ShaderProg = nullptr;
+				}
 			}
 		}
 	}
