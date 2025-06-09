@@ -7,6 +7,7 @@ float4 TESR_ParallaxData : register(c35);
 
 #ifdef TERRAIN
 // Complex Parallax Materials for Community Shaders
+// https://bartwronski.com/wp-content/uploads/2014/03/ac4_gdc.pdf
 // https://www.artstation.com/blogs/andreariccardi/3VPo/a-new-approach-for-parallax-mapping-presenting-the-contact-refinement-parallax-mapping-technique
 float getTerrainHeight(float2 coords, float2 dx, float2 dy, float blendFactor, int texCount, sampler2D tex[7], float blends[7], float status[7], out float weights[7]) {
     weights = blends;
@@ -56,11 +57,11 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
         }
     
         // Variables.
-        bool highQuality = TESR_TerrainParallaxData.w;
+        static const float maxSteps = (TESR_TerrainParallaxData.w) ? 16.0f : 8.0f;
         float maxDistance = TESR_TerrainParallaxExtraData.x;
         float height = TESR_TerrainParallaxExtraData.y;
     #else
-        bool highQuality = false;
+        static const float maxSteps = 16.0f;
         float maxDistance = 2048;
         float height = 0.1 * TESR_ParallaxData.x;
     #endif
@@ -86,16 +87,9 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
     float2 output;
     if (distanceBlend < 1.0)
     {
-        int numSteps;
-        
-        if (highQuality) {
-            numSteps = lerp(4, 64, quality);
-            numSteps = clamp((numSteps / 4) * 4, 4, 64);
-        }
-        else {
-            numSteps = lerp(4, 32, quality);
-            numSteps = clamp((numSteps / 4) * 4, 4, 32);
-        }
+        int numSteps = int((maxSteps * (1.0 - distanceBlend)) + 0.5);
+        numSteps = ((numSteps + 3) / 4) * 4;
+        numSteps = clamp(numSteps, 4, maxSteps);
 
         float stepSize = rcp((float) numSteps);
 
@@ -107,9 +101,13 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
 
         float2 pt1 = 0;
         float2 pt2 = 0;
+        
+        int numStepOrig = numSteps;
+        bool done = false;
+        bool contactRefinement = false;
 
         // Need fastopt otherwise compile times are crazy.
-        [loop][fastopt] while (numSteps > 0) {
+        [loop][fastopt] while (numSteps > 0 && !done) {
             float4 currentOffset[2];
             currentOffset[0] = prevOffset.xyxy - float4(1, 1, 2, 2) * offsetPerStep.xyxy;
             currentOffset[1] = prevOffset.xyxy - float4(3, 3, 4, 4) * offsetPerStep.xyxy;
@@ -133,33 +131,50 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
 
             [branch] if (any(testResult))
             {
+                float2 lastOffset = 0;
                 [flatten] if (testResult.w)
                 {
+                    lastOffset = currentOffset[1].xy;
                     pt1 = float2(currentBound.w, currHeight.w);
                     pt2 = float2(currentBound.z, currHeight.z);
                 }
                 [flatten] if (testResult.z)
                 {
+                    lastOffset = currentOffset[0].zw;
                     pt1 = float2(currentBound.z, currHeight.z);
                     pt2 = float2(currentBound.y, currHeight.y);
                 }
                 [flatten] if (testResult.y)
                 {
+                    lastOffset = currentOffset[0].xy;
                     pt1 = float2(currentBound.y, currHeight.y);
                     pt2 = float2(currentBound.x, currHeight.x);
                 }
                 [flatten] if (testResult.x)
                 {
+                    lastOffset = prevOffset;
                     pt1 = float2(currentBound.x, currHeight.x);
                     pt2 = float2(prevBound, prevHeight);
                 }
-                break;
+                
+                if (contactRefinement) {
+                    done = true;
+                }
+                else {
+                    contactRefinement = true;
+                    prevOffset = lastOffset;
+                    prevBound = pt2.x;
+                    numSteps = numStepOrig;
+                    stepSize /= (float) numSteps;
+                    offsetPerStep /= (float) numSteps;
+                }
             }
-
-            prevOffset = currentOffset[1].zw;
-            prevBound = currentBound.w;
-            prevHeight = currHeight.w;
-            numSteps -= 4;
+            else {
+                prevOffset = currentOffset[1].zw;
+                prevBound = currentBound.w;
+                prevHeight = currHeight.w;
+                numSteps -= 4;
+            }
         }
         
         float delta2 = pt2.x - pt2.y;
