@@ -145,7 +145,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 lightTS = mul(tbn, SunDir.xyz);
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, heightStatus, BaseMap);
     
-    float3 lighting = getSunLighting(lightTS, SunColor.rgb, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, gloss, specExponent);
+    float3 lighting = getSunLighting(lightTS, SunColor.rgb, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, gloss, specExponent, 1.0, parallaxShadowMultiplier);
 
     #if defined(NUM_PT_LIGHTS)
         [loop] for (int i = 0; i < PointLightCount; i++) {
