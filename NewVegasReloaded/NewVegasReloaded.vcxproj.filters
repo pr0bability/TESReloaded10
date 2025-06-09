@@ -307,6 +307,12 @@
     <ClInclude Include="..\src\effects\PBR.h">
       <Filter>Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Shaders.h">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SMAA.h">
+      <Filter>Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -529,6 +535,15 @@
       <Filter>Effects</Filter>
     </ClCompile>
     <ClCompile Include="..\src\effects\PBR.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\Hooks\Shaders.cpp">
+      <Filter>NewVegas\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\SMAA.cpp">
+      <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\effects\SunShadows.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
   </ItemGroup>

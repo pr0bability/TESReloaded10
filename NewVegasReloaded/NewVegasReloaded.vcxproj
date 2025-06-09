@@ -223,7 +223,6 @@
     <ClInclude Include="..\src\effects\DepthOfField.h" />
     <ClInclude Include="..\src\effects\Effects.h" />
     <ClInclude Include="..\src\effects\Exposure.h" />
-    <ClInclude Include="..\src\effects\ExtraShaders.h" />
     <ClInclude Include="..\src\effects\Flashlight.h" />
     <ClInclude Include="..\src\effects\GodRays.h" />
     <ClInclude Include="..\src\effects\Grass.h" />
