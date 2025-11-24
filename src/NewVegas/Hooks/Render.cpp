@@ -358,13 +358,15 @@ BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 
 
 // 0xE69660
 bool __fastcall NiDX9Renderer__Do_EndFrame(NiDX9Renderer* apThis, void*) {
-	ThisCall(0xE69660, apThis);
+	bool bResult = ThisStdCall<bool>(0xE69660, apThis);
 
 	// Reload effects if queued.
 	if (TheShaderManager && TheShaderManager->EffectReloadQueued) {
 		TheShaderManager->ReloadEffects();
 		TheShaderManager->EffectReloadQueued = false;
 	}
+
+	return bResult;
 }
 
 
@@ -399,3 +401,4 @@ bool __fastcall NiDX9Renderer__Do_EndFrame(NiDX9Renderer* apThis, void*) {
 	// emittance color is index 27
 	//ScaleColor(GetLightConstant(27), TheShaderManager->ShaderConst.HDR.PointLightMult);
 //}
+
