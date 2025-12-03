@@ -68,12 +68,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "New Vegas Reloaded"
-            VALUE "FileVersion", "4.3.1"
+            VALUE "FileVersion", "4.3.2"
             VALUE "InternalName", "NewVegasReloaded.dll"
             VALUE "LegalCopyright", "Copyright (C) 2025"
             VALUE "OriginalFilename", "NewVegasReloaded.dll"
             VALUE "ProductName", "New Vegas Reloaded"
-            VALUE "ProductVersion", "4.3.1"
+            VALUE "ProductVersion", "4.3.2"
         END
     END
     BLOCK "VarFileInfo"

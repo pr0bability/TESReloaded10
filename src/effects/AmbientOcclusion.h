@@ -5,6 +5,8 @@ class AmbientOcclusionEffect : public EffectRecord
 public:
 	AmbientOcclusionEffect() : EffectRecord("AmbientOcclusion") {};
 
+	bool bNVAOLoaded = false;
+
 	struct AmbientOcclusionStruct {
 		bool			Enabled;
 		D3DXVECTOR4		AOData;

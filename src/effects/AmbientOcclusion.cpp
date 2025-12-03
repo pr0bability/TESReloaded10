@@ -23,5 +23,5 @@ void AmbientOcclusionEffect::UpdateSettings() {
 }
 
 bool AmbientOcclusionEffect::ShouldRender() {
-	return Constants.Enabled;
+	return Constants.Enabled && !bNVAOLoaded;
 }

@@ -43,6 +43,10 @@ extern "C" {
 				Logger::Log("JG not found");
 			}
 
+			if (GetModuleHandle(L"VanillaPlusAO.dll")) {
+				TheShaderManager->Effects.AmbientOcclusion->bNVAOLoaded = true;
+			}			
+
 			// Make sure all SLS vertex shaders pass and update EyePosition.
 			ShadowLightShader::EnableEyePositionForAllPasses();
 
@@ -64,7 +68,7 @@ extern "C" {
 		
 		Info->InfoVersion = PluginInfo::kInfoVersion;
 		Info->Name = "NewVegasReloaded";
-		Info->Version = 431;
+		Info->Version = 432;
 		return true;
 
 	}
