@@ -328,8 +328,12 @@ void ShadowsExteriorEffect::UpdateSettings() {
 
 void ShadowsExteriorEffect::clearShadowsBuffer() {
 	// clear shadows buffer
+	IDirect3DSurface9* currentRT;
+	TheRenderManager->device->GetRenderTarget(0, &currentRT);
 	TheRenderManager->device->SetRenderTarget(0, Textures.ShadowPassSurface);
 	TheRenderManager->device->Clear(0L, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 255, 0, 0), 1.0f, 0L);
+	TheRenderManager->device->SetRenderTarget(0, currentRT);
+	currentRT->Release();
 }
 
 
