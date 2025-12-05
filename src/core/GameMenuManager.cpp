@@ -129,6 +129,8 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->Keys[209] = "PgDown";
 	TheGameMenuManager->Keys[210] = "Insert";
 	TheGameMenuManager->Keys[211] = "Delete";
+
+	TheGameMenuManager->IsLiveMenu = nullptr;
 }
 
 void GameMenuManager::UpdateSettings() {

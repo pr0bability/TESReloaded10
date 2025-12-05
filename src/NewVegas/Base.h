@@ -60,8 +60,6 @@ public:
 		static const UInt32 Method	= 0x007134D0;
 	};
 	struct Shadows {
-		static const UInt32 RenderShadowMapHook			= 0x00870C39;
-		static const UInt32 RenderShadowMapReturn		= 0x00870C41;
 		static const UInt32 RenderShadowMap1Hook		= 0x0087084E;
 		static const UInt32 RenderShadowMap1Return		= 0x00870856;
 		static const UInt32 AddCastShadowFlagHook		= 0x0050DD06;

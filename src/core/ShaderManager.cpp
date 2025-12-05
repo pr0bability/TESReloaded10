@@ -215,10 +215,16 @@ void ShaderManager::UpdateConstants() {
 	if (Effects.Debug->Enabled) avglumaRequired = true;
 
 	// context variables
-	GameState.PipBoyIsOn = InterfaceManager->getIsMenuOpen();
+	GameState.PipBoyIsOn = InterfaceManager->IsPipBoyOpen();
 	GameState.VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
-	GameState.OverlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
-		InterfaceManager->IsActive(Menu::kMenuType_LockPick) ||
+
+	const bool bHasRTM = TheGameMenuManager->IsLiveMenu != nullptr;
+	bool bComputersMenu = InterfaceManager->IsActive(Menu::kMenuType_Computers) && (bHasRTM ? (TheGameMenuManager->IsLiveMenu(Menu::kMenuType_Computers, false, false) == GameMenuManager::MENU_PAUSED) : true);
+	if (!bComputersMenu)
+		bComputersMenu = InterfaceManager->IsActive(Menu::kMenuType_Hacking) && (bHasRTM ? (TheGameMenuManager->IsLiveMenu(Menu::kMenuType_Hacking, false, false) == GameMenuManager::MENU_PAUSED) : true);
+	bool bLockpickMenu = LockPickMenu::GetSingleton() && (bHasRTM ? (TheGameMenuManager->IsLiveMenu(Menu::kMenuType_LockPick, false, false) == GameMenuManager::MENU_PAUSED) : true);
+
+	GameState.OverlayIsOn = bComputersMenu || bLockpickMenu ||
 		InterfaceManager->IsActive(Menu::kMenuType_Surgery) ||
 		InterfaceManager->IsActive(Menu::kMenuType_SlotMachine) ||
 		InterfaceManager->IsActive(Menu::kMenuType_Blackjack) ||
@@ -686,7 +692,7 @@ void ShaderManager::RenderEffectToRT(IDirect3DSurface9* RenderTarget, EffectReco
 void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget) {
 	if (!TheSettingManager->SettingsMain.Main.RenderEffects) return; // Main toggle
 	if (!Player->parentCell) return;
-	if (GameState.OverlayIsOn) return; // disable all effects during terminal/lockpicking sequences because they bleed through the overlay
+	if (GameState.OverlayIsOn && TESMain::IsMenuBackgroundReady()) return; // disable all effects during terminal/lockpicking sequences
 
 	auto timer = TimeLogger();
 

@@ -45,6 +45,14 @@ public:
 	std::chrono::system_clock::time_point		lastKeyPressed;
 	UInt16										keyDown;
 
+	enum MenuPauseState : uint32_t {
+		MENU_PAUSED	= 0, // Pauses the game, runs MenuMode only
+		MENU_LIVE	= 1, // Does not pause the game, runs both GameMode and MenuMode
+		MENU_MIXED	= 2, // Does not pause the game, runs only MenuMode
+	};
+
+	MenuPauseState(__cdecl* IsLiveMenu)(uint32_t aeMenu, bool abCheckInstances, bool abGameModeCheck);
+
 	int HeaderYPos;
 	int MenuHeight;
 	int rowHeight;
