@@ -5738,3 +5738,10 @@ public:
 		return *(NiNode**)0x11D8690;
 	}
 };
+
+class TESMain {
+public:
+	static bool IsMenuBackgroundReady() {
+		return *reinterpret_cast<bool*>(0x11DEA29);
+	}
+};
