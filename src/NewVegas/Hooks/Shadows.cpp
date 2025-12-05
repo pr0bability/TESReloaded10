@@ -1,14 +1,8 @@
 #pragma once
 
-__declspec(naked) void RenderShadowMapHook() {
-
-	__asm {
-		pushad
-		mov		ecx, TheShadowManager
-		call	ShadowManager::RenderShadowMaps
-		popad
-		jmp		Jumpers::Shadows::RenderShadowMapReturn
-	}
+void __fastcall RenderShadowMapHook(void* apThis) {
+	TheShadowManager->RenderShadowMaps();
+	CdeclCall(0x871A50);
 }
 
 static void AddCastShadowFlag(TESObjectREFR* Ref, TESObjectLIGH* Light, NiPointLight* LightPoint) {

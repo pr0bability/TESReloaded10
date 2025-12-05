@@ -215,10 +215,16 @@ void ShaderManager::UpdateConstants() {
 	if (Effects.Debug->Enabled) avglumaRequired = true;
 
 	// context variables
-	GameState.PipBoyIsOn = InterfaceManager->getIsMenuOpen();
+	GameState.PipBoyIsOn = InterfaceManager->IsPipBoyOpen();
 	GameState.VATSIsOn = InterfaceManager->IsActive(Menu::kMenuType_VATS);
-	GameState.OverlayIsOn = InterfaceManager->IsActive(Menu::kMenuType_Computers) ||
-		InterfaceManager->IsActive(Menu::kMenuType_LockPick) ||
+
+	const bool bHasRTM = TheGameMenuManager->IsLiveMenu != nullptr;
+	bool bComputersMenu = InterfaceManager->IsActive(Menu::kMenuType_Computers) && (bHasRTM ? (TheGameMenuManager->IsLiveMenu(Menu::kMenuType_Computers, false, false) == GameMenuManager::MENU_PAUSED) : true);
+	if (!bComputersMenu)
+		bComputersMenu = InterfaceManager->IsActive(Menu::kMenuType_Hacking) && (bHasRTM ? (TheGameMenuManager->IsLiveMenu(Menu::kMenuType_Hacking, false, false) == GameMenuManager::MENU_PAUSED) : true);
+	bool bLockpickMenu = LockPickMenu::GetSingleton() && (bHasRTM ? (TheGameMenuManager->IsLiveMenu(Menu::kMenuType_LockPick, false, false) == GameMenuManager::MENU_PAUSED) : true);
+
+	GameState.OverlayIsOn = bComputersMenu || bLockpickMenu ||
 		InterfaceManager->IsActive(Menu::kMenuType_Surgery) ||
 		InterfaceManager->IsActive(Menu::kMenuType_SlotMachine) ||
 		InterfaceManager->IsActive(Menu::kMenuType_Blackjack) ||

@@ -70,7 +70,12 @@ HRESULT __fastcall SetSamplerStateHook(NiDX9RenderState* This, UInt32 edx, UInt3
 void (__thiscall* RenderWorldSceneGraph)(Main*, Sun*, UInt8, UInt8, UInt8) = (void (__thiscall*)(Main*, Sun*, UInt8, UInt8, UInt8))Hooks::RenderWorldSceneGraph;
 void __fastcall RenderWorldSceneGraphHook(Main* This, UInt32 edx, Sun* SkySun, UInt8 IsFirstPerson, UInt8 WireFrame, UInt8 Arg4) {
 	(*RenderWorldSceneGraph)(This, SkySun, IsFirstPerson, WireFrame, Arg4);
-	if (!InterfaceManager->getIsMenuOpen()) TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture); // disable updating the world buffer when pipboy is out
+
+	const bool bPipBoyOpen = InterfaceManager->IsPipBoyOpen();
+	const bool bPipBoyLive = (TheGameMenuManager->IsLiveMenu && TheGameMenuManager->IsLiveMenu(Menu::kMenuType_BigFour, false, false) == GameMenuManager::MenuPauseState::MENU_LIVE);
+
+	if (!bPipBoyOpen || bPipBoyLive)
+		TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTexture); // disable updating the world buffer when pipboy is out
 
 	if (!IsFirstPerson) {
 		// clear the viewmodel depth buffer
@@ -122,8 +127,48 @@ float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 
 }
 
+bool bSkippedRender_RenderedMenu = false;
+bool bDoneRender_LockPickMenu = false;
+
 void(__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void(__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
 void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* SourceTarget, BSRenderedTexture* DestinationTarget) {
+	bool bLiveRenderedMenu = false; // FORenderedMenu, FOPipBoyManager
+	bool bLive3DMenu = false; // Normal menus, but 3D, lockpick etc
+	if (*reinterpret_cast<bool*>(0x11DEA29) && TheGameMenuManager->IsLiveMenu && InterfaceManager->currentMode != 1) {
+		const bool bLockPickMenu = LockPickMenu::GetSingleton() && TheGameMenuManager->IsLiveMenu(Menu::kMenuType_LockPick, false, false) == GameMenuManager::MENU_LIVE;
+		const bool bPipBoyLive = InterfaceManager->IsPipBoyOpen() && TheGameMenuManager->IsLiveMenu(Menu::kMenuType_BigFour, false, false) == GameMenuManager::MenuPauseState::MENU_LIVE;
+		const bool bRenderedMenuLive = InterfaceManager->pRenderedMenu && TheGameMenuManager->IsLiveMenu(InterfaceManager->menuStack[0], false, false) == GameMenuManager::MenuPauseState::MENU_LIVE;
+		bLiveRenderedMenu = bPipBoyLive || bRenderedMenuLive;
+		bLive3DMenu = bLockPickMenu;
+	}
+
+	if (bLive3DMenu) {
+		if (bDoneRender_LockPickMenu) {
+			bDoneRender_LockPickMenu = false;
+			ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
+			return;
+		}
+		else {
+			bDoneRender_LockPickMenu = true;
+		}
+	}
+	else {
+		bDoneRender_LockPickMenu = false;
+	}
+	
+	if (bLiveRenderedMenu) {
+		if (!bSkippedRender_RenderedMenu) {
+			bSkippedRender_RenderedMenu = true;
+			ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
+			return;
+		}
+		else {
+			bSkippedRender_RenderedMenu = false;
+		}
+	}
+	else {
+		bSkippedRender_RenderedMenu = false;
+	}
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
@@ -134,7 +179,7 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 	TheRenderManager->SetupSceneCamera();
 	TheShaderManager->UpdateConstants();
 
-	if (TheSettingManager->SettingsMain.Main.RenderPreTonemapping) {
+	if (SourceTarget && TheSettingManager->SettingsMain.Main.RenderPreTonemapping) {
 		SourceTarget->GetD3DTexture(0)->GetSurfaceLevel(0, &GameSurface); // get the surface from the game render target
 
 		// Disable render state settings that create artefacts

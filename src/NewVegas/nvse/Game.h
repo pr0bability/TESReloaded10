@@ -4689,6 +4689,13 @@ public:
 };
 assert(sizeof(Menu) == 0x28);
 
+class LockPickMenu : public Menu{
+public:
+	static LockPickMenu* GetSingleton() {
+		return *reinterpret_cast<LockPickMenu**>(0x11DA204);
+	}
+};
+
 class HUDMainMenu : public Menu {
 public:
 	struct QueuedMessage {
@@ -5292,7 +5299,7 @@ public:
 	UInt32					unk160;				// 160
 	UInt32					unk164;				// 164
 	UInt32					unk168;				// 168
-	void*					unk16C;				// 16C
+	void*					pRenderedMenu;		// 16C
 	UInt32					unk170;				// 170
 	void*					pipboyManager;		// 174 FOPipboyManager*
 	UInt32					unk178;				// 178
@@ -5306,7 +5313,7 @@ public:
 	UInt32					pipBoyMode;			// 4BC
 	UInt32					unk4C0[48];			// 4C0
 
-	UInt8					getIsMenuOpen() { return pipBoyMode == 3; };
+	UInt8					IsPipBoyOpen() { return pipBoyMode == 3; };
 };
 assert(sizeof(MenuInterfaceManager) == 0x580);
 

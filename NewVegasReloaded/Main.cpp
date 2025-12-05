@@ -47,6 +47,12 @@ extern "C" {
 				TheShaderManager->Effects.AmbientOcclusion->bNVAOLoaded = true;
 			}			
 
+			HMODULE hRTM = GetModuleHandle(L"RealTimeMenus.dll");
+			if (hRTM) {
+				Logger::Log("Real Time Menus found, initializing functions");
+				TheGameMenuManager->IsLiveMenu = (GameMenuManager::MenuPauseState(__cdecl*)(uint32_t, bool, bool))GetProcAddress(hRTM, "IsLiveMenu");
+			}
+
 			// Make sure all SLS vertex shaders pass and update EyePosition.
 			ShadowLightShader::EnableEyePositionForAllPasses();
 
