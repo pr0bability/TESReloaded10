@@ -386,3 +386,7 @@ void ShadowLightShader::EnableEyePositionForAllPasses() {
 		uiVertexConstantFlags[i] |= 0b10000000000;
 	}
 }
+
+BSRenderedTexture* ImageSpaceTexture::GetRenderedTexture() const {
+	return bIsRenderedTexture ? static_cast<BSRenderedTexture*>(spTexture.m_pObject) : nullptr;
+}

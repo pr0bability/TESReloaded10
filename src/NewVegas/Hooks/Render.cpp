@@ -142,6 +142,9 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 		bLive3DMenu = bLockPickMenu;
 	}
 
+	// Only render after tonemapping effects for standard draws to avoid doubling for rendered menus and whatever.
+	TheShaderManager->RenderAfterTonemapping = !DestinationTarget;
+
 	if (bLive3DMenu) {
 		if (bDoneRender_LockPickMenu) {
 			bDoneRender_LockPickMenu = false;
@@ -206,7 +209,7 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 
 	ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
 
-	if (!DestinationTarget && TheRenderManager->currentRTGroup) {
+	if (!TheShaderManager->FakeISEffect && !DestinationTarget && TheRenderManager->currentRTGroup) {
 		OutputSurface = TheRenderManager->currentRTGroup->RenderTargets[0]->data->Surface;
 		if (!TheSettingManager->SettingsMain.Main.RenderPreTonemapping) TheShaderManager->RenderEffectsPreTonemapping(OutputSurface);
 		TheShaderManager->RenderEffects(OutputSurface);

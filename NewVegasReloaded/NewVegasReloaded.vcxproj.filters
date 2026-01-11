@@ -313,6 +313,9 @@
     <ClInclude Include="..\src\effects\SMAA.h">
       <Filter>Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\core\FakeImageSpaceEffect.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -545,6 +548,9 @@
     </ClCompile>
     <ClCompile Include="..\src\effects\SunShadows.cpp">
       <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\FakeImageSpaceEffect.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

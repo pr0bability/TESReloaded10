@@ -53,6 +53,18 @@ extern "C" {
 				TheGameMenuManager->IsLiveMenu = (GameMenuManager::MenuPauseState(__cdecl*)(uint32_t, bool, bool))GetProcAddress(hRTM, "IsLiveMenu");
 			}
 
+			
+
+			typedef void(__cdecl pfn_RegisterEOFEffect)(uint32_t auiIndex, ImageSpaceEffect* apEffect);
+			HMODULE hShaderLoader = GetModuleHandle(L"Fallout Shader Loader.dll");
+
+			pfn_RegisterEOFEffect* pRegisterEOFEffect = (pfn_RegisterEOFEffect*)GetProcAddress(hShaderLoader, "RegisterEOFEffect");
+			
+			if (pRegisterEOFEffect) {
+				TheShaderManager->FakeISEffect = ImageSpaceEffectAfterTonemapping::CreateObject();
+				pRegisterEOFEffect(12000, TheShaderManager->FakeISEffect);
+			}
+
 			// Make sure all SLS vertex shaders pass and update EyePosition.
 			ShadowLightShader::EnableEyePositionForAllPasses();
 

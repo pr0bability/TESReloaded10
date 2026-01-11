@@ -119,6 +119,7 @@
     <ClCompile Include="..\src\core\Device\Device.cpp" />
     <ClCompile Include="..\src\core\Device\Hook.cpp" />
     <ClCompile Include="..\src\core\EffectRecord.cpp" />
+    <ClCompile Include="..\src\core\FakeImageSpaceEffect.cpp" />
     <ClCompile Include="..\src\core\FrameRateManager.cpp" />
     <ClCompile Include="..\src\core\GameEventManager.cpp" />
     <ClCompile Include="..\src\core\GameMenuManager.cpp" />
@@ -196,6 +197,7 @@
     <ClInclude Include="..\src\core\Device\Device.h" />
     <ClInclude Include="..\src\core\Device\Hook.h" />
     <ClInclude Include="..\src\core\EffectRecord.h" />
+    <ClInclude Include="..\src\core\FakeImageSpaceEffect.h" />
     <ClInclude Include="..\src\core\FrameRateManager.h" />
     <ClInclude Include="..\src\core\GameEventManager.h" />
     <ClInclude Include="..\src\core\GameMenuManager.h" />

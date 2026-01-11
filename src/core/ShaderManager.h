@@ -2,6 +2,7 @@
 #define FrameFVF D3DFVF_XYZ | D3DFVF_TEX1
 
 #include "../Effects/Animator.h"
+#include "FakeImageSpaceEffect.h"
 #include "ShaderRecord.h"
 #include "EffectRecord.h"
 #include "ShaderCollection.h"
@@ -164,5 +165,8 @@ public:
 	D3DXVECTOR4				LightPosition[TrackedLightsMax];
 	D3DXVECTOR4				LightColor[TrackedLightsMax + ShadowCubeMapsMax];
 	D3DXVECTOR4				LightAttenuation[TrackedLightsMax];
+	
+	ImageSpaceEffectAfterTonemapping* FakeISEffect;
+	bool					RenderAfterTonemapping;
 };
 
