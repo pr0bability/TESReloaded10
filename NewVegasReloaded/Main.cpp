@@ -51,9 +51,14 @@ extern "C" {
 			if (hRTM) {
 				Logger::Log("Real Time Menus found, initializing functions");
 				TheGameMenuManager->IsLiveMenu = (GameMenuManager::MenuPauseState(__cdecl*)(uint32_t, bool, bool))GetProcAddress(hRTM, "IsLiveMenu");
-			}
+				TheGameMenuManager->GetImageSpaceStage = (GameMenuManager::ImageSpaceStage(__cdecl*)())GetProcAddress(hRTM, "GetImageSpaceStage");
 
-			
+				if (!TheGameMenuManager->IsLiveMenu || !TheGameMenuManager->GetImageSpaceStage) {
+					MessageBox(NULL, L"Failed to load Real Time Menus functions.\nNew Vegas Reloaded cannot be used without them, please make sure to update RTM.", L"New Vegas Reloaded", MB_OK | MB_ICONERROR);
+					ExitProcess(0);
+				}
+
+			}
 
 			typedef void(__cdecl pfn_RegisterEOFEffect)(uint32_t auiIndex, ImageSpaceEffect* apEffect);
 			HMODULE hShaderLoader = GetModuleHandle(L"Fallout Shader Loader.dll");

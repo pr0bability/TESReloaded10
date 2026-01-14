@@ -127,9 +127,6 @@ float __fastcall GetWaterHeightLODHook(TESWorldSpace* This, UInt32 edx) {
 
 }
 
-bool bSkippedRender_RenderedMenu = false;
-bool bDoneRender_LockPickMenu = false;
-
 void(__cdecl* ProcessImageSpaceShaders)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*) = (void(__cdecl*)(NiDX9Renderer*, BSRenderedTexture*, BSRenderedTexture*))Hooks::ProcessImageSpaceShaders;
 void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTexture* SourceTarget, BSRenderedTexture* DestinationTarget) {
 	bool bLiveRenderedMenu = false; // FORenderedMenu, FOPipBoyManager
@@ -146,31 +143,15 @@ void __cdecl ProcessImageSpaceShadersHook(NiDX9Renderer* Renderer, BSRenderedTex
 	TheShaderManager->RenderAfterTonemapping = !DestinationTarget;
 
 	if (bLive3DMenu) {
-		if (bDoneRender_LockPickMenu) {
-			bDoneRender_LockPickMenu = false;
+		if (bLive3DMenu && TheGameMenuManager->GetImageSpaceStage && TheGameMenuManager->GetImageSpaceStage() != GameMenuManager::IS_BG) {
 			ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
 			return;
 		}
-		else {
-			bDoneRender_LockPickMenu = true;
-		}
-	}
-	else {
-		bDoneRender_LockPickMenu = false;
 	}
 	
-	if (bLiveRenderedMenu) {
-		if (!bSkippedRender_RenderedMenu) {
-			bSkippedRender_RenderedMenu = true;
-			ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
-			return;
-		}
-		else {
-			bSkippedRender_RenderedMenu = false;
-		}
-	}
-	else {
-		bSkippedRender_RenderedMenu = false;
+	if (bLiveRenderedMenu && TheGameMenuManager->GetImageSpaceStage && TheGameMenuManager->GetImageSpaceStage() == GameMenuManager::IS_BG) {
+		ProcessImageSpaceShaders(Renderer, SourceTarget, DestinationTarget);
+		return;
 	}
 
 	IDirect3DDevice9* Device = TheRenderManager->device;

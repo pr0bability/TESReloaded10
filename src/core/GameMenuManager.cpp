@@ -131,6 +131,7 @@ void GameMenuManager::Initialize() {
 	TheGameMenuManager->Keys[211] = "Delete";
 
 	TheGameMenuManager->IsLiveMenu = nullptr;
+	TheGameMenuManager->GetImageSpaceStage = nullptr;
 }
 
 void GameMenuManager::UpdateSettings() {
