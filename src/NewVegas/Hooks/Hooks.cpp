@@ -38,10 +38,10 @@ void AttachHooks() {
 	DetourTransactionCommit();
 
 	// Vanilla shader specific hooks.
-	SafeWrite32(0x10AFE94, (UInt32)SkyShader__UpdateConstants);
+	kSkyShaderConstantsDetour.ReplaceVirtualFunc(0x10AFE94, SkyShader__UpdateConstants);
 
-	SafeWriteCall(0xBE0B73, (UInt32)NiD3DVertexShaderEx::Free);
-	SafeWriteCall(0xBE0AF3, (UInt32)NiD3DPixelShaderEx::Free);
+	WriteRelCall(0xBE0B73, NiD3DVertexShaderEx::Free);
+	WriteRelCall(0xBE0AF3, NiD3DPixelShaderEx::Free);
 	SafeWrite32(0x00E7624D, sizeof(RenderManager));
 	SafeWrite32(0x00466606, sizeof(TESWeatherEx));
 	SafeWrite32(0x0046CF9B, sizeof(TESWeatherEx));
@@ -50,53 +50,54 @@ void AttachHooks() {
 	SafeWrite8(0x008751C0, 0);				// Stops to clear the depth buffer when rendering the 1st person node
 	SafeWrite16(0x0086A170, 0x9090);		// Avoids to pause the game when ALT-TAB
 
-	SafeWriteJump(Jumpers::DetectorWindow::CreateTreeViewHook, (UInt32)DetectorWindowCreateTreeViewHook);
-	SafeWriteJump(Jumpers::DetectorWindow::DumpAttributesHook, (UInt32)DetectorWindowDumpAttributesHook);
-	SafeWriteJump(Jumpers::DetectorWindow::ConsoleCommandHook, (UInt32)DetectorWindowConsoleCommandHook);
-	SafeWriteCall(Jumpers::DetectorWindow::SetNodeName, (UInt32)DetectorWindowSetNodeName);
-	SafeWriteJump(Jumpers::RenderInterface::Hook, (UInt32)RenderInterfaceHook);
-	SafeWriteJump(0x871290, (UInt32)RenderShadowMapHook);
+	WriteRelJump(Jumpers::DetectorWindow::CreateTreeViewHook, DetectorWindowCreateTreeViewHook);
+	WriteRelJump(Jumpers::DetectorWindow::DumpAttributesHook, DetectorWindowDumpAttributesHook);
+	WriteRelJump(Jumpers::DetectorWindow::ConsoleCommandHook, DetectorWindowConsoleCommandHook);
+	WriteRelCall(Jumpers::DetectorWindow::SetNodeName, DetectorWindowSetNodeName);
+	kRenderInterfaceDetour.ReplaceCall(Jumpers::RenderInterface::Hook, RenderInterfaceHook);
+	WriteRelJump(0x871290, RenderShadowMapHook);
 	//SafeWriteJump(Jumpers::Shadows::RenderShadowMap1Hook,		(UInt32)RenderShadowMap1Hook);
 	//SafeWriteJump(Jumpers::Shadows::AddCastShadowFlagHook, (UInt32)AddCastShadowFlagHook);
-	SafeWriteJump(Jumpers::Shadows::LeavesNodeNameHook, (UInt32)LeavesNodeNameHook);
-	SafeWriteCall(Jumpers::MainMenuMusic::Fix1, (UInt32)MainMenuMusicFix);
-	SafeWriteCall(Jumpers::MainMenuMusic::Fix2, (UInt32)MainMenuMusicFix);
+	WriteRelJump(Jumpers::Shadows::LeavesNodeNameHook, LeavesNodeNameHook);
+	WriteRelCall(Jumpers::MainMenuMusic::Fix1, MainMenuMusicFix);
+	WriteRelCall(Jumpers::MainMenuMusic::Fix2, MainMenuMusicFix);
 
-	SafeWriteJump(0x004E4C3B, 0x004E4C42); // Fixes reflections when cell water height is not like worldspace water height
-	SafeWriteJump(0x004E4DA4, 0x004E4DAC); // Fixes reflections on the distant water
-	SafeWriteCall(0x00875B86, 0x00710AB0); // Sets the world fov at the end of 1st person rendering
-	SafeWriteCall(0x00875B9D, 0x00710AB0); // Sets the world fov at the end of 1st person rendering
-	SafeWriteJump(0x00C03F49, 0x00C03F5A); // Fixes wrong rendering for image space effects
+	WriteRelJump(0x004E4C3B, 0x004E4C42); // Fixes reflections when cell water height is not like worldspace water height
+	WriteRelJump(0x004E4DA4, 0x004E4DAC); // Fixes reflections on the distant water
+	WriteRelCall(0x00875B86, 0x00710AB0); // Sets the world fov at the end of 1st person rendering
+	WriteRelCall(0x00875B9D, 0x00710AB0); // Sets the world fov at the end of 1st person rendering
+	WriteRelJump(0x00C03F49, 0x00C03F5A); // Fixes wrong rendering for image space effects
 
-	SafeWriteCall(0x9BB158, (UInt32)MuzzleLightCullingFix);
-	SafeWriteCall(0x879061, (UInt32)CreateSaveTextureHook); // Fixes image corruption in save screenshots when using DXVK with the HDR mod 
+	WriteRelCall(0x9BB158, MuzzleLightCullingFix);
+	WriteRelCall(0x879061, CreateSaveTextureHook); // Fixes image corruption in save screenshots when using DXVK with the HDR mod 
 
-	if (TheSettingManager->SettingsMain.Main.ReplaceIntro) SafeWriteJump(Jumpers::SetTileShaderConstants::Hook, (UInt32)SetTileShaderConstantsHook);
+	if (TheSettingManager->SettingsMain.Main.ReplaceIntro) 
+		WriteRelJump(Jumpers::SetTileShaderConstants::Hook, SetTileShaderConstantsHook);
 
 	if (TheSettingManager->SettingsMain.Main.RemovePrecipitations) {
-		SafeWriteJump(0x0063AFC4, 0x0063AFD8);
-		SafeWriteJump(0x0063A5CB, 0x0063A5DE);
+		WriteRelJump(0x0063AFC4, 0x0063AFD8);
+		WriteRelJump(0x0063A5CB, 0x0063A5DE);
 	}
 
 	// Vanilla fog remover.
 	for (UInt32 uiAddress : {0x6335EE, 0xB795FA, 0xB7AE86, 0xB7B539, 0xB7C3AB, 0xB86738, 0xBAA43B, 0xBB1B5B, 0xBB1FA5, 0xBB670E, 0xBBDF26, 0xBBE3EC, 0xBC6E33, 0xBD4BED }) {
-		SafeWriteCall(uiAddress, (UInt32)ShadowSceneNode__GetFogPropertyEx);
+		WriteRelCall(uiAddress, ShadowSceneNode__GetFogPropertyEx);
 	}
 
 	// End frame hook for effect reload.
 	SafeWrite32(0x10EE63C, (UInt32)NiDX9Renderer__Do_EndFrame);
 
 	if (TheSettingManager->SettingsMain.Main.RemoveUnderwater)
-		SafeWriteCall(0x4EC8EE, UInt32(WaterFogRemover));
+		WriteRelCall(0x4EC8EE, WaterFogRemover);
 
 	//SafeWriteCall(0xB7DBAC, (UInt32)ShadowLightShader__UpdateLights);
 
 
 	if (SettingsMain->FlyCam.Enabled) {
-		SafeWriteJump(Jumpers::FlyCam::UpdateForwardFlyCamHook, (UInt32)UpdateForwardFlyCamHook);
-		SafeWriteJump(Jumpers::FlyCam::UpdateBackwardFlyCamHook, (UInt32)UpdateBackwardFlyCamHook);
-		SafeWriteJump(Jumpers::FlyCam::UpdateRightFlyCamHook, (UInt32)UpdateRightFlyCamHook);
-		SafeWriteJump(Jumpers::FlyCam::UpdateLeftFlyCamHook, (UInt32)UpdateLeftFlyCamHook);
+		WriteRelJump(Jumpers::FlyCam::UpdateForwardFlyCamHook, UpdateForwardFlyCamHook);
+		WriteRelJump(Jumpers::FlyCam::UpdateBackwardFlyCamHook, UpdateBackwardFlyCamHook);
+		WriteRelJump(Jumpers::FlyCam::UpdateRightFlyCamHook, UpdateRightFlyCamHook);
+		WriteRelJump(Jumpers::FlyCam::UpdateLeftFlyCamHook, UpdateLeftFlyCamHook);
 	}
 
 }

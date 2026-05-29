@@ -24,6 +24,6 @@ static __declspec(naked) void CreateDeviceHook()
 
 void AttachDeviceHooks() {
 
-	SafeWriteJump(Jumpers::CreateDevice::Hook, (UInt32)CreateDeviceHook);
+	WriteRelJump(Jumpers::CreateDevice::Hook, (UInt32)CreateDeviceHook);
 
 }

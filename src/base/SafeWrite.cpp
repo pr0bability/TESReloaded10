@@ -1,50 +1,92 @@
-void SafeWrite8(UInt32 addr, UInt32 data) {
+#include "SafeWrite.h"
+#include <memoryapi.h>
 
-	UInt32	oldProtect;
+#pragma optimize("y", on)
 
-	VirtualProtect((void*)addr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
-	*((UInt8*)addr) = data;
-	VirtualProtect((void*)addr, 4, oldProtect, &oldProtect);
+class MemoryUnlock {
+public:
+	MemoryUnlock(SIZE_T _addr, SIZE_T _size = sizeof(SIZE_T)) : addr(_addr), size(_size) {
+		VirtualProtect((void*)addr, size, PAGE_EXECUTE_READWRITE, &oldProtect);
+	}
+	~MemoryUnlock() {
+		VirtualProtect((void*)addr, size, oldProtect, &oldProtect);
+	}
 
+private:
+	const SIZE_T addr;
+	const SIZE_T size;
+	SIZE_T oldProtect;
+};
+
+void __fastcall SafeWrite8(SIZE_T addr, SIZE_T data)
+{
+	MemoryUnlock unlock(addr);
+	*((uint8_t*)addr) = data;
 }
 
-void SafeWrite16(UInt32 addr, UInt32 data) {
-
-	UInt32	oldProtect;
-
-	VirtualProtect((void*)addr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
-	*((UInt16*)addr) = data;
-	VirtualProtect((void*)addr, 4, oldProtect, &oldProtect);
-
+void __fastcall SafeWrite16(SIZE_T addr, SIZE_T data)
+{
+	MemoryUnlock unlock(addr);
+	*((uint16_t*)addr) = data;
 }
 
-void SafeWrite32(UInt32 addr, UInt32 data) {
-
-	UInt32	oldProtect;
-
-	VirtualProtect((void*)addr, 4, PAGE_EXECUTE_READWRITE, &oldProtect);
-	*((UInt32*)addr) = data;
-	VirtualProtect((void*)addr, 4, oldProtect, &oldProtect);
-
+void __fastcall SafeWrite32(SIZE_T addr, SIZE_T data)
+{
+	MemoryUnlock unlock(addr);
+	*((uint32_t*)addr) = data;
 }
 
-void SafeWriteJump(UInt32 jumpSrc, UInt32 jumpTgt) {
+void __fastcall SafeWriteBuf(SIZE_T addr, const void *data, SIZE_T len)
+{
+	MemoryUnlock unlock(addr, len);
+	memcpy((void *)addr, data, len);
+}
 
-	SafeWrite8(jumpSrc, 0xE9);
+void __fastcall WriteRelJump(SIZE_T jumpSrc, SIZE_T jumpTgt)
+{
+	MemoryUnlock unlock(jumpSrc, 5);
+	*((uint8_t*)jumpSrc) = 0xE9;
+	*((uint32_t*)(jumpSrc + 1)) = jumpTgt - jumpSrc - 1 - 4;
+}
+
+void __fastcall WriteRelCall(SIZE_T jumpSrc, SIZE_T jumpTgt)
+{
+	MemoryUnlock unlock(jumpSrc, 5);
+	*((uint8_t*)jumpSrc) = 0xE8;
+	*((uint32_t*)(jumpSrc + 1)) = jumpTgt - jumpSrc - 1 - 4;
+}
+
+void __fastcall ReplaceCall(SIZE_T jumpSrc, SIZE_T jumpTgt)
+{
 	SafeWrite32(jumpSrc + 1, jumpTgt - jumpSrc - 1 - 4);
-
 }
 
-void SafeWriteCall(UInt32 jumpSrc, UInt32 jumpTgt) {
-
-	SafeWrite8(jumpSrc, 0xE8);
-	SafeWrite32(jumpSrc + 1, jumpTgt - jumpSrc - 1 - 4);
-
+void __fastcall ReplaceVirtualFunc(SIZE_T jumpSrc, void* jumpTgt) {
+	SafeWrite32(jumpSrc, (SIZE_T)jumpTgt);
 }
 
-void SafeWriteNop(UInt32 jumpSrc, UInt8 num){
-    for(UInt8 n = 0; n < num; n++){
-        SafeWrite8(jumpSrc + n, 0x90);
-    }
-    
+void __fastcall WriteRelJnz(SIZE_T jumpSrc, SIZE_T jumpTgt)
+{
+	// jnz rel32
+	SafeWrite16(jumpSrc, 0x850F);
+	SafeWrite32(jumpSrc + 2, jumpTgt - jumpSrc - 2 - 4);
 }
+
+void __fastcall WriteRelJle(SIZE_T jumpSrc, SIZE_T jumpTgt)
+{
+	// jle rel32
+	SafeWrite16(jumpSrc, 0x8E0F);
+	SafeWrite32(jumpSrc + 2, jumpTgt - jumpSrc - 2 - 4);
+}
+
+void __fastcall PatchMemoryNop(ULONG_PTR Address, SIZE_T Size)
+{
+	{
+		MemoryUnlock unlock(Address, Size);
+		for (SIZE_T i = 0; i < Size; i++)
+			*(volatile BYTE*)(Address + i) = 0x90; //0x90 == opcode for NOP
+	}
+	FlushInstructionCache(GetCurrentProcess(), (LPVOID)Address, Size);
+}
+
+#pragma optimize("y", off)

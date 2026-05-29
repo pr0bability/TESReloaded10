@@ -225,20 +225,11 @@ static void RenderMainMenuMovie() {
 
 }
 
-__declspec(naked) void RenderInterfaceHook() {
-
-	__asm {
-		pushad
-		call	RenderMainMenuMovie
-		popad
-		call	Jumpers::RenderInterface::Method
-		pushad
-		mov		ecx, TheGameMenuManager
-		call	GameMenuManager::Render
-		popad
-		jmp		Jumpers::RenderInterface::Return
-	}
-
+CallDetour kRenderInterfaceDetour;
+void __fastcall RenderInterfaceHook(void* apThis, void*, void* apCuller, bool abPipboyVisible) {
+	RenderMainMenuMovie();
+	ThisCall(kRenderInterfaceDetour.GetOverwrittenAddr(), apThis, apCuller, abPipboyVisible);
+	TheGameMenuManager->Render();
 }
 
 static void SetTileShaderConstants() {

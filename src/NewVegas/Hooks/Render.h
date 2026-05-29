@@ -32,7 +32,8 @@ void* __fastcall ShowDetectorWindowHook(DetectorWindow* This, UInt32 edx, HWND H
 extern BSRenderedTexture* (__cdecl* CreateBSRenderedTexture)(BSString*, const UInt32, const UInt32, NiTexture::FormatPrefs*, UInt32, bool, NiDepthStencilBuffer*, UInt32, UInt32);
 BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 uiWidth, const UInt32 uiHeight, NiTexture::FormatPrefs* kPrefs, UInt32 eMSAAPref, bool bUseDepthStencil, NiDepthStencilBuffer* pkDSBuffer, UInt32 a7, UInt32 uiBackgroundColor);
 
-void RenderInterfaceHook();
+extern CallDetour kRenderInterfaceDetour;
+void __fastcall RenderInterfaceHook(void* apThis, void*, void* apCuller, bool abPipboyVisible);
 void SetTileShaderConstantsHook();
 void DetectorWindowCreateTreeViewHook();
 void DetectorWindowDumpAttributesHook();
